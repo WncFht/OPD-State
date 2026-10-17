@@ -10,7 +10,7 @@ import logging
 import unittest
 from pathlib import Path
 from types import SimpleNamespace
-from typing import Any
+from typing import Any, Callable
 
 SOURCE = (
     Path(__file__).resolve().parents[2]
@@ -30,6 +30,7 @@ def load_lifecycle():
         "abort_all_requests",
         "resume_generation",
         "_sleep_hybrid",
+        "collective_rpc",
     }
     methods = [
         node
@@ -52,6 +53,7 @@ def load_lifecycle():
     namespace = {
         "inspect": inspect,
         "Any": Any,
+        "Callable": Callable,
         "logger": logger,
         "is_torch_npu_available": lambda **kw: False,
     }
@@ -105,6 +107,32 @@ class LifecycleTests(unittest.IsolatedAsyncioTestCase):
         for engine, expected in [(LegacyEngine(), None), (CurrentEngine(), True)]:
             await self.fixture(engine)._reset_prefix_cache()
             self.assertEqual(engine.calls, [("prefix", expected)])
+
+    async def test_collective_rpc_returns_generation_payload_unchanged(self):
+        payload = [{"responses": [[1, 2]], "student_version": 4, "lambda": 0.5}]
+        captured = {}
+
+        class Engine:
+            async def collective_rpc(self, **kwargs):
+                captured.update(kwargs)
+                return payload
+
+        result = await self.fixture(Engine()).collective_rpc(
+            "generate_logit_fusion",
+            timeout=60,
+            args=("prefix",),
+            kwargs={"expected_version": 4},
+        )
+        self.assertIs(result, payload)
+        self.assertEqual(
+            captured,
+            {
+                "method": "generate_logit_fusion",
+                "timeout": 60,
+                "args": ("prefix",),
+                "kwargs": {"expected_version": 4},
+            },
+        )
 
     async def test_legacy_abort_clears_requests_and_caches_without_pause(self):
         engine = LegacyEngine()

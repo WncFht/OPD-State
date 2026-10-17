@@ -39,3 +39,5 @@ GPU 数值验证随后完成。原 SDPA 静态缓存与动态参考在 FP32 下�
 真实 GPU 已验证 student 参数版本 0→1→2、原地改动 lm_head 后输出改变、恢复参数后原输出恢复、图对象保持不变、教师每个参数的前 32 个元素不变。正式 GPU 调试仍需跑完整训练桥接，不能将独立模型测试当成端到端成功。顺序调度脚本将固定提交、保存命令与退出码，并在 teacher 成功退出后启动独占基准、两步调试和后续来源实验。
 
 01:19 已启动实际调度进程 3846840，目录 `runs/rollout-sources/suite-20261018-0118`，固定源码 68bb191e0db4a0e976b54239c1328572409f8835。进程与状态均核对，当前为 `waiting_for_teacher`，等待 pipeline PID 3749135 和 `TEACHER_TRAIN_FINISHED` 成功标志。teacher 已完成三个验证 batch，最终指标尚未写出；没有将排队任务视为实验完成。顺序为独占 GPU 基准、Fusion 两步调试、初始 student 缓存、Semi-OPD 50、在线 student 50、通过调试的 Fusion 50、Semi-OPD 300。所有正式验证保持三基准、每题 16 次，长时组每 50 步验证。完整维护检查与 12 项 CPU 测试通过，归档 GPU 检查的两个源码 SHA-256 均与该提交一致。
+
+进一步检查实际 RPC 链路，vLLMHttpServer.collective_rpc 原方法只 await，没有 return，导致生成端虽然完成计算，ServerAdapter 只能收到 None。补上返回值，并以原方法 AST 编译执行回归测试，核对生成 payload 的对象身份及全部转发参数；同时核对安装的 vLLM AsyncLLM/core client 均返回 worker 的列表结果。六项生命周期/RPC 测试通过。原等待队列以 SIGINT 正常退出以更换固定提交；该动作只作用于 PID 3846840，没有停止 teacher 或其他 GPU 作业。新版本检查完成后重新启动等待队列。
