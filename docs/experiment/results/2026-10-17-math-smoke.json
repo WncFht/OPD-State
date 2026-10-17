@@ -1,0 +1,51 @@
+{
+  "protocol": "two-step GPU smoke; not an accuracy benchmark",
+  "gpus": [0, 1, 2, 3],
+  "batch": 8,
+  "train_response_cap": 256,
+  "validation_examples": 4,
+  "steps": [
+    {
+      "step": 1,
+      "loss": 0.07682366669178009,
+      "grad_norm": 2.335258722305298,
+      "lr": 1e-6,
+      "step_seconds": 49.319739781320095,
+      "validation_seconds": null
+    },
+    {
+      "step": 2,
+      "loss": 0.08390366286039352,
+      "grad_norm": 2.5944466590881348,
+      "lr": 1e-6,
+      "step_seconds": 20.524498097598553,
+      "validation_seconds": 2.2809319347143173
+    }
+  ],
+  "checkpoint_files": 0,
+  "final_validation_complete": true,
+  "environment": {
+    "python": "/mnt/tidalfs-bdsz01/dataset/llm_dataset/zkn_data/fht_data/OPD-State/../envs/opd-state/bin/python",
+    "prefix": "/mnt/tidalfs-bdsz01/dataset/llm_dataset/zkn_data/fht_data/envs/opd-state",
+    "torch_file": "/mnt/tidalfs-bdsz01/dataset/llm_dataset/zkn_data/fht_data/envs/opd-state/lib/python3.12/site-packages/torch/__init__.py",
+    "torch": "2.7.1+cu126",
+    "vllm": "0.10.0",
+    "transformers": "4.57.6",
+    "cuda_device_count": 4,
+    "cuda_matmul_mean": 64.0
+  },
+  "data": [
+    {
+      "path": "/mnt/tidalfs-bdsz01/dataset/llm_dataset/zkn_data/fht_data/MD-OPD/data/math/DAPO/train.parquet",
+      "rows": 17917,
+      "unique_formatted_prompts": 17255,
+      "sha256": "c69f0fb5cb09b642b77dc3e78615e1ba113388ca3fd5aa8c451c782ff1508719"
+    },
+    {
+      "path": "/mnt/tidalfs-bdsz01/dataset/llm_dataset/zkn_data/fht_data/MD-OPD/data/math/MATH-500/test.parquet",
+      "rows": 500,
+      "unique_formatted_prompts": 500,
+      "sha256": "49e1b2c7bddd84791f38287bcdd4a99639c599e699d5906c238c74d0b31ccf8c"
+    }
+  ]
+}

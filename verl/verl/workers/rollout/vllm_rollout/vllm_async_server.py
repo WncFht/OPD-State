@@ -26,15 +26,14 @@ import vllm.entrypoints.cli.serve
 from packaging import version
 from ray.actor import ActorHandle
 from vllm import SamplingParams
+from vllm.config import CompilationConfig
 from vllm.engine.arg_utils import AsyncEngineArgs
 from vllm.entrypoints.cli.serve import run_headless
 from vllm.entrypoints.openai.api_server import build_app, init_app_state
-from vllm.entrypoints.openai.parser.harmony_utils import get_encoding
 from vllm.inputs import TokensPrompt
 from vllm.lora.request import LoRARequest
 from vllm.outputs import RequestOutput
 from vllm.usage.usage_lib import UsageContext
-from vllm.utils.argparse_utils import FlexibleArgumentParser
 from vllm.v1.engine.async_llm import AsyncLLM
 
 from verl.plugin.platform import get_platform
@@ -66,7 +65,14 @@ from verl.workers.rollout.vllm_rollout.utils import (
 
 _VLLM_VERSION = version.parse(vllm.__version__)
 
+if _VLLM_VERSION < version.parse("0.12.0"):
+    from vllm.utils import FlexibleArgumentParser
+else:
+    from vllm.utils.argparse_utils import FlexibleArgumentParser
+
 if os.getenv("VERL_USE_GPT_OSS", "0") == "1":
+    from vllm.entrypoints.openai.parser.harmony_utils import get_encoding
+
     get_encoding()
 
 
@@ -270,11 +276,12 @@ class vLLMHttpServer:
         compilation_config = engine_kwargs.pop("compilation_config", None) or {}
         if isinstance(compilation_config, str):
             compilation_config = json.loads(compilation_config)
-        compilation_config.setdefault("cudagraph_mode", "FULL_AND_PIECEWISE")
+        if "cudagraph_mode" in inspect.signature(CompilationConfig).parameters:
+            compilation_config.setdefault("cudagraph_mode", "FULL_AND_PIECEWISE")
 
         # FULL cuda graph is not yet supported with DCP, downgrade to PIECEWISE
         dcp_size = engine_kwargs.get("decode_context_parallel_size", 1) or 1
-        if dcp_size > 1 and compilation_config["cudagraph_mode"] == "FULL_AND_PIECEWISE":
+        if dcp_size > 1 and compilation_config.get("cudagraph_mode") == "FULL_AND_PIECEWISE":
             logger.warning(
                 "FULL cuda graph is not supported with DCP (decode_context_parallel_size=%d), "
                 "downgrading cudagraph_mode to PIECEWISE.",
@@ -767,6 +774,11 @@ class vLLMHttpServer:
             kv_transfer_params=decode_kv_params,
         )
 
+    async def _reset_prefix_cache(self):
+        reset = self.engine.reset_prefix_cache
+        kwargs = {"reset_connector": True} if "reset_connector" in inspect.signature(reset).parameters else {}
+        await reset(**kwargs)
+
     async def wake_up(self, tags: list[str] | None = None):
         if self.node_rank != 0:
             return
@@ -776,7 +788,7 @@ class vLLMHttpServer:
             # processes across all DP shards (unlike collective_rpc which only reaches
             # TP workers within a single shard).
             await self.engine.wake_up(tags=tags or self._get_wake_up_tags())
-            await self.engine.reset_prefix_cache(reset_connector=True)
+            await self._reset_prefix_cache()
         elif self.rollout_mode == RolloutMode.COLOCATED:
             # Directly call engine to wake up without sync weights.
             await self.engine.wake_up(tags=self._get_wake_up_tags())
@@ -784,7 +796,7 @@ class vLLMHttpServer:
             # (e.g. MooncakeStoreConnector) whose entries were computed
             # against the previous weights. No-op success when no connector
             # is configured (vLLM scheduler treats it as such).
-            await self.engine.reset_prefix_cache(reset_connector=True)
+            await self._reset_prefix_cache()
         elif self.rollout_mode == RolloutMode.STANDALONE:
             logger.info("skip wake_up in standalone mode")
 
@@ -805,10 +817,11 @@ class vLLMHttpServer:
             # (e.g. MooncakeStoreConnector) whose entries were computed
             # against the previous model weights. With no connector it
             # is a no-op success, so we can pass it unconditionally.
-            await self.engine.reset_prefix_cache(reset_connector=True)
+            await self._reset_prefix_cache()
 
             await self.engine.reset_mm_cache()
-            await self.engine.reset_encoder_cache()
+            if hasattr(self.engine, "reset_encoder_cache"):
+                await self.engine.reset_encoder_cache()
 
     async def release_kv_cache(self):
         """Release only kv_cache GPU memory, keeping model weights intact.
@@ -878,23 +891,31 @@ class vLLMHttpServer:
             #    MooncakeStoreConnector) is invalidated along with the
             #    local prefix cache — RL-correct hard-reset at every
             #    weight update boundary, no extra kwargs needed.
-            await self.engine.pause_generation(
-                wait_for_inflight_requests=False,
-                clear_cache=reset_prefix_cache,
-            )
+            if hasattr(self.engine, "pause_generation"):
+                await self.engine.pause_generation(
+                    wait_for_inflight_requests=False,
+                    clear_cache=reset_prefix_cache,
+                )
+            else:
+                for request_id in request_ids:
+                    await self.engine.abort(request_id)
+                if reset_prefix_cache:
+                    await self._reset_prefix_cache()
+                    await self.engine.reset_mm_cache()
 
             logger.info(f"Aborted {len(request_ids)} requests: {request_ids}")
             return {"aborted_count": len(request_ids), "request_ids": request_ids}
 
         except Exception as e:
             logger.error(f"Error aborting requests: {e}")
-            return {"aborted_count": 0, "request_ids": [], "error": str(e)}
+            raise
 
     async def resume_generation(self):
         """Resume generation after abort_all_requests (pause_generation)."""
         if self.node_rank != 0:
             return
-        await self.engine.resume_generation()
+        if hasattr(self.engine, "pause_generation"):
+            await self.engine.resume_generation()
 
     async def abort_request(self, request_id: str, reset_prefix_cache: bool = True) -> dict[str, Any]:
         """Abort a specific generation request.
@@ -975,7 +996,10 @@ class vLLMHttpServer:
 
     def _preprocess_engine_kwargs(self, engine_kwargs: dict) -> None:
         """Mutate engine_kwargs in-place before the CLI args dict is built."""
-        if _VLLM_VERSION < version.parse("0.22.0"):
+        if (
+            _VLLM_VERSION < version.parse("0.22.0")
+            and "mm_processor_cache_gb" in inspect.signature(AsyncEngineArgs).parameters
+        ):
             # Work around multimodal processor cache desync across pause/resume.
             # See: https://github.com/vllm-project/vllm/pull/43001/
             engine_kwargs.setdefault("mm_processor_cache_gb", 0)
@@ -1096,7 +1120,8 @@ class vLLMHttpServer:
         else:
             sleep_level = 2
         await self.engine.sleep(level=sleep_level)
-        await self.engine.reset_encoder_cache()
+        if hasattr(self.engine, "reset_encoder_cache"):
+            await self.engine.reset_encoder_cache()
 
 
 class vLLMReplica(RolloutReplica):

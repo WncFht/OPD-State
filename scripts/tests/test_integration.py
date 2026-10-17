@@ -281,6 +281,32 @@ class IntegrationTests(unittest.TestCase):
                 )
                 self.assertIn("trainer.n_gpus_per_node=4", data["args"])
                 self.assertIn("trainer.total_training_steps=10", data["args"])
+        baseline = subprocess.run(
+            ["bash", str(upstream / "recipe/math_baseline.sh")],
+            cwd=self.root,
+            env={
+                **env,
+                "OPD_TRAIN_PYTHON": str(fake),
+                "EXPERIMENT_NAME": "fixture-baseline",
+                "OPD_ROOT": str(self.root / "baseline"),
+                "WANDB_DIR": str(self.root / "wandb"),
+                "RAY_TMPDIR": str(self.root / "ray"),
+            },
+            capture_output=True,
+            text=True,
+            check=False,
+        )
+        self.assertEqual(baseline.returncode, 0, baseline.stderr)
+        args = json.loads(capture.read_text())["args"]
+        for required in [
+            "trainer.total_training_steps=50",
+            "trainer.test_freq=50",
+            "trainer.save_freq=-1",
+            "trainer.val_before_train=False",
+            "trainer.project_name=OPD-State",
+            "actor_rollout_ref.rollout.val_kwargs.do_sample=False",
+        ]:
+            self.assertIn(required, args)
         result = subprocess.run(
             ["bash", str(upstream / "recipe/opd.sh")],
             cwd=self.root,
