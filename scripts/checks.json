@@ -1,0 +1,109 @@
+{
+  "version": 1,
+  "checks": [
+    {
+      "id": "docs",
+      "command": ["python3", "scripts/check_docs.py"],
+      "modes": ["docs", "ci"],
+      "needs": [],
+      "timeout": 120,
+      "allow_failure": false
+    },
+    {
+      "id": "notes",
+      "command": ["python3", "scripts/notes_guard.py", "--root", "."],
+      "modes": ["docs", "ci"],
+      "needs": [],
+      "timeout": 120,
+      "allow_failure": false
+    },
+    {
+      "id": "archive",
+      "command": ["python3", "scripts/check_archive.py"],
+      "modes": ["docs", "ci"],
+      "needs": [],
+      "timeout": 120,
+      "allow_failure": false
+    },
+    {
+      "id": "maintenance-tests",
+      "command": [
+        "python3",
+        "-m",
+        "unittest",
+        "discover",
+        "-s",
+        "scripts/tests",
+        "-v"
+      ],
+      "modes": ["test", "ci"],
+      "needs": [],
+      "timeout": 120,
+      "allow_failure": false
+    },
+    {
+      "id": "training-source",
+      "command": ["python3", "scripts/check_upstream.py"],
+      "modes": ["test", "ci"],
+      "needs": [],
+      "timeout": 120,
+      "allow_failure": false
+    },
+    {
+      "id": "exact-research",
+      "command": ["python3", "research/occupancy/experiments/exact_checks.py"],
+      "modes": ["test", "ci"],
+      "needs": [],
+      "timeout": 120,
+      "allow_failure": false
+    },
+    {
+      "id": "research-document",
+      "command": ["node", "research/occupancy/experiments/check_document.cjs"],
+      "modes": ["docs", "ci"],
+      "needs": [],
+      "timeout": 120,
+      "allow_failure": false
+    },
+    {
+      "id": "python-lint",
+      "command": ["ruff", "check", "."],
+      "modes": ["lint", "ci"],
+      "needs": [],
+      "timeout": 120,
+      "allow_failure": false
+    },
+    {
+      "id": "python-format",
+      "command": ["ruff", "format", "--check", "."],
+      "modes": ["lint", "ci"],
+      "needs": [],
+      "timeout": 120,
+      "allow_failure": false
+    },
+    {
+      "id": "format",
+      "command": ["npm", "run", "format:check"],
+      "modes": ["lint", "ci"],
+      "needs": [],
+      "timeout": 120,
+      "allow_failure": false
+    },
+    {
+      "id": "markdown",
+      "command": ["npm", "run", "lint:md"],
+      "modes": ["lint", "ci"],
+      "needs": [],
+      "timeout": 120,
+      "allow_failure": false
+    },
+    {
+      "id": "spacing",
+      "command": ["python3", "scripts/check_spacing.py"],
+      "modes": ["lint", "ci"],
+      "needs": [],
+      "timeout": 120,
+      "allow_failure": false
+    }
+  ]
+}

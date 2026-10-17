@@ -1,0 +1,11 @@
+.git
+.venv
+node_modules
+.claude
+.agents/notes/archived/**
+training/one-shot-opd/**
+research/occupancy/results/**
+research/occupancy/figures/**
+provenance/one-shot-opd.json
+
+runs/

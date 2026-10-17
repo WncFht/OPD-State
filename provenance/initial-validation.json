@@ -1,0 +1,20 @@
+{
+  "date": "2026-10-17",
+  "pre_migration_commit": "d559d136062d3a9c86a9d4a8feac6ff48cc9b341",
+  "upstream_commit": "6b6b1782cc3f04749dd077de19353f839f6bc048",
+  "upstream_files": 572,
+  "python_compiled": 488,
+  "shell_syntax_checked": 5,
+  "integration_tests": 7,
+  "launcher_combinations": 5,
+  "numerical_summary_equal_excluding_metadata": true,
+  "curve_records": 4230,
+  "curve_bytes_equal": true,
+  "curve_sha256": "7f2488c6d13248163a387b6974864e1ddd2e5337a81c6d9ac3f8202352f36ed2",
+  "math_expressions": 343,
+  "local_research_links": 30,
+  "research_footnotes": 6,
+  "figure_audit_issues": [],
+  "gpu_training_executed": false,
+  "remote_ci_executed": false
+}

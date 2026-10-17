@@ -1,0 +1,59 @@
+default_install_hook_types: [pre-commit, pre-push]
+default_stages: [pre-commit]
+exclude: ^training/one-shot-opd/|^research/occupancy/(results|figures)/|^provenance/one-shot-opd\.json$|^\.agents/notes/archived/
+repos:
+  - repo: local
+    hooks:
+      - id: prose-format
+        stages: [manual]
+        name: Format staged Markdown
+        entry: node_modules/.bin/git-format-staged --formatter "bash scripts/fmt-markdown.sh {}"
+        language: system
+        types: [markdown]
+      - id: config-format
+        stages: [manual]
+        name: Format staged configuration and JavaScript
+        entry: node_modules/.bin/git-format-staged --formatter "node_modules/.bin/prettier --stdin-filepath {}"
+        language: system
+        files: '\.(yaml|yml|json|jsonc|cjs)$'
+      - id: python-format
+        stages: [manual]
+        name: Format staged Python
+        entry: node_modules/.bin/git-format-staged --formatter "ruff format --stdin-filename {} -"
+        language: system
+        types: [python]
+      - id: python-lint
+        name: Python lint
+        entry: ruff check
+        language: system
+        types: [python]
+      - id: markdownlint
+        name: Markdown lint
+        entry: node_modules/.bin/markdownlint-cli2
+        language: system
+        types: [markdown]
+      - id: spacing
+        name: Check prose spacing
+        entry: python3 scripts/check_spacing.py
+        language: system
+        pass_filenames: false
+        always_run: true
+      - id: staged-contracts
+        name: Staged document and note contracts
+        entry: python3 scripts/staged_checks.py
+        language: system
+        pass_filenames: false
+        always_run: true
+      - id: secrets
+        name: Staged secrets
+        entry: gitleaks git --pre-commit --staged --redact --no-banner
+        language: system
+        pass_filenames: false
+        always_run: true
+      - id: maintenance
+        name: Maintenance checks before push
+        entry: python3 scripts/run_checks.py --config scripts/checks.json --mode ci
+        language: system
+        pass_filenames: false
+        always_run: true
+        stages: [pre-push]

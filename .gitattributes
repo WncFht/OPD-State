@@ -1,0 +1,4 @@
+* text=auto eol=lf
+
+# Preserve the imported snapshot byte-for-byte, including upstream CRLF files.
+training/one-shot-opd/** -text
