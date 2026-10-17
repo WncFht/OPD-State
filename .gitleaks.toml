@@ -6,7 +6,7 @@ useDefault = true
 description = "Upstream geometry dataset routing examples"
 condition = "AND"
 regexTarget = "line"
-paths = ['''^training/one-shot-opd/verl/verl/(trainer/config/distillation/distillation\.yaml|workers/config/distillation\.py)$''']
+paths = ['''^(training/one-shot-opd/)?verl/verl/(trainer/config/distillation/distillation\.yaml|workers/config/distillation\.py)$''']
 regexes = ['''^\s*#?\s*\+distillation\.teacher_models\.teacher_model[12]\.key=hiyouga/geometry3k\s*$''']
 
 # DataProto uses this literal as an internal dictionary key.
@@ -14,5 +14,5 @@ regexes = ['''^\s*#?\s*\+distillation\.teacher_models\.teacher_model[12]\.key=hi
 description = "Upstream DataProto padding dictionary key"
 condition = "AND"
 regexTarget = "match"
-paths = ['''^training/one-shot-opd/verl/verl/protocol\.py$''']
+paths = ['''^(training/one-shot-opd/)?verl/verl/protocol\.py$''']
 regexes = ['''^_padding_size_key = "_padding_size_key_x123d"\s*$''']

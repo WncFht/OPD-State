@@ -1,5 +1,9 @@
-training/one-shot-opd/
+README.md
+data/
+eval/
+recipe/
+verl/
 .agents/notes/archived/
-research/occupancy/results/
-research/occupancy/figures/
-provenance/one-shot-opd.json
+docs/research/occupancy/results/
+docs/research/occupancy/figures/
+docs/provenance/one-shot-opd.json

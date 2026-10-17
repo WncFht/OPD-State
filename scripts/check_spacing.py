@@ -29,9 +29,12 @@ SUFFIXES = {
 NAMES = {".prettierrc", ".autocorrectrc"}
 EXCLUDED = (
     ".agents/notes/archived/",
-    "training/one-shot-opd/",
-    "research/occupancy/results/",
-    "provenance/one-shot-opd.json",
+    "data/",
+    "eval/",
+    "recipe/",
+    "verl/",
+    "docs/research/occupancy/results/",
+    "docs/provenance/one-shot-opd.json",
 )
 
 

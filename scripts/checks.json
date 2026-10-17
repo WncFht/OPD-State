@@ -43,7 +43,7 @@
     },
     {
       "id": "training-source",
-      "command": ["python3", "scripts/check_upstream.py"],
+      "command": ["python3", "scripts/check_source.py"],
       "modes": ["test", "ci"],
       "needs": [],
       "timeout": 120,
@@ -51,7 +51,10 @@
     },
     {
       "id": "exact-research",
-      "command": ["python3", "research/occupancy/experiments/exact_checks.py"],
+      "command": [
+        "python3",
+        "docs/research/occupancy/experiments/exact_checks.py"
+      ],
       "modes": ["test", "ci"],
       "needs": [],
       "timeout": 120,
@@ -59,7 +62,10 @@
     },
     {
       "id": "research-document",
-      "command": ["node", "research/occupancy/experiments/check_document.cjs"],
+      "command": [
+        "node",
+        "docs/research/occupancy/experiments/check_document.cjs"
+      ],
       "modes": ["docs", "ci"],
       "needs": [],
       "timeout": 120,

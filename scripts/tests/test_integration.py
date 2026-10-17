@@ -15,8 +15,8 @@ import yaml
 ROOT = Path(__file__).resolve().parents[2]
 sys.path.insert(0, str(ROOT / "scripts"))
 import check_docs
+import check_source
 import check_spacing
-import check_upstream
 import install_hooks
 
 
@@ -173,7 +173,7 @@ class IntegrationTests(unittest.TestCase):
 
     def test_secret_allowlist_only_accepts_the_upstream_constant(self):
         shutil.copy2(ROOT / ".gitleaks.toml", self.root / ".gitleaks.toml")
-        source = self.root / "training/one-shot-opd/verl/verl/protocol.py"
+        source = self.root / "verl/verl/protocol.py"
         source.parent.mkdir(parents=True)
         source.write_text(
             "_padding_size_key = " + json.dumps("_padding_size_" + "key_x123d") + "\n"
@@ -200,32 +200,23 @@ class IntegrationTests(unittest.TestCase):
         )
         self.assertNotEqual(rejected.returncode, 0)
 
-    def test_upstream_integrity_and_syntax_failures(self):
-        source = self.root / "training/one-shot-opd"
-        source.mkdir(parents=True)
+    def test_training_source_syntax_and_editing(self):
+        self.assertTrue(check_source.check(self.root))
+        source = self.root / "verl"
+        source.mkdir()
         path = source / "sample.py"
         path.write_text("value = 1\n")
-        (self.root / "provenance").mkdir()
-        manifest = {
-            "path": "training/one-shot-opd",
-            "commit": "fixture",
-            "files": {
-                "sample.py": {
-                    "mode": "100644",
-                    "sha256": hashlib.sha256(path.read_bytes()).hexdigest(),
-                }
-            },
-        }
-        (self.root / "provenance/one-shot-opd.json").write_text(json.dumps(manifest))
-        self.assertEqual(check_upstream.check(self.root, pristine=True), [])
+        self.assertEqual(check_source.check(self.root), [])
         path.write_text("value = 2\n")
-        self.assertTrue(check_upstream.check(self.root, pristine=True))
-        self.assertEqual(check_upstream.check(self.root), [])
+        self.assertEqual(check_source.check(self.root), [])
         path.write_text("value = (\n")
-        self.assertTrue(check_upstream.check(self.root))
-        path.write_text("value = 1\n")
-        path.chmod(0o755)
-        self.assertTrue(check_upstream.check(self.root, pristine=True))
+        self.assertTrue(check_source.check(self.root))
+        path.unlink()
+        shell = source / "launch.sh"
+        shell.write_text("#!/bin/bash\necho valid\n")
+        self.assertEqual(check_source.check(self.root), [])
+        shell.write_text("#!/bin/bash\nif then\n")
+        self.assertTrue(check_source.check(self.root))
 
     def test_launchers_forward_arguments_and_select_vendored_verl(self):
         binary = self.root / "training-env/bin"
@@ -249,7 +240,7 @@ class IntegrationTests(unittest.TestCase):
             "N_GPUS_PER_NODE": "4",
             "CUDA_VISIBLE_DEVICES": "0,1,2,3",
         }
-        upstream = ROOT / "training/one-shot-opd"
+        upstream = ROOT
         for script, mode in [
             ("opd.sh", "full"),
             ("opd.sh", "oneshot"),

@@ -16,7 +16,7 @@ from pathlib import Path
 ROOT = Path(__file__).resolve().parents[1]
 SKILL = Path(
     os.environ.get(
-        "FIGURE_VIZ_HOME", str(ROOT.parents[2] / ".agents/skills/figure-viz")
+        "FIGURE_VIZ_HOME", str(ROOT.parents[3] / ".agents/skills/figure-viz")
     )
 )
 sys.path.insert(0, str(SKILL / "assets/mpl"))

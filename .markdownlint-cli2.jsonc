@@ -10,7 +10,10 @@
         ".venv/**",
         ".claude/**",
         ".agents/notes/archived/**",
-        "training/one-shot-opd/**",
+        "README.md",
+        "data/**",
+        "eval/**",
+        "verl/**",
         "runs/**",
     ],
 }

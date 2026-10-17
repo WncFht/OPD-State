@@ -3,9 +3,11 @@
 node_modules
 .claude
 .agents/notes/archived/**
-training/one-shot-opd/**
-research/occupancy/results/**
-research/occupancy/figures/**
-provenance/one-shot-opd.json
-
+README.md
+data/**
+eval/**
+verl/**
+docs/research/occupancy/results/**
+docs/research/occupancy/figures/**
+docs/provenance/one-shot-opd.json
 runs/

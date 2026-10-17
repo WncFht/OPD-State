@@ -1,30 +1,30 @@
-# 架构
+# 代码结构与修改入口
 
-OPD-State 将同一个问题的理论分析与训练实现放在一个 Git 仓库中。研究正文引用可复现构造，训练代码保留自己的数据与运行协议，两者通过明确的实验假设、配置和结果关联。
+本仓以 One-Shot-OPD 的根目录作为开发根目录。训练代码直接在原位置修改，hooks 和研究资料是添加到代码库中的辅助内容。
 
-## 目录职责
+## 训练与维护
 
-| 目录                       | 维护内容                             | 修改入口                                                   |
-| -------------------------- | ------------------------------------ | ---------------------------------------------------------- |
-| `training/one-shot-opd/`   | 可直接修改的完整上游训练源码         | `recipe/` 选配置，`verl/verl/` 改训练行为，`eval/` 改评测  |
-| `research/occupancy/`      | 访问测度研究正文、精确实验、结果与图 | `experiments/` 为生成来源，`results/` 与 `figures/` 为产物 |
-| `docs/`                    | 架构、开发和来源说明                 | 面向仓库使用者                                             |
-| `notes/`                   | 需求与研究工作记录                   | 假设、过程和未决事项                                       |
-| `.agents/`                 | 维护技能、共享参考和长期决策         | 根 AGENTS.md 提供入口                                      |
-| `scripts/`                 | 检查与两阶段 hooks                   | `checks.json` 为本仓唯一检查集合                           |
-| `provenance/`、`licenses/` | 导入版本、文件校验值和许可           | 新的上游同步单独审阅差异                                   |
-| `runs/`                    | 本地实验大文件与临时状态             | Git 忽略，结论所需小结果另行入库                           |
+| 位置            | 职责与修改方式                                                         |
+| --------------- | ---------------------------------------------------------------------- |
+| `recipe/`       | 启动训练、选择模型和数据、传递 Hydra 参数；新增实验配方从这里进入      |
+| `data/prep/`    | 数据下载与转换；`data/README.md` 定义数据布局，实际数据文件由 Git 忽略 |
+| `eval/`         | 评测入口；沿用原有任务协议，指标调整与实现一同提交                     |
+| `verl/verl/`    | PPO 训练循环、rollout、教师打分、策略损失与分布式 worker               |
+| `verl/scripts/` | 原框架的模型与运行辅助脚本                                             |
+| `scripts/`      | 我们接入的维护检查、工具安装与 hooks                                   |
 
-## 训练链路与扩展位置
+`verl/` 内部的 `setup.py`、`pyproject.toml` 和 `verl/` 包目录是上游原有结构。保留这一层可继续使用原安装入口和 recipe 的 PYTHONPATH 解析；日常改训练代码直接进入 `verl/verl/`。
 
-上游 `recipe/opd.sh`、`mopd.sh`、`grpo.sh` 共享 `_common.sh`，后者设置 vendored verl 的 PYTHONPATH，再调用 `verl.trainer.main_ppo`。`DOMAIN` 选择模型与数据，`MODE` 选择 full、oneshot 或 template。应保留这些相对路径关系；从任意目录调用 recipe 都能解析同一份源码。
+## 研究与开发资料
 
-PPO 训练循环在 `verl/verl/trainer/ppo/ray_trainer.py`；`opd_trainer_mixin.py` 注册并初始化 teacher worker，把 teacher 的逐 token 信号装入训练 batch。`verl/verl/workers/fsdp_teacher_worker.py` 负责教师打分，`core_algos.py` 处理优势与策略损失。后续访问测度实验先在已有链路定位采样、打分、归约三个动作，再按实际行为增加最小配置，避免同时维护第二套训练器。
+所有人工阅读的项目资料统一归 `docs/`。`docs/research/occupancy/` 包含研究正文，以及随正文复现的 `experiments/`、`results/` 和 `figures/`；`docs/notes/` 保存需求、尝试和工作记录。两者是同一文档目录中的不同用途，使用说明通过链接引用结果。
 
-logit fusion、同轨迹切换和 batch 混合尚未实现。实现时需分别固定 prefix 来源、action 采样分布和是否使用重要性修正；结果同时报告 KL、任务正确率和预算，不能把覆盖率单独当作成功条件。具体假设与判分见[研究正文](../research/occupancy/2026-10-17-OPD访问测度与收敛机制研究.md)。
+开发说明归 [development.md](development.md)，导入版本与许可归 [provenance.md](provenance.md)。`.agents/` 保留工具要求的技能入口和决策格式。模型、数据、checkpoint、日志与大文件输出按 `.gitignore` 排除；`node_modules/` 只供本地维护工具使用。
 
-## 导入与维护边界
+## 算法修改链路
 
-训练源码作为普通文件纳入当前仓库，许可证、NOTICE 和原 README 保持原样。来源清单冻结导入基线；日常源码修改允许与它不同，严格导入检查用于核验初始快照。后续同步上游应在独立提交中审阅，保留本地算法改动。
+`recipe/opd.sh`、`mopd.sh`、`grpo.sh` 通过 `_common.sh` 解析根目录的数据与 vendored verl，再调用 `verl.trainer.main_ppo`。`DOMAIN` 选择模型与数据，`MODE` 选择 full、oneshot 或 template。训练命令从仓库根目录执行，例如 `MODE=oneshot bash -o pipefail recipe/opd.sh`。
 
-根 formatter 与文档门控覆盖自有内容，导入训练源码使用上游风格和相关产品测试。基础检查会编译所有上游 Python 源码并检查 Shell 语法；这只证明语法成立，训练正确性仍需在独立 GPU 环境中验证。
+PPO 主循环在 `verl/verl/trainer/ppo/ray_trainer.py`，OPD 的教师注册和逐 token 信号处理在 `opd_trainer_mixin.py`，教师打分在 `verl/verl/workers/fsdp_teacher_worker.py`，优势与策略损失在 `verl/verl/trainer/ppo/core_algos.py`。实验直接修改这些源码和对应 recipe，使用普通 Git 提交记录。
+
+后续 logit fusion 与轨迹内 teacher/student 切换从 rollout 路径实现；batch 混合需要同时检查轨迹来源、batch 组装和 action 分布。先跑原算法基线，再逐个加入变体并核对梯度与指标。相关假设与判分归[研究正文](research/occupancy/2026-10-17-OPD访问测度与收敛机制研究.md)。这些变体尚未实现。

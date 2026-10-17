@@ -1,12 +1,27 @@
-.venv/
+# Development dependencies and local tools.
 node_modules/
+.venv/
 .claude/
 .crossnote/
 __pycache__/
 *.pyc
 .ruff_cache/
 .pytest_cache/
-runs/
+*.egg-info/
+.DS_Store
+
+# Training data is rebuilt by data/prep; keep preparation code and smoke inputs.
+/data/*
+!/data/prep/
+!/data/smoke/
+!/data/README.md
+/logs/
+/results/
+/outputs/
+/checkpoints/
+/swanlab/
+/runs/
 .env
 .env.*
 !.env.example
+.swanlab_key

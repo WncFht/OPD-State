@@ -18,10 +18,10 @@ for (const m of prose.matchAll(/!?\[[^\]]*\]\(([^)]+)\)/g)) {
     if (!fs.existsSync(resolved)) {
         if (
             resolved.startsWith(
-                path.resolve(root, "../../../Awesome-OPD-Paper") + path.sep,
+                path.resolve(root, "../../../../Awesome-OPD-Paper") + path.sep,
             ) ||
             resolved.startsWith(
-                path.resolve(root, "../../../MirrorOPD") + path.sep,
+                path.resolve(root, "../../../../MirrorOPD") + path.sep,
             )
         )
             unavailableExternalLinks.push(target);

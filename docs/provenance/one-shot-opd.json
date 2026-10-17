@@ -2,7 +2,7 @@
   "repository": "https://github.com/Thinking-Space/One-Shot-OPD",
   "commit": "6b6b1782cc3f04749dd077de19353f839f6bc048",
   "imported_on": "2026-10-17",
-  "path": "training/one-shot-opd",
+  "path": ".",
   "files": {
     ".gitignore": {"mode": "100644", "sha256": "984078b6ef8cf68a798dfc9801d749c80fef904720493d2198208a02072e19a2"},
     "LICENSE": {"mode": "100644", "sha256": "cfc7749b96f63bd31c3c42b5c471bf756814053e847c10f3eb003417bc523d30"},

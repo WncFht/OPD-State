@@ -64,7 +64,7 @@ def check(root: Path) -> list[str]:
     links = 0
     for path in sorted(root.rglob("*.md")):
         relative = path.relative_to(root)
-        if relative.parts[:2] == ("training", "one-shot-opd"):
+        if relative.parts[0] in {"data", "eval", "verl"}:
             continue
         if set(relative.parts) & IGNORED or relative.parts[:3] == (
             ".agents",

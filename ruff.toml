@@ -1,6 +1,6 @@
 target-version = "py310"
 line-length = 88
-extend-exclude = ["training/one-shot-opd", ".agents/notes/archived"]
+extend-exclude = ["data", "eval", "verl", ".agents/notes/archived"]
 
 [lint]
 select = ["E4", "E7", "E9", "F", "I"]
@@ -8,4 +8,4 @@ select = ["E4", "E7", "E9", "F", "I"]
 [lint.per-file-ignores]
 # 本地脚本模块与可选绘图技能需要先设置导入路径。
 "scripts/tests/*.py" = ["E402"]
-"research/occupancy/experiments/plot_results.py" = ["E402"]
+"docs/research/occupancy/experiments/plot_results.py" = ["E402"]

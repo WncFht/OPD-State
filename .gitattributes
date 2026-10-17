@@ -1,4 +1,5 @@
 * text=auto eol=lf
 
-# Preserve the imported snapshot byte-for-byte, including upstream CRLF files.
-training/one-shot-opd/** -text
+# Retain the line endings of the two unchanged upstream source files.
+verl/verl/models/transformers/npu_patch.py -text
+verl/verl/utils/reward_score/search_r1_like_qa_em.py -text
