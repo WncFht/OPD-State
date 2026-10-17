@@ -16,7 +16,7 @@ Zhao 等的 _When Do We Need On-Policy Distillation?_[^semi]将初始学生轨�
 
 论文的来源对照同时改变 prefix、被采样 action、轨迹长度与推理内容。即使固定 prompt、模型与步数，末步准确率差异也不能直接归因于 prefix 访问测度。现有[访问测度研究](../research/occupancy/2026-10-17-OPD访问测度与收敛机制研究.md)已给出这个限制，并区分条件 KL、序列 KL 与任务正确率。
 
-论文在去重后的 14,116 个 DAPO prompt 上训练，每步 128 个 prompt、每题一条轨迹；温度与 top-p 均为 1，学习率 $10^{-6}$。非思考配置主要使用 4,096 的训练响应上限，思考配置使用 16,384，评估通常允许 32K，指标为 AIME24/25/26 与 HMMT Feb26 的 avg@32。论文的汇总表与不同图件还存在 cap 和基准范围差异，应按目标实验逐项核对。
+论文在去重后的 14,116 个 DAPO prompt 上训练，每步 128 个 prompt、每题一条轨迹；温度与 top-p 均为 1，学习率 $10^{-6}$。非思考配置主要使用 4,096 的训练响应上限，思考配置使用 16,384，评估通常允许 32K，指标为 AIME24/25/26 与 HMMT Feb26 的 avg@32。论文基准表还平均了第 60、80、100 步检查点；汇总表与不同图件存在 cap 和基准范围差异，应按目标实验逐项核对。
 
 本地 parquet 的格式化 prompt 去重后是 17,255 条，仍不同于论文的 14,116 条。严格复现需要继续核对数据 revision、英语筛选及预处理规则，不能仅凭“DAPO”名称认为数据相同。
 
@@ -51,7 +51,7 @@ Zhao 等的 _When Do We Need On-Policy Distillation?_[^semi]将初始学生轨�
 
 ### 运行与验收
 
-训练 Python 默认是工作区独立环境 `envs/opd-state/bin/python`。可通过 `OPD_TRAIN_PYTHON` 指定完整、独立的训练环境；不修改原有共享环境。当前 CUDA 12.6 适配复用了相邻 MD-OPD 的 `cef14fa` 补丁，涉及 vLLM 版本门槛、参数解析器导入位置和 GPT-OSS 的延迟导入；适配不改变 OPD 更新式。旧版 vLLM 的后台服务显式启用 `VLLM_USE_V1=1`，并按实际接口能力设置多模态缓存与 CUDA Graph 默认项。四卡两步更新与末步评测已通过，[机器记录](results/2026-10-17-math-smoke.json)保存 loss、梯度、环境和数据哈希。调试响应 cap 为 256，不将该准确率当作正式 math 基准。
+训练 Python 默认是工作区独立环境 `envs/opd-state/bin/python`。可通过 `OPD_TRAIN_PYTHON` 指定完整、独立的训练环境；不修改原有共享环境。当前 CUDA 12.6 适配复用了相邻 MD-OPD 的 `cef14fa` 补丁，涉及 vLLM 版本门槛、参数解析器导入位置和 GPT-OSS 的延迟导入；适配不改变 OPD 更新式。旧版 vLLM 的后台服务显式启用 `VLLM_USE_V1=1`，并按实际接口能力设置多模态缓存与 CUDA Graph 默认项。该开关选择 vLLM 推理引擎；`trainer.use_v1=False` 则保留含 OPD mixin 的 veRL 训练路径，两者是独立开关。四卡两步更新与末步评测已通过，[机器记录](results/2026-10-17-math-smoke.json)保存 loss、梯度、环境和数据哈希。调试响应 cap 为 256，不将该准确率当作正式 math 基准。
 
 ```bash
 bash recipe/math_baseline.sh
@@ -156,10 +156,16 @@ $$
 g_\mu(\theta)=\mathbb E_{(s,a)\sim\nu_\mu}[(\log p_\theta(a\mid s)-\log q(a\mid s))\nabla_\theta\log p_\theta(a\mid s)].
 $$
 
-由于缓存测度固定，逐项求导得到
+记 $r_\theta(s,a)=\log p_\theta(a\mid s)-\log q(a\mid s)$。缓存是有限集合，其权重与 $\theta$ 无关，冻结教师满足 $\nabla_\theta\log q=0$。逐项求导得到
 
 $$
-g_\mu(\theta)=\nabla_\theta\left[\frac12\mathbb E_{(s,a)\sim\nu_\mu}(\log p_\theta(a\mid s)-\log q(a\mid s))^2\right].
+\begin{aligned}
+F_\mu(\theta)&=\frac12\sum_{s,a}\nu_\mu(s,a)r_\theta(s,a)^2,\\
+\nabla_\theta F_\mu(\theta)
+&=\frac12\sum_{s,a}\nu_\mu(s,a)\,2r_\theta(s,a)\nabla_\theta r_\theta(s,a)\\
+&=\sum_{s,a}\nu_\mu(s,a)r_\theta(s,a)\bigl(\nabla_\theta\log p_\theta(a\mid s)-0\bigr)\\
+&=g_\mu(\theta).
+\end{aligned}
 $$
 
 该等式要求参与取对数的概率为正，缓存权重固定，且采用同一 token 归约；它描述精确期望的局部梯度，不把多步 PPO clipping 当成相同目标。两个缓存组因此同时改变 prefix 权重和 action 权重。在线组的 action 随当前学生变化，不能把上述固定测度求导直接套过去。
@@ -168,7 +174,20 @@ $$
 
 ## 对照设置提案
 
-第一轮建议沿用已跑通的模型、4K cap、batch 64 和末步 MATH-500 greedy@1，三个来源各跑 50 步，用种子 42、43、44 做三组配对重复。先执行在线 baseline；缓存生成与其余训练待这里的设置确定后执行。使用同一 prompt 清单和 batch 顺序，每条 prompt 在两个缓存组各有一条固定响应，在线组每次按当前学生重新采样。
+实现缓存路径后，先沿用已跑通的 JustRL 配对做短工程对照，确认三组都读对轨迹、更新一次并用最终学生评测。当前先执行在线 50 步 baseline；缓存生成与其余训练待这里的设置确定后执行。
+
+正式检验来源差异，建议优先使用论文的 Qwen3-1.7B（non-thinking）← Qwen3-4B-Instruct-2507 配对。论文对该配对报告初始 overlap 62.5%；对当前同名 JustRL 配对报告 79.7%，并将后者列为 rollout 长度与正信号比例趋势的例外。上述百分比是论文报告，当前本地 50 步没有测量 overlap。因此，JustRL 适合作为已跑通的工程起点与较高 overlap 对照，不宜单独承担“低 overlap 下三组来源会不同”的主检验。
+
+| 阶段           | 配对与预算提案                                                                                | 用途                                           |
+| -------------- | --------------------------------------------------------------------------------------------- | ---------------------------------------------- |
+| 工程验收       | 当前 1.5B/JustRL 配对，三组短运行，1 个 seed                                                  | 验证缓存语义和梯度，不比较平台                 |
+| 来源差异主实验 | Qwen3-1.7B non-thinking ← Qwen3-4B-Instruct-2507；4K cap；先 batch 64；50 步；seed 42、43、44 | 先检验有限预算末步差异，三组共用 prompt 与配置 |
+| 配对稳健性     | JustRL 配对使用共同设置重复三组                                                               | 判断效应是否依赖模型配对                       |
+| 论文协议复现   | 另行对齐 batch 128、数据过滤、各配对 cap 和 AIME/HMMT avg@32                                  | 与论文数字比较                                 |
+
+Qwen3 配对需要准备指定 revision，并显式设置 non-thinking；缓存前验证 chat template、prompt token ID 与 tokenizer 支持集。不能把默认 thinking 开关或 teacher 自带模板的差异混入来源对照。之后可在不改变 sampled-token 训练信号的前提下单独测量初始 top-64 overlap；该观测与 `LOG_PROB_TOP_K` 的训练目标开关分开。
+
+三组使用同一 prompt 清单和 batch 顺序，每条 prompt 在两个缓存组各有一条固定响应，在线组每次按当前学生重新采样。
 
 若目的是让固定缓存被重复吸收，单个 epoch 不足以检验“重复使用相同状态”。建议固定一个可审计 prompt 子集，例如 1,024 条，batch 64 则每 16 步遍历一次；50 步会复用三轮以上。该设置与全量 17,917 条数据的 50 步在线调试不相同，应另起共同对照，不能直接拿首个 baseline 与子集缓存组比较。
 
@@ -189,22 +208,36 @@ $$
 
 任务准确率报告每题得分及均值，配对比较相同题目的得分差。greedy@1 可报告题目层面的配对 bootstrap 区间，并单独报告训练 seed 的离散性。若改用 avg@N，先在题内平均 N 次，再在题目间平均；不能把 N 次采样当成独立训练重复。当前 MATH-500 结果不能与论文 AIME/HMMT 的均值直接对比。
 
+### 判分与否决条件提案
+
+首轮按配对 seed 比较 teacher-cache、initial-student-cache 与 online-student 的末步准确率差，三个比较同时报告效应大小与逐题得分差。暂将 2 个百分点作为值得继续追踪的实际差异阈值；该阈值用于参数讨论，不替代区间估计。只有一个 seed 或区间跨零时，保留为探索性结果。若对三组两两差异作显著性判断，需处理三次比较，例如 Holm 校正。
+
+若差异小于阈值且区间仍很宽，只能说证据不足。要支持“在该预算下实际等价”，区间需整体落在预先指定的等价范围内。若扩大训练预算后差异持续缩小，则否决“已经观察到不同平台”的表述；若增加长度或统一有效 token 预算后排序改变，则优先解释长度或预算的作用。
+
+平台候选至少要求两个更长预算的末步结果趋稳、跨 seed 的排序一致，并报告训练目标和截断率的末段状态。即使准确率趋稳，也只称该协议下的有限预算平台，不据此宣称学生策略或访问测度相同。
+
 ## 代码支持方案
 
 现有代码已经支持第一组。`ray_trainer.py` 在每步调用 `async_rollout_manager.generate_sequences()`，重算 `old_log_probs` 后，`OPDTrainerMixin.compute_opd_token_reward()` 调用 FSDP teacher，构造逐 token 信号，再由 `token_reward_direct` 与策略损失更新学生。验证也复用当前学生的 rollout engine。
 
-缓存组目前没有完整入口，不能只把数据路径替换成某份响应 parquet 就声称已实现。建议增加以下最小改动，复用现有更新与评测链路：
+`MODE=oneshot` 只切换到单 query 数据集，仍然每步用当前学生生成响应，并不提供 Semi-OPD 缓存语义。
 
-| 修改位置                           | 要实现的行为                                                                                                     |
-| ---------------------------------- | ---------------------------------------------------------------------------------------------------------------- |
-| `recipe/` 与配置                   | 显式选择 `rollout_source=online_student/cached_teacher/cached_initial_student`，缓存路径与版本必填               |
-| `data/prep/` 下独立缓存生成器      | 冻结来源模型，按统一 prompt 清单采样一次，保存 token ID、mask、EOS/截断、生成设置与来源哈希                      |
-| 教师评分入口                       | 对缓存轨迹仅评分一次，保存 teacher log-probability；验证 tokenizer、温度和 checkpoint 一致                       |
-| `ray_trainer.py` 的训练 batch 构造 | 缓存组跳过在线 `generate_sequences()`，将缓存 token、mask 与 position ID 装入同一 DataProto；保留相同 batch 顺序 |
-| `_compute_old_log_prob()`          | 三组都按本步当前学生重算，缓存初始学生概率只作诊断字段                                                           |
-| `compute_opd_token_reward()`       | 缓存组从验证过的字段读取 teacher log-probability，计算当前 log-ratio；在线组保持原 teacher worker 路径           |
-| 权重同步与验证                     | 缓存训练不需要每步同步到生成端，末步评测前必须同步最终 student；验证始终使用 student                             |
-| 日志与审计                         | 标记来源、缓存哈希、采样版本、prompt ID 顺序、更新次数、训练 token 数与截断率                                    |
+现有 `AgentLoopManager.generate_sequences()` 带 `SkipManager` 装饰器，`verl/utils/skip/rollout_skip.py` 已能序列化和加载 DataProto，可复用其接入点与存储方式。但它目前按 global step 选择缓存；`repeat` 可以加载最近的一整批结果，缺少缓存时会调用当前生成器补齐。直接启用会有三项问题：以前在线训练逐步留下的快照不是统一初始学生生成；跨 batch 重放可能和当前 prompt、ground truth 不匹配；cache miss 会引入当前学生的新轨迹。其缓存也位于教师评分之前，不包含后续计算的 OPD teacher log-probability。
+
+因此，首版优先扩展现有缓存入口：固定来源预生成，使用 prompt ID/输入哈希校验，固定缓存组缺失即报错，并单独加入教师评分缓存；保留已有 validation 绕过缓存的机制。无需建立第二套训练器。建议增加以下最小改动，复用现有更新与评测链路：
+
+| 修改位置                                    | 要实现的行为                                                                                                                           |
+| ------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------- |
+| `recipe/` 与配置                            | 显式选择 `rollout_source=online_student/cached_teacher/cached_initial_student`，缓存路径与版本必填                                     |
+| `data/prep/` 下独立缓存生成器               | 冻结来源模型，按统一 prompt 清单采样一次，保存 token ID、mask、EOS/截断、生成设置与来源哈希                                            |
+| 教师评分入口                                | 对缓存轨迹仅评分一次，保存 teacher log-probability；验证 tokenizer、温度和 checkpoint 一致                                             |
+| `SkipManager` / `RolloutSkip` 与 batch 构造 | 复用生成钩子读取缓存，按 prompt ID/输入哈希匹配，缺失即报错；复用 padding 工具生成同一 DataProto，保持 mask、position ID 与 batch 顺序 |
+| `_compute_old_log_prob()`                   | 三组都按本步当前学生重算，缓存初始学生概率只作诊断字段                                                                                 |
+| `compute_opd_token_reward()`                | 缓存组从验证过的字段读取 teacher log-probability，计算当前 log-ratio；在线组保持原 teacher worker 路径                                 |
+| 权重同步与验证                              | 缓存训练不需要每步同步到生成端，末步评测前必须同步最终 student；验证始终使用 student                                                   |
+| 日志与审计                                  | 标记来源、缓存哈希、采样版本、prompt ID 顺序、更新次数、训练 token 数与截断率                                                          |
+
+持久缓存使用数据 revision 与原始行号或规范化输入哈希生成稳定 `prompt_id`；当前训练器每步创建的随机 `uid` 仅用于运行时分组，不能拿来索引跨步缓存。加载时保留当前 batch 的 `uid` 和 ground truth，按稳定 ID 匹配响应，避免把旧 batch 的元数据一同重放。
 
 缓存元数据至少包含 student/teacher revision、tokenizer 与 chat-template 哈希、数据 ID 清单哈希、source、seed、temperature、top-p、cap、EOS 规则、评分 dtype/温度。教师 log-probability 与 token/mask 绑定；任何来源变化都应拒绝读取旧缓存。只缓存 teacher logits 中被采样 token 的概率，不需要保存整个词表张量。
 
