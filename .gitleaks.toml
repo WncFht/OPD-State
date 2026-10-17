@@ -16,3 +16,11 @@ condition = "AND"
 regexTarget = "match"
 paths = ['''^(training/one-shot-opd/)?verl/verl/protocol\.py$''']
 regexes = ['''^_padding_size_key = "_padding_size_key_x123d"\s*$''']
+
+# This field is SHA-256(vocabulary + chat template + special token IDs).
+[[allowlists]]
+description = "SHA-256 tokenizer metadata in experiment cache manifests"
+condition = "AND"
+regexTarget = "line"
+paths = ['''^docs/experiment/results/[^/]+/cache-manifest\.json$''']
+regexes = ['''^\s*"tokenizer_signature"\s*:\s*"[a-f0-9]{64}"\s*,?\s*$''']

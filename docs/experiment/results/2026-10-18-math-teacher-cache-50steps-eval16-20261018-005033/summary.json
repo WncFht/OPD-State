@@ -1,0 +1,13 @@
+{
+  "run_name": "math-teacher-cache-50steps-eval16-20261018-005033",
+  "run_directory": "/mnt/tidalfs-bdsz01/dataset/llm_dataset/zkn_data/fht_data/OPD-State/runs/rollout-sources/math-teacher-cache-50steps-eval16-20261018-005033",
+  "source_commit": "350a286be0d586f04e4cd0b0e89624a336b17a81",
+  "training_steps": 50,
+  "samples_per_question": 16,
+  "full_benchmarks": true,
+  "checkpoints_saved": false,
+  "wandb_url": "https://wandb.ai/wncfht/OPD-State/runs/va2nhhra",
+  "training_log_sha256": "c231052eb004c954701be8fa3242f62dd48d4124d5fe3c1be393fe13f7dc50a7",
+  "collector_source_sha256": "c32c48bcd71e1af93c97cb6869df80aafbe24792259bae3462df9eb16028a2b0",
+  "validation_steps": [50]
+}

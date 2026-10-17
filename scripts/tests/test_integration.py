@@ -200,6 +200,46 @@ class IntegrationTests(unittest.TestCase):
         )
         self.assertNotEqual(rejected.returncode, 0)
 
+    def test_manifest_hash_allowlist_preserves_path_key_and_format_boundaries(self):
+        shutil.copy2(ROOT / ".gitleaks.toml", self.root / ".gitleaks.toml")
+        digest = hashlib.sha256(b"synthetic tokenizer metadata fixture").hexdigest()
+        allowed = "docs/experiment/results/fixture/cache-manifest.json"
+        cases = [
+            (allowed, "tokenizer_signature", digest, 0),
+            (allowed, "api_key", digest, 1),
+            (allowed, "tokenizer_signature", digest + "XYZ", 1),
+            (allowed, "tokenizer_signature", digest.upper(), 1),
+            ("docs/elsewhere/cache-manifest.json", "tokenizer_signature", digest, 1),
+            (
+                "docs/experiment/results/fixture/credentials.json",
+                "tokenizer_signature",
+                digest,
+                1,
+            ),
+        ]
+        command = [
+            str(Path(sys.executable).parent / "gitleaks"),
+            "git",
+            "--pre-commit",
+            "--staged",
+            "--redact",
+            "--no-banner",
+        ]
+        previous = None
+        for name, key, value, code in cases:
+            with self.subTest(path=name, key=key, expected_exit=code):
+                if previous is not None:
+                    previous.unlink()
+                path = self.root / name
+                path.parent.mkdir(parents=True, exist_ok=True)
+                path.write_text(json.dumps({key: value}, indent=2) + "\n")
+                self.git("add", "-A")
+                result = subprocess.run(
+                    command, cwd=self.root, capture_output=True, check=False
+                )
+                self.assertEqual(result.returncode, code)
+                previous = path
+
     def test_training_source_syntax_and_editing(self):
         self.assertTrue(check_source.check(self.root))
         source = self.root / "verl"

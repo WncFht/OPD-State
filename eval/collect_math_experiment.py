@@ -52,7 +52,8 @@ def read_steps(log):
 def write_csv(path, rows):
     fields = list(dict.fromkeys(key for row in rows for key in row))
     with path.open("w", newline="") as stream:
-        writer = csv.DictWriter(stream, fieldnames=fields)
+        # Git normalizes tracked text to LF; hashes must survive a fresh checkout.
+        writer = csv.DictWriter(stream, fieldnames=fields, lineterminator="\n")
         writer.writeheader()
         writer.writerows(rows)
 

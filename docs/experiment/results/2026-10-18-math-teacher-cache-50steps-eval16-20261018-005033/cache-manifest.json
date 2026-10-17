@@ -1,0 +1,22 @@
+{
+  "schema": 1,
+  "source": "cached_teacher",
+  "records": 3200,
+  "response_tokens": 12493768,
+  "database_sha256": "c61a86ca7e9bac6f273495696d8718c6879dc440af5bfb1ba2c2907724e9953f",
+  "schedule_parquet_sha256": "a98110172a296c791ceb10c27de9f335b905ffb46f98ab119383ddcb9886c760",
+  "student_signature": "2fc42a962d3f6f5281e99686ab9a5ae32c8cb9529c8e3fd07709c5c056613f48",
+  "teacher_signature": "2736b59eeb53f416088992a3d7ecb3376274c74e685c358214360072395631f0",
+  "tokenizer_signature": "ac73ad8e421aab1d9fff928ea3b8c8bdf30c614ffa6aad6c821dae5013e68e7c",
+  "vocab_size": 151665,
+  "eos_token_id": 151643,
+  "pad_token_id": 151643,
+  "prompt_cap": 1024,
+  "response_cap": 4096,
+  "temperature": 1.0,
+  "top_p": 1.0,
+  "apply_chat_template_kwargs": {},
+  "seed": 42,
+  "seconds": 545.4189964458346,
+  "generator_commit": "350a286be0d586f04e4cd0b0e89624a336b17a81"
+}
