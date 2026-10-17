@@ -1,0 +1,15 @@
+{
+  "configuration": "data/prep/configs/math-rollout-schedule.json",
+  "records": 3200,
+  "filtered_rows": 17909,
+  "configuration_sha256": "cc9e5fb41d97c17f27b48b53bfe74e5708d23a0ba3adbbc15ac3b45f1ee8928a",
+  "generator_source_sha256": "51079f6d42163bf383c1ef538b7b9d57adc3c4bc3a0d70344438f21d400b5e5d",
+  "all_selected_indices_equal": true,
+  "source_hash_equal": true,
+  "tokenizer_identity_equal": true,
+  "prompt_records_equal": true,
+  "ordered_parquet_equal": true,
+  "ordered_parquet_sha256": "a98110172a296c791ceb10c27de9f335b905ffb46f98ab119383ddcb9886c760",
+  "prompts_sha256": "578b41e53de162b41ccada99164bc3e611740fbe0c70b7e321bf3ce2fbe8c854",
+  "requires_historical_wandb_config": false
+}

@@ -49,7 +49,7 @@ def prepare_schedule(args):
     frame = dataset.dataframe.select(selected)
     source_hash = digest_json(
         {
-            "files": {str(p): digest_file(p) for p in data.train_files},
+            "files": {str(Path(p).resolve()): digest_file(p) for p in data.train_files},
             "tokenizer": tokenizer_signature(tokenizer),
             "seed": data.seed,
         }
@@ -81,6 +81,8 @@ def prepare_schedule(args):
         "apply_chat_template_kwargs": dict(data.get("apply_chat_template_kwargs", {})),
         "prompt_cap": int(data.max_prompt_length),
         "source_indices": selected,
+        "configuration_sha256": digest_file(args.baseline_config),
+        "generator_source_sha256": digest_file(__file__),
     }
     # Each batch must reproduce the original baseline's observed prompt lengths.
     if args.baseline_log:

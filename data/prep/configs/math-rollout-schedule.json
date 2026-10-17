@@ -1,0 +1,27 @@
+{
+  "baseline_source_commit": "5de81e423bc1fb6edade6aba168c1fc72bc666ef",
+  "actor_rollout_ref": {
+    "model": {
+      "path": "../models/DeepSeek-R1-Distill-Qwen-1.5B"
+    }
+  },
+  "data": {
+    "train_files": ["../MD-OPD/data/math/DAPO/train.parquet"],
+    "prompt_key": "prompt",
+    "train_batch_size": 64,
+    "seed": 42,
+    "shuffle": true,
+    "max_prompt_length": 1024,
+    "max_response_length": 4096,
+    "truncation": "error",
+    "filter_overlong_prompts": true,
+    "filter_overlong_prompts_workers": 1,
+    "return_raw_chat": true,
+    "return_raw_input_ids": false,
+    "return_full_prompt": false,
+    "use_shm": false,
+    "trust_remote_code": false,
+    "apply_chat_template_kwargs": {},
+    "continuous_token": {"enable": false, "model_family": "auto"}
+  }
+}
