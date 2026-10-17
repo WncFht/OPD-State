@@ -401,6 +401,32 @@ class RayPPOTrainer(OPDTrainerMixin):
                 raise ValueError("Fusion generation and OPD supervision must use the same frozen teacher")
         self._create_dataloader(train_dataset, val_dataset, collate_fn, train_sampler)
 
+        self.plateau_monitor = None
+        minimum = config.trainer.get("plateau_min_steps", 0)
+        if minimum:
+            from verl.trainer.ppo.plateau import FixedCachePlateau
+
+            optim = config.actor_rollout_ref.actor.optim
+            if (
+                self.fixed_rollout_cache is None
+                or config.trainer.test_freq != 50
+                or config.trainer.save_freq != -1
+                or config.trainer.resume_mode != "disable"
+                or config.trainer.get("math_eval_samples") != 16
+                or not config.trainer.get("math_eval_require_full", False)
+                or optim.get("lr_scheduler_type", "constant") != "constant"
+                or optim.get("lr_warmup_steps_ratio", 0) != 0
+                or (optim.get("lr_warmup_steps", -1) or 0) > 0
+            ):
+                raise ValueError(
+                    "Plateau stopping requires fixed replay, full eval16 every 50, constant LR and no checkpoints"
+                )
+            if not config.trainer.get("plateau_report_path") or self.total_training_steps < minimum:
+                raise ValueError("Plateau stopping requires a report path and a budget >= its minimum")
+            if len(self.train_dataloader) * config.trainer.total_epochs < self.total_training_steps:
+                raise ValueError("Training epochs do not cover the declared plateau budget")
+            self.plateau_monitor = FixedCachePlateau(minimum_steps=minimum)
+
         self.checkpoint_manager = None
         self._init_dump_executor()
 
@@ -1924,6 +1950,30 @@ class RayPPOTrainer(OPDTrainerMixin):
                 )
 
                 # TODO: make a canonical logger that supports various backend
+                if self.plateau_monitor is not None:
+                    self.plateau_monitor.add_step(self.global_steps, metrics)
+                    if will_validate:
+                        from pathlib import Path
+
+                        report = self.plateau_monitor.observe(self.global_steps, metrics)
+                        observed = report["status"] == "observed_plateau"
+                        if observed:
+                            is_last_step = True
+                            last_val_metrics = val_metrics
+                            self.total_training_steps = self.global_steps
+                            progress_bar.total = self.global_steps
+                        report.update(
+                            requested_max_steps=self.config.trainer.total_training_steps,
+                            stopped=is_last_step,
+                            budget_exhausted=is_last_step and not observed,
+                        )
+                        path = Path(self.config.trainer.plateau_report_path)
+                        path.parent.mkdir(parents=True, exist_ok=True)
+                        temporary = path.with_suffix(path.suffix + ".new")
+                        temporary.write_text(json.dumps(report, indent=2) + "\n")
+                        temporary.replace(path)
+                        metrics["convergence/plateau_observed"] = float(observed)
+                        metrics["convergence/budget_exhausted"] = float(report["budget_exhausted"])
                 logger.log(data=metrics, step=self.global_steps)
 
                 progress_bar.update(1)

@@ -135,12 +135,20 @@ class Suite:
                 "50",
             ],
         )
+        self.state.setdefault("collected_results", {})[run.name] = str(output)
+        return output
 
-    def train(self, label, script, *, steps=50, extra=(), env=None):
+    def train(self, label, script, *, steps=50, extra=(), env=None, plateau=False):
         name = (
             f"math-{label}-{steps}steps-eval16-{datetime.now(TIMEZONE):%Y%m%d-%H%M%S}"
         )
         run = ROOT / "runs/rollout-sources" / name
+        if plateau:
+            extra = (
+                *extra,
+                "+trainer.plateau_min_steps=300",
+                "+trainer.plateau_report_path=" + str(run / "plateau.json"),
+            )
         self.command(
             label,
             ["bash", self.recipe(script), *extra],
@@ -152,9 +160,37 @@ class Suite:
                 **(env or {}),
             },
         )
+        self.state[label + "_maximum_steps"] = steps
+        if plateau:
+            report = json.loads((run / "plateau.json").read_text())
+            if not report["stopped"]:
+                raise RuntimeError(
+                    "Long run exited without a final plateau/budget report"
+                )
+            steps = report["training_steps"]
+            self.state[label + "_plateau_report"] = report
         self.collect(run, steps)
         self.state[label + "_run"] = str(run)
         return run
+
+    def analyze(self, comparison, label):
+        arguments = []
+        for name, run in comparison.items():
+            arguments.extend(
+                ["--result", name + "=" + self.state["collected_results"][run.name]]
+            )
+        self.command(
+            label,
+            [
+                PYTHON,
+                self.snapshot / "eval/analyze_math_sources.py",
+                *arguments,
+                "--reference",
+                "student-online",
+                "--output",
+                self.directory / label,
+            ],
+        )
 
     def run(self):
         pid = self.args.wait_pid
@@ -167,7 +203,8 @@ class Suite:
             not in Path(self.args.teacher_status_log).read_text().splitlines()
         ):
             raise RuntimeError("Teacher pipeline exited without its success marker")
-        self.collect(Path(self.args.teacher_run).resolve(), 50)
+        teacher = Path(self.args.teacher_run).resolve()
+        self.collect(teacher, 50)
         # Do not overlap the isolated performance measurement or cache generation
         # with the preceding Ray cluster's delayed GPU teardown.
         self.save("waiting_for_gpu_release")
@@ -302,23 +339,30 @@ class Suite:
             or cache_meta["records"] != 3200
         ):
             raise ValueError("Initial-student cache does not match the paired schedule")
-        self.train(
+        semi = self.train(
             "semi-opd", "math_cached.sh", extra=("cached_initial_student", str(cache))
         )
-        self.train("student-online", "math_online.sh")
+        online = self.train("student-online", "math_online.sh")
+        comparison = {"teacher": teacher, "semi-opd": semi, "student-online": online}
+        self.analyze(comparison, "analyze-three-sources")
         if fusion_ready:
-            self.train(
+            fusion = self.train(
                 "fusion-lambda05",
                 "math_fusion.sh",
                 env={"FUSION_BACKEND": "cuda_graph_flash", "FUSION_LAMBDA": "0.5"},
             )
+            comparison["fusion-lambda05"] = fusion
+            self.analyze(comparison, "analyze-fusion")
         if self.args.long_steps:
-            self.train(
+            long_run = self.train(
                 "semi-opd-long",
                 "math_cached.sh",
                 steps=self.args.long_steps,
                 extra=("cached_initial_student", str(cache)),
+                plateau=True,
             )
+            comparison["semi-opd-long"] = long_run
+            self.analyze(comparison, "analyze-long-run")
         self.save(
             "runs_finished" if fusion_ready else "sources_finished_fusion_needs_repair"
         )
@@ -331,7 +375,12 @@ def main():
     parser.add_argument("--wait-pid", type=int, required=True)
     parser.add_argument("--teacher-run", required=True)
     parser.add_argument("--teacher-status-log", required=True)
-    parser.add_argument("--long-steps", type=int, default=300)
+    parser.add_argument(
+        "--long-steps",
+        type=int,
+        default=800,
+        help="Maximum long-run budget; plateau stopping is enabled from step 300",
+    )
     args = parser.parse_args()
     if args.long_steps and (args.long_steps < 300 or args.long_steps % 50):
         raise ValueError(

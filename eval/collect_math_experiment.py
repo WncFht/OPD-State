@@ -29,6 +29,12 @@ def sha256(path):
     return digest.hexdigest()
 
 
+def question_identity(row):
+    content = {key: row[key] for key in ("data_source", "input", "gts")}
+    canonical = json.dumps(content, ensure_ascii=False, sort_keys=True, separators=(",", ":"))
+    return hashlib.sha256(canonical.encode()).hexdigest()
+
+
 def read_steps(log):
     text = re.sub(r"\x1b\[[0-9;]*[A-Za-z]", "", log.read_text())
     rows = {}
@@ -82,6 +88,16 @@ def collect(run, output, *, steps, interval, require_full=True):
             required_sources=MATH.MATH_BENCHMARK_COUNTS,
             required_counts=MATH.MATH_BENCHMARK_COUNTS if require_full else None,
         )
+        identities = {}
+        for row in raw:
+            key = str(row["data_source"]), str(row["validation_uid"])
+            identity = question_identity(row)
+            if identities.setdefault(key, identity) != identity:
+                raise ValueError(f"Replicas with the same validation UID have different questions: {key}")
+        for question in questions:
+            question["question_sha256"] = identities[question["data_source"], question["uid"]]
+        if len({row["question_sha256"] for row in questions}) != len(questions):
+            raise ValueError("Validation contains duplicate question content under different UIDs")
         for key, value in metrics.items():
             if key not in training[step] or abs(value - training[step][key]) > 1e-8:
                 raise ValueError(f"Recomputed metric disagrees with trainer: step={step} {key}")
@@ -90,6 +106,7 @@ def collect(run, output, *, steps, interval, require_full=True):
             "responses": len(raw),
             "questions": len(questions),
             "response_jsonl_sha256": sha256(path),
+            "questions_csv_sha256": sha256(output / f"questions-step{step}.csv"),
             "metrics": metrics,
         }
         timeseries.append({"step": step, **metrics})
@@ -109,6 +126,7 @@ def collect(run, output, *, steps, interval, require_full=True):
         "checkpoints_saved": False,
         "wandb_url": urls[-1] if urls else None,
         "training_log_sha256": sha256(logs[0]),
+        "collector_source_sha256": sha256(Path(__file__).resolve()),
         "validations": validations,
     }
     # One JSON per validation keeps long-run summaries bounded too.

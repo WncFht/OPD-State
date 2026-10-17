@@ -41,3 +41,7 @@ GPU 数值验证随后完成。原 SDPA 静态缓存与动态参考在 FP32 下�
 01:19 已启动实际调度进程 3846840，目录 `runs/rollout-sources/suite-20261018-0118`，固定源码 68bb191e0db4a0e976b54239c1328572409f8835。进程与状态均核对，当前为 `waiting_for_teacher`，等待 pipeline PID 3749135 和 `TEACHER_TRAIN_FINISHED` 成功标志。teacher 已完成三个验证 batch，最终指标尚未写出；没有将排队任务视为实验完成。顺序为独占 GPU 基准、Fusion 两步调试、初始 student 缓存、Semi-OPD 50、在线 student 50、通过调试的 Fusion 50、Semi-OPD 300。所有正式验证保持三基准、每题 16 次，长时组每 50 步验证。完整维护检查与 12 项 CPU 测试通过，归档 GPU 检查的两个源码 SHA-256 均与该提交一致。
 
 进一步检查实际 RPC 链路，vLLMHttpServer.collective_rpc 原方法只 await，没有 return，导致生成端虽然完成计算，ServerAdapter 只能收到 None。补上返回值，并以原方法 AST 编译执行回归测试，核对生成 payload 的对象身份及全部转发参数；同时核对安装的 vLLM AsyncLLM/core client 均返回 worker 的列表结果。六项生命周期/RPC 测试通过。原等待队列以 SIGINT 正常退出以更换固定提交；该动作只作用于 PID 3846840，没有停止 teacher 或其他 GPU 作业。新版本检查完成后重新启动等待队列。
+
+新增题目内容身份、逐题 CSV 与采集器源码哈希，以及成对题目 bootstrap 比较，避免随机 validation UID 无法跨运行配对。平台判据在长时结果产生前固定：至少 300 步、最后连续四个验证点，macro mean@16 极差至多 1 个百分点、窗口 RMS 相对极差至多 5%、平均梯度范数相对极差至多 10%。它只表示有限预算经验平台，不表示梯度为零、已与教师对齐或渐近收敛。固定缓存训练增加验证后正常停止机制，最大预算从 300 提高至 800；期间保持同一训练进程，不写模型权重。到 800 仍不满足时明确标记预算耗尽。
+
+七项结果分析/停止测试已通过，包括正负对照、按 token 数合并 RMS、最低观察预算、步数缺口、逐题指标篡改拒绝，以及从真实 trainer AST 编译执行的正常提前停止与预算耗尽分支。含 teacher 重复响应的两步 smoke 已重新采集，题目内容身份与 CSV 哈希校验通过。GPU 长时控制尚未实际触发，不能把这些 CPU 证据当成已经取得收敛结果。
