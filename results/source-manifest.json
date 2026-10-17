@@ -1,0 +1,169 @@
+{
+  "review_date": "2026-10-17",
+  "repositories": {
+    "Awesome-OPD-Paper": "addb637c71d9044fe02954da854c15320ad15802",
+    "MirrorOPD": "ad52997ec19a66f8a1a7cae66476219bcde1342d"
+  },
+  "files": [
+    {
+      "path": "Awesome-OPD-Paper/2608.16647/appendix/appendix.tex",
+      "sha256": "01d27b7a28db79cbd1af14afcef0a74c37bbcd4a27a4537e89e465d4da8876f0"
+    },
+    {
+      "path": "Awesome-OPD-Paper/2608.16647/main.tex",
+      "sha256": "46ec823f8e5dc631c5fd86492b9ae52d13c6839a70bbdd09ab9199355dcb6d66"
+    },
+    {
+      "path": "Awesome-OPD-Paper/2608.16647/resources/packages.tex",
+      "sha256": "6299bef781dbc674ec9911359ae40bc590906c3098d1fe4b2911307fe33433bb"
+    },
+    {
+      "path": "Awesome-OPD-Paper/2608.16647/sections/abstract.tex",
+      "sha256": "4aa8029e152f5062213c0b3e2901828a6b583c220a07c241c57bec1244b4bfbe"
+    },
+    {
+      "path": "Awesome-OPD-Paper/2608.16647/sections/discussion.tex",
+      "sha256": "fbb3780ccde56abdfb359080d2a61993b86d89d87fdf52deedabbb6ff0e69766"
+    },
+    {
+      "path": "Awesome-OPD-Paper/2608.16647/sections/findings23.tex",
+      "sha256": "7fbeee27486974c1c6feb4e2fdb3d2116bdd93287ffccbb5c3cfe15d3bbf2316"
+    },
+    {
+      "path": "Awesome-OPD-Paper/2608.16647/sections/findings_1.tex",
+      "sha256": "7d20b94bd1b62928791b1866a4dd0ebf3dc863d76975fb6d95df277fd49d88ab"
+    },
+    {
+      "path": "Awesome-OPD-Paper/2608.16647/sections/intro.tex",
+      "sha256": "f9bdc0e484643fb99eb20ec10a8d5aa194a29b875beacc4169f4bbbe6d13a783"
+    },
+    {
+      "path": "Awesome-OPD-Paper/2608.16647/sections/preliminary.tex",
+      "sha256": "7d2afc1f559d3553df602eac3cbb0a4dfbdfff96fe72d649771c2552739c6194"
+    },
+    {
+      "path": "Awesome-OPD-Paper/2609.04172/Sections/0_Abstract.tex",
+      "sha256": "905cf67e0b1762131bee2d09b80d3c9a7b0706e92f6f1358b887358e18f0b2e1"
+    },
+    {
+      "path": "Awesome-OPD-Paper/2609.04172/Sections/1_Introduction.tex",
+      "sha256": "bea6c1a6e0d9c3b9507f92958cb51aadfd7c3a8dc5c675a204d432109c48d131"
+    },
+    {
+      "path": "Awesome-OPD-Paper/2609.04172/Sections/2_Preliminaries.tex",
+      "sha256": "621c40161171debea68400ba6bf175a488a56e1c83b3819026879058e208d1c3"
+    },
+    {
+      "path": "Awesome-OPD-Paper/2609.04172/Sections/3_One-shot.tex",
+      "sha256": "4b38ba2707887d585abba9fae688a03938474da9bfcd7a5adb255da0bd53efae"
+    },
+    {
+      "path": "Awesome-OPD-Paper/2609.04172/Sections/4_Mechanism-Data.tex",
+      "sha256": "b0af75a94ae44c1475a3b44f28aa860325cfaef664add67e9d7d224af77b28aa"
+    },
+    {
+      "path": "Awesome-OPD-Paper/2609.04172/Sections/5_Mechanism-Algo.tex",
+      "sha256": "7555723a395421f8cc196f3f49d2961d8e14b67ffafc7e38d2e389c385755838"
+    },
+    {
+      "path": "Awesome-OPD-Paper/2609.04172/Sections/6_MOPD.tex",
+      "sha256": "3080c21ba67b38b96ffc5096e2f9ccffa9bd7d37aaae33f10af102924cbb967e"
+    },
+    {
+      "path": "Awesome-OPD-Paper/2609.04172/Sections/7_Discussion.tex",
+      "sha256": "22f20377d2e7f34d9b68fa2ef856dc2bfe02a7651220c0d5348c4fedfe971bc3"
+    },
+    {
+      "path": "Awesome-OPD-Paper/2609.04172/Sections/8_Related-work.tex",
+      "sha256": "041575f08921ca4fd9ef4e6ad461a402dfdebbfe1d9e355daa60c60340e5c39b"
+    },
+    {
+      "path": "Awesome-OPD-Paper/2609.04172/Sections/9_Conclusion.tex",
+      "sha256": "9ec8ad661ed45c0a548fe1331fadad42446a05e04099cbb4265867292f77eb0d"
+    },
+    {
+      "path": "Awesome-OPD-Paper/2609.04172/Sections/Appendix.tex",
+      "sha256": "42942e33e4087be3be65543c760a456ed2cc340cb7c0ccd381881f8b35ff331b"
+    },
+    {
+      "path": "Awesome-OPD-Paper/2609.04172/main.tex",
+      "sha256": "8af33557d16acd01305aabd70eac17c7a3b234c32b4088e240a23f712276a044"
+    },
+    {
+      "path": "Awesome-OPD-Paper/2610.11291/main_tech_report.tex",
+      "sha256": "0b6ef63b3619b2776ed7b287bd73f26ba63aeab87a08aa53ae08c009fadfcbcb"
+    },
+    {
+      "path": "Awesome-OPD-Paper/2610.11291/math_commands.tex",
+      "sha256": "222cf6490dc879148d61d602f9e551943b2fb999e7bd0c32f07e03ba6de8690e"
+    },
+    {
+      "path": "Awesome-OPD-Paper/2610.11291/sections/00_abstract.tex",
+      "sha256": "9ab0d7541ce64f5b225ec30bdacbf2ece09b9ac0841c3f4344adbd735784c6b3"
+    },
+    {
+      "path": "Awesome-OPD-Paper/2610.11291/sections/01_intro.tex",
+      "sha256": "22b9a11fa45c15d1496b4fc87375c1cc3da169b317e041a8a46dcfaed244d8f2"
+    },
+    {
+      "path": "Awesome-OPD-Paper/2610.11291/sections/02_method.tex",
+      "sha256": "37d9509818b9d11528100cfae92a793bcd927453d858ece64a777460783a48d1"
+    },
+    {
+      "path": "Awesome-OPD-Paper/2610.11291/sections/03_experiments.tex",
+      "sha256": "12413e11c9bb6165693653670293240907341901cc6720f65838eaae637c5359"
+    },
+    {
+      "path": "Awesome-OPD-Paper/2610.11291/sections/04_when.tex",
+      "sha256": "5965ef7fbc49ad655ae105ed671ae62517e602d6a0e12db03f008531bd6c1821"
+    },
+    {
+      "path": "Awesome-OPD-Paper/2610.11291/sections/05_why.tex",
+      "sha256": "bd268c2c1d211c2ec1a9ffe077893e16b28cc5039c74d578b0cc7b2f9ea9168b"
+    },
+    {
+      "path": "Awesome-OPD-Paper/2610.11291/sections/06_more.tex",
+      "sha256": "0ad06e1c249a86f9792296148d20428e767c93560452f0c0a57fad02068d9f74"
+    },
+    {
+      "path": "Awesome-OPD-Paper/2610.11291/sections/07_related.tex",
+      "sha256": "8b6c629a6a6c44f3b7eba39812302e8b71a249685baeb6102495cd0f59dd4a46"
+    },
+    {
+      "path": "Awesome-OPD-Paper/2610.11291/sections/08_conclusion.tex",
+      "sha256": "7aa110fc5c5f7e87114aaf453b94a22702a12434eafd54598f1da8b5db8a01d1"
+    },
+    {
+      "path": "Awesome-OPD-Paper/2610.11291/sections/09_appendix.tex",
+      "sha256": "1a5370a75c301c654b6d965e8957155d584b4b2d9d077189ae86ec964f7b3110"
+    },
+    {
+      "path": "Awesome-OPD-Paper/2610.11291/sections/rollout_qualitative_comparison.tex",
+      "sha256": "9a0ed207fdcf87a39d6bc1b477a02faf39b4c60807cc58fb13ea7bb09da2169c"
+    },
+    {
+      "path": "MirrorOPD/src/mirroropd/core/objectives.py",
+      "sha256": "e6323f08eec8b0c42364aafd4f3d5066eeece9a8f9abe7ef63bcecaa3eeba762"
+    },
+    {
+      "path": "MirrorOPD/src/mirroropd/core/signal.py",
+      "sha256": "e70d3d82a20e43a71db1e9751ba4ffd0affe0097f5e8a64a06637c0b74342563"
+    },
+    {
+      "path": "MirrorOPD/src/mirroropd/core/config.py",
+      "sha256": "61c0b49d6acb7e5eeda85d000a9fdafcfc19c6824dc1bb86cb7dcdbed3854e55"
+    },
+    {
+      "path": "MirrorOPD/src/mirroropd/core/cache.py",
+      "sha256": "53b8d32eb56431f92e7a9082e9aad701c2f504f1825d6a75ae33c738b4531af3"
+    },
+    {
+      "path": "MirrorOPD/src/mirroropd/profiles/recipes/math-four-gpu.json",
+      "sha256": "4042c444fd9cabae8dfb18be019650f7d1162afff609d242e2dd3a6b17f301e6"
+    },
+    {
+      "path": "MirrorOPD/src/mirroropd/profiles/models/deepseek-justrl.json",
+      "sha256": "fbfc3581f2bc7459db4098a0106d9c2712faf734e5ed10880e07f4c0e94a7fa9"
+    }
+  ]
+}
