@@ -21,3 +21,15 @@ Fusion 定义为同一 prefix 上 (1-lambda)*student_logits+lambda*teacher_logit
 已生成 3,200 条配对 schedule，50 个 batch 的 prompt 均值/最小/最大长度全部与旧 baseline 日志相符。单卡 teacher 生成 8 条短轨迹完成；四卡缓存训练完成两步，cache_hit=1，读取计数 8→16，当前学生梯度有限；三基准短验证共 96 个响应、每基准两题、每题 16 次采样，完整运行退出码为 0。
 
 指标汇总微基准为 20 个合成题、每题 16 次采样，参考耗时 1.796 秒、向量化 0.135 秒，所有指标差值为零，约 13.3 倍。另有多数投票平局与 NumPy 状态对照，原生 Torch 的 EOS=padding、位置与旧概率字段检查通过。缓存模型同步优化从每步同步改为仅评测前同步，保持每步 actor 概率与教师打分。
+
+## Fusion 实现方向
+
+采用同 GPU 上的两份 Hugging Face 推理模型，分别维护独立 KV cache，共用已采样 token；student 推理副本随 actor 的原生权重流更新，teacher 永不更新。通过 vLLM worker extension 的独立批量 RPC 生成训练轨迹，验证仍走原生 student vLLM 路径，避免把融合分布用于评测。当前模型显存允许复制两份推理模型。
+
+先实现 DynamicCache eager 参考，随后比较 StaticCache 和 CUDA Graph 热路径。固定 cache、输入缓冲、4D attention mask 与 RoPE position 让 decode 图可复用；prefill 不捕获。图模式的适用模型和 mask 条件明确限制，失败不静默改策略。数学端点、同一 prefix、padding/EOS、缓存复位、当前学生版本、teacher 不变及权重同步都要验证。只有 GPU 基准证明正确与可用后才运行 lambda=0.5 的 50 步。
+
+正式 teacher pipeline 已提交至本地独立进程，先复验仅验证前同步，再生成 3,200 条 teacher 轨迹并训练/评测 50 步。生产源码固定在 350a286be0d586f04e4cd0b0e89624a336b17a81 的私有快照，后续 fusion 开发不改变其导入代码。
+
+teacher 完整缓存已生成，50 步更新已到达最终验证。同步优化后的两步 smoke 验证仅同步一次，step 1 不同步、step 2 验证前同步，96 条短验证记录满足三基准各两题、每题 16 次采样。真实结果采集器已在该 smoke 上独立重算并逐字段匹配训练日志。
+
+7b9b99f 提交共享 prefix 的 fusion 候选实现、三个解码后端、版本化参数流、训练桥接、基准脚本与配方。12 项原生 CPU 测试通过，Hydra 配置 dry-run 通过，完整维护检查无阻断项；GPU 基准和两步训练尚未验证。缓存生成 wrapper 和结果采集器作为可复现入口保存，避免仅保留临时运行命令。

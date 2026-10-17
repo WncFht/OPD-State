@@ -12,7 +12,7 @@ esac
 CACHE_DIRECTORY=$(realpath "$CACHE_DIRECTORY")
 export STEPS=${STEPS:-50}
 export TRAIN_FILES="[${ROOT}/runs/rollout-sources/paired-schedule/ordered.parquet]"
-export TOTAL_EPOCHS=$(( (STEPS + 49) / 50 ))
+export TOTAL_EPOCHS=${TOTAL_EPOCHS:-$(( (STEPS + 49) / 50 ))}
 export EXPERIMENT_NAME=${EXPERIMENT_NAME:-math-${SOURCE}-${STEPS}steps-eval16-$(TZ=Asia/Shanghai date +%Y%m%d-%H%M%S)}
 export OPD_ROOT=${OPD_ROOT:-${ROOT}/runs/rollout-sources/${EXPERIMENT_NAME}}
 export WANDB_JOB_TYPE=$SOURCE WANDB_RUN_GROUP=math-rollout-sources-eval16

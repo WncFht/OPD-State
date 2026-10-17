@@ -250,6 +250,7 @@ def generate_cache(args):
         "apply_chat_template_kwargs": schedule_meta["apply_chat_template_kwargs"],
         "seed": args.seed,
         "seconds": time.monotonic() - started,
+        "generator_commit": args.generator_commit,
     }
     (root / "manifest.json").write_text(json.dumps(manifest, indent=2) + "\n")
     print(json.dumps(manifest), flush=True)
@@ -275,6 +276,7 @@ def main():
     cache.add_argument("--seed", type=int, default=42)
     cache.add_argument("--gpus", type=int, default=4, choices=range(1, 5))
     cache.add_argument("--limit", type=int)
+    cache.add_argument("--generator-commit", help="Commit of the frozen preparation source")
     args = parser.parse_args()
     if args.command == "schedule":
         prepare_schedule(args)
