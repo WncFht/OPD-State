@@ -52,6 +52,19 @@ export EXPERIMENT_NAME=${EXPERIMENT_NAME:-math-on-policy-50steps-$(date +%Y%m%d-
 export OPD_ROOT=${OPD_ROOT:-${ROOT}/runs/math-baseline/${EXPERIMENT_NAME}}
 export RAY_TMPDIR=${RAY_TMPDIR:-/tmp/opd-state-ray-${UID}}
 mkdir -p "$OPD_ROOT" "$WANDB_DIR" "$RAY_TMPDIR"
+if [[ ${OPD_FREEZE_SOURCE:-0} == 1 ]]; then
+    SNAPSHOT="$OPD_ROOT/source"
+    if [[ -e "$SNAPSHOT/COMMIT" ]]; then
+        [[ $(cat "$SNAPSHOT/COMMIT") == "$SOURCE_COMMIT" ]] || {
+            echo "Run source snapshot belongs to another commit" >&2; exit 2;
+        }
+    else
+        mkdir -p "$SNAPSHOT"
+        git archive "$SOURCE_COMMIT" verl | tar -x -C "$SNAPSHOT"
+        printf '%s\n' "$SOURCE_COMMIT" > "$SNAPSHOT/COMMIT"
+    fi
+    export VERL_ROOT="$SNAPSHOT/verl"
+fi
 exec bash -o pipefail recipe/opd.sh \
     trainer.total_training_steps="$STEPS" \
     +trainer.source_commit="$SOURCE_COMMIT" \
