@@ -716,6 +716,45 @@ class ActorRolloutRefWorker(Worker, DistProfilerExtension):
         assert "actor" in self.role, "save_checkpoint only support actor role"
         self.actor.save_checkpoint(local_path, hdfs_path, global_step, max_ckpt_to_keep)
 
+    @register(dispatch_mode=Dispatch.DP_COMPUTE_PROTO)
+    async def generate_logit_fusion(self, prompts):
+        from verl.trainer.ppo.fixed_rollout import pack_token_records
+
+        prompt_ids = [list(map(int, row)) for row in prompts.non_tensor_batch["fusion_prompt_ids"]]
+        step = int(prompts.meta_info["global_steps"])
+        result = await self.rollout.generate_logit_fusion(
+            prompt_ids,
+            expected_version=step - 1,
+            seed=int(self.config.rollout.seed) + step * self.world_size + self.rank,
+        )
+        if len(result["responses"]) != len(prompt_ids):
+            raise RuntimeError("Fusion RPC returned a different batch size")
+        records = list(zip(prompt_ids, result["responses"], result["finish_reasons"], strict=True))
+        pad = self.config.model.get("pad_token_id", None)
+        if pad is None:
+            # HFModelConfig already owns the tokenizer used by native rollouts.
+            from verl.utils.tokenizer import hf_tokenizer
+
+            if not hasattr(self, "_fusion_tokenizer"):
+                self._fusion_tokenizer = hf_tokenizer(self.config.model.path)
+            pad = self._fusion_tokenizer.pad_token_id
+        output = pack_token_records(
+            records,
+            prompt_cap=self.config.rollout.prompt_length,
+            response_cap=self.config.rollout.response_length,
+            pad_token_id=pad,
+            source="logit_fusion",
+        )
+        count = sum(len(row) for row in result["responses"])
+        output.meta_info["metrics"] = {
+            "fusion/decode_seconds": result["seconds"],
+            "fusion/token_count": count,
+            "fusion/logp_sum": sum(sum(row) for row in result["behavior_log_probs"]),
+            "fusion/teacher_weight": result["lambda"],
+            "fusion/student_version": result["student_version"],
+        }
+        return output
+
     @register(dispatch_mode=Dispatch.ONE_TO_ALL, blocking=False)
     async def update_weights(self, global_steps: int = None, mode: str = "auto"):
         """Update weights from trainer to rollout.

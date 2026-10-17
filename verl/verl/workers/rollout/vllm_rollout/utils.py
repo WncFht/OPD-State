@@ -229,7 +229,26 @@ class vLLMColocateWorkerExtension:
             # patch weight loader to support MoE model
             patch_vllm_moe_model_weight_loader(model)
 
-    def update_weights_from_ipc(self, peft_config: dict = None, base_sync_done=False, use_shm: bool = False):
+    def generate_logit_fusion(self, prompt_ids, *, expected_version, seed, max_new_tokens, temperature):
+        decoder = getattr(self, "_logit_fusion_decoder", None)
+        if decoder is None:
+            raise RuntimeError("Logit-fusion replica has not received initial actor weights")
+        return decoder.generate(
+            prompt_ids,
+            max_new_tokens=max_new_tokens,
+            temperature=temperature,
+            seed=seed,
+            expected_version=expected_version,
+        )
+
+    def update_weights_from_ipc(
+        self,
+        peft_config: dict = None,
+        base_sync_done=False,
+        use_shm: bool = False,
+        fusion_config: dict = None,
+        global_steps: int = None,
+    ):
         """Update the weights of the rollout model."""
         from verl.workers.rollout.vllm_rollout.bucketed_weight_transfer import BucketedWeightReceiver
 
@@ -237,6 +256,23 @@ class vLLMColocateWorkerExtension:
             # vLLM workers may leave self.device unset on non-CUDA platforms (e.g. NPU);
             # fall back to the worker's local rank on the current accelerator.
             self.device = torch.device(f"{get_device_name()}:{self.local_rank}")
+
+        if fusion_config is not None:
+            if peft_config is not None or is_fp8_model(self.model_runner.vllm_config):
+                raise ValueError("Fusion currently requires dense, full-precision actor weight streams")
+            if getattr(self, "_logit_fusion_decoder", None) is None:
+                from verl.workers.rollout.fusion.decoder import LogitFusionDecoder
+
+                self._logit_fusion_decoder = LogitFusionDecoder.from_paths(
+                    fusion_config["student_model_path"],
+                    fusion_config["teacher_model_path"],
+                    device=self.device,
+                    weight=fusion_config["teacher_weight"],
+                    backend=fusion_config["backend"],
+                    prompt_cap=fusion_config["prompt_cap"],
+                    response_cap=fusion_config["response_cap"],
+                    completion_check_interval=fusion_config["completion_check_interval"],
+                )
 
         # =========================== step 1: prepare for weight loading ===========================
         quant_reload_states = None
@@ -289,6 +325,8 @@ class vLLMColocateWorkerExtension:
         lora_weights: dict[str, torch.Tensor] | None = {} if (peft_config and base_sync_done) else None
 
         def on_bucket_received(weights: list[tuple[str, torch.Tensor]], is_last: bool) -> None:
+            if fusion_config is not None:
+                self._logit_fusion_decoder.load_student_weights(weights, version=global_steps, final=is_last)
             if lora_weights is not None:
                 # Clone: add_lora keeps these past the callback (reused IPC buffer, #6454).
                 lora_weights.update((name, tensor.clone()) for name, tensor in weights)

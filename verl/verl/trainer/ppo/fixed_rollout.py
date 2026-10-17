@@ -112,47 +112,58 @@ class FixedRolloutCache:
 
     def build_batch(self, prompts):
         """Pack tokens while retaining fresh UIDs and the current batch's metadata."""
-        import numpy as np
-        import torch
-
-        from verl import DataProto
-
         ids = prompts.non_tensor_batch.get("opd_prompt_id")
         if ids is None:
             raise ValueError("Fixed rollout requires stable opd_prompt_id from the paired schedule")
         raw = prompts.non_tensor_batch["raw_prompt"]
         records = [self.lookup(key, value) for key, value in zip(ids, raw, strict=True)]
-        bsz = len(records)
-        pcap, rcap = self.manifest["prompt_cap"], self.manifest["response_cap"]
-        pad = self.manifest["pad_token_id"]
-        p = torch.full((bsz, pcap), pad, dtype=torch.long)
-        r = torch.full((bsz, rcap), pad, dtype=torch.long)
-        p_mask, r_mask = torch.zeros_like(p), torch.zeros_like(r)
-        for i, (pi, ri, _) in enumerate(records):
-            p[i, -len(pi) :] = torch.tensor(pi)
-            r[i, : len(ri)] = torch.tensor(ri)
-            p_mask[i, -len(pi) :] = 1
-            r_mask[i, : len(ri)] = 1
-        attention_mask = torch.cat([p_mask, r_mask], dim=-1)
-        positions = (attention_mask.cumsum(-1) - 1).clamp_min(0)
-        positions.masked_fill_(attention_mask == 0, 0)
-        multi_modal = np.empty(bsz, dtype=object)
-        for i in range(bsz):
-            multi_modal[i] = {}
-        output = DataProto.from_dict(
-            tensors={
-                "prompts": p,
-                "responses": r,
-                "input_ids": torch.cat([p, r], dim=-1),
-                "attention_mask": attention_mask,
-                "position_ids": positions,
-                "response_mask": r_mask,
-                "rm_scores": torch.zeros((bsz, rcap)),
-            },
-            non_tensors={"multi_modal_inputs": multi_modal, "num_turns": np.full(bsz, 2, dtype=np.int32)},
-            meta_info={"timing": {}, "fixed_source": self.manifest["source"]},
+        return pack_token_records(
+            records,
+            prompt_cap=self.manifest["prompt_cap"],
+            response_cap=self.manifest["response_cap"],
+            pad_token_id=self.manifest["pad_token_id"],
+            source=self.manifest["source"],
         )
-        return output
+
+
+def pack_token_records(records, *, prompt_cap, response_cap, pad_token_id, source):
+    """Shared text-only packing for strict caches and current-policy fusion."""
+    import numpy as np
+    import torch
+
+    from verl import DataProto
+
+    bsz = len(records)
+    pcap, rcap = prompt_cap, response_cap
+    if not bsz or any(not p or not r or len(p) > pcap or len(r) > rcap for p, r, _ in records):
+        raise ValueError("Trajectory lengths do not fit the packing protocol")
+    p = torch.full((bsz, pcap), pad_token_id, dtype=torch.long)
+    r = torch.full((bsz, rcap), pad_token_id, dtype=torch.long)
+    p_mask, r_mask = torch.zeros_like(p), torch.zeros_like(r)
+    for i, (pi, ri, _) in enumerate(records):
+        p[i, -len(pi) :] = torch.tensor(pi)
+        r[i, : len(ri)] = torch.tensor(ri)
+        p_mask[i, -len(pi) :] = 1
+        r_mask[i, : len(ri)] = 1
+    attention_mask = torch.cat([p_mask, r_mask], dim=-1)
+    positions = (attention_mask.cumsum(-1) - 1).clamp_min(0)
+    positions.masked_fill_(attention_mask == 0, 0)
+    multi_modal = np.empty(bsz, dtype=object)
+    for i in range(bsz):
+        multi_modal[i] = {}
+    return DataProto.from_dict(
+        tensors={
+            "prompts": p,
+            "responses": r,
+            "input_ids": torch.cat([p, r], dim=-1),
+            "attention_mask": attention_mask,
+            "position_ids": positions,
+            "response_mask": r_mask,
+            "rm_scores": torch.zeros((bsz, rcap)),
+        },
+        non_tensors={"multi_modal_inputs": multi_modal, "num_turns": np.full(bsz, 2, dtype=np.int32)},
+        meta_info={"timing": {}, "rollout_source": source},
+    )
 
 
 def open_training_cache(config, tokenizer):

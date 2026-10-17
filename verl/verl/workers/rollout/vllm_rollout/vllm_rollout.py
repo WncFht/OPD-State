@@ -219,10 +219,24 @@ class ServerAdapter(BaseRollout):
         )
         start_time = time.time()
 
+        fusion = self.config.logit_fusion
+        fusion_config = None
+        if fusion.get("enabled", False):
+            if self.config.tensor_model_parallel_size != 1 or self.config.pipeline_model_parallel_size != 1:
+                raise ValueError("Fusion currently requires one colocated inference worker per actor rank")
+            fusion_config = {
+                "student_model_path": self.model_config.path,
+                "teacher_model_path": fusion["teacher_model_path"],
+                "teacher_weight": fusion["teacher_weight"],
+                "backend": fusion["backend"],
+                "prompt_cap": self.config.prompt_length,
+                "response_cap": self.config.response_length,
+                "completion_check_interval": fusion["completion_check_interval"],
+            }
         future = await self._execute_method(
             "update_weights_from_ipc",
             non_block=True,
-            kwargs={**kwargs, "use_shm": self.use_shm},
+            kwargs={**kwargs, "use_shm": self.use_shm, "fusion_config": fusion_config, "global_steps": global_steps},
         )
 
         bucket_size_mb = self.config.checkpoint_engine.update_weights_bucket_megabytes
@@ -244,6 +258,29 @@ class ServerAdapter(BaseRollout):
 
         if self.replica_rank == 0 and self.rollout_rank == 0:
             logger.info(f"update_weights done, time cost: {time.time() - start_time:.2f}s")
+
+    async def generate_logit_fusion(self, prompt_ids, *, expected_version, seed):
+        if not self.config.logit_fusion.get("enabled", False):
+            raise RuntimeError("Fusion is not enabled for this inference replica")
+        responses = await self._execute_method(
+            "generate_logit_fusion",
+            kwargs={
+                "prompt_ids": prompt_ids,
+                "expected_version": expected_version,
+                "seed": seed,
+                "max_new_tokens": self.config.response_length,
+                "temperature": self.config.temperature,
+            },
+        )
+        if not isinstance(responses, list) or len(responses) != 1:
+            raise RuntimeError("Fusion RPC requires exactly one inference worker")
+        result = responses[0]
+        if (
+            result["student_version"] != expected_version
+            or result["lambda"] != self.config.logit_fusion["teacher_weight"]
+        ):
+            raise RuntimeError("Fusion worker reported the wrong weight version or coefficient")
+        return result
 
     def _get_server_name_prefix(self) -> str:
         """Return the Ray actor name prefix matching the rollout type (e.g. 'vllm_')."""

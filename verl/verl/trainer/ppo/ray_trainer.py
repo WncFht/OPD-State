@@ -377,6 +377,28 @@ class RayPPOTrainer(OPDTrainerMixin):
         from verl.trainer.ppo.fixed_rollout import open_training_cache
 
         self.fixed_rollout_cache = open_training_cache(config, tokenizer)
+        fusion = config.actor_rollout_ref.rollout.get("logit_fusion", {})
+        self.use_fusion_rollout = bool(fusion.get("enabled", False))
+        if self.use_fusion_rollout:
+            from pathlib import Path
+
+            if self.fixed_rollout_cache is not None or not self.use_opd_teacher or self.processor is not None:
+                raise ValueError("Fusion requires text-only live OPD without fixed trajectory replay")
+            rollout = config.actor_rollout_ref.rollout
+            if (
+                rollout.n != 1
+                or not rollout.do_sample
+                or rollout.top_p != 1
+                or rollout.top_k != -1
+                or rollout.agent.default_agent_loop != "single_turn_agent"
+                or config.algorithm.adv_estimator != "token_reward_direct"
+            ):
+                raise ValueError("Fusion requires single-turn n=1 sampled-token OPD without top-p/top-k truncation")
+            if (
+                Path(fusion["teacher_model_path"]).resolve()
+                != Path(config.distillation.fsdp_teacher.model_path).resolve()
+            ):
+                raise ValueError("Fusion generation and OPD supervision must use the same frozen teacher")
         self._create_dataloader(train_dataset, val_dataset, collate_fn, train_sampler)
 
         self.checkpoint_manager = None
@@ -1585,7 +1607,24 @@ class RayPPOTrainer(OPDTrainerMixin):
                     with marked_timer("gen", timing_raw, color="red"):
                         if curr_step_profile:
                             self.llm_server_manager.start_profile()
-                        if self.fixed_rollout_cache is None:
+                        if self.use_fusion_rollout:
+                            prompt_ids = np.empty(len(combined_gen_batch), dtype=object)
+                            for i, raw_prompt in enumerate(combined_gen_batch.non_tensor_batch["raw_prompt"]):
+                                prompt_ids[i] = self.tokenizer.apply_chat_template(
+                                    raw_prompt.tolist() if hasattr(raw_prompt, "tolist") else raw_prompt,
+                                    tokenize=True,
+                                    add_generation_prompt=True,
+                                    **dict(self.config.data.get("apply_chat_template_kwargs", {})),
+                                )
+                            combined_gen_batch.non_tensor_batch["fusion_prompt_ids"] = prompt_ids
+                            combined_gen_output = self.actor_rollout_wg.generate_logit_fusion(combined_gen_batch)
+                            fm = reduce_metrics(combined_gen_output.meta_info.pop("metrics"))
+                            metrics["fusion/behavior_logp_mean"] = fm.pop("fusion/logp_sum") / max(
+                                fm["fusion/token_count"], 1
+                            )
+                            metrics.update(fm)
+                            self.checkpoint_manager.sleep_replicas()
+                        elif self.fixed_rollout_cache is None:
                             combined_gen_output = self.async_rollout_manager.generate_sequences(combined_gen_batch)
                             self.checkpoint_manager.sleep_replicas()
                         else:

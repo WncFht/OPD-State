@@ -24,6 +24,7 @@ from verl.workers.config.model import MtpConfig
 
 __all__ = [
     "SamplingConfig",
+    "LogitFusionConfig",
     "MultiTurnConfig",
     "CustomAsyncServerConfig",
     "AgentLoopConfig",
@@ -152,6 +153,27 @@ class CheckpointEngineConfig(BaseConfig):
 
 
 @dataclass
+class LogitFusionConfig(BaseConfig):
+    enabled: bool = False
+    teacher_model_path: str = ""
+    teacher_weight: float = 0.5
+    backend: str = "dynamic"
+    completion_check_interval: int = 16
+
+    def __post_init__(self):
+        import math
+
+        if not math.isfinite(self.teacher_weight) or not 0 <= self.teacher_weight <= 1:
+            raise ValueError("Fusion teacher weight must be finite and in [0,1]")
+        if self.backend not in {"dynamic", "static", "cuda_graph"}:
+            raise ValueError("Invalid logit-fusion backend")
+        if self.enabled and not self.teacher_model_path:
+            raise ValueError("Enabled fusion requires the frozen teacher path")
+        if self.completion_check_interval < 1:
+            raise ValueError("Fusion completion interval must be positive")
+
+
+@dataclass
 class RolloutConfig(BaseConfig):
     _mutable_fields = {
         "max_model_len",
@@ -229,6 +251,7 @@ class RolloutConfig(BaseConfig):
     calculate_log_probs: bool = False
 
     agent: AgentLoopConfig = field(default_factory=AgentLoopConfig)
+    logit_fusion: LogitFusionConfig = field(default_factory=LogitFusionConfig)
 
     trace: TraceConfig = field(default_factory=TraceConfig)
 
