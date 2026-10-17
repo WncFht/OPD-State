@@ -374,6 +374,9 @@ class RayPPOTrainer(OPDTrainerMixin):
 
         self.use_prefix_grouper = self.config.actor_rollout_ref.actor.get("use_prefix_grouper", False)
 
+        from verl.trainer.ppo.fixed_rollout import open_training_cache
+
+        self.fixed_rollout_cache = open_training_cache(config, tokenizer)
         self._create_dataloader(train_dataset, val_dataset, collate_fn, train_sampler)
 
         self.checkpoint_manager = None
@@ -599,7 +602,9 @@ class RayPPOTrainer(OPDTrainerMixin):
         # Keep `ability` on the leftover batch: generate_sequences may drop
         # extra non-tensor columns, and MOPD routing reads this field after
         # the gen-output union.
-        reward_keys = set({"data_source", "reward_model", "extra_info", "uid", "ability"}) & batch.non_tensor_batch.keys()
+        reward_keys = (
+            set({"data_source", "reward_model", "extra_info", "uid", "ability"}) & batch.non_tensor_batch.keys()
+        )
 
         # pop those keys for generation
         batch_keys_to_pop = []
@@ -735,7 +740,11 @@ class RayPPOTrainer(OPDTrainerMixin):
                 outputs=sample_outputs,
                 gts=sample_gts,
                 scores=sample_scores,
-                reward_extra_infos_dict=reward_extra_infos_dict,
+                reward_extra_infos_dict={
+                    **reward_extra_infos_dict,
+                    "validation_uid": sample_uids,
+                    "data_source": np.concatenate(data_source_lst).tolist(),
+                },
                 dump_path=val_data_dir,
             )
 
@@ -754,8 +763,25 @@ class RayPPOTrainer(OPDTrainerMixin):
         return self._val_metrics_update(data_sources, sample_uids, reward_extra_infos_dict, sample_turns)
 
     def _val_metrics_update(self, data_sources, sample_uids, reward_extra_infos_dict, sample_turns):
-        data_src2var2metric2val = process_validation_metrics(data_sources, sample_uids, reward_extra_infos_dict)
         metric_dict = {}
+        expected_samples = self.config.trainer.get("math_eval_samples")
+        if expected_samples is not None:
+            from verl.trainer.ppo.math_eval import MATH_BENCHMARK_COUNTS, exact_math_metrics
+
+            if "acc" not in reward_extra_infos_dict:
+                raise ValueError("Math evaluation requires per-sample acc from the verifier")
+            exact, _ = exact_math_metrics(
+                data_sources,
+                sample_uids,
+                reward_extra_infos_dict["acc"],
+                samples_per_question=int(expected_samples),
+                required_sources=MATH_BENCHMARK_COUNTS,
+                required_counts=MATH_BENCHMARK_COUNTS
+                if self.config.trainer.get("math_eval_require_full", True)
+                else None,
+            )
+            metric_dict.update(exact)
+        data_src2var2metric2val = process_validation_metrics(data_sources, sample_uids, reward_extra_infos_dict)
         for data_source, var2metric2val in data_src2var2metric2val.items():
             core_var = "acc" if "acc" in var2metric2val else "reward"
             for var_name, metric2val in var2metric2val.items():
@@ -1464,7 +1490,8 @@ class RayPPOTrainer(OPDTrainerMixin):
 
         # load checkpoint and update weights before doing anything
         self._load_checkpoint()
-        self.checkpoint_manager.update_weights(self.global_steps)
+        if self.fixed_rollout_cache is None or self.config.trainer.get("val_before_train", True):
+            self.checkpoint_manager.update_weights(self.global_steps)
 
         current_epoch = self.global_steps // len(self.train_dataloader)
 
@@ -1481,6 +1508,8 @@ class RayPPOTrainer(OPDTrainerMixin):
             assert val_metrics, f"{val_metrics=}"
             pprint(f"Initial validation metrics: {val_metrics}")
             logger.log(data=val_metrics, step=self.global_steps)
+            if self.fixed_rollout_cache is not None:
+                self.checkpoint_manager.sleep_replicas()
             if self.config.trainer.get("val_only", False):
                 self._shutdown_dump_executor()
                 return
@@ -1546,13 +1575,23 @@ class RayPPOTrainer(OPDTrainerMixin):
                     num_sampled_prompts = len(gen_batch_output)
 
                 is_last_step = self.global_steps >= self.total_training_steps
+                will_validate = (
+                    self.validation_enabled
+                    and self.config.trainer.test_freq > 0
+                    and (is_last_step or self.global_steps % self.config.trainer.test_freq == 0)
+                )
                 with marked_timer("step", timing_raw):
                     # generate a batch
                     with marked_timer("gen", timing_raw, color="red"):
                         if curr_step_profile:
                             self.llm_server_manager.start_profile()
-                        combined_gen_output = self.async_rollout_manager.generate_sequences(combined_gen_batch)
-                        self.checkpoint_manager.sleep_replicas()
+                        if self.fixed_rollout_cache is None:
+                            combined_gen_output = self.async_rollout_manager.generate_sequences(combined_gen_batch)
+                            self.checkpoint_manager.sleep_replicas()
+                        else:
+                            combined_gen_output = self.fixed_rollout_cache.build_batch(combined_gen_batch)
+                            metrics["source/cache_hit_fraction"] = 1.0
+                            metrics["source/cache_read_count"] = self.fixed_rollout_cache.read_count
                         if curr_step_profile:
                             self.llm_server_manager.stop_profile()
 
@@ -1766,8 +1805,12 @@ class RayPPOTrainer(OPDTrainerMixin):
                                 self._save_checkpoint()
 
                         # update weights from trainer to rollout
-                        with marked_timer("update_weights", timing_raw, color="red"):
-                            self.checkpoint_manager.update_weights(self.global_steps)
+                        if self.fixed_rollout_cache is None or will_validate:
+                            with marked_timer("update_weights", timing_raw, color="red"):
+                                self.checkpoint_manager.update_weights(self.global_steps)
+                            metrics["source/rollout_sync"] = 1.0
+                        else:
+                            metrics["source/rollout_sync"] = 0.0
 
                         actor_output_metrics = reduce_metrics(actor_output.meta_info["metrics"])
                         metrics.update(actor_output_metrics)
@@ -1778,16 +1821,14 @@ class RayPPOTrainer(OPDTrainerMixin):
                         self._log_rollout_data(batch, reward_extra_infos_dict, timing_raw, rollout_data_dir)
 
                 # validate
-                if (
-                    self.validation_enabled
-                    and self.config.trainer.test_freq > 0
-                    and (is_last_step or self.global_steps % self.config.trainer.test_freq == 0)
-                ):
+                if will_validate:
                     with marked_timer("testing", timing_raw, color="green"):
                         val_metrics: dict = self._validate()
                         if is_last_step:
                             last_val_metrics = val_metrics
                     metrics.update(val_metrics)
+                    if self.fixed_rollout_cache is not None:
+                        self.checkpoint_manager.sleep_replicas()
 
                 with marked_timer("stop_profile", timing_raw):
                     next_step_profile = (

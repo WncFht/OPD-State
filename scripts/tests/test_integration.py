@@ -304,7 +304,9 @@ class IntegrationTests(unittest.TestCase):
             "trainer.save_freq=-1",
             "trainer.val_before_train=False",
             "trainer.project_name=OPD-State",
-            "actor_rollout_ref.rollout.val_kwargs.do_sample=False",
+            "actor_rollout_ref.rollout.val_kwargs.do_sample=True",
+            "actor_rollout_ref.rollout.val_kwargs.n=16",
+            "+trainer.math_eval_samples=16",
         ]:
             self.assertIn(required, args)
         result = subprocess.run(

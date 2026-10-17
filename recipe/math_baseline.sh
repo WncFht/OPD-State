@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# Four-GPU sampled-token math baseline with final-only evaluation and no checkpoints.
+# Four-GPU sampled-token math baseline; three-benchmark avg@16, final-only by default.
 set -euo pipefail
 ROOT=$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)
 WORKSPACE=$(dirname "$ROOT")
@@ -40,12 +40,13 @@ export N_GPUS_PER_NODE=4 NNODES=1 DOMAIN=math MODE=full
 export SAVE_FREQ=-1 TEST_FREQ=$STEPS VAL_BEFORE_TRAIN=False
 export MAX_PROMPT_LENGTH=${MAX_PROMPT_LENGTH:-1024}
 export MAX_RESP_LENGTH=${MAX_RESP_LENGTH:-4096}
-export MAX_VAL_RESP_LENGTH=${MAX_VAL_RESP_LENGTH:-8192}
+export MAX_VAL_RESP_LENGTH=${MAX_VAL_RESP_LENGTH:-31744}
 export MINI_BATCH_SIZE=${MINI_BATCH_SIZE:-64}
 export TEACHER_MICRO_BSZ=${TEACHER_MICRO_BSZ:-1}
 export PPO_MAX_TOKEN_LEN_PER_GPU=${PPO_MAX_TOKEN_LEN_PER_GPU:-8192}
 export GPU_MEMORY_UTILIZATION=${GPU_MEMORY_UTILIZATION:-0.55}
-export VAL_N=1 VAL_TEMPERATURE=0 VAL_TOP_P=1
+export VAL_N=${VAL_N:-16} VAL_TEMPERATURE=${VAL_TEMPERATURE:-0.7} VAL_TOP_P=${VAL_TOP_P:-0.9}
+export VAL_FILES=${VAL_FILES:-[${DATA_BASE}/math/MATH-500/test.parquet,${DATA_BASE}/math/AMC23/test.parquet,${DATA_BASE}/math/AIME25/test.parquet]}
 export LOG_PROB_TOP_K=0 METRIC_TOP_K=0 N_RESPONSES=1
 export EXPERIMENT_NAME=${EXPERIMENT_NAME:-math-on-policy-50steps-$(date +%Y%m%d-%H%M%S)}
 export OPD_ROOT=${OPD_ROOT:-${ROOT}/runs/math-baseline/${EXPERIMENT_NAME}}
@@ -59,7 +60,10 @@ exec bash -o pipefail recipe/opd.sh \
     trainer.validation_data_dir="$OPD_ROOT/validation" \
     data.seed=42 \
     actor_rollout_ref.actor.ppo_epochs=1 \
-    actor_rollout_ref.rollout.val_kwargs.do_sample=False \
+    actor_rollout_ref.rollout.val_kwargs.do_sample=True \
+    data.val_batch_size=32 \
+    +trainer.math_eval_samples="$VAL_N" \
+    +trainer.math_eval_require_full=True \
     +ray_kwargs.ray_init.num_cpus=16 \
     +ray_kwargs.ray_init.object_store_memory=4294967296 \
     "$@"

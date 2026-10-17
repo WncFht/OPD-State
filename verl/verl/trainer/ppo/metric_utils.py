@@ -857,10 +857,30 @@ def bootstrap_metric(
 
     # compute metric results for each bootstrap sample
     for fn_idx, reduce_fn in enumerate(reduce_fns):
-        # bootstrap sample and compute metric
-        for boot_idx in range(n_bootstrap):
-            sample = data_np[bootstrap_idxs[boot_idx]]
-            metric_results[fn_idx, boot_idx] = reduce_fn(sample)
+        numeric = np.asarray(data)
+        if any(reduce_fn is fn for fn in (np.max, np.min, np.mean)) and numeric.dtype.kind in "biuf":
+            metric_results[fn_idx] = reduce_fn(numeric[bootstrap_idxs], axis=1)
+        elif (
+            isinstance(reduce_fn, partial)
+            and reduce_fn.func is calc_maj_val
+            and not reduce_fn.args
+            and set(reduce_fn.keywords or {}) == {"vote_key", "val_key"}
+        ):
+            vote_key, val_key = reduce_fn.keywords["vote_key"], reduce_fn.keywords["val_key"]
+            codes, mapping = [], {}
+            for item in data:
+                codes.append(mapping.setdefault(item[vote_key], len(mapping)))
+            sampled_codes = np.asarray(codes)[bootstrap_idxs]
+            # argmax chooses the first winning occurrence, preserving Counter's
+            # first-seen tie break and its first value for that prediction.
+            counts = (sampled_codes[:, :, None] == sampled_codes[:, None, :]).sum(axis=-1)
+            winners = counts.argmax(axis=1)
+            values = np.asarray([item[val_key] for item in data], dtype=np.float64)
+            metric_results[fn_idx] = values[bootstrap_idxs[np.arange(n_bootstrap), winners]]
+        else:
+            for boot_idx in range(n_bootstrap):
+                sample = data_np[bootstrap_idxs[boot_idx]]
+                metric_results[fn_idx, boot_idx] = reduce_fn(sample)
 
     # compute mean and std for each metric function
     result = [

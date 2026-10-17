@@ -1,0 +1,15 @@
+{
+  "stage": "trajectory-cache GPU smoke before validation-only synchronization optimization",
+  "training_steps": [1, 2],
+  "validation_samples": 96,
+  "questions_per_benchmark": {
+    "MATH-500": 2,
+    "AMC23": 2,
+    "AIME25": 2
+  },
+  "samples_per_question": 16,
+  "source": "cached_teacher",
+  "response_cap": 64,
+  "validation_response_cap": 128,
+  "exit_code": 0
+}

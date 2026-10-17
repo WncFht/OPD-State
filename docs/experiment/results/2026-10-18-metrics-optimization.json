@@ -1,0 +1,8 @@
+{
+  "questions": 20,
+  "samples": 16,
+  "reference_seconds": 1.7955872267484665,
+  "optimized_seconds": 0.13472644984722137,
+  "speedup": 13.327651910850815,
+  "maximum_metric_difference": 0.0
+}
