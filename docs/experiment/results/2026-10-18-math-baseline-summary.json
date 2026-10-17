@@ -1,0 +1,80 @@
+{
+  "run_name": "math-student-online-s42-50steps-4k-20261017-231756",
+  "project": "OPD-State",
+  "wandb_url": "https://wandb.ai/wncfht/OPD-State/runs/4rpfdf0l",
+  "source_commit": "5de81e423bc1fb6edade6aba168c1fc72bc666ef",
+  "finished_at": "2026-10-18T00:01:36.869056+08:00",
+  "physical_gpus": [0, 1, 2, 3],
+  "student": "DeepSeek-R1-Distill-Qwen-1.5B",
+  "teacher": "JustRL-DeepSeek-1.5B",
+  "training_steps": 50,
+  "prompts_per_step": 64,
+  "prompt_occurrences": 3200,
+  "prompt_cap": 1024,
+  "train_response_cap": 4096,
+  "validation_response_cap": 8192,
+  "validation_protocol": "MATH-500 greedy@1",
+  "validation_examples": 500,
+  "correct": 355,
+  "accuracy": 0.71,
+  "validation_metrics": {
+    "val-core/MATH-500/acc/mean@1": 0.71
+  },
+  "validation_steps": [50],
+  "checkpoint_files": 0,
+  "training_step_seconds": 2347.2447612658143,
+  "validation_seconds": 119.06611414253712,
+  "mean_train_response_tokens": 3869.0515625,
+  "total_valid_train_response_tokens": 12380965,
+  "mean_train_response_cap_hit_rate": 0.81875,
+  "last_actor_loss": 0.05417978763580322,
+  "last_grad_norm": 0.570016086101532,
+  "all_loss_and_grad_norm_finite": true,
+  "filtered_dataset_rows": [17909, 500],
+  "environment": {
+    "python": "/mnt/tidalfs-bdsz01/dataset/llm_dataset/zkn_data/fht_data/OPD-State/../envs/opd-state/bin/python",
+    "prefix": "/mnt/tidalfs-bdsz01/dataset/llm_dataset/zkn_data/fht_data/envs/opd-state",
+    "torch_file": "/mnt/tidalfs-bdsz01/dataset/llm_dataset/zkn_data/fht_data/envs/opd-state/lib/python3.12/site-packages/torch/__init__.py",
+    "torch": "2.7.1+cu126",
+    "vllm": "0.10.0",
+    "transformers": "4.57.6",
+    "cuda_device_count": 4,
+    "cuda_matmul_mean": 64.0,
+    "installed_versions": {
+      "numpy": "1.26.4",
+      "ray": "2.59.0",
+      "transformers": "4.57.6",
+      "wandb": "0.30.0"
+    }
+  },
+  "data": [
+    {
+      "path": "/mnt/tidalfs-bdsz01/dataset/llm_dataset/zkn_data/fht_data/MD-OPD/data/math/DAPO/train.parquet",
+      "rows": 17917,
+      "unique_formatted_prompts": 17255,
+      "sha256": "c69f0fb5cb09b642b77dc3e78615e1ba113388ca3fd5aa8c451c782ff1508719"
+    },
+    {
+      "path": "/mnt/tidalfs-bdsz01/dataset/llm_dataset/zkn_data/fht_data/MD-OPD/data/math/MATH-500/test.parquet",
+      "rows": 500,
+      "unique_formatted_prompts": 500,
+      "sha256": "49e1b2c7bddd84791f38287bcdd4a99639c599e699d5906c238c74d0b31ccf8c"
+    }
+  ],
+  "validation_jsonl_sha256": "07b69970e783aae900d3ff046c56dddf6e341995dbfad8abc5e88109bb0aa93c",
+  "driver_log_sha256": "b7a0325e983d223116f572f84a7d1e58058cba5b9e9d1cfa8673d7f48b5226c4",
+  "wandb_verification": {
+    "id": "4rpfdf0l",
+    "state": "finished",
+    "url": "https://wandb.ai/wncfht/OPD-State/runs/4rpfdf0l",
+    "project": "OPD-State",
+    "entity": "wncfht",
+    "uploaded_training_steps": 50,
+    "final_accuracy": 0.71,
+    "source_commit": "5de81e423bc1fb6edade6aba168c1fc72bc666ef",
+    "validation_steps": [50],
+    "checkpoint_save_freq": -1
+  },
+  "process_exit_code": 0,
+  "shutdown_warning": "W&B atexit ConnectionResetError after sync; remote run finished and all 50 metric rows verified"
+}
