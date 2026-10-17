@@ -220,20 +220,22 @@ Qwen3 配对需要准备指定 revision，并显式设置 non-thinking；缓存�
 
 现有代码已经支持第一组。`ray_trainer.py` 在每步调用 `async_rollout_manager.generate_sequences()`，重算 `old_log_probs` 后，`OPDTrainerMixin.compute_opd_token_reward()` 调用 FSDP teacher，构造逐 token 信号，再由 `token_reward_direct` 与策略损失更新学生。验证也复用当前学生的 rollout engine。
 
-`MODE=oneshot` 只切换到单 query 数据集，仍然每步用当前学生生成响应，并不提供 Semi-OPD 缓存语义。
+`MODE=oneshot` 只切换到单 query 数据集，仍然每步用当前学生生成响应，并不提供 Semi-OPD 缓存语义。`ACTOR_MODEL_PATH` 同时决定被训练的学生和在线生成模型；teacher-cache 组应在预生成入口选择教师作为 source，训练阶段仍加载原始学生，不能通过替换 actor 路径实现。
 
 现有 `AgentLoopManager.generate_sequences()` 带 `SkipManager` 装饰器，`verl/utils/skip/rollout_skip.py` 已能序列化和加载 DataProto，可复用其接入点与存储方式。但它目前按 global step 选择缓存；`repeat` 可以加载最近的一整批结果，缺少缓存时会调用当前生成器补齐。直接启用会有三项问题：以前在线训练逐步留下的快照不是统一初始学生生成；跨 batch 重放可能和当前 prompt、ground truth 不匹配；cache miss 会引入当前学生的新轨迹。其缓存也位于教师评分之前，不包含后续计算的 OPD teacher log-probability。
 
-因此，首版优先扩展现有缓存入口：固定来源预生成，使用 prompt ID/输入哈希校验，固定缓存组缺失即报错，并单独加入教师评分缓存；保留已有 validation 绕过缓存的机制。无需建立第二套训练器。建议增加以下最小改动，复用现有更新与评测链路：
+因此，首版优先扩展现有缓存入口：固定来源预生成，使用 prompt ID/输入哈希校验，固定缓存组缺失即报错，保留已有 validation 绕过缓存的机制。无需建立第二套训练器。
+
+实现可分两步。最小版本只缓存轨迹，继续调用现有冻结 teacher worker 实时评分，保持当前学生打分、优势和损失路径原样。因为 q 固定且处于 eval 模式，在同一 token/prefix 上重算教师分数与预先缓存对应于同一数学目标；两者的数值差异需要实测核对。该版本已能比较三种轨迹来源，但不具备论文避免重复教师前向的效率收益。随后在首步梯度和评分一致性通过后，再加入 teacher log-probability 缓存并移除重复打分。建议改动如下：
 
 | 修改位置                                    | 要实现的行为                                                                                                                           |
 | ------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------- |
 | `recipe/` 与配置                            | 显式选择 `rollout_source=online_student/cached_teacher/cached_initial_student`，缓存路径与版本必填                                     |
 | `data/prep/` 下独立缓存生成器               | 冻结来源模型，按统一 prompt 清单采样一次，保存 token ID、mask、EOS/截断、生成设置与来源哈希                                            |
-| 教师评分入口                                | 对缓存轨迹仅评分一次，保存 teacher log-probability；验证 tokenizer、温度和 checkpoint 一致                                             |
+| 教师评分入口                                | 效率版本对缓存轨迹仅评分一次，保存 teacher log-probability；最小版本继续复用现有实时评分                                               |
 | `SkipManager` / `RolloutSkip` 与 batch 构造 | 复用生成钩子读取缓存，按 prompt ID/输入哈希匹配，缺失即报错；复用 padding 工具生成同一 DataProto，保持 mask、position ID 与 batch 顺序 |
 | `_compute_old_log_prob()`                   | 三组都按本步当前学生重算，缓存初始学生概率只作诊断字段                                                                                 |
-| `compute_opd_token_reward()`                | 缓存组从验证过的字段读取 teacher log-probability，计算当前 log-ratio；在线组保持原 teacher worker 路径                                 |
+| `compute_opd_token_reward()`                | 最小版本保持原路径；效率版本从验证过的缓存读取 teacher log-probability，再计算当前 log-ratio                                           |
 | 权重同步与验证                              | 缓存训练不需要每步同步到生成端，末步评测前必须同步最终 student；验证始终使用 student                                                   |
 | 日志与审计                                  | 标记来源、缓存哈希、采样版本、prompt ID 顺序、更新次数、训练 token 数与截断率                                                          |
 
@@ -241,14 +243,14 @@ Qwen3 配对需要准备指定 revision，并显式设置 non-thinking；缓存�
 
 缓存元数据至少包含 student/teacher revision、tokenizer 与 chat-template 哈希、数据 ID 清单哈希、source、seed、temperature、top-p、cap、EOS 规则、评分 dtype/温度。教师 log-probability 与 token/mask 绑定；任何来源变化都应拒绝读取旧缓存。只缓存 teacher logits 中被采样 token 的概率，不需要保存整个词表张量。
 
-缓存阶段可以用四卡并行生成与打分；训练阶段只保留 student optimizer，并在最终评测前加载/同步生成服务。第一版也可暂时保留已初始化的 teacher worker，但必须确认缓存组不再调用它。运行计时要区分一次性准备成本与重复训练成本。
+缓存阶段可以用四卡并行生成；效率版本另做一次教师打分，训练阶段无需重复调用 teacher worker。最小版本保留现有 teacher worker，每步在固定轨迹上评分。两版都在最终评测前同步生成服务；运行计时区分一次性准备成本与重复训练成本，准确率对照先保证相同更新语义。
 
 ### 实现验收
 
 1. 对固定合成 batch，缓存 teacher log-probability 与实时打分一致；mask、EOS、position ID 对齐。
 2. 在线生成与缓存读取相同轨迹时，学生 log-probability、优势和首步梯度一致。
 3. 修改当前学生后，缓存 token 和教师分数不变，学生分数及优势变化。
-4. 缓存组训练阶段不调用生成器或教师评分；在线组每步确实生成新轨迹并同步版本。
+4. 缓存组训练阶段不调用生成器；效率版本还需证明不重复调用教师评分。在线组每步确实生成新轨迹并同步版本。
 5. 缓存来源、tokenizer、模型或数据清单不匹配时明确失败；验证数据不进入训练缓存。
 6. 三组都只在末步评测当前学生，且关闭 checkpoint 保存；空有效集合与训练失败非零退出或明确记为无效更新。
 
