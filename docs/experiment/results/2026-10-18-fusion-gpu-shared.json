@@ -1,0 +1,166 @@
+{
+  "recorded_at": "2026-10-17T17:15:31.610267+00:00",
+  "decoder_source_sha256": "d5aea5198ab477884a0f7be6e85b7f4ed99db7380f8e922ea543a0a3b438f694",
+  "benchmark_source_sha256": "1fa93db3800f8112eca381274d2b201a77247b4aaac1efadc3b56f9b0d694e60",
+  "device": "NVIDIA H800",
+  "torch": "2.7.1+cu126",
+  "tokens": 128,
+  "prompt_cap": 1024,
+  "response_cap": 4096,
+  "lambda": 0.5,
+  "dtype": "bfloat16",
+  "attention_backend": "auto",
+  "graph_attention": "flash-kv",
+  "measurements": [
+    {
+      "backend": "dynamic",
+      "batch": 1,
+      "seconds": 3.6792151108384132,
+      "tokens": 128,
+      "tokens_per_second": 34.79002889038243,
+      "cold_seconds": 0.14671389758586884,
+      "peak_allocated_gb": 6.731072902679443,
+      "sample": "Okay, so I have this problem here: I need to find how many subsets of two elements can be removed from the set {1, 2, 3, 4, 5, 6, 7, 8"
+    },
+    {
+      "backend": "cuda_graph_flash",
+      "batch": 1,
+      "seconds": 1.6623594388365746,
+      "tokens": 128,
+      "tokens_per_second": 76.99899131897888,
+      "cold_seconds": 0.3836124837398529,
+      "peak_allocated_gb": 7.030087471008301,
+      "sample": "Okay, so I have this problem here: I need to find how many subsets of two elements can be removed from the set {1, 2, 3, 4, 5, 6, 7, 8"
+    },
+    {
+      "backend": "dynamic",
+      "batch": 8,
+      "seconds": 5.3397094160318375,
+      "tokens": 1024,
+      "tokens_per_second": 191.77073511258175,
+      "cold_seconds": 0.18367186188697815,
+      "peak_allocated_gb": 6.993941307067871,
+      "sample": "Okay, so I have this problem here: I need to find how many subsets of two elements can be removed from the set {1, 2, 3, 4, 5, 6, 7, 8"
+    },
+    {
+      "backend": "cuda_graph_flash",
+      "batch": 8,
+      "seconds": 1.9733604416251183,
+      "tokens": 1024,
+      "tokens_per_second": 518.911790466777,
+      "cold_seconds": 0.37791183590888977,
+      "peak_allocated_gb": 9.095929145812988,
+      "sample": "Okay, so I have this problem here: I need to find how many subsets of two elements can be removed from the set {1, 2, 3, 4, 5, 6, 7, 8"
+    },
+    {
+      "backend": "dynamic",
+      "batch": 16,
+      "seconds": 5.383859306573868,
+      "tokens": 2048,
+      "tokens_per_second": 380.3962702924508,
+      "cold_seconds": 0.22751769423484802,
+      "peak_allocated_gb": 7.200165748596191,
+      "sample": "Okay, so I have this problem here: I need to find how many subsets of two elements can be removed from the set {1, 2, 3, 4, 5, 6, 7, 8"
+    },
+    {
+      "backend": "cuda_graph_flash",
+      "batch": 16,
+      "seconds": 2.1380481272935867,
+      "tokens": 2048,
+      "tokens_per_second": 957.8830213669827,
+      "cold_seconds": 0.4586583897471428,
+      "peak_allocated_gb": 11.460577011108398,
+      "sample": "Okay, so I have this problem here: I need to find how many subsets of two elements can be removed from the set {1, 2, 3, 4, 5, 6, 7, 8"
+    }
+  ],
+  "parity": [
+    {
+      "max_logit_error_graph_vs_dynamic": 0.1875,
+      "max_distribution_tv_graph_vs_dynamic": 0.028909455984830856,
+      "max_logit_error_graph_vs_static": 0.0,
+      "tested_prefix_steps": 8,
+      "batch": 1,
+      "logit_errors_by_step_and_model": [
+        0.1875, 0.125, 0.125, 0.1875, 0.125, 0.125, 0.171875, 0.1796875, 0.125,
+        0.125, 0.1875, 0.171875, 0.1484375, 0.1875, 0.125, 0.1875
+      ],
+      "distribution_tv_by_step_and_model": [
+        0.02885781042277813, 0.028909455984830856, 3.223706457333719e-8,
+        2.167830189137021e-6, 5.157893156138016e-6, 0.017206061631441116,
+        1.4848292266833596e-5, 0.000638748868368566, 0.0016793329268693924,
+        0.012227727100253105, 0.000542130321264267, 5.440576842374867e-6,
+        9.613728616386652e-5, 3.6996902963437606e-6, 0.000792931707110256,
+        0.0222830381244421
+      ]
+    },
+    {
+      "max_logit_error_graph_vs_dynamic": 0.375,
+      "max_distribution_tv_graph_vs_dynamic": 0.030883075669407845,
+      "max_logit_error_graph_vs_static": 0.0,
+      "tested_prefix_steps": 8,
+      "batch": 8,
+      "logit_errors_by_step_and_model": [
+        0.29296875, 0.1953125, 0.3125, 0.220703125, 0.1875, 0.21875, 0.1875,
+        0.25, 0.138671875, 0.130859375, 0.1484375, 0.25, 0.1875, 0.375, 0.25,
+        0.2734375
+      ],
+      "distribution_tv_by_step_and_model": [
+        0.029791193082928658, 0.030490312725305557, 1.8404547290629125e-6,
+        1.2639279702852946e-6, 0.01648643985390663, 0.01980689913034439,
+        0.02188141644001007, 0.010471416637301445, 0.030721552670001984,
+        0.029748983681201935, 0.0037737253587692976, 0.001883714459836483,
+        0.0012102306354790926, 0.023808257654309273, 0.028350787237286568,
+        0.030883075669407845
+      ]
+    },
+    {
+      "max_logit_error_graph_vs_dynamic": 0.3125,
+      "max_distribution_tv_graph_vs_dynamic": 0.031377509236335754,
+      "max_logit_error_graph_vs_static": 0.0,
+      "tested_prefix_steps": 8,
+      "batch": 16,
+      "logit_errors_by_step_and_model": [
+        0.296875, 0.3125, 0.3125, 0.25, 0.1875, 0.25, 0.25, 0.25, 0.125,
+        0.15234375, 0.25, 0.28125, 0.25, 0.25, 0.25, 0.25
+      ],
+      "distribution_tv_by_step_and_model": [
+        0.029798045754432678, 0.03096824698150158, 3.6888911836285843e-6,
+        1.8865156334868516e-6, 0.030192045494914055, 0.02895038202404976,
+        0.007472464349120855, 0.015598384663462639, 0.031377509236335754,
+        0.03098238818347454, 0.02995334006845951, 0.003354866523295641,
+        0.012513846158981323, 0.02682475373148918, 0.0309614147990942,
+        0.029944147914648056
+      ]
+    }
+  ],
+  "other_gpu_process_count": 2,
+  "timing_isolated": false,
+  "flash_attention_vs_fp32": [
+    {
+      "batch": 1,
+      "width": 9,
+      "queries": 9,
+      "max_abs_error_vs_fp32": 0.007768154144287109,
+      "relative_l2": 0.0015941198216751218
+    },
+    {
+      "batch": 3,
+      "width": 11,
+      "queries": 11,
+      "max_abs_error_vs_fp32": 0.008069276809692383,
+      "relative_l2": 0.0015928103821352124
+    },
+    {
+      "batch": 3,
+      "width": 13,
+      "queries": 1,
+      "max_abs_error_vs_fp32": 0.0053141117095947266,
+      "relative_l2": 0.0019897473976016045
+    }
+  ],
+  "weight_updates": {
+    "versions_verified": [0, 1, 2],
+    "graph_reused": true,
+    "teacher_parameter_probes_unchanged": true
+  }
+}

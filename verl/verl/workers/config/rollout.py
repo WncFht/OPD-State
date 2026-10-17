@@ -165,7 +165,7 @@ class LogitFusionConfig(BaseConfig):
 
         if not math.isfinite(self.teacher_weight) or not 0 <= self.teacher_weight <= 1:
             raise ValueError("Fusion teacher weight must be finite and in [0,1]")
-        if self.backend not in {"dynamic", "static", "cuda_graph"}:
+        if self.backend not in {"dynamic", "static", "cuda_graph", "cuda_graph_flash"}:
             raise ValueError("Invalid logit-fusion backend")
         if self.enabled and not self.teacher_model_path:
             raise ValueError("Enabled fusion requires the frozen teacher path")

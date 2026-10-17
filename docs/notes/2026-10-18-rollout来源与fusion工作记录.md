@@ -33,3 +33,7 @@ Fusion 定义为同一 prefix 上 (1-lambda)*student_logits+lambda*teacher_logit
 teacher 完整缓存已生成，50 步更新已到达最终验证。同步优化后的两步 smoke 验证仅同步一次，step 1 不同步、step 2 验证前同步，96 条短验证记录满足三基准各两题、每题 16 次采样。真实结果采集器已在该 smoke 上独立重算并逐字段匹配训练日志。
 
 7b9b99f 提交共享 prefix 的 fusion 候选实现、三个解码后端、版本化参数流、训练桥接、基准脚本与配方。12 项原生 CPU 测试通过，Hydra 配置 dry-run 通过，完整维护检查无阻断项；GPU 基准和两步训练尚未验证。缓存生成 wrapper 和结果采集器作为可复现入口保存，避免仅保留临时运行命令。
+
+GPU 数值验证随后完成。原 SDPA 静态缓存与动态参考在 FP32 下最大 logits 差 4.96e-5、分布 TV 2.27e-6，同内核 graph/eager 差为零；BF16 的跨内核误差超过最初 0.01 的 TV 阈值，逐层舍入需要独立区分。新增 FlashAttention KV 路径，含左 padding、GQA、prefill/decode 的原始 attention 与 FP32 数学内核相对 L2 误差 0.00159–0.00199。同内核 graph/eager 仍要求差小于 1e-5；跨 BF16 内核按 TV 0.05、logits 差 0.5 验收，三种 batch 实测 TV 不超过 0.0314。共享 GPU 结果已归档，未作为独占吞吐结论。
+
+真实 GPU 已验证 student 参数版本 0→1→2、原地改动 lm_head 后输出改变、恢复参数后原输出恢复、图对象保持不变、教师每个参数的前 32 个元素不变。正式 GPU 调试仍需跑完整训练桥接，不能将独立模型测试当成端到端成功。顺序调度脚本将固定提交、保存命令与退出码，并在 teacher 成功退出后启动独占基准、两步调试和后续来源实验。

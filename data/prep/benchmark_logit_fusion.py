@@ -4,12 +4,16 @@ from __future__ import annotations
 
 import argparse
 import gc
+import hashlib
 import json
+import os
+import subprocess
 import time
+from datetime import datetime, timezone
 from pathlib import Path
 
 
-def compare_prefix_logits(student, teacher, prompts, *, tokenizer, prompt_cap, response_cap, steps=8):
+def compare_prefix_logits(student, teacher, prompts, *, tokenizer, prompt_cap, response_cap, flash_kv=False, steps=8):
     import torch
     from transformers import DynamicCache
 
@@ -31,8 +35,8 @@ def compare_prefix_logits(student, teacher, prompts, *, tokenizer, prompt_cap, r
     valid = torch.zeros((bsz, capacity), dtype=torch.bool, device=device)
     valid[:, :width] = mask.bool()
     caches = [DynamicCache(config=model.config) for model in (student, teacher)]
-    static = StaticDecodeContext(student, teacher, bsz, capacity, capture=False)
-    graph = StaticDecodeContext(student, teacher, bsz, capacity, capture=True)
+    static = StaticDecodeContext(student, teacher, bsz, capacity, capture=False, flash_kv=flash_kv)
+    graph = StaticDecodeContext(student, teacher, bsz, capacity, capture=True, flash_kv=flash_kv)
     with torch.inference_mode():
         dynamic_logits = [
             model(
@@ -80,18 +84,78 @@ def compare_prefix_logits(student, teacher, prompts, *, tokenizer, prompt_cap, r
         "max_logit_error_graph_vs_static": max(graph_static),
         "tested_prefix_steps": steps,
         "batch": len(prompts),
+        "logit_errors_by_step_and_model": differences,
+        "distribution_tv_by_step_and_model": variation,
     }
-    if result["max_distribution_tv_graph_vs_dynamic"] > 0.01:
+    print(json.dumps({"parity": result}), flush=True)
+    fp32 = next(student.parameters()).dtype == torch.float32
+    # Independent FP32 and raw-attention checks distinguish masking mistakes
+    # from accumulated BF16 rounding across different attention kernels.
+    tolerance = 1e-5 if fp32 else 0.05
+    if result["max_distribution_tv_graph_vs_dynamic"] > tolerance:
         raise AssertionError(f"Graph probability drift exceeds the BF16 parity gate: {result}")
-    if result["max_logit_error_graph_vs_static"] > 0.125:
-        raise AssertionError(f"Graph/static drift exceeds one high-logit BF16 increment: {result}")
+    if result["max_logit_error_graph_vs_dynamic"] > (1e-4 if fp32 else 0.5):
+        raise AssertionError(f"Graph logit drift exceeds the precision gate: {result}")
+    if result["max_logit_error_graph_vs_static"] > 1e-5:
+        raise AssertionError(f"Captured and eager versions of the same kernel disagree: {result}")
     del reference, static, graph, caches
     gc.collect()
     torch.cuda.empty_cache()
     return result
 
 
-def verify_graph_weight_updates(student, teacher, prompt, *, tokenizer, prompt_cap, response_cap):
+def verify_flash_kv_attention():
+    import torch
+    from torch.nn.attention import SDPBackend, sdpa_kernel
+
+    from verl.workers.rollout.fusion.decoder import flash_kv_attention
+
+    generator = torch.Generator(device="cuda").manual_seed(173)
+    errors = []
+    for batch, width, queries in ((1, 9, 9), (3, 11, 11), (3, 13, 1)):
+        q = torch.randn((batch, 12, queries, 128), generator=generator, device="cuda", dtype=torch.bfloat16)
+        k = torch.randn((batch, 2, 128, 128), generator=generator, device="cuda", dtype=torch.bfloat16)
+        v = torch.randn(k.shape, generator=generator, device="cuda", dtype=torch.bfloat16)
+        lengths = torch.full((batch,), width, device="cuda", dtype=torch.int32)
+        leftpad = torch.arange(batch, device="cuda", dtype=torch.int32) * 2
+        output, _ = flash_kv_attention(
+            None,
+            q,
+            k,
+            v,
+            None,
+            scaling=128**-0.5,
+            fusion_kv_lengths=lengths,
+            fusion_kv_leftpad=leftpad,
+        )
+        keys = torch.arange(128, device="cuda")
+        allowed = (keys[None, :] >= leftpad[:, None]) & (keys[None, :] < lengths[:, None])
+        allowed = allowed[:, None, None, :]
+        if queries > 1:
+            physical_query = torch.arange(queries, device="cuda") + width - queries
+            allowed = allowed & (keys[None, :] <= physical_query[:, None])[None, None]
+        with sdpa_kernel(SDPBackend.MATH):
+            reference = torch.nn.functional.scaled_dot_product_attention(
+                q.float(), k.float(), v.float(), attn_mask=allowed, enable_gqa=True
+            ).transpose(1, 2)
+        torch.testing.assert_close(output.float(), reference, rtol=0.01, atol=0.008)
+        difference = output.float() - reference
+        relative_l2 = float(difference.norm() / reference.norm())
+        if relative_l2 > 0.005:
+            raise AssertionError(f"Flash KV relative L2 error exceeds BF16 tolerance: {relative_l2}")
+        errors.append(
+            {
+                "batch": batch,
+                "width": width,
+                "queries": queries,
+                "max_abs_error_vs_fp32": float(difference.abs().max()),
+                "relative_l2": relative_l2,
+            }
+        )
+    return errors
+
+
+def verify_graph_weight_updates(student, teacher, prompt, *, tokenizer, prompt_cap, response_cap, flash_kv=False):
     import torch
 
     from verl.workers.rollout.fusion.decoder import LogitFusionDecoder
@@ -103,7 +167,7 @@ def verify_graph_weight_updates(student, teacher, prompt, *, tokenizer, prompt_c
         eos_token_id=tokenizer.eos_token_id,
         pad_token_id=tokenizer.pad_token_id if tokenizer.pad_token_id is not None else tokenizer.eos_token_id,
         weight=0,
-        backend="cuda_graph",
+        backend="cuda_graph_flash" if flash_kv else "cuda_graph",
         prompt_cap=prompt_cap,
         response_cap=response_cap,
     )
@@ -155,30 +219,67 @@ def main():
     parser.add_argument("--prompt-cap", type=int, default=1024)
     parser.add_argument("--response-cap", type=int, default=4096)
     parser.add_argument("--backends", default="dynamic,static,cuda_graph")
+    parser.add_argument("--dtype", choices=("bfloat16", "float32"), default="bfloat16")
+    parser.add_argument("--attention-backend", choices=("auto", "efficient", "math"), default="auto")
+    parser.add_argument("--graph-attention", choices=("sdpa", "flash-kv"), default="sdpa")
     args = parser.parse_args()
     torch.set_num_threads(4)
     if torch.cuda.device_count() != 1:
         raise ValueError("Benchmark expects exactly one assigned CUDA device")
+    torch.backends.cuda.enable_flash_sdp(args.attention_backend == "auto")
+    torch.backends.cuda.enable_mem_efficient_sdp(args.attention_backend != "math")
+    torch.backends.cuda.enable_math_sdp(args.attention_backend != "efficient")
     tokenizer = AutoTokenizer.from_pretrained(args.student)
     models = [
-        AutoModelForCausalLM.from_pretrained(path, torch_dtype=torch.bfloat16, attn_implementation="sdpa")
+        AutoModelForCausalLM.from_pretrained(path, torch_dtype=getattr(torch, args.dtype), attn_implementation="sdpa")
         .to("cuda")
         .eval()
         for path in (args.student, args.teacher)
     ]
     prompts = [json.loads(line)["prompt_ids"] for line in Path(args.prompts).read_text().splitlines()]
     report = {
+        "recorded_at": datetime.now(timezone.utc).isoformat(),
+        "decoder_source_sha256": hashlib.sha256(
+            (Path(__file__).resolve().parents[2] / "verl/verl/workers/rollout/fusion/decoder.py").read_bytes()
+        ).hexdigest(),
+        "benchmark_source_sha256": hashlib.sha256(Path(__file__).read_bytes()).hexdigest(),
         "device": torch.cuda.get_device_name(0),
         "torch": torch.__version__,
         "tokens": args.tokens,
         "prompt_cap": args.prompt_cap,
         "response_cap": args.response_cap,
         "lambda": 0.5,
+        "dtype": args.dtype,
+        "attention_backend": args.attention_backend,
+        "graph_attention": args.graph_attention,
         "measurements": [],
         "parity": [],
     }
+    query = subprocess.run(
+        [
+            "nvidia-smi",
+            "--id=" + os.environ["CUDA_VISIBLE_DEVICES"],
+            "--query-compute-apps=pid",
+            "--format=csv,noheader",
+        ],
+        check=True,
+        capture_output=True,
+        text=True,
+    )
+    # Driver PIDs can use a different namespace from os.getpid(). Our CUDA
+    # context is already live, so exactly one compute process means isolation.
+    process_count = len([line for line in query.stdout.splitlines() if line.strip()])
+    report["other_gpu_process_count"] = max(0, process_count - 1)
+    report["timing_isolated"] = process_count == 1
+    if args.graph_attention == "flash-kv":
+        report["flash_attention_vs_fp32"] = verify_flash_kv_attention()
     report["weight_updates"] = verify_graph_weight_updates(
-        *models, prompts[0], tokenizer=tokenizer, prompt_cap=args.prompt_cap, response_cap=args.response_cap
+        *models,
+        prompts[0],
+        tokenizer=tokenizer,
+        prompt_cap=args.prompt_cap,
+        response_cap=args.response_cap,
+        flash_kv=args.graph_attention == "flash-kv",
     )
     for batch in map(int, args.batch_sizes.split(",")):
         selected = prompts[:batch]
@@ -188,6 +289,7 @@ def main():
             tokenizer=tokenizer,
             prompt_cap=args.prompt_cap,
             response_cap=args.response_cap,
+            flash_kv=args.graph_attention == "flash-kv",
             steps=min(8, args.tokens - 1),
         )
         report["parity"].append(parity)

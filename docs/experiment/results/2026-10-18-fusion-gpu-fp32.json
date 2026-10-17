@@ -1,0 +1,74 @@
+{
+  "device": "NVIDIA H800",
+  "torch": "2.7.1+cu126",
+  "tokens": 16,
+  "prompt_cap": 1024,
+  "response_cap": 4096,
+  "lambda": 0.5,
+  "dtype": "float32",
+  "attention_backend": "auto",
+  "measurements": [
+    {
+      "backend": "dynamic",
+      "batch": 1,
+      "seconds": 0.5248858779668808,
+      "tokens": 16,
+      "tokens_per_second": 30.48281668764875,
+      "cold_seconds": 0.15761351585388184,
+      "peak_allocated_gb": 13.353166580200195,
+      "sample": "Okay, so I have this problem here: I need to find how many subsets"
+    },
+    {
+      "backend": "static",
+      "batch": 1,
+      "seconds": 1.180470071732998,
+      "tokens": 16,
+      "tokens_per_second": 13.553922613650917,
+      "cold_seconds": 0.33019890636205673,
+      "peak_allocated_gb": 13.945281505584717,
+      "sample": "Okay, so I have this problem here: I need to find how many subsets"
+    },
+    {
+      "backend": "cuda_graph",
+      "batch": 1,
+      "seconds": 1.103631541132927,
+      "tokens": 16,
+      "tokens_per_second": 14.497592179700924,
+      "cold_seconds": 0.7277281805872917,
+      "peak_allocated_gb": 13.977664470672607,
+      "sample": "Okay, so I have this problem here: I need to find how many subsets"
+    }
+  ],
+  "parity": [
+    {
+      "max_logit_error_graph_vs_dynamic": 4.9591064453125e-5,
+      "max_distribution_tv_graph_vs_dynamic": 2.2652779989584815e-6,
+      "max_logit_error_graph_vs_static": 0.0,
+      "tested_prefix_steps": 8,
+      "batch": 1,
+      "logit_errors_by_step_and_model": [
+        2.09808349609375e-5, 4.9591064453125e-5, 1.2874603271484375e-5,
+        2.193450927734375e-5, 1.621246337890625e-5, 2.193450927734375e-5,
+        1.52587890625e-5, 1.2159347534179688e-5, 9.655952453613281e-6,
+        1.1920928955078125e-5, 1.4543533325195312e-5, 2.0503997802734375e-5,
+        2.9385089874267578e-5, 3.0517578125e-5, 2.09808349609375e-5,
+        2.09808349609375e-5
+      ],
+      "distribution_tv_by_step_and_model": [
+        4.2939461764035514e-7, 1.332277747678745e-6, 1.4091136590899112e-10,
+        1.3226827619283732e-11, 1.6872178321136744e-7, 5.958870588074205e-7,
+        1.7262878770907264e-7, 2.2594086601657182e-7, 8.256296837316768e-7,
+        1.1010278058165568e-6, 3.215565769210116e-8, 3.2835849594903266e-8,
+        1.307100649938775e-8, 1.70781557784494e-8, 3.5966331779491156e-7,
+        2.2652779989584815e-6
+      ]
+    }
+  ],
+  "weight_updates": {
+    "versions_verified": [0, 1, 2],
+    "graph_reused": true,
+    "teacher_parameter_probes_unchanged": true
+  },
+  "timing_isolated": false,
+  "measurement_context": "shared GPU with teacher evaluation; numeric mask check only"
+}

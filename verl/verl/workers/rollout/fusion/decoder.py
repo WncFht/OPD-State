@@ -13,6 +13,26 @@ import time
 import torch
 
 
+def flash_kv_attention(module, query, key, value, attention_mask, scaling=None, **kwargs):
+    """Use physical KV lengths and left padding without materializing GQA copies."""
+    from flash_attn import flash_attn_with_kvcache
+
+    lengths, leftpad = kwargs.get("fusion_kv_lengths"), kwargs.get("fusion_kv_leftpad")
+    if lengths is None or leftpad is None:
+        raise RuntimeError("Flash KV fusion requires explicit cache lengths and left padding")
+    output = flash_attn_with_kvcache(
+        query.transpose(1, 2),
+        key.transpose(1, 2),
+        value.transpose(1, 2),
+        cache_seqlens=lengths,
+        cache_leftpad=leftpad,
+        softmax_scale=scaling,
+        causal=query.shape[2] > 1,
+        num_splits=1,
+    )
+    return output, None
+
+
 def fuse_logits(student, teacher, weight, *, validate=True):
     if not math.isfinite(weight) or not 0 <= weight <= 1:
         raise ValueError("Fusion weight must be finite and in [0,1]")
@@ -34,7 +54,7 @@ def fuse_logits(student, teacher, weight, *, validate=True):
 class StaticDecodeContext:
     """Fixed storage for decode; prefill stays eager and all positions are explicit."""
 
-    def __init__(self, student, teacher, batch_size, max_length, *, capture):
+    def __init__(self, student, teacher, batch_size, max_length, *, capture, flash_kv=False):
         from transformers import StaticCache
 
         self.student, self.teacher = student, teacher
@@ -49,6 +69,15 @@ class StaticDecodeContext:
         self.cache_position = torch.zeros(1, dtype=torch.long, device=self.device)
         self.mask = torch.full((batch_size, 1, 1, max_length), -float("inf"), dtype=self.dtype, device=self.device)
         self.capture = capture
+        self.flash_kv = flash_kv
+        self.kv_lengths = torch.zeros(batch_size, dtype=torch.int32, device=self.device)
+        self.kv_leftpad = torch.zeros_like(self.kv_lengths)
+        if flash_kv:
+            from transformers import AttentionInterface
+
+            if self.device.type != "cuda" or self.dtype not in {torch.bfloat16, torch.float16}:
+                raise ValueError("Flash KV fusion requires CUDA and BF16/FP16 models")
+            AttentionInterface.register("opd_fusion_flash_kv", flash_kv_attention)
         self.graph = None
         self.outputs = None
         for model in (student, teacher):
@@ -64,7 +93,8 @@ class StaticDecodeContext:
     def _decode(self):
         results = []
         for model, cache in zip((self.student, self.teacher), self.caches, strict=True):
-            result = model(
+            result = self._forward(
+                model,
                 input_ids=self.input_ids,
                 attention_mask={"full_attention": self.mask},
                 position_ids=self.position_ids,
@@ -77,10 +107,22 @@ class StaticDecodeContext:
             results.append(result.logits[:, -1])
         return results
 
+    def _forward(self, model, **kwargs):
+        if not self.flash_kv:
+            return model(**kwargs)
+        previous = model.config._attn_implementation
+        model.config._attn_implementation = "opd_fusion_flash_kv"
+        try:
+            return model(**kwargs, fusion_kv_lengths=self.kv_lengths, fusion_kv_leftpad=self.kv_leftpad)
+        finally:
+            model.config._attn_implementation = previous
+
     def prefill(self, input_ids, attention_mask, position_ids):
         for cache in self.caches:
             cache.reset()
         p = input_ids.shape[1]
+        self.kv_lengths.fill_(p)
+        self.kv_leftpad.copy_((attention_mask == 0).sum(-1))
         keys = torch.arange(self.max_length, device=self.device)
         query = torch.arange(p, device=self.device)
         allowed = (keys[None, :] <= query[:, None])[None, None]
@@ -94,7 +136,8 @@ class StaticDecodeContext:
         outputs = []
         positions = torch.arange(p, device=self.device)
         for model, cache in zip((self.student, self.teacher), self.caches, strict=True):
-            result = model(
+            result = self._forward(
+                model,
                 input_ids=input_ids,
                 attention_mask={"full_attention": mask},
                 position_ids=position_ids,
@@ -109,6 +152,7 @@ class StaticDecodeContext:
             # Capture at an unused last slot. Real decode never writes the final
             # slot: the last response token is returned without another forward.
             self.cache_position.fill_(self.max_length - 1)
+            self.kv_lengths.fill_(self.max_length)
             self.mask.fill_(-float("inf"))
             self.mask[:, :, :, -1] = 0
             stream = torch.cuda.Stream(device=self.device)
@@ -127,6 +171,7 @@ class StaticDecodeContext:
         self.input_ids.copy_(token)
         self.position_ids.copy_(position_ids)
         self.cache_position.fill_(physical_position)
+        self.kv_lengths.fill_(physical_position + 1)
         self.mask.masked_fill_(attention_mask[:, None, None, :], 0)
         self.mask.masked_fill_(~attention_mask[:, None, None, :], -float("inf"))
         if self.graph is not None:
@@ -154,7 +199,7 @@ class LogitFusionDecoder:
             raise ValueError("Student and frozen teacher must be separate model objects")
         if not math.isfinite(weight) or not 0 <= weight <= 1:
             raise ValueError("Fusion weight must be in [0,1]")
-        if backend not in {"dynamic", "static", "cuda_graph"}:
+        if backend not in {"dynamic", "static", "cuda_graph", "cuda_graph_flash"}:
             raise ValueError("Unknown fusion decoder backend")
         if prompt_cap < 1 or response_cap < 1 or completion_check_interval < 1:
             raise ValueError("Token caps and completion interval must be positive")
@@ -281,7 +326,12 @@ class LogitFusionDecoder:
         else:
             if bsz not in self.contexts:
                 self.contexts[bsz] = StaticDecodeContext(
-                    self.student, self.teacher, bsz, total_capacity, capture=self.backend == "cuda_graph"
+                    self.student,
+                    self.teacher,
+                    bsz,
+                    total_capacity,
+                    capture=self.backend.startswith("cuda_graph"),
+                    flash_kv=self.backend == "cuda_graph_flash",
                 )
             context = self.contexts[bsz]
             output = context.prefill(inputs, prefix_mask, positions)
