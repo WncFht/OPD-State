@@ -273,6 +273,14 @@ class vLLMHttpServer(NativePolicyServerMixin):
             set_expandable_segments(True)
 
         quantization, hf_overrides = self._apply_quantization()
+        native_fusion = self.config.get("generation_fusion")
+        if native_fusion is not None:
+            hf_overrides.update({
+                "architectures": ["OPDNativeQwen2Fusion"],
+                "opd_teacher_path": native_fusion["teacher_path"],
+                "opd_teacher_fingerprint": native_fusion["teacher_fingerprint"],
+                "opd_teacher_weight": native_fusion["teacher_weight"],
+            })
 
         compilation_config = engine_kwargs.pop("compilation_config", None) or {}
         if isinstance(compilation_config, str):

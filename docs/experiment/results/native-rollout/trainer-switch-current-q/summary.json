@@ -1,0 +1,18 @@
+{
+  "run_name": "trainer-switch-current-q-v1",
+  "run_directory": "/mnt/tidalfs-bdsz01/dataset/llm_dataset/zkn_data/fht_data/OPD-State/runs/native-rollout-implementation/trainer-switch-current-q-v1",
+  "source_commit": "4994d2b4186ca9dab7adf06560824386c2a56e98",
+  "source_manifest_sha256": "5db89eda61ecbc7b66d9245eabc1a32973d411bfefcce6076e2c6a223d09bb92",
+  "source_identity": "runtime_snapshot",
+  "training_steps": 2,
+  "samples_per_question": 16,
+  "full_benchmarks": false,
+  "checkpoints_saved": false,
+  "wandb_url": null,
+  "training_log_sha256": "83fd5606c1950557658be28a28c8c3b2005bf9d08540ea47e3f2f6e847196e18",
+  "training_log_observed_bytes": 220300,
+  "collection_scope": "final_validation",
+  "final_validation_marker_verified": true,
+  "collector_source_sha256": "d55fdb5753b7557a445c8584830f41fdbb3ca450ae53fa888791f2cdf81899fb",
+  "validation_steps": [2]
+}

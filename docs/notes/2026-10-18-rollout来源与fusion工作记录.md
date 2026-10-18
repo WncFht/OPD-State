@@ -203,3 +203,13 @@ identity-gpu-v3 与最终 v4 均完整通过 p0/q 原生 worker 和生产 execut
 双原生 Qwen2 的独立 GPU 数值检查通过 λ=0/0.5/1、两条短 prefix 和完整 151,665 个有效 token 的 logits/分布对照，六项误差均为零；λ=0.5 的 56 个 KV 区域互不重叠，两端点各 28 个，sleep/wake 后逐值一致。原始浮点数组留在忽略目录，摘要及数组哈希归统一实验附件。它只覆盖单 token prefill；下一阶段仍须连续 decode、更新时 teacher 不变、缓存失效、graph 与真实 fusion trainer 验收。
 
 initial-student 四卡两步已完成并独立核对最终九十六条响应，固定 p0 与 learner 分离且没有训练同步，验证是最终 student 版本 2。全程 251.83 秒，两步为 22.54/4.85 秒，短验证 16.14 秒，整卡采样最大 18,051 MiB。四种分段方向和两种 batch 混合组成独立串行矩阵，固定源码 4994d2b；切换点为 32/64 token，current batch 的 teacher 占比为 1/8，刻意覆盖部分推理副本无该来源请求。启动器现在支持提交快照，并保存影响策略的环境参数；任意训练或审计失败即停止后续 case。
+
+分段/batch 六项矩阵均已完成并独立核验。current fusion 的单卡调试与两种 fusion 的四卡两步也已通过：current 版本 0/1 生成，最终仅用版本 2 的纯 student；teacher 全参数摘要跨步骤/副本一致，initial fusion 还核对 initial 全参数摘要一致。单卡调试与矩阵第四项启动重叠，干扰 vLLM 显存探测，失败项只到初始化；确认退出后串行原参数重跑通过，后续 GPU 工作改成串行，未修改共享环境。
+
+模型池进一步区分 training 与 evaluation 用途，current 训练也建立专用副本。训练上下文统一为 prompt+response，来源共享预算，所有 case 的最终纯 student 验证使用相同完整预算；actor 导出前核对用途/角色/路径/命名空间/companion。fusion actor loader 与 post-load 变换只处理 base，诊断开关校验完整冻结参数，graph 模式额外核对参数地址；graph 实测仍在进行。
+
+完整 DAPO 题库准备与真实 RLHFDataset/sampler 核验完成：17,917 行，8 行超长，662 条额外重复记录，12 个标签冲突的唯一 prompt 排除后为 17,235 题。batch 64 每 epoch 269 批、drop-last 19 行，前 50 批 3,200 题互异，题库没有按步数截断。访问次数改按内容累计，原始行号另存；正式配方可以绑定 manifest 校验文件/词表/模板/上限。原生路径显式拒绝缺少已验证行为分数的无偏 top-k tail 组合，保留历史入口。
+
+连续解码数值检查覆盖 λ=0/0.5/1、两条 prompt 各八步、完整有效词表及 sleep/wake。current 单模型跨 HF/native 的最大 logits 差为 0.125、TV 为 0.027081，其余两项误差为零，均满足预先采用的 BF16 界限；原生自身恢复前后逐值一致。CUDA Graph 检查只使用已空闲的 GPU 0，等待真实捕获计数和输出验证，不以配置开关当作通过。
+
+CUDA Graph 连续解码随后通过：λ=0.5、两条 prompt 各八步，实际捕获 114 个图，十六个位置的完整 logits 与 HF 参考相同，固定参数和地址跨 sleep/wake 不变。新增重复同一道真实 DAPO 题十六行的专用 fixture，正在执行四卡两步 graph 训练：覆盖相同 prefix 的跨 actor 更新缓存失效，要求 q 完整摘要不变，参数地址不得改变。训练源码冻结在私有快照中，未重启其他作业。

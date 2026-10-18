@@ -53,3 +53,19 @@ field-by-field identical schemas to concatenate them.
 - `if/MultiIF/eval_3turn.parquet` is excluded and not named `test.parquet`. It
   holds three prompts per row, has no `reward_model` column, and is read only by
   `eval/run_if_eval.py`.
+
+## Fresh math prompt pool
+
+`build_fresh_math_data.py` builds the entire unique prompt pool independently of training steps. It filters by the canonical rendered token length, removes duplicate token prefixes, excludes every copy when answers conflict, and records data/tokenizer/template hashes. Training owns the seeded epoch permutation; prompt visits are counted by content.
+
+```bash
+CUDA_VISIBLE_DEVICES='' PYTHONPATH=verl ../envs/opd-state/bin/python \
+    data/prep/build_fresh_math_data.py \
+    --input ../MD-OPD/data/math/DAPO/train.parquet \
+    --student ../models/DeepSeek-R1-Distill-Qwen-1.5B \
+    --output runs/native-data/math-full
+NATIVE_DATA_MANIFEST="$PWD/runs/native-data/math-full/manifest.json" \
+    OPD_FREEZE_SOURCE=1 bash recipe/math_native.sh student_fresh
+```
+
+Use a fresh output directory when rebuilding. The launcher binds the manifest to the exact Parquet, tokenizer/template and prompt cap before initializing GPU workers. The native path supports `student_teacher_fusion` and `initial_teacher_fusion` with `TEACHER_WEIGHT`, sequence directions with `SWITCH_TOKENS`, and batch mixtures with `TEACHER_FRACTION`; the experiment report distinguishes verified short runs from full quality results.

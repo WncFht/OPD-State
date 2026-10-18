@@ -38,6 +38,8 @@ class Engine:
         self.output_processor = NS(request_states={})
         self.version = 0
         self.write_serial = 0
+        self.frozen_digests = {}
+        self.parameter_addresses = "stable-addresses"
         self.done = asyncio.Event()
 
     async def abort(self, request_id):
@@ -47,11 +49,28 @@ class Engine:
     async def collective_rpc(self, method, **kwargs):
         self.calls.append((method,))
         if method == "native_source_status":
-            return [{"actor_version": self.version, "write_serial": self.write_serial}]
+            return [
+                {
+                    "actor_version": self.version,
+                    "write_serial": self.write_serial,
+                    "frozen_digests": dict(self.frozen_digests),
+                    "parameter_addresses": self.parameter_addresses,
+                }
+            ]
         if method == "native_request_barrier":
             return [{"native_device_idle": True}]
         args = kwargs["kwargs"]
-        return [{"role": args["role"], "path": args["path"]}]
+        fusion = args.get("fusion")
+        return [
+            {
+                "role": args["role"],
+                "path": args["path"],
+                "fusion": fusion,
+                "companion": ("teacher", fusion["teacher_path"], fusion["teacher_fingerprint"]) if fusion else None,
+                "frozen_digests": dict(self.frozen_digests),
+                "parameter_addresses": self.parameter_addresses if args.get("verify_addresses") else None,
+            }
+        ]
 
 
 class Server(M.NativePolicyServerMixin):
@@ -92,6 +111,68 @@ class Server(M.NativePolicyServerMixin):
 
 
 class NativeServerTests(unittest.IsolatedAsyncioTestCase):
+    async def test_graph_receiver_refuses_changed_parameter_addresses_after_an_update(self):
+        s = Server("current_student")
+        s.config["enforce_eager"] = False
+        await s.initialize_native_source()
+        await s.begin_native_update(0)
+        s.engine.write_serial = 1
+        await s.commit_native_update(0)
+        await s.begin_native_update(1)
+        s.engine.version, s.engine.write_serial = 1, 2
+        s.engine.parameter_addresses = "reallocated-addresses"
+        with self.assertRaisesRegex(RuntimeError, "addresses changed"):
+            await s.commit_native_update(1)
+        self.assertFalse(s.native_state.valid)
+
+    async def paired(self):
+        s = Server("current_student")
+        s.config["generation_fusion"] = {"teacher_path": "/q", "teacher_fingerprint": "sha", "teacher_weight": 0.5}
+        s.engine.frozen_digests = {"teacher": "unchanged"}
+        await s.initialize_native_source()
+        await s.begin_native_update(0)
+        s.engine.write_serial = 1
+        await s.commit_native_update(0)
+        return s
+
+    async def test_pair_requires_both_identities_and_actual_coefficient_before_sampling(self):
+        s = await self.paired()
+        with self.assertRaisesRegex(RuntimeError, "companion"):
+            await s.generate_native_batch([self.call()], ("current_student", "/p", 0), {})
+        self.assertFalse(s.generated)
+        rows = await s.generate_native_batch(
+            [self.call()],
+            ("current_student", "/p", 0),
+            {},
+            expected_companion=("teacher", "/q", "sha"),
+            teacher_weight=0.5,
+        )
+        self.assertEqual(rows[0]["identities"], (("current_student", "/p", 0), ("teacher", "/q", "sha")))
+        self.assertEqual(rows[0]["teacher_weight"], 0.5)
+        self.assertEqual(rows[0]["frozen_digests"], {"teacher": "unchanged"})
+
+    async def test_pair_rejects_frozen_parameter_mutation_during_actor_publication(self):
+        s = await self.paired()
+        await s.begin_native_update(1)
+        s.engine.version, s.engine.write_serial = 1, 2
+        s.engine.frozen_digests["teacher"] = "corrupted"
+        with self.assertRaisesRegex(RuntimeError, "frozen model parameters"):
+            await s.commit_native_update(1)
+        self.assertFalse(s.native_state.valid)
+
+    async def test_pair_rejects_mutated_frozen_weights_instead_of_publishing_a_batch(self):
+        s = await self.paired()
+        s.engine.frozen_digests["teacher"] = "corrupted"
+        with self.assertRaisesRegex(RuntimeError, "frozen model parameters"):
+            await s.generate_native_batch(
+                [self.call()],
+                ("current_student", "/p", 0),
+                {},
+                expected_companion=("teacher", "/q", "sha"),
+                teacher_weight=0.5,
+            )
+        self.assertFalse(s.native_state.valid)
+
     async def fixture(self, role="teacher"):
         s = Server(role)
         await s.initialize_native_source()

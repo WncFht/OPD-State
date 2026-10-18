@@ -1,0 +1,6 @@
+{
+  "scope": "Native prefill plus seven decode positions per request, full valid vocabulary, HF reference and sleep/wake; no training accuracy claim",
+  "raw_directory": "/mnt/tidalfs-bdsz01/dataset/llm_dataset/zkn_data/fht_data/OPD-State/runs/native-rollout-implementation/fusion-decode-eager-v1",
+  "positions_per_lambda": 16,
+  "weights": [0, 0.5, 1]
+}

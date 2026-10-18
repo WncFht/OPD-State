@@ -756,6 +756,10 @@ class ActorRolloutRefWorker(Worker, DistProfilerExtension):
         return output
 
     @register(dispatch_mode=Dispatch.ONE_TO_ALL, blocking=False)
+    async def set_native_rollout_target(self, servers, expected_fusion=None, purpose="training"):
+        return await self.rollout.set_native_weight_target(servers, expected_fusion, purpose)
+
+    @register(dispatch_mode=Dispatch.ONE_TO_ALL, blocking=False)
     async def update_weights(self, global_steps: int = None, mode: str = "auto"):
         """Update weights from trainer to rollout.
 

@@ -715,6 +715,31 @@ $$
 
 原生精确 fusion 的[独立数值检查](results/native-rollout/fusion-numerics/receipt.json)已覆盖 λ=0/0.5/1、两条短 prefix、完整 151,665 词表和 sleep/wake。λ=0.5 使用两个原生 Qwen2 backbone，56 个 KV 区域互不重叠；端点只使用 28 层单模型。六个 prefix/λ 组合的原生与 HF BF16 FlashAttention2 logits 和概率分布逐值相同，休眠恢复也逐值相同。每条仅生成一个 token，此结果只证明这些 prefill 条件下的数值与缓存布局，尚未覆盖连续 decode、actor 热更新、CUDA Graph 或 fusion trainer；HF 只在独立数值参考中执行。
 
+### 原生分段、batch 与 fusion 的接入结果
+
+四种分段方向与两种 batch 混合均已完成两步四卡训练和最终九十六条纯 student 响应，独立核验来源、阶段预算、全局配额及全部精确指标。下表只作实现验收；短 cap 的准确率和两步耗时不能替代正式质量或稳定吞吐。前三个分段及 batch 运行使用 4994d2b 的私有源码快照；initial→teacher 的首次启动受另一项自有 GPU 调试干扰，vLLM 显存探测失败，停止后以相同参数串行重跑成功。
+
+| 训练变体                                                                                                    | 设置                                  | 第二步生成 / step | 最终短验证 | 整卡采样最大值         |
+| ----------------------------------------------------------------------------------------------------------- | ------------------------------------- | ----------------- | ---------- | ---------------------- |
+| [teacher→current](results/native-rollout/trainer-switch-q-current/native-acceptance.json)                   | k=32，总 cap=64                       | 0.761 / 7.425 s   | 6.798 s    | 20,904 MiB             |
+| [current→teacher](results/native-rollout/trainer-switch-current-q/native-acceptance.json)                   | k=32，总 cap=64                       | 0.709 / 6.727 s   | 7.100 s    | 14,157 MiB             |
+| [teacher→initial](results/native-rollout/trainer-switch-q-initial/native-acceptance.json)                   | k=32，总 cap=64；GPU 0 有并行调试负载 | 3.463 / 7.557 s   | 17.552 s   | 40,021 MiB，含并行作业 |
+| [initial→teacher](results/native-rollout/trainer-switch-initial-q/native-acceptance.json)                   | k=32，总 cap=64；串行重跑             | 0.821 / 4.007 s   | 10.708 s   | 17,540 MiB             |
+| [batch current/teacher](results/native-rollout/trainer-batch-current-empty-replicas/native-acceptance.json) | teacher=1/8，三副本无 teacher 请求    | 0.729 / 7.343 s   | 6.911 s    | 14,015 MiB             |
+| [batch initial/teacher](results/native-rollout/trainer-batch-initial/native-acceptance.json)                | teacher=1/2                           | 0.957 / 4.023 s   | 10.342 s   | 20,976 MiB             |
+| [current/teacher fusion](results/native-rollout/trainer-current-fusion/native-acceptance.json)              | λ=0.5，完整 teacher 参数摘要校验      | 7.904 / 27.257 s  | 16.003 s   | 18,331 MiB             |
+| [initial/teacher fusion](results/native-rollout/trainer-initial-fusion/native-acceptance.json)              | λ=0.5，完整两模型参数摘要校验         | 14.935 / 17.617 s | 15.936 s   | 20,407 MiB             |
+
+两种 fusion 的生成计时包含完整 GPU→CPU 参数摘要计算，后者校验两套模型，因此该列不能与关闭校验的前六项比较推理吞吐。current 的生成版本为 0/1，最终验证为纯 student 版本 2；teacher 的全部 native 参数摘要保持一致。initial fusion 的 initial 与 teacher 摘要均保持一致，训练不向生成端同步 actor；其 final eval 也只使用 student 版本 2。所有运行未保存 checkpoint。
+
+后续训练与验证使用独立引擎，统一训练上下文为 prompt+response，最终验证始终使用共同预算。该布局和新增的内容 visit 计数继续接受完整实验验收；旧短测只支持其各自源码快照中的行为。新的完整题库由[数据审计](results/native-rollout/fresh-data-summary.json)固定为 17,235 道唯一题，前五十批 batch 64 消费 3,200 道不同题，题库没有截成 3,200 行；长训练每 epoch 269 批后重新打乱全库。
+
+### 连续解码与 graph 数值检查
+
+[eager 连续解码](results/native-rollout/fusion-decode-eager/receipt.json)扩展到两条 prompt 各八步，共四十八个 prefix/λ 位置，每个位置比较完整 151,665 词表。λ=0 的跨 HF/native 最大 logits 差为 0.125、TV 为 0.027081；λ=0.5/1 的误差为零，全部满足预先采用的 BF16 界限。固定模型完整参数摘要和 sleep/wake 后原生输出均保持一致。
+
+[CUDA Graph 检查](results/native-rollout/fusion-decode-graph/receipt.json)使用 λ=0.5、相同两条 prompt 与八步生成，实际捕获 114 个图，十六个位置的完整 logits/分布与 HF 参考相同。恢复后的参数内容、参数地址、输出和 logits 一致。该证据证明所测固定权重条件；重复 prompt 下的 FSDP 热更新、实际原生 abort/drain 与正式长响应性能仍需独立验收。
+
 ## 复现与结果位置
 
 从仓库根目录执行。正式模型、数据和独立环境位于工作区相邻目录。已有缓存或 schedule 时生成器拒绝覆盖；独立复核应换输出目录。`OPD_SOURCE_COMMIT` 可固定历史提交；正式生产源码使用每个 run 的私有快照，后续开发不会改变已运行任务。

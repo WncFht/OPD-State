@@ -1,0 +1,18 @@
+{
+  "run_name": "trainer-current-fusion-four-v1",
+  "run_directory": "/mnt/tidalfs-bdsz01/dataset/llm_dataset/zkn_data/fht_data/OPD-State/runs/native-rollout-implementation/trainer-current-fusion-four-v1",
+  "source_commit": "248f9fcdb6fd3ddb0cbf16e49869f22ea9d3ecdf",
+  "source_manifest_sha256": "a53e3e03cf8e3d3ffd6cd828f4fbc7a2664a161bc0a92f0fedcc760a22f19214",
+  "source_identity": "runtime_snapshot",
+  "training_steps": 2,
+  "samples_per_question": 16,
+  "full_benchmarks": false,
+  "checkpoints_saved": false,
+  "wandb_url": null,
+  "training_log_sha256": "970b43ba78217a516818055caf824342a0c5e1810a37e9f44bae0bba4dd4657e",
+  "training_log_observed_bytes": 222431,
+  "collection_scope": "final_validation",
+  "final_validation_marker_verified": true,
+  "collector_source_sha256": "d55fdb5753b7557a445c8584830f41fdbb3ca450ae53fa888791f2cdf81899fb",
+  "validation_steps": [2]
+}

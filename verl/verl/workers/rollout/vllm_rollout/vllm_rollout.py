@@ -169,6 +169,24 @@ class ServerAdapter(BaseRollout):
             self.server_handle = ray.get_actor(actor_name)
         return True
 
+    async def set_native_weight_target(self, servers, expected_fusion, expected_purpose="training"):
+        """Bind one sleeping current-student receiver before exporting FSDP weights."""
+        if self.config.get("policy") is None or self.config.tensor_model_parallel_size != 1:
+            raise ValueError("Native actor routing requires the explicit TP=1 policy path")
+        from pathlib import Path
+
+        handle = servers[self.replica_rank]
+        status = await handle.native_source_status.remote()
+        if (status["source_role"] != "current_student"
+            or status["source_path"] != str(Path(self.model_config.path).resolve())
+            or status["sync_namespace"] != self.config.generation_sync_namespace
+            or status["fusion"] != expected_fusion
+            or status["purpose"] != expected_purpose
+            or status["active"] or status["awake"]):
+            raise RuntimeError("Actor weights require an idle sleeping receiver with the exact declared source")
+        self.server_handle = handle
+        return {"replica_rank": self.replica_rank, "fusion": expected_fusion}
+
     async def _execute_method(
         self,
         method: str,

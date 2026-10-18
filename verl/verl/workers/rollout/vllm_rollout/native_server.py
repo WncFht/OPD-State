@@ -28,11 +28,21 @@ class NativePolicyServerMixin:
                 "path": path,
                 "fingerprint": fingerprint,
                 "sync_namespace": self.config.get("generation_sync_namespace", ""),
+                "fusion": self.config.get("generation_fusion"),
+                "verify_frozen": self.config.get("generation_verify_frozen", False),
+                "verify_addresses": not self.config.get("enforce_eager", True),
             },
         )
         if len(summaries) != 1 or summaries[0]["path"] != path or summaries[0]["role"] != role:
             raise RuntimeError("Native source initialization requires the matching TP=1 worker")
         self.native_state = GenerationState(role, path, fingerprint)
+        self.native_fusion = self.config.get("generation_fusion")
+        if summaries[0].get("fusion") != self.native_fusion:
+            raise RuntimeError("Native worker did not bind the declared fusion")
+        companion = summaries[0].get("companion")
+        self.native_companion = tuple(companion) if companion is not None else None
+        self.native_frozen_digests = summaries[0].get("frozen_digests", {})
+        self.native_parameter_addresses = summaries[0].get("parameter_addresses")
 
     async def generate(
         self,
@@ -75,10 +85,18 @@ class NativePolicyServerMixin:
             if state is not None:
                 state.complete(request_id)
 
-    async def generate_native_batch(self, calls, expected_identity, sampling_params):
+    async def generate_native_batch(
+        self, calls, expected_identity, sampling_params, expected_companion=None, teacher_weight=None
+    ):
         state = getattr(self, "native_state", None)
         if state is None or state.identity != tuple(expected_identity):
             raise RuntimeError("Native batch targeted the wrong source or actor version")
+        if (
+            tuple(expected_companion) if expected_companion is not None else None
+        ) != self.native_companion or teacher_weight != (
+            self.native_fusion["teacher_weight"] if self.native_fusion is not None else None
+        ):
+            raise RuntimeError("Native batch targeted the wrong companion or fusion coefficient")
         if any(
             c["max_tokens"] < 1 or len(c["prompt_ids"]) + c["max_tokens"] > self.config.max_model_len for c in calls
         ):
@@ -95,6 +113,9 @@ class NativePolicyServerMixin:
                 "token_ids": output.token_ids,
                 "log_probs": output.log_probs,
                 "identity": output.extra_fields["generation_identity"],
+                "identities": (output.extra_fields["generation_identity"],)
+                + ((self.native_companion,) if self.native_companion is not None else ()),
+                "teacher_weight": teacher_weight,
                 "finish_reason": output.extra_fields["native_finish_reason"],
                 "stop_reason": output.extra_fields["native_stop_reason"],
                 "num_preempted": output.num_preempted,
@@ -102,12 +123,33 @@ class NativePolicyServerMixin:
 
         tasks = [asyncio.create_task(one(call)) for call in calls]
         try:
-            return await asyncio.gather(*tasks)
+            rows = await asyncio.gather(*tasks)
+            if self.native_frozen_digests or self.native_parameter_addresses is not None:
+                await self.check_native_frozen()
+                for row in rows:
+                    row["frozen_digests"] = dict(self.native_frozen_digests)
+                    row["parameter_addresses"] = self.native_parameter_addresses
+            return rows
         except BaseException:
             for task in tasks:
                 task.cancel()
             await asyncio.gather(*tasks, return_exceptions=True)
             raise
+
+    async def check_native_frozen(self, summaries=None):
+        if not self.native_frozen_digests and self.native_parameter_addresses is None:
+            return
+        if summaries is None:
+            summaries = await self.engine.collective_rpc("native_source_status")
+        if len(summaries) != 1 or summaries[0].get("frozen_digests") != self.native_frozen_digests:
+            self.native_state.fail_update()
+            raise RuntimeError("Native frozen model parameters changed")
+        if (
+            self.native_parameter_addresses is not None
+            and summaries[0].get("parameter_addresses") != self.native_parameter_addresses
+        ):
+            self.native_state.fail_update()
+            raise RuntimeError("Native parameter addresses changed after graph capture")
 
     async def begin_native_update(self, version):
         if getattr(self, "native_state", None) is not None:
@@ -121,6 +163,7 @@ class NativePolicyServerMixin:
         if getattr(self, "native_state", None) is None:
             return
         summaries = await self.engine.collective_rpc("native_source_status")
+        await self.check_native_frozen(summaries)
         if (
             len(summaries) != 1
             or summaries[0]["actor_version"] != version
@@ -147,6 +190,13 @@ class NativePolicyServerMixin:
             "awake": state.awake,
             "valid": state.valid,
             "pending_version": state.pending_version,
+            "source_role": state.role,
+            "source_path": state.path,
+            "sync_namespace": self.config.get("generation_sync_namespace", ""),
+            "fusion": self.native_fusion,
+            "purpose": self.config.get("generation_purpose", "evaluation"),
+            "verified_frozen_digests": self.native_frozen_digests,
+            "parameter_addresses": self.native_parameter_addresses,
         }
 
     async def drain_native_requests(self, *, abort=False, timeout=60):

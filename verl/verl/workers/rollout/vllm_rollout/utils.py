@@ -216,7 +216,11 @@ class vLLMColocateWorkerExtension:
 
     def _iter_all_models_with_config(self):
         """Yield (model, model_config) for models that need post-processing."""
-        yield self.model_runner.model, self.model_runner.vllm_config.model_config
+        model = self.model_runner.model
+        # The paired teacher was loaded once at engine initialization. Actor
+        # reloads and their post-load transforms must only touch the base.
+        target = model.base if type(model).__name__ == "NativeQwen2Fusion" else model
+        yield target, self.model_runner.vllm_config.model_config
         if self._use_mtp_drafter_weight_sync():
             draft_cfg = self._get_draft_model_config()
             if draft_cfg is not None:
@@ -241,16 +245,24 @@ class vLLMColocateWorkerExtension:
             expected_version=expected_version,
         )
 
-    def configure_native_source(self, role, path, fingerprint=None, sync_namespace=""):
+    def configure_native_source(
+        self, role, path, fingerprint=None, sync_namespace="", fusion=None, verify_frozen=False,
+        verify_addresses=False,
+    ):
         from verl.workers.rollout.vllm_rollout.native_weights import configure_source
 
-        return configure_source(self, role, path, fingerprint, sync_namespace)
+        return configure_source(self, role, path, fingerprint, sync_namespace, fusion, verify_frozen, verify_addresses)
 
     def native_source_status(self):
+        from verl.workers.rollout.vllm_rollout.native_weights import frozen_digests, parameter_addresses
+
         return {
             "role": getattr(self, "_native_generation_role", None),
             "actor_version": getattr(self, "_native_actor_version", None),
             "write_serial": getattr(self, "_native_weight_write_serial", 0),
+            "frozen_digests": frozen_digests(self),
+            "parameter_addresses": parameter_addresses(self.model_runner.model)
+            if getattr(self, "_native_verify_addresses", False) else None,
         }
 
     def native_request_barrier(self):
@@ -259,6 +271,8 @@ class vLLMColocateWorkerExtension:
 
     def native_model_layout(self):
         """Report actual native KV regions for paired-model acceptance."""
+        from vllm.compilation.counter import compilation_counter
+
         context = self.model_runner.vllm_config.compilation_config.static_forward_context
         regions = []
         for name, layer in context.items():
@@ -277,6 +291,11 @@ class vLLMColocateWorkerExtension:
             "kv_regions": regions,
             "parameter_tensors": len(parameters),
             "parameter_bytes": sum(p.numel() * p.element_size() for p in parameters),
+            "cuda_graph_enabled": bool(self.model_runner.use_cuda_graph),
+            "cuda_graphs_captured": compilation_counter.num_cudagraph_captured,
+            "compiled_code_counts": {name: len(module.compiled_codes)
+                                     for name, module in self.model_runner.model.named_modules()
+                                     if hasattr(module, "compiled_codes")},
         }
 
     def update_weights_from_ipc(
