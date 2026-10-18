@@ -46,7 +46,7 @@ Status: proposed
 
 ### 训练与验证引擎的实现边界
 
-模型池将验证放在独立的纯 current-student 引擎中，训练 current 也使用训练专用副本。单模型、分段、batch 与 fusion 的训练引擎统一采用 prompt+response 的上下文和共同 token/batch 设置；训练来源共享一个总显存预算，最终验证始终使用完整的验证预算。该布局增加冷启动副本，消除了“current 使用长验证上下文、固定模型使用短训练上下文”和不同策略验证预算不同的混杂。
+模型池将验证放在独立的纯 current-student 引擎中，训练 current 也使用训练专用副本。单模型、分段、batch 与 fusion 的训练引擎统一采用 prompt+response 的上下文和共同 token/batch 设置；训练来源共享一个总显存预算，最终验证始终使用完整的验证预算。该布局增加冷启动副本，消除了“current 使用长验证上下文、固定模型使用短训练上下文”和不同策略验证预算不同的混杂。验证序列并发现在可由 `generation_eval_max_num_seqs` 单独配置：默认 `null` 保留继承行为；显式设置时仅为验证 manager 克隆配置，训练原配置与各训练副本保持原值，不通过改写全局训练配置再回填私有值实现。初版成功条件是训练/验证的实际 worker 上限分别符合声明、最终验证仍为当前 student、数据与学习预算不变；错误 worker 值或覆盖训练设置均否决。参数正值、token 预算与冲突的 engine_kwargs 在 pre-Ray 阶段检查。配置变化可能改变有限随机样本输出，比较时须固定该参数，不能承诺逐 token 不变或未实测的加速。
 
 actor 的 FSDP 权重流在每次导出前显式选择 sleeping current 接收端，核对角色、初始化路径、运行命名空间、用途与 frozen companion。fusion 只将原始 HF 命名张量交给 base loader，teacher 不参加 actor 的 post-load 变换；initial fusion 的两套生成权重均拒绝 actor 写入。可选完整参数摘要用于 GPU 验收，graph 模式还核对参数地址；这些检查不能代替实际 graph/缓存测试。
 
@@ -74,6 +74,8 @@ current 与 initial 的 λ=0.5 原生 fusion 均完成两步四卡更新和九�
 真实 native 请求检查补齐了取消路径：vLLM 0.10 abort 不唤醒等待输出的生成协程，单靠 frontend map 为空不足以确认完成。服务端保存实际生成 task，abort 后取消并等待 task，再等待 CUDA barrier 与 prefix reset；超时保持 drain-pending，禁止权重变更或重新开放。eager/graph 的长请求均在实际 decode 后成功排空，随后 logits 与发布恢复；见[运行检查](../../../../docs/experiment/results/native-rollout/runtime/receipt.json)。同一检查还验证生产 IPC 完整换权重后的 APC 零命中与完整 logits 等价。
 
 [四卡 graph 训练](../../../../docs/experiment/results/native-rollout/trainer-current-fusion-graph/native-acceptance.json)在重复同题条件下完成两步和最终纯 student 验证，检查相同 prefix 跨 actor 版本更新、完整冻结摘要和参数地址。当前尚待最终版本的统一性能基准、正式 50 步完整质量矩阵和逐项完成审计，提案保持 proposed。
+
+[独立验证并发的 CPU 验收](../../../../docs/experiment/results/native-rollout/eval-concurrency-cpu.json)覆盖默认继承、配置副本、重复解析、四类训练策略和 worker 参数读取；三组四卡短验收将对照 current 继承值、current 验证上限 64 和 initial-fusion 验证上限 64。它们共享 B8、两步和六题×16，额外核对默认完整数据清单及实际引擎回执。GPU 接入尚未验收，计时不作质量或吞吐结论；旧冻结任务保持原配置。
 
 ### 完整 prompt 池与访问次数
 

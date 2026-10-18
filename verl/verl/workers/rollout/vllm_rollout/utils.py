@@ -254,11 +254,15 @@ class vLLMColocateWorkerExtension:
 
         source = configure_source(self, role, path, fingerprint, sync_namespace, fusion, verify_frozen, verify_addresses)
         device = torch.cuda.current_device()
+        worker_config = self.model_runner.vllm_config
         source["worker_execution"] = {
             "device_uuid": str(torch.cuda.get_device_properties(device).uuid),
             "local_device": device,
             "visible_devices": os.environ.get("CUDA_VISIBLE_DEVICES", ""),
             "pid": os.getpid(),
+            "max_num_seqs": int(worker_config.scheduler_config.max_num_seqs),
+            "max_num_batched_tokens": int(worker_config.scheduler_config.max_num_batched_tokens),
+            "max_model_len": int(worker_config.model_config.max_model_len),
         }
         return source
 

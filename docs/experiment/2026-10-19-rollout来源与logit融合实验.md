@@ -561,6 +561,8 @@ GPU busy 均值先按每张卡在对应阶段的有效采样求算术平均，�
 
 ### 时间的具体组成
 
+工程验收的并发上限与正式训练须分开记录：当前全量 gate 的实际 vLLM 启动参数为训练/验证各 `max_num_seqs=8`，来自 B8 启动参数，不能将其生成耗时直接用作正式 B64 协议的速度。新增[独立验证并发设置](results/native-rollout/eval-concurrency-cpu.json)默认保持继承，显式启用时只修改验证引擎配置；真实 GPU 对照仍待执行，不以配置可用推断加速。
+
 下表为 50 步累计秒数。Teacher 评分嵌套在优势计算 `adv` 内，已扣除重复项；最终验证在训练 `step` 计时块之外。
 
 | 阶段                   | 在线 student | Teacher 轨迹 | Semi-OPD | Fusion λ=0.5 |

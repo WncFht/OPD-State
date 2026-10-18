@@ -1,5 +1,7 @@
 """Torch/Hydra bridge checks; run explicitly with the training environment."""
 
+import asyncio
+import copy
 import json
 import tempfile
 import unittest
@@ -14,7 +16,13 @@ from omegaconf import open_dict
 
 from verl import DataProto
 from verl.trainer.ppo.fixed_rollout import digest_file, tokenizer_signature
-from verl.trainer.ppo.rollout_coordinator import RolloutCoordinator, epochs_for_budget, prepare_native_config
+from verl.trainer.ppo.rollout_coordinator import (
+    RolloutCoordinator,
+    epochs_for_budget,
+    native_evaluation_config,
+    prepare_native_config,
+)
+from verl.workers.rollout.native_pool import NativeModelPool
 
 ROOT = Path(__file__).resolve().parents[2]
 
@@ -125,6 +133,123 @@ class CoordinatorTests(unittest.TestCase):
         self.config.actor_rollout_ref.rollout.generation_layout = "automatic"
         with self.assertRaisesRegex(ValueError, "layout"):
             self.prepare()
+
+    def test_eval_concurrency_is_optional_and_repeated_resolution_preserves_training_limit(self):
+        r = self.config.actor_rollout_ref.rollout
+        r.max_num_seqs = 8
+        self.prepare()
+        self.assertEqual(r.max_num_seqs, 8)
+        self.assertIs(native_evaluation_config(self.config), self.config)
+        r.generation_eval_max_num_seqs = 64
+        self.prepare()
+        evaluation = native_evaluation_config(self.config)
+        self.assertEqual(evaluation.actor_rollout_ref.rollout.max_num_seqs, 64)
+        self.assertEqual(r.max_num_seqs, 8)
+        self.prepare()
+        self.assertEqual(r.max_num_seqs, 8)
+        self.assertEqual(self.config.data.train_batch_size, 4)
+        self.assertEqual(r.val_kwargs.n, 16)
+        r.max_num_seqs = 32
+        self.prepare()
+        self.assertEqual(r.max_num_seqs, 32)
+        self.assertEqual(native_evaluation_config(self.config).actor_rollout_ref.rollout.max_num_seqs, 64)
+        r.policy = None
+        self.assertIs(native_evaluation_config(self.config), self.config)
+
+    def test_invalid_eval_concurrency_fails_before_resource_or_config_mutation(self):
+        r = self.config.actor_rollout_ref.rollout
+        r.max_num_seqs = 8
+        for value in (0, -1, True, 1.5, "64"):
+            r.generation_eval_max_num_seqs = value
+            with self.subTest(value=value), self.assertRaisesRegex(ValueError, "positive integer"):
+                self.prepare()
+            self.assertEqual(r.max_num_seqs, 8)
+        r.generation_eval_max_num_seqs = int(r.max_num_batched_tokens) + 1
+        with self.assertRaisesRegex(ValueError, "batched-token budget"):
+            self.prepare()
+        r.generation_eval_max_num_seqs = 64
+        r.engine_kwargs = {"vllm": {"max_num_seqs": 128}}
+        with self.assertRaisesRegex(ValueError, "engine_kwargs"):
+            self.prepare()
+
+    def test_actual_pool_creation_separates_eval_and_all_training_policy_limits(self):
+        class Replica:
+            def __init__(self, replica_rank, config, model_config, gpus_per_node=4, **kwargs):
+                self.replica_rank, self.gpus_per_node = replica_rank, gpus_per_node
+                self.config, self.model_config = copy.deepcopy(config), model_config
+                self.workers, self.awake = [], False
+
+                async def status():
+                    return {"awake": self.awake}
+
+                self._server_handle = NS(native_source_status=NS(remote=status))
+
+            async def launch_servers(self):
+                self.awake = True
+
+            async def sleep(self):
+                self.awake = False
+
+        policies = [
+            {"kind": "single", "model": "current_student"},
+            {"kind": "single", "model": "teacher"},
+            {"kind": "logit_fusion", "base": "initial_student", "teacher_weight": 0.5},
+            {
+                "kind": "batch_mix",
+                "components": [
+                    {"policy": {"kind": "single", "model": "teacher"}, "weight": 0.5},
+                    {"policy": {"kind": "single", "model": "current_student"}, "weight": 0.5},
+                ],
+            },
+        ]
+        for policy in policies:
+            r = self.config.actor_rollout_ref.rollout
+            r.policy, r.max_num_seqs, r.generation_eval_max_num_seqs = policy, 8, 64
+            self.prepare()
+            evaluation = native_evaluation_config(self.config)
+            mains = [
+                Replica(i, evaluation.actor_rollout_ref.rollout, self.config.actor_rollout_ref.model) for i in range(4)
+            ]
+            manager = NS(get_replicas=lambda mains=mains: mains, server_handles=[m._server_handle for m in mains])
+            pool = NativeModelPool(self.config, manager)
+            with (
+                self.subTest(policy=policy),
+                patch("verl.workers.rollout.replica.get_rollout_replica_class", return_value=Replica),
+            ):
+                asyncio.run(pool.initialize())
+                self.assertEqual(pool.describe()[pool.eval_slot]["max_num_seqs"], 64)
+                for slot, replicas in pool.replicas.items():
+                    if slot == pool.eval_slot:
+                        continue
+                    self.assertEqual(len(replicas), 4)
+                    for replica in replicas:
+                        self.assertEqual(replica.config.max_num_seqs, 8)
+                        self.assertEqual(replica.config.generation_purpose, "training")
+                        self.assertEqual(replica.config.max_model_len, 8)
+                self.assertEqual(r.max_num_seqs, 8)
+
+    def test_worker_receipt_reads_the_actual_engine_scheduler_configuration(self):
+        from verl.workers.rollout.vllm_rollout.utils import vLLMColocateWorkerExtension
+
+        worker = NS(
+            model_runner=NS(
+                vllm_config=NS(
+                    scheduler_config=NS(max_num_seqs=64, max_num_batched_tokens=8192),
+                    model_config=NS(max_model_len=32768),
+                )
+            )
+        )
+        with (
+            patch("verl.workers.rollout.vllm_rollout.native_weights.configure_source", return_value={}),
+            patch("torch.cuda.current_device", return_value=0),
+            patch("torch.cuda.get_device_properties", return_value=NS(uuid="GPU-CPU-fixture")),
+        ):
+            receipt = vLLMColocateWorkerExtension.configure_native_source(worker, "current_student", "/student")
+        execution = receipt["worker_execution"]
+        self.assertEqual(execution["max_num_seqs"], 64)
+        self.assertEqual(execution["max_num_batched_tokens"], 8192)
+        self.assertEqual(execution["max_model_len"], 32768)
+        self.assertFalse(torch.cuda.is_initialized())
 
     def test_prompt_visits_and_eval_samples_have_independent_counters(self):
         self.prepare()

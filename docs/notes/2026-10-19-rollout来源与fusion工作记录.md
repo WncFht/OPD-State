@@ -323,3 +323,7 @@ v2 bank 后续完成生成，canonical bank 含 180 条轨迹、1,440 个抽样�
 Bank/长响应验收提交为 f334951，完整 CI 与 hooks 通过。核对入口时发现，正式矩阵显式绑定完整去重清单，但 math_native.sh 未传数据参数会继承原始 DAPO 文件。默认值现指向 runs/native-data/math-full/manifest.json，缺失时先退出；显式 TRAIN_FILES 及 NATIVE_DATA_MANIFEST 保留，既有小型工程输入与排队任务不改。将已验证池的三个文件逐字节复用到默认位置，未重新抽样或过滤数据。
 
 四项 Bash 入口测试通过，实际 OPD_DRY_RUN 配置指向默认 ordered.parquet，随后使用真实 tokenizer 执行 prepare_native_config 的 pre-Ray 清单校验，17235 题与数据/模板/cap 签名匹配，CUDA 未初始化。新增默认清单是入口前置条件，迁移步骤在 data README 与开发指南；没有修改冻结训练源码、当前任务或历史实验协议。
+
+默认清单入口提交为 8f128cc，完整 CI（八十七项原生、十八项维护工具、一百三十六项维护检查）通过，原有显式工程数据继续使用原设置。全量 gate 2233555 仍健康运行；日志实际启动参数确认验证引擎是 max_num_seqs=8、context=32768，训练引擎是 8/1088，并发继承了 B8，不能把这次生成耗时直接当成正式 B64 的验证速度。
+
+新增可选 generation_eval_max_num_seqs，默认 null；显式值只进入主验证 manager 的独立配置副本，训练配置和预算保留。Worker 回执增加实际 max_num_seqs/max_num_batched_tokens/max_model_len，避免只用配置声明作为接入证明。四类策略的真实 pool 初始化代码、配置幂等性、legacy、冲突值、非法类型和扩展 worker 方法已在 CPU/训练环境检查；八十七项原生与五十八项运行检查通过。三个维护测试包含七个错误回执，全部拒绝。真实 Hydra/pre-Ray 验证保持训练 batch=8、训练上限=8、验证上限=64、同步 namespace 不变，CUDA 未初始化。三组 GPU 工程对照继续排队，当前任务未调整。

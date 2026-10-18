@@ -21,6 +21,8 @@ generation_fusion: null
 generation_verify_frozen: false
 generation_purpose: evaluation
 generation_layout: overlap
+# Native eval engine concurrency; null preserves the inherited setting.
+generation_eval_max_num_seqs: null
 generation_state_metrics: true
 preserve_source_weights: false
 

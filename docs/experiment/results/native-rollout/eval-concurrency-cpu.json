@@ -1,0 +1,73 @@
+{
+  "schema": "native-eval-concurrency-cpu-v1",
+  "scope": "Configuration/pool/receipt semantics and installed CPU interfaces; no GPU throughput or quality conclusion",
+  "source_sha256": {
+    "verl/verl/workers/config/rollout.py": "19e04296f4c26cb1b2f2456abc95780f04ede003286ace3c2ad32e20ebcd6780",
+    "verl/verl/trainer/config/rollout/rollout.yaml": "b53393a87e41eb10c3350161522934741321027585caa9452b4aca1af0f22e0c",
+    "verl/verl/trainer/ppo/rollout_coordinator.py": "a47173d0e0eadaea38ffd12a9c5627dcc20bbff33d27b98f3e6a2113b0521f04",
+    "verl/verl/trainer/ppo/ray_trainer.py": "f6f20c43994c00f54489bfad0f595d168e4a339d01349428e81cb695e50bb295",
+    "verl/verl/workers/rollout/vllm_rollout/utils.py": "e3feb0870316f7b5dc5235c284a9ebfbc3d5034d7964a67f34d1e1ca976fa1cd",
+    "verl/tests/opd/test_rollout_coordinator_runtime.py": "0a1fea52891c135b454c587ad94b2711ce6419fe2bdd8173eb62fe85fd976f6f",
+    "eval/run_native_eval_limits.py": "69709dc4bc85144e13c85de065031e3ab60e1f7b074b248274ba9957d44b55ac",
+    "eval/verify_native_engine_limits.py": "1d14640bb4eedcfa0cde530395825fe47d0648b10fa3ce0b3699be40b4c9f80d",
+    "scripts/tests/test_native_eval_limits.py": "a64bff0fb71ac49b4250f07616d953a629f21a22d1ea1b77d7f068a02537cfeb"
+  },
+  "tests": {
+    "native_pure_methods": 87,
+    "training_environment_runtime_methods": 58,
+    "coordinator_methods": 16,
+    "maintenance_methods": 3,
+    "wrong_receipt_controls": 7,
+    "four_policy_families": [
+      "current single",
+      "teacher single",
+      "initial fusion",
+      "current/teacher batch mixture"
+    ]
+  },
+  "observed_old_protocol": {
+    "scope": "Actual engine CLI settings only; not a causal throughput comparison",
+    "run": "native-validation-kl-full-20261019-v2",
+    "log_prefix_bytes": 169298,
+    "log_prefix_sha256": "723005be89a8935462286afb136bd34c4fbb0e0a443916a25f30d31ee72e1148",
+    "observed_engines": {
+      "2237544": {
+        "max_model_len": 32768,
+        "max_num_seqs": 8,
+        "max_num_batched_tokens": 32768
+      },
+      "2238714": {
+        "max_model_len": 1088,
+        "max_num_seqs": 8,
+        "max_num_batched_tokens": 1088
+      }
+    }
+  },
+  "actual_hydra_pre_ray": {
+    "scope": "Actual Hydra and pre-Ray validation only; no GPU inference",
+    "training_batch": 8,
+    "training_max_num_seqs": 8,
+    "evaluation_max_num_seqs": 64,
+    "namespace_preserved": true,
+    "source_config_unchanged": true,
+    "cuda_initialized": false,
+    "log_sha256": "e518cc20bdf69a38239ddaaad9bbeed3a8acd99da3288520ba1d3529885e75c8"
+  },
+  "gpu_protocol": {
+    "cases": ["current-inherit", "current-eval64", "initial-fusion-eval64"],
+    "training_batch": 8,
+    "updates": 2,
+    "train_response_cap": 64,
+    "validation_questions": 6,
+    "validation_samples": 16,
+    "validation_response_cap": 128,
+    "cuda_graph": true,
+    "default_prepared_pool": true,
+    "actual_worker_limits_required": true,
+    "physical_gpus": [0, 1, 2, 3]
+  },
+  "pending": [
+    "Three real GPU integrations of independent train/eval concurrency",
+    "Performance selection under matched context/KV/workload; the new option does not imply faster generation"
+  ]
+}

@@ -1140,8 +1140,13 @@ class RayPPOTrainer(OPDTrainerMixin):
         # two conditions satisfied: (1) no reward model, or (2) reward model with extra resource pool
         enable_agent_reward_loop = not self.use_rm or self.config.reward.reward_model.enable_resource_pool
 
+        server_config = self.config
+        if self.native_policy_enabled:
+            from verl.trainer.ppo.rollout_coordinator import native_evaluation_config
+
+            server_config = native_evaluation_config(self.config)
         self.llm_server_manager = LLMServerManager.create(
-            config=self.config, worker_group=self.actor_rollout_wg, rollout_resource_pool=actor_rollout_resource_pool
+            config=server_config, worker_group=self.actor_rollout_wg, rollout_resource_pool=actor_rollout_resource_pool
         )
 
         # if enable_agent_reward_loop, we directly pass reward_loop_workers to agent loop manager

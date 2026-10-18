@@ -213,6 +213,8 @@ class RolloutConfig(BaseConfig):
     generation_verify_frozen: bool = False
     generation_purpose: str = "evaluation"
     generation_layout: str = "overlap"
+    # Native eval engine only; None inherits the original rollout concurrency.
+    generation_eval_max_num_seqs: Optional[int] = None
     generation_state_metrics: bool = True
     preserve_source_weights: bool = False
 

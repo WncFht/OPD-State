@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import asyncio
+import copy
 import json
 import math
 import time
@@ -28,6 +29,14 @@ def prepare_native_config(config, tokenizer, processor):
         raise ValueError("generation_fusion is reserved for the model pool; configure policy.kind=logit_fusion")
     if rollout.get("generation_layout", "overlap") not in {"overlap", "split"}:
         raise ValueError("Native generation layout must be overlap or split")
+    eval_sequences = rollout.get("generation_eval_max_num_seqs")
+    if eval_sequences is not None:
+        if type(eval_sequences) is not int or eval_sequences < 1:
+            raise ValueError("Native evaluation max_num_seqs must be a positive integer")
+        if eval_sequences > int(rollout.max_num_batched_tokens):
+            raise ValueError("Native evaluation max_num_seqs exceeds its batched-token budget")
+        if "max_num_seqs" in (rollout.get("engine_kwargs", {}).get("vllm") or {}):
+            raise ValueError("Native evaluation max_num_seqs conflicts with the engine_kwargs override")
     policy = OmegaConf.to_container(rollout.policy, resolve=True)
     parsed = parse_policy(policy, int(rollout.response_length))
     plan = compile_policy(
@@ -146,6 +155,20 @@ def prepare_native_config(config, tokenizer, processor):
         config.trainer.native_generation_memory_budget = budget
         config.trainer.native_required_models = sorted(plan.models)
     return True
+
+
+def native_evaluation_config(config):
+    """Give the main eval manager its own limits, retaining train configuration."""
+    from omegaconf import open_dict
+
+    rollout = config.actor_rollout_ref.rollout
+    limit = rollout.get("generation_eval_max_num_seqs")
+    if limit is None or rollout.get("policy") is None:
+        return config
+    evaluation = copy.deepcopy(config)
+    with open_dict(evaluation):
+        evaluation.actor_rollout_ref.rollout.max_num_seqs = limit
+    return evaluation
 
 
 def epochs_for_budget(total_steps, batches_per_epoch):
