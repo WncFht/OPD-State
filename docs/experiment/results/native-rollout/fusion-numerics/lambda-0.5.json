@@ -1,0 +1,308 @@
+{
+  "teacher_weight": 0.5,
+  "native_paired_backbones": true,
+  "vocab_size": 151665,
+  "prompt_ids": [
+    [
+      151646, 151644, 3838, 374, 220, 22, 3039, 220, 23, 30, 6928, 697, 32711,
+      13, 151645, 151648, 198
+    ],
+    [
+      151646, 151644, 50, 3948, 856, 61, 17, 481, 220, 20, 87, 488, 220, 21,
+      284, 220, 15, 13, 151645, 151648, 198
+    ]
+  ],
+  "max_abs_logit_error": [0.0, 0.0],
+  "total_variation": [0.0, 0.0],
+  "sleep_wake_logits_bitwise_equal": true,
+  "native_sampler": true,
+  "native_layout": {
+    "model_class": "NativeQwen2Fusion",
+    "kv_regions": [
+      {
+        "layer": "base.model.layers.0.self_attn.attn",
+        "pointer": 21508390912,
+        "bytes": 97615872
+      },
+      {
+        "layer": "base.model.layers.1.self_attn.attn",
+        "pointer": 21609054208,
+        "bytes": 97615872
+      },
+      {
+        "layer": "base.model.layers.2.self_attn.attn",
+        "pointer": 21709717504,
+        "bytes": 97615872
+      },
+      {
+        "layer": "base.model.layers.3.self_attn.attn",
+        "pointer": 21810380800,
+        "bytes": 97615872
+      },
+      {
+        "layer": "base.model.layers.4.self_attn.attn",
+        "pointer": 21911044096,
+        "bytes": 97615872
+      },
+      {
+        "layer": "base.model.layers.5.self_attn.attn",
+        "pointer": 22011707392,
+        "bytes": 97615872
+      },
+      {
+        "layer": "base.model.layers.6.self_attn.attn",
+        "pointer": 22112370688,
+        "bytes": 97615872
+      },
+      {
+        "layer": "base.model.layers.7.self_attn.attn",
+        "pointer": 22213033984,
+        "bytes": 97615872
+      },
+      {
+        "layer": "base.model.layers.8.self_attn.attn",
+        "pointer": 22313697280,
+        "bytes": 97615872
+      },
+      {
+        "layer": "base.model.layers.9.self_attn.attn",
+        "pointer": 22414360576,
+        "bytes": 97615872
+      },
+      {
+        "layer": "base.model.layers.10.self_attn.attn",
+        "pointer": 22515023872,
+        "bytes": 97615872
+      },
+      {
+        "layer": "base.model.layers.11.self_attn.attn",
+        "pointer": 22615687168,
+        "bytes": 97615872
+      },
+      {
+        "layer": "base.model.layers.12.self_attn.attn",
+        "pointer": 22716350464,
+        "bytes": 97615872
+      },
+      {
+        "layer": "base.model.layers.13.self_attn.attn",
+        "pointer": 22817013760,
+        "bytes": 97615872
+      },
+      {
+        "layer": "base.model.layers.14.self_attn.attn",
+        "pointer": 22917677056,
+        "bytes": 97615872
+      },
+      {
+        "layer": "base.model.layers.15.self_attn.attn",
+        "pointer": 23018340352,
+        "bytes": 97615872
+      },
+      {
+        "layer": "base.model.layers.16.self_attn.attn",
+        "pointer": 23119003648,
+        "bytes": 97615872
+      },
+      {
+        "layer": "base.model.layers.17.self_attn.attn",
+        "pointer": 23219666944,
+        "bytes": 97615872
+      },
+      {
+        "layer": "base.model.layers.18.self_attn.attn",
+        "pointer": 23320330240,
+        "bytes": 97615872
+      },
+      {
+        "layer": "base.model.layers.19.self_attn.attn",
+        "pointer": 23420993536,
+        "bytes": 97615872
+      },
+      {
+        "layer": "base.model.layers.20.self_attn.attn",
+        "pointer": 23521656832,
+        "bytes": 97615872
+      },
+      {
+        "layer": "base.model.layers.21.self_attn.attn",
+        "pointer": 23622320128,
+        "bytes": 97615872
+      },
+      {
+        "layer": "base.model.layers.22.self_attn.attn",
+        "pointer": 23722983424,
+        "bytes": 97615872
+      },
+      {
+        "layer": "base.model.layers.23.self_attn.attn",
+        "pointer": 23823646720,
+        "bytes": 97615872
+      },
+      {
+        "layer": "base.model.layers.24.self_attn.attn",
+        "pointer": 23924310016,
+        "bytes": 97615872
+      },
+      {
+        "layer": "base.model.layers.25.self_attn.attn",
+        "pointer": 24024973312,
+        "bytes": 97615872
+      },
+      {
+        "layer": "base.model.layers.26.self_attn.attn",
+        "pointer": 24125636608,
+        "bytes": 97615872
+      },
+      {
+        "layer": "base.model.layers.27.self_attn.attn",
+        "pointer": 24226299904,
+        "bytes": 97615872
+      },
+      {
+        "layer": "teacher.model.layers.28.self_attn.attn",
+        "pointer": 24326963200,
+        "bytes": 97615872
+      },
+      {
+        "layer": "teacher.model.layers.29.self_attn.attn",
+        "pointer": 24427626496,
+        "bytes": 97615872
+      },
+      {
+        "layer": "teacher.model.layers.30.self_attn.attn",
+        "pointer": 24528289792,
+        "bytes": 97615872
+      },
+      {
+        "layer": "teacher.model.layers.31.self_attn.attn",
+        "pointer": 24628953088,
+        "bytes": 97615872
+      },
+      {
+        "layer": "teacher.model.layers.32.self_attn.attn",
+        "pointer": 24729616384,
+        "bytes": 97615872
+      },
+      {
+        "layer": "teacher.model.layers.33.self_attn.attn",
+        "pointer": 24830279680,
+        "bytes": 97615872
+      },
+      {
+        "layer": "teacher.model.layers.34.self_attn.attn",
+        "pointer": 24930942976,
+        "bytes": 97615872
+      },
+      {
+        "layer": "teacher.model.layers.35.self_attn.attn",
+        "pointer": 25031606272,
+        "bytes": 97615872
+      },
+      {
+        "layer": "teacher.model.layers.36.self_attn.attn",
+        "pointer": 25132269568,
+        "bytes": 97615872
+      },
+      {
+        "layer": "teacher.model.layers.37.self_attn.attn",
+        "pointer": 25232932864,
+        "bytes": 97615872
+      },
+      {
+        "layer": "teacher.model.layers.38.self_attn.attn",
+        "pointer": 25333596160,
+        "bytes": 97615872
+      },
+      {
+        "layer": "teacher.model.layers.39.self_attn.attn",
+        "pointer": 25434259456,
+        "bytes": 97615872
+      },
+      {
+        "layer": "teacher.model.layers.40.self_attn.attn",
+        "pointer": 25534922752,
+        "bytes": 97615872
+      },
+      {
+        "layer": "teacher.model.layers.41.self_attn.attn",
+        "pointer": 25635586048,
+        "bytes": 97615872
+      },
+      {
+        "layer": "teacher.model.layers.42.self_attn.attn",
+        "pointer": 25736249344,
+        "bytes": 97615872
+      },
+      {
+        "layer": "teacher.model.layers.43.self_attn.attn",
+        "pointer": 25836912640,
+        "bytes": 97615872
+      },
+      {
+        "layer": "teacher.model.layers.44.self_attn.attn",
+        "pointer": 25937575936,
+        "bytes": 97615872
+      },
+      {
+        "layer": "teacher.model.layers.45.self_attn.attn",
+        "pointer": 26038239232,
+        "bytes": 97615872
+      },
+      {
+        "layer": "teacher.model.layers.46.self_attn.attn",
+        "pointer": 26138902528,
+        "bytes": 97615872
+      },
+      {
+        "layer": "teacher.model.layers.47.self_attn.attn",
+        "pointer": 26239565824,
+        "bytes": 97615872
+      },
+      {
+        "layer": "teacher.model.layers.48.self_attn.attn",
+        "pointer": 26340229120,
+        "bytes": 97615872
+      },
+      {
+        "layer": "teacher.model.layers.49.self_attn.attn",
+        "pointer": 26440892416,
+        "bytes": 97615872
+      },
+      {
+        "layer": "teacher.model.layers.50.self_attn.attn",
+        "pointer": 26541555712,
+        "bytes": 97615872
+      },
+      {
+        "layer": "teacher.model.layers.51.self_attn.attn",
+        "pointer": 26642219008,
+        "bytes": 97615872
+      },
+      {
+        "layer": "teacher.model.layers.52.self_attn.attn",
+        "pointer": 26742882304,
+        "bytes": 97615872
+      },
+      {
+        "layer": "teacher.model.layers.53.self_attn.attn",
+        "pointer": 26843545600,
+        "bytes": 97615872
+      },
+      {
+        "layer": "teacher.model.layers.54.self_attn.attn",
+        "pointer": 26944208896,
+        "bytes": 97615872
+      },
+      {
+        "layer": "teacher.model.layers.55.self_attn.attn",
+        "pointer": 27044872192,
+        "bytes": 97615872
+      }
+    ],
+    "parameter_tensors": 398,
+    "parameter_bytes": 7108352000
+  },
+  "reference": "HF BF16 FlashAttention2, same token prefix and valid vocabulary",
+  "source_sha256": "3711b16acddf1ca7c284a406287759f621d779df3dee9cff5ef41e70d222a1ce"
+}

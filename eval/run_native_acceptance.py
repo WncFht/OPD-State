@@ -39,15 +39,27 @@ def main():
     parser.add_argument("--memory-budget", type=float, default=0.15)
     parser.add_argument("--validation", type=Path, required=True)
     parser.add_argument("--wandb", action="store_true")
+    parser.add_argument("--source-commit", help="Freeze a committed verl tree instead of the current worktree")
     args, overrides = parser.parse_known_args()
     root = Path(__file__).resolve().parents[1]
     run = args.output.resolve()
     run.mkdir(parents=True, exist_ok=False)
     source = run / "source"
-    shutil.copytree(root / "verl", source / "verl", ignore=shutil.ignore_patterns("__pycache__", "*.pyc"))
-    commit = subprocess.check_output(["git", "rev-parse", "HEAD"], cwd=root, text=True).strip()
+    commit = subprocess.check_output(
+        ["git", "rev-parse", "--verify", (args.source_commit or "HEAD") + "^{commit}"], cwd=root, text=True
+    ).strip()
+    if args.source_commit:
+        source.mkdir()
+        archive = subprocess.Popen(["git", "archive", commit, "verl"], cwd=root, stdout=subprocess.PIPE)
+        subprocess.run(["tar", "-x", "-C", str(source)], stdin=archive.stdout, check=True)
+        archive.stdout.close()
+        if archive.wait() != 0:
+            raise RuntimeError("Could not freeze the selected source commit")
+    else:
+        shutil.copytree(root / "verl", source / "verl", ignore=shutil.ignore_patterns("__pycache__", "*.pyc"))
     manifest = {
         "base_commit": commit,
+        "source_kind": "git_archive" if args.source_commit else "worktree_copy",
         "files": {
             str(p.relative_to(source)): hashlib.sha256(p.read_bytes()).hexdigest()
             for p in sorted((source / "verl").rglob("*"))
@@ -72,7 +84,11 @@ def main():
         "RAY_TMPDIR": str(ray_dir),
         "VERL_ROOT": str(source / "verl"),
         "WANDB_RUN_GROUP": "math-native-rollout-sources",
+        "OPD_SOURCE_COMMIT": commit,
     }
+    for name in ["SWITCH_TOKENS", "TEACHER_FRACTION"]:
+        if name in os.environ:
+            settings[name] = os.environ[name]
     command = [
         "bash",
         str(root / "recipe/math_native.sh"),

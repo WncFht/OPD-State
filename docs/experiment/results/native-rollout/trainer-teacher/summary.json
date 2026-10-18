@@ -1,0 +1,18 @@
+{
+  "run_name": "trainer-teacher-v1",
+  "run_directory": "/mnt/tidalfs-bdsz01/dataset/llm_dataset/zkn_data/fht_data/OPD-State/runs/native-rollout-implementation/trainer-teacher-v1",
+  "source_commit": "d187a4b86719faa88fed586fa486e413a0a29e0a",
+  "source_manifest_sha256": "082b4e3df1cc1134925a770fcc1e6e1aba18b9289cbb4b98e88c6d3e89fef2cb",
+  "source_identity": "runtime_snapshot",
+  "training_steps": 2,
+  "samples_per_question": 16,
+  "full_benchmarks": false,
+  "checkpoints_saved": false,
+  "wandb_url": null,
+  "training_log_sha256": "ed72f19335467fe368434153dd3d028dddf70a75a3f7a5ac35da9f574583b67c",
+  "training_log_observed_bytes": 216946,
+  "collection_scope": "final_validation",
+  "final_validation_marker_verified": true,
+  "collector_source_sha256": "d55fdb5753b7557a445c8584830f41fdbb3ca450ae53fa888791f2cdf81899fb",
+  "validation_steps": [2]
+}

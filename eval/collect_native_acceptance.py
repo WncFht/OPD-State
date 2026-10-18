@@ -15,8 +15,8 @@ from collect_math_experiment import collect
 ROOT = Path(__file__).resolve().parents[1]
 
 
-def load_policy():
-    spec = importlib.util.spec_from_file_location("acceptance_policy", ROOT / "verl/verl/workers/rollout/policy.py")
+def load_policy(path):
+    spec = importlib.util.spec_from_file_location("acceptance_policy", path)
     module = importlib.util.module_from_spec(spec)
     sys.modules[spec.name] = module
     spec.loader.exec_module(module)
@@ -36,7 +36,7 @@ def audit(run, output, steps, *, require_full=False):
     env = json.loads((run / "command.json").read_text())["environment"]
     cap = int(manifest.get("response_cap", env["MAX_RESP_LENGTH"]))
     seed = int(manifest.get("seed", 42))
-    policy = load_policy()
+    policy = load_policy(run / "source/verl/verl/workers/rollout/policy.py")
     reports = []
     for step in range(1, steps + 1):
         path = directory / f"step-{step}.jsonl"

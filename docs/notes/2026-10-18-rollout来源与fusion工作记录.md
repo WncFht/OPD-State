@@ -197,3 +197,9 @@ identity-gpu-v3 与最终 v4 均完整通过 p0/q 原生 worker 和生产 execut
 17:24 完成 trainer 原生协调器与模型池的首个真实四卡验收。当前 student 两步生成使用版本 0/1，最终六题各十六次只用版本 2；独立采集器重算九十六条 verifier 结果并逐项匹配日志，未保存 checkpoint。全程 182.40 秒，两个训练 step 为 22.31/5.71 秒，短验证 11.90 秒；整卡每两秒采样峰值约 17 GiB，进程结束四卡回到 1 MiB。已有四十七项原生 CPU 与五项训练环境桥接检查通过；metadata-only DataProto 的两次接入错误由真实运行和更新后的回归用例定位修复。一次已知错误的自有 canary 在更新前停止，仅清理其已核对的子进程。
 
 新增每次运行独立的 ZMQ 命名空间，区分 job ID 相同的独立 Ray 集群；生成按源/副本批量 RPC，固定来源与 actor 存储隔离，验证同步最新 student。运行源码为 d187a4b 基线加完整文件哈希快照，不能按基线提交冒称全部改动已入库。teacher/initial、分段、batch、graph、原生排空和正式质量矩阵仍未完成。原生双 Qwen2 模型已写出待验证实现，注意力全局层号与两套 KV 分离；其 GPU 数值检查正在独立进行，尚未接入 trainer。
+
+原生协调器阶段提交为 4994d2b，隔离 worktree 的完整 CI 与提交 hooks 均通过。teacher-fresh 随后四卡两步完成并独立核对九十六条最终 student 响应：两步生成固定 q，训练不向生成端同步 actor，最终验证是版本 2 的 student。全程 224.95 秒，第二步生成 0.668 秒、训练 3.539 秒，整卡采样最大 17,889 MiB。initial-student 的独立四卡 canary 已启动，仍待结果。
+
+双原生 Qwen2 的独立 GPU 数值检查通过 λ=0/0.5/1、两条短 prefix 和完整 151,665 个有效 token 的 logits/分布对照，六项误差均为零；λ=0.5 的 56 个 KV 区域互不重叠，两端点各 28 个，sleep/wake 后逐值一致。原始浮点数组留在忽略目录，摘要及数组哈希归统一实验附件。它只覆盖单 token prefill；下一阶段仍须连续 decode、更新时 teacher 不变、缓存失效、graph 与真实 fusion trainer 验收。
+
+initial-student 四卡两步已完成并独立核对最终九十六条响应，固定 p0 与 learner 分离且没有训练同步，验证是最终 student 版本 2。全程 251.83 秒，两步为 22.54/4.85 秒，短验证 16.14 秒，整卡采样最大 18,051 MiB。四种分段方向和两种 batch 混合组成独立串行矩阵，固定源码 4994d2b；切换点为 32/64 token，current batch 的 teacher 占比为 1/8，刻意覆盖部分推理副本无该来源请求。启动器现在支持提交快照，并保存影响策略的环境参数；任意训练或审计失败即停止后续 case。

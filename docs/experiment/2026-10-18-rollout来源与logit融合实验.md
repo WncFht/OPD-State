@@ -685,7 +685,7 @@ $$
 
 ## 原生 rollout 重构验收
 
-重构沿用同一实验报告，分阶段接入原生 vLLM。三种单模型、双向分段、简单 batch 混合与两种独立 fusion 的目标语义见对应 Agent Note；TCOD 与嵌套组合排除在实现范围外。当前四十七项原生 CPU 检查和五项训练环境桥接检查通过，完整训练证据先覆盖 `student_fresh`，不能推及尚未完成的组合。
+重构沿用同一实验报告，分阶段接入原生 vLLM。三种单模型、双向分段、简单 batch 混合与两种独立 fusion 的目标语义见对应 Agent Note；TCOD 与嵌套组合排除在实现范围外。当前四十七项原生 CPU 检查和五项训练环境桥接检查通过，三种单模型来源的四卡短训练均通过，不能推及尚未完成的组合。
 
 `trainer-current-v5` 使用物理 GPU 0–3，各卡 TP=1 的原生 vLLM 副本，actor 与评分 teacher 均采用 FSDP/CPU offload。它消费原始 DAPO 数据集，不把题目池截成训练步数乘 batch；两次更新各使用八题，prompt 上限 512，训练响应上限 64，验证上限 128，T=1/top-p=1/top-k=-1，推理预算每卡 0.15，eager 与 prefix caching 开启。最终仅验证三基准各两题、每题十六次，共九十六条响应；短长度使得准确率不具备质量比较意义。调试只写 console，正式 50 步仍要求 W&B 项目 `OPD-State`、完整 570 题和最终 eval16。
 
@@ -699,7 +699,21 @@ $$
 | 整卡采样峰值 GPU 0/1/2/3 | 17,375 / 17,157 / 17,157 / 17,157 MiB；每两秒采样，不能代替连续峰值               |
 | checkpoint 与退出资源    | 未保存 checkpoint；四卡占用均回到 1 MiB                                           |
 
-结果保存在[current 接入证据](results/native-rollout/trainer-current/native-acceptance.json)与[逐步指标](results/native-rollout/trainer-current/training-1-2.csv)。采集器核对完整运行源码哈希、全局路由、阶段预算、固定身份、actor 版本和最终 student 验证；原始 token、生成分组与整卡遥测留在忽略的 run 目录。推理预算不是整卡作业上限，FSDP 更新时的内存也计入整卡采样；这里尚无其他策略的同条件速度比较。
+结果保存在[current 接入证据](results/native-rollout/trainer-current/native-acceptance.json)与[逐步指标](results/native-rollout/trainer-current/training-1-2.csv)。采集器核对完整运行源码哈希、全局路由、阶段预算、固定身份、actor 版本和最终 student 验证；原始 token、生成分组与整卡遥测留在忽略的 run 目录。推理预算不是整卡作业上限，FSDP 更新时的内存也计入整卡采样。
+
+`teacher_fresh` 随后使用同一短训练条件完成两步和最终九十六条 student 验证。两步生成身份均为固定 JustRL teacher，actor 从原 student 初始化并得到有限 loss/梯度，训练期间的 actor→rollout 同步次数为零；最终验证显式加载 student 版本 2。其[独立接入证据](results/native-rollout/trainer-teacher/native-acceptance.json)核对身份、版本、响应数和全部精确指标。
+
+`initial_student_fresh` 的[独立接入](results/native-rollout/trainer-initial/native-acceptance.json)也通过同一流程：两步从固定初始 student 实时重新采样，actor 正常更新，训练不向生成端同步，最终九十六条响应全部来自 student 版本 2。它没有使用历史 Semi-OPD 缓存。两步 loss 为 0.047954、0.085354，grad norm 为 3.285007、3.493234。
+
+| 短训练来源       | 第二步原生生成 / 训练 step | 第一步训练 step | 最终短验证 | 启动至退出 | 四卡最大整卡采样峰值 |
+| ---------------- | -------------------------- | --------------- | ---------- | ---------- | -------------------- |
+| 当前 student     | 0.541 / 5.712 s            | 22.312 s        | 11.905 s   | 182.405 s  | 17,375 MiB           |
+| 固定 teacher     | 0.668 / 3.539 s            | 20.824 s        | 10.146 s   | 224.949 s  | 17,889 MiB           |
+| 固定初始 student | 0.844 / 4.846 s            | 22.537 s        | 16.144 s   | 251.828 s  | 18,051 MiB           |
+
+三组没有复用响应，均实时生成。teacher 的第二步生成没有更快，但训练 step 省去了 current 所需的权重同步：current 的 `update_weights` 为 2.349 s，teacher 为跳过同步后的约 0.000006 s。固定来源总耗时还包含额外引擎初始化；两步测试不足以估计稳定性能，后续基准将分离冷启动、热生成、同步和验证。
+
+原生精确 fusion 的[独立数值检查](results/native-rollout/fusion-numerics/receipt.json)已覆盖 λ=0/0.5/1、两条短 prefix、完整 151,665 词表和 sleep/wake。λ=0.5 使用两个原生 Qwen2 backbone，56 个 KV 区域互不重叠；端点只使用 28 层单模型。六个 prefix/λ 组合的原生与 HF BF16 FlashAttention2 logits 和概率分布逐值相同，休眠恢复也逐值相同。每条仅生成一个 token，此结果只证明这些 prefill 条件下的数值与缓存布局，尚未覆盖连续 decode、actor 热更新、CUDA Graph 或 fusion trainer；HF 只在独立数值参考中执行。
 
 ## 复现与结果位置
 

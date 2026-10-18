@@ -20,7 +20,7 @@ Status: proposed
 
 可变选择包括单引擎换权重/双引擎驻留、副本布局、批量分组与流水化、CUDA Graph 和后续 speculative fusion。验证原型保持已归档训练的源码和实验条件，也不以独立生成检查冒充完整 trainer 集成通过；真实训练热更新和两步端到端验收仍是正式接入前的独立条件。
 
-正式 trainer 的可选原生路径已接入协调器，current-student 四卡两步训练与最终短验证通过；其余来源与组合仍需分别验收。初始审阅基线为 `d17d6c6`，范围是当前 math 的 FSDP、vLLM/HF fusion、权重同步、teacher 评分与验证执行链，涉及 32 个相关文件；另核对安装环境的 vLLM 0.10.0 V1 模型注册、采样、键值缓存（KV cache）与 worker 扩展接口。[代码核验清单](../../../../docs/experiment/results/2026-10-18-rollout-refactor-code-audit.json)保存范围、哈希与源码观察。方案优先使用 vLLM 原生执行；正式实验保留各自固定的源码快照。后续流程图描述目标算法和接入方式，具体实现状态以“实施进展”与对应验收证据为准。
+正式 trainer 的可选原生路径已接入协调器，三种单模型来源均完成四卡两步训练与最终短验证；分段、batch 与 fusion 训练仍需分别验收。初始审阅基线为 `d17d6c6`，范围是当前 math 的 FSDP、vLLM/HF fusion、权重同步、teacher 评分与验证执行链，涉及 32 个相关文件；另核对安装环境的 vLLM 0.10.0 V1 模型注册、采样、键值缓存（KV cache）与 worker 扩展接口。[代码核验清单](../../../../docs/experiment/results/2026-10-18-rollout-refactor-code-audit.json)保存范围、哈希与源码观察。方案优先使用 vLLM 原生执行；正式实验保留各自固定的源码快照。后续流程图描述目标算法和接入方式，具体实现状态以“实施进展”与对应验收证据为准。
 
 ### 实施进展
 
@@ -35,6 +35,10 @@ Status: proposed
 [rollout_coordinator.py](../../../../verl/verl/trainer/ppo/rollout_coordinator.py)与[native_pool.py](../../../../verl/verl/workers/rollout/native_pool.py)已接入 trainer 的可选原生路径：生成来源独立于 actor 初始化，复用同一 verifier，固定来源跳过训练权重同步，验证显式切回最新 student；数据遍历轮数由实际 dataloader 长度和更新预算计算。每次运行使用独立的权重传输命名空间，避免不同 Ray 集群重复 job ID。四十七项原生 CPU 检查与五项训练环境桥接检查通过，后者使用真正的 metadata-only DataProto 输入。
 
 [current-student 四卡接入证据](../../../../docs/experiment/results/native-rollout/trainer-current/native-acceptance.json)包含两步 FSDP 更新和六题各十六次最终验证。训练生成版本为 0/1，验证独占最终 student 版本 2；完整响应、阶段身份和配额由独立采集器复核，实际 verifier 指标与日志一致，没有保存 checkpoint。运行源码以 d187a4b 为基线的完整文件哈希快照标识，不能只用基线提交代替运行身份。其余单模型、分段、batch 混合、原生 fusion、graph/缓存/排空与正式 50 步完整 math 对照尚待验收，提案保持 proposed。
+
+[teacher-fresh 四卡接入](../../../../docs/experiment/results/native-rollout/trainer-teacher/native-acceptance.json)随后通过：训练始终使用固定 q，无 actor→生成权重同步，最终验证仍是更新后的 student 版本 2。独立数值检查也已验证[native 双 Qwen2 模型](../../../../verl/verl/workers/rollout/fusion/vllm_model.py)：λ=0/0.5/1 的两条短 prefix 在完整有效词表上与 HF 参考逐值相同，paired 有 56 个独立 KV 区域，端点有 28 个，sleep/wake 后一致；见[数值证据](../../../../docs/experiment/results/native-rollout/fusion-numerics/receipt.json)。该检查每条只生成一个 token，连续 decode、actor 热更新、graph 与 fusion trainer 尚待完成，不能据此开放正式 fusion 训练。
+
+[initial-student 四卡接入](../../../../docs/experiment/results/native-rollout/trainer-initial/native-acceptance.json)也已通过：生成身份保持为固定 p0，两步重新采样，actor 正常更新，验证仍是最终 student 版本 2。分段和简单 batch 的独立矩阵固定使用 4994d2b 源码，逐项成功后才继续，任意失败均保留现场；它们不复用正在修改的训练代码。
 
 ### 目标与算法含义
 

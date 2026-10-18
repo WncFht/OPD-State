@@ -1,0 +1,22 @@
+{
+  "scope": "Native exact-fusion eager prefill and sleep/wake on two short prefixes; not trainer, decode, graph or hot-update acceptance",
+  "gpu": 0,
+  "vllm": "0.10.0+cu126",
+  "eager": true,
+  "prefix_caching": true,
+  "max_model_len": 256,
+  "max_num_batched_tokens": 128,
+  "max_num_seqs": 2,
+  "gpu_memory_utilization": 0.15,
+  "new_tokens_per_request": 1,
+  "raw_arrays_directory": "/mnt/tidalfs-bdsz01/dataset/llm_dataset/zkn_data/fht_data/OPD-State/runs/native-rollout-implementation/fusion-numerics-v1",
+  "source_sha256": {
+    "eval/probe_native_fusion.py": "2dd81c10a723188d3394680bcde1c88cd10dfe2cf392571b58e9b192ac3639f5",
+    "verl/verl/workers/rollout/fusion/vllm_model.py": "3711b16acddf1ca7c284a406287759f621d779df3dee9cff5ef41e70d222a1ce"
+  },
+  "raw_arrays_sha256": {
+    "lambda-0.0.npz": "bac26fdfdf982d5585feb91fde622a4ef9870f5b98e001cdf06edd2c0da9ccf1",
+    "lambda-0.5.npz": "27d244efad115ee5d7e1748f162cb48c9a9c3aa143aa4c618aea1d6d1a8c8e37",
+    "lambda-1.0.npz": "0e9411789900248609c7316550f486aef4ace07f7de462cc5bd2d3a0f3f3690d"
+  }
+}

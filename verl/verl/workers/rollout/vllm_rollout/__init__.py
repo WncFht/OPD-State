@@ -14,6 +14,8 @@
 import os
 from importlib.metadata import PackageNotFoundError, version
 
+from verl.workers.rollout.fusion import register_native_fusion
+
 from .vllm_rollout import ServerAdapter  # noqa: F401
 
 
@@ -31,6 +33,10 @@ if vllm_package_version is None:
         "To use vllm rollout, please ensure the 'vllm' package is properly installed. See "
         "https://verl.readthedocs.io/en/latest/start/install.html for more details"
     )
+
+# Register the lazy class in both the serving process and native worker imports.
+# Loading remains opt-in through the engine's architecture override.
+register_native_fusion()
 
 if "ROCM_PATH" in os.environ:
     import re

@@ -1,0 +1,78 @@
+{
+  "scope": "Real four-GPU trainer acceptance; short caps do not establish math accuracy",
+  "training": [
+    {
+      "step": 1,
+      "responses": 8,
+      "response_tokens": 512,
+      "generation_identities": [
+        [
+          "initial_student",
+          "/mnt/tidalfs-bdsz01/dataset/llm_dataset/zkn_data/fht_data/models/DeepSeek-R1-Distill-Qwen-1.5B",
+          "2fc42a962d3f6f5281e99686ab9a5ae32c8cb9529c8e3fd07709c5c056613f48"
+        ]
+      ],
+      "trace_sha256": "cea5e916df69e0259e37288c836c5a06331a88cb762cf87d7a767c81c43e67f4"
+    },
+    {
+      "step": 2,
+      "responses": 8,
+      "response_tokens": 512,
+      "generation_identities": [
+        [
+          "initial_student",
+          "/mnt/tidalfs-bdsz01/dataset/llm_dataset/zkn_data/fht_data/models/DeepSeek-R1-Distill-Qwen-1.5B",
+          "2fc42a962d3f6f5281e99686ab9a5ae32c8cb9529c8e3fd07709c5c056613f48"
+        ]
+      ],
+      "trace_sha256": "6cae1ea2eeb2af7bf205d79231910e6d8ad71478e76ae1c22e3c2521c447c6ab"
+    }
+  ],
+  "evaluation_responses": 96,
+  "final_student_version": 2,
+  "evaluation_model_identities": [
+    [
+      "current_student",
+      "/mnt/tidalfs-bdsz01/dataset/llm_dataset/zkn_data/fht_data/models/DeepSeek-R1-Distill-Qwen-1.5B",
+      2
+    ]
+  ],
+  "whole_card_peak_mib": {
+    "0": 18051,
+    "1": 17889,
+    "2": 17889,
+    "3": 17889
+  },
+  "status": {
+    "state": "finished",
+    "exit_code": 0,
+    "elapsed_s": 251.82780623435974,
+    "gpu_after": [
+      [0, 315, 0],
+      [1, 131, 0],
+      [2, 283, 0],
+      [3, 3117, 0]
+    ],
+    "source_manifest": "/mnt/tidalfs-bdsz01/dataset/llm_dataset/zkn_data/fht_data/OPD-State/runs/native-rollout-implementation/trainer-initial-v1/source-manifest.json"
+  },
+  "native_manifest_sha256": "0609e7820bc4d07c096ecda4ed3e36189f6fad3b357d45b37f2708b45cddba3c",
+  "math_summary": {
+    "run_name": "trainer-initial-v1",
+    "run_directory": "/mnt/tidalfs-bdsz01/dataset/llm_dataset/zkn_data/fht_data/OPD-State/runs/native-rollout-implementation/trainer-initial-v1",
+    "source_commit": "4994d2b4186ca9dab7adf06560824386c2a56e98",
+    "source_manifest_sha256": "4edf126313cf540c3ddfb1770448b0a1755dd7db386be032df863c75c139a9f7",
+    "source_identity": "runtime_snapshot",
+    "training_steps": 2,
+    "samples_per_question": 16,
+    "full_benchmarks": false,
+    "checkpoints_saved": false,
+    "wandb_url": null,
+    "training_log_sha256": "bbde1c306eeee12a374f210f6bc5740da84f1113c4e1ad885442d4070e482288",
+    "training_log_observed_bytes": 215114,
+    "collection_scope": "final_validation",
+    "final_validation_marker_verified": true,
+    "collector_source_sha256": "d55fdb5753b7557a445c8584830f41fdbb3ca450ae53fa888791f2cdf81899fb",
+    "validation_steps": [2]
+  },
+  "collector_source_sha256": "2e9cb27e4abcbd10d602199bde4cf93a01548bcaf367b56ad4b957ceccec1555"
+}
