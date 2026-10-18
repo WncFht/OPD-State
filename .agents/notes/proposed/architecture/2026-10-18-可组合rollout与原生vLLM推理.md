@@ -24,7 +24,7 @@ Status: proposed
 
 ### 实施进展
 
-正式矩阵的三种单模型来源均完成五十步、完整 570×16 最终评测、独立路由/版本审计和 W&B finished 核验，无 checkpoint；current/initial/teacher 来源的 macro mean@16 为 64.30%/64.17%/63.80%。相对 current 的两个题目 bootstrap 区间均跨零，不据此排序。同设置的原生生成吞吐均接近 15k token/s，固定来源省去训练侧 actor 发布；详见[统一报告](../../../../docs/experiment/2026-10-19-rollout来源与logit融合实验.md)。当前矩阵已恢复运行 current/teacher fusion，独立 bank/长响应验收控制器等待该组完成后的串行窗口。剩余质量、布局、参数扫描与探针仍未完成，Status 保持 proposed。
+正式矩阵的三种单模型来源均完成五十步、完整 570×16 最终评测、独立路由/版本审计和 W&B finished 核验，无 checkpoint；current/initial/teacher 来源的 macro mean@16 为 64.30%/64.17%/63.80%。相对 current 的两个题目 bootstrap 区间均跨零，不据此排序。同设置的原生生成吞吐均接近 15k token/s，固定来源省去训练侧 actor 发布；详见[统一报告](../../../../docs/experiment/2026-10-19-rollout来源与logit融合实验.md)。Current/teacher fusion 的训练与完整评测进程现已成功退出，结果待调度器最终归档和 W&B 核验；独立 bank 生成已进入串行窗口，后接长响应验收。剩余质量、布局、参数扫描与探针仍未完成，Status 保持 proposed。
 
 原生单模型、四个分段方向、两种 batch 混合与两种 fusion 已完成四卡短训练；连续解码、graph 热更新和原生排空也已有下文的独立证据。正式十五组 50 步/570 题×16 矩阵已使用 d59a7c3 冻结源码启动，质量比较尚未完成。新增 `generation_layout=split` 的生产副本映射仍在验收：默认 `overlap`，不改变已启动矩阵；[CPU 路由证据](../../../../docs/experiment/results/native-rollout/placement-cpu.json)覆盖小组集中、分卡、响应顺序、冻结恢复和 current 写入前置条件，真实四卡新布局训练尚待验证。下文早期检查按其实际覆盖范围保留，不代表所有后续验收均已完成。
 
@@ -577,6 +577,10 @@ correctness 模式完成 71 个场景，包含功能、恢复、长序列与 36 
 
 因此正式质量对照需要保留“同模型两段请求”的执行控制组，不能把所有分段后差异都归因于 teacher/student 来源。跨布局以固定 prefix 的完整分布误差和质量重复实验验收；相同请求、相同布局仍保留严格重放检查。vLLM 0.15 提供 batch invariance 选项，它也与已调研的双模型插件版本接近，可作为独立环境候选；不能在现有 0.10 中仅设置同名环境变量便认定已启用。升级仍需验证 actor 权重传输、FSDP 生命周期、teacher 冻结及最终评测，不能原地替换现有训练环境。
 
+独立候选环境已按插件实际测试版本固定为 vLLM 0.15.1、Torch 2.9.1/cu129、Transformers 4.57.6；[依赖清单](../../../../eval/requirements-vllm015-cu129.txt)锁定一百八十五项发行包和插件 a987755 提交，已在独立目录同步安装。[环境 CPU 证据](../../../../docs/experiment/results/native-rollout/vllm015-environment-cpu.json)覆盖实际导入、模型注册、十九项上游 routing/demo 检查，以及开关在独立进程中的读取；检查全程隐藏 GPU，CUDA 未初始化。安装前后原训练环境二百二十九个发行包的版本与 METADATA 校验值相同。当前主机内核驱动为 550.163.01，既有 libcuda 560.35.03 报告 Driver API 12.6；新栈的 CUDA 12.9 GPU/JIT 兼容性仍需实测，CPU 导入不能代替 CUDA 小版本兼容性的实际验证。[^cuda-minor-version] 两套环境同时改变 Torch/CUDA 依赖，后续性能差异也不能只归因于 vLLM 版本。
+
+两项开关相关源码与 v0.15.1 标签逐字节核对后确认，batch invariance 在 `model_executor/layers/batch_invariant.py` 导入时读取并缓存开关，不由 `vllm.envs` 中的同名属性证明是否启用；各实验须在导入前设置，并使用独立进程。源码对非 FLASH_ATTN 的受支持后端仅声明 decode 不变性，跨 prefill/decode 的控制应明确选择 FLASH_ATTN，再分别测 batch/顺序变化与同模型分段。[^vllm015-invariance-source] 插件的实际 `load_weights` 方法另经单参数 CPU 模块与空 checkpoint 迭代器对照：给定权重流未被读取、零参数写入，仍声称载入全部参数名；该证据不涉及原生 GPU 更新，但已足以拒绝将这个入口直接接到当前 actor 权重流。双 checkpoint logits、独立 KV、graph、冻结 teacher 与 actor 热更新仍须另行验收。
+
 默认多进程调度的短序列请求墙钟均值如下，每格为 3 次重复，单位为秒。模型始终驻留，测试过程中没有切换权重；“串行/并发”指两个来源分组的执行方式。
 
 | 全局响应 batch | 单 student | 50% batch 混合串行 | 50% batch 混合同卡并发 | teacher→student，k=64 |
@@ -833,3 +837,7 @@ $$
 [^vllm-stop-order]: vLLM contributors. V1 scheduler check_stop. vLLM v0.10.0，2025. [长度与 EOS 的判定顺序](https://github.com/vllm-project/vllm/blob/v0.10.0/vllm/v1/core/sched/utils.py).
 
 [^batch-invariance]: Horace He et al. Defeating Nondeterminism in LLM Inference. Thinking Machines Lab，2025. [不同形状下的数值不变性](https://thinkingmachines.ai/blog/defeating-nondeterminism-in-llm-inference/). vLLM contributors. Batch Invariance. vLLM v0.15.0，2026. [版本对应的功能与限制](https://docs.vllm.ai/en/v0.15.0/features/batch_invariance/).
+
+[^vllm015-invariance-source]: vLLM contributors. Batch invariant kernels and initialization. vLLM v0.15.1，2026. [导入时开关、后端限制与初始化](https://github.com/vllm-project/vllm/blob/v0.15.1/vllm/model_executor/layers/batch_invariant.py).
+
+[^cuda-minor-version]: NVIDIA. Minor Version Compatibility. CUDA Compatibility，2026. [版本范围、特性与 PTX 限制](https://docs.nvidia.com/deploy/cuda-compatibility/minor-version-compatibility.html).

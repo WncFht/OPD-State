@@ -2,7 +2,7 @@
 
 ## 进度与主要结果
 
-本页统一记录 math 蒸馏研究的历史缓存/融合对照和后续原生实时 rollout 矩阵。历史四组已完成五十次 student 更新和三基准 eval16；新的十五组矩阵已有当前、固定初始、teacher 三种来源完成，current/teacher fusion 正在运行。新版本还在接入全量验证 KL 与固定前缀对照，完整研究任务尚未完成。日志、逐题输出和 W&B 按各自源码/协议核对；正式运行使用物理 GPU 0–3，不保存模型 checkpoint。
+本页统一记录 math 蒸馏研究的历史缓存/融合对照和后续原生实时 rollout 矩阵。历史四组已完成五十次 student 更新和三基准 eval16；新的十五组矩阵已有当前、固定初始、teacher 三种来源完成，current/teacher fusion 的训练与评测进程也已成功退出，结果待最终归档和 W&B 核验。新版本的固定前缀 bank 已开始串行生成，后续长响应与全量验证 KL 仍待验收，完整研究任务尚未完成。日志、逐题输出和 W&B 按各自源码/协议核对；正式运行使用物理 GPU 0–3，不保存模型 checkpoint。
 
 历史在线 student、teacher 轨迹、Semi-OPD、fusion 的 macro mean@16（三个基准等权平均）分别为 **64.84%、62.52%、64.59%、64.16%**。目前没有证据表明 λ=0.5 fusion 稳定提高平均正确率。四组都只有一个验证预算点，不能据此判断收敛。独立长时 Semi-OPD 已按用户要求于 2026-10-18 14:58（Asia/Shanghai）停止：完成 200 次更新，完整训练日志到第 199 步；第 50/100/150 步的 macro 分别为 **64.80%/66.92%/67.34%**，第 200 步验证中断，没有最终准确率或 checkpoint。训练队列、每小时观察器和 GPU 遥测均已退出，物理 GPU 0–3 已释放；停止状态与指标见[停止归档](results/long-semi-progress/stopped/summary.json)。
 
@@ -721,7 +721,7 @@ $$
 
 ## 原生 rollout 重构验收
 
-重构沿用同一实验报告，分阶段接入原生 vLLM。三种单模型、双向分段、简单 batch 混合与两种独立 fusion 的目标语义见对应 Agent Note；TCOD 与嵌套组合排除在实现范围外。三种单模型、四个分段方向、两种 batch 混合和两种 fusion 均已通过四卡短训练。新增布局后累计六十六项原生 CPU 检查和十三项训练环境检查通过，完整质量对照仍需正式矩阵验收。
+重构沿用同一实验报告，分阶段接入原生 vLLM。三种单模型、双向分段、简单 batch 混合与两种独立 fusion 的目标语义见对应 Agent Note；TCOD 与嵌套组合排除在实现范围外。三种单模型、四个分段方向、两种 batch 混合和两种 fusion 均已通过四卡短训练。新增布局后累计六十六项原生 CPU 检查和十三项训练环境检查通过，完整质量对照仍需正式矩阵验收。另有[独立 0.15.1 候选环境的 CPU 证据](results/native-rollout/vllm015-environment-cpu.json)：完成安装、导入、注册与上游 CPU 检查，但尚无 GPU 推理结论；外部插件的 incoming 权重流不适配当前 actor 热更新，相关取舍归 Agent Note，现有训练仍使用冻结的 0.10.0 栈。
 
 `trainer-current-v5` 使用物理 GPU 0–3，各卡 TP=1 的原生 vLLM 副本，actor 与评分 teacher 均采用 FSDP/CPU offload。它消费原始 DAPO 数据集，不把题目池截成训练步数乘 batch；两次更新各使用八题，prompt 上限 512，训练响应上限 64，验证上限 128，T=1/top-p=1/top-k=-1，推理预算每卡 0.15，eager 与 prefix caching 开启。最终仅验证三基准各两题、每题十六次，共九十六条响应；短长度使得准确率不具备质量比较意义。调试只写 console，正式 50 步仍要求 W&B 项目 `OPD-State`、完整 570 题和最终 eval16。
 

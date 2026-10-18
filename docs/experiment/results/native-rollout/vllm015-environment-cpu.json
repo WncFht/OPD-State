@@ -1,0 +1,115 @@
+{
+  "schema": "vllm015-independent-environment-cpu-v1",
+  "scope": "Isolated installation, CPU imports/registration/feature flag and mocked loader contract; no GPU generation or performance evidence",
+  "environment": {
+    "prefix": "/root/.cache/opd-state/envs/inference-vllm015",
+    "vllm": "0.15.1",
+    "torch": "2.9.1+cu129",
+    "torch_cuda_build": "12.9",
+    "transformers": "4.57.6",
+    "plugin": "0.2.0",
+    "packages": 185,
+    "python": "3.12.15",
+    "requirements_file": "eval/requirements-vllm015-cu129.txt",
+    "requirements_sha256": "9d0d07d9afc726057367baabf4b326522534d8116a428750b16711b5aa80e10f"
+  },
+  "inspector_sha256": "9a404179998b3e4bec0659b64163f9d892ccf7a57e42f7e5e993e56b7ff4613c",
+  "plugin": {
+    "version": "0.2.0",
+    "registered": true,
+    "entry_points": {
+      "lora_filesystem_resolver": "vllm.plugins.lora_resolvers.filesystem_resolver:register_filesystem_resolver",
+      "vllm_logits_register": "vllm_logits.register:register_all"
+    },
+    "files_sha256": {
+      "vllm_logits.register": "a7b36a0f2c70197ebd00e68174b142beba9cabfbb4ad55343c453647938bd0bd",
+      "vllm_logits._compat": "4b864a1013f1186eb2af94f656301a1f98136f8ab270d5139f34544e471b29c5",
+      "vllm_logits.backbones": "c53d58a43fd170de8cb80790e046e73bd19c357b47bd7b62302fa97d21622cda"
+    },
+    "weight_stream_probe": {
+      "scope": "Actual loader method with stubbed empty CPU checkpoint iterators; no native GPU update",
+      "incoming_iterated": false,
+      "parameter_writes": 0,
+      "claimed_loaded_names": ["sentinel"],
+      "sentinel_value_after": 0.0,
+      "incoming_actor_stream_consumed": false
+    },
+    "reviewed_commit": "a987755aad1a94689745843676d491bc77201e51",
+    "upstream_cpu_tests": {
+      "passed": 19,
+      "scope": "routing and numpy demo, not native backbones",
+      "log_sha256": "773678a2574c8e40f80b386095486ea11f7dedcfe15e04e98829f0a1f659d5f1"
+    }
+  },
+  "batch_invariance": {
+    "off": {
+      "recognized_implementation": true,
+      "import_time_flag": false,
+      "flag_after_late_environment_change": false,
+      "import_time_configuration_cached": true,
+      "kernel_overrides_initialized": false,
+      "source_path": "/root/.cache/opd-state/envs/inference-vllm015/lib/python3.12/site-packages/vllm/model_executor/layers/batch_invariant.py",
+      "source_sha256": "4c8e764495ef41fd1cd4d29f999969959fb0f690e796dd9112e58cfe887bae8c"
+    },
+    "on": {
+      "recognized_implementation": true,
+      "import_time_flag": true,
+      "flag_after_late_environment_change": true,
+      "import_time_configuration_cached": true,
+      "kernel_overrides_initialized": false,
+      "source_path": "/root/.cache/opd-state/envs/inference-vllm015/lib/python3.12/site-packages/vllm/model_executor/layers/batch_invariant.py",
+      "source_sha256": "4c8e764495ef41fd1cd4d29f999969959fb0f690e796dd9112e58cfe887bae8c"
+    },
+    "visible_gpu_guard_rejected": true
+  },
+  "driver_api": {
+    "query_exit_code": 0,
+    "version": 12060,
+    "mapped_libraries": [
+      "/usr/local/cuda-12.6/compat/lib.real/libcuda.so.560.35.03"
+    ],
+    "scope": "cuDriverGetVersion without cuInit; does not establish runtime/kernel compatibility"
+  },
+  "hardware": {
+    "physical_gpus": [0, 1, 2, 3],
+    "model": "NVIDIA H800",
+    "compute_capability": "9.0",
+    "kernel_driver": "550.163.01",
+    "gpu_runtime_compatibility": "not tested"
+  },
+  "tag_source_comparison": {
+    "envs.py": {
+      "tag_sha256": "daed927944497df0d7f11f108eea2975fe2a580d1871198120371c502797c277",
+      "installed_sha256": "daed927944497df0d7f11f108eea2975fe2a580d1871198120371c502797c277",
+      "matches": true
+    },
+    "model_executor/layers/batch_invariant.py": {
+      "tag_sha256": "4c8e764495ef41fd1cd4d29f999969959fb0f690e796dd9112e58cfe887bae8c",
+      "installed_sha256": "4c8e764495ef41fd1cd4d29f999969959fb0f690e796dd9112e58cfe887bae8c",
+      "matches": true
+    }
+  },
+  "training_environment_metadata": {
+    "packages": 229,
+    "versions_and_metadata_identical": true,
+    "before_sha256": "b9f2fe36edc39e3671051c9f1c6d1e9f8ab6b2fa510b335375dcf058101be143",
+    "after_sha256": "b9f2fe36edc39e3671051c9f1c6d1e9f8ab6b2fa510b335375dcf058101be143",
+    "scope": "Distribution version/METADATA comparison, not a whole-filesystem integrity claim"
+  },
+  "raw_inspections_sha256": {
+    "vllm015-inspect-off.json": "0f1c0492028463fd4a809e74a6e910ba2d4d596043ddb2db5e2d99481a37f027",
+    "vllm015-inspect-on.json": "69a342f17869e244cd7803535b1b6b807c057526f002a102f1ee999742bc9927"
+  },
+  "limitations": [
+    "CUDA 12.9 build versus the existing CUDA driver API 12.6 still needs actual GPU validation",
+    "Import-time flag enabled is not evidence that GPU kernel overrides initialized",
+    "The reviewed plugin ignores incoming actor streams and claims all parameter names even with empty checkpoint iterators in the CPU probe",
+    "Upstream routing/demo tests do not validate dual-checkpoint logits, KV independence, CUDA Graph or actor hot updates",
+    "A 0.10/0.15 comparison also changes Torch/CUDA dependencies; cannot attribute results solely to vLLM version"
+  ],
+  "reproduction": {
+    "lock_sync_completed": true,
+    "plugin_source": "git+https://github.com/NizarIslah/vllm-logits.git@a987755aad1a94689745843676d491bc77201e51",
+    "log_sha256": "06746b9da5b8b234ad0304b32a539dada3d3a7c3dd71185256328e6bd4e7ac41"
+  }
+}
