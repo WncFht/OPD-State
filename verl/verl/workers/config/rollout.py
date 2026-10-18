@@ -212,6 +212,7 @@ class RolloutConfig(BaseConfig):
     generation_fusion: Optional[dict] = None
     generation_verify_frozen: bool = False
     generation_purpose: str = "evaluation"
+    generation_layout: str = "overlap"
     preserve_source_weights: bool = False
 
     # Whether to enable full determinism for reproducibility.

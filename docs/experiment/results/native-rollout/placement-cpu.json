@@ -1,0 +1,40 @@
+{
+  "scope": "CPU placement, production adapter sharding and training-environment contracts; no GPU performance or trainer acceptance for split routing",
+  "recorded_at": "2026-10-18T12:03:25.172121+00:00",
+  "base_commit": "e43e15ef1451c17e7772632b2dc08f26c2e1b1bf",
+  "source_identity": "uncommitted file SHA-256 snapshot",
+  "source_sha256": {
+    "verl/verl/workers/rollout/placement.py": "e69ded7e676a8b327fef1e200adb4bbd5d18b80f2048b2eb9beefc59bc36ed6e",
+    "verl/verl/workers/rollout/native_pool.py": "af572cec3e47c01b366db7ac865f25f1bf805a2be353c58f4d316a01acbdd212",
+    "verl/verl/trainer/ppo/rollout_coordinator.py": "89a0844d9e1629f50943a084da9dedc24c2be102ae372778a6c723fd4cedb326",
+    "verl/verl/workers/config/rollout.py": "0ef80900c330d9590d56386d96338457e600c75ff6f7261033ee6f3964f25825",
+    "verl/verl/trainer/config/rollout/rollout.yaml": "8ed6d6fe8230e41676b08d59fc846001c9c94d3f9eb8cc99059c1936794815eb",
+    "verl/tests/opd/test_native_placement_on_cpu.py": "2a78f951816250be17dde565c455271dcb8fa3a99339ce04a901c29d765d34fd",
+    "verl/tests/opd/test_native_pool_on_cpu.py": "578042ffdee9e9727f95cd46fefbf9a218b0f8b6c209186cc63760d8f7c9f324",
+    "verl/tests/opd/test_rollout_coordinator_runtime.py": "63a0d4acffcdbbde96bd3b7a8a97d4ef8310f506991a7ad5ad9f276f43468195"
+  },
+  "checks": [
+    {
+      "command": ".venv/bin/python -m unittest discover -s verl/tests/opd -p test_native_*_on_cpu.py -v",
+      "tests": 66,
+      "exit_code": 0,
+      "log_sha256": "a81cee3fd0dfebff4e51da811d1d789a9195a0e04f8f9d5c03ff617c9d78ccf1"
+    },
+    {
+      "command": "CUDA_VISIBLE_DEVICES='' PYTHONPATH=verl ../envs/opd-state/bin/python -m unittest discover -s verl/tests/opd -p test_*_runtime.py -v",
+      "tests": 13,
+      "exit_code": 0,
+      "log_sha256": "6dc97bd79f0fba1b2f600bc2467bdb237cd3ad3455f6c29470d1cb70257549dd"
+    }
+  ],
+  "random_placement_trials": 500,
+  "random_seed": 42,
+  "default_layout": "overlap",
+  "split_keeps_source_kv_budgets": true,
+  "actor_publication_collectives_unchanged": true,
+  "formal_suite_source_unchanged": "d59a7c3463244ef7533ca4acf73855e988043848",
+  "pending": [
+    "Real 4-GPU split trainer acceptance",
+    "Controlled production split throughput and memory comparison"
+  ]
+}

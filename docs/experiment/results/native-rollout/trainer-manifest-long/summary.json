@@ -1,0 +1,18 @@
+{
+  "run_name": "trainer-manifest-long-v1",
+  "run_directory": "/mnt/tidalfs-bdsz01/dataset/llm_dataset/zkn_data/fht_data/OPD-State/runs/native-rollout-implementation/trainer-manifest-long-v1",
+  "source_commit": "46a928f7a9a2b1fd2aeae8b834cad412ced77a92",
+  "source_manifest_sha256": "59f15ea5c8149046cd790bc6aaf83dce824f198441ab34043261adc6b0146d3e",
+  "source_identity": "runtime_snapshot",
+  "training_steps": 2,
+  "samples_per_question": 16,
+  "full_benchmarks": false,
+  "checkpoints_saved": false,
+  "wandb_url": null,
+  "training_log_sha256": "66e102888ec8fcdf4f85458b7076d23629cb5ea6adac7598ef1cf7d0d7cc8f41",
+  "training_log_observed_bytes": 229864,
+  "collection_scope": "final_validation",
+  "final_validation_marker_verified": true,
+  "collector_source_sha256": "d55fdb5753b7557a445c8584830f41fdbb3ca450ae53fa888791f2cdf81899fb",
+  "validation_steps": [2]
+}

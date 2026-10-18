@@ -24,6 +24,8 @@ Status: proposed
 
 ### 实施进展
 
+原生单模型、四个分段方向、两种 batch 混合与两种 fusion 已完成四卡短训练；连续解码、graph 热更新和原生排空也已有下文的独立证据。正式十五组 50 步/570 题×16 矩阵已使用 d59a7c3 冻结源码启动，质量比较尚未完成。新增 `generation_layout=split` 的生产副本映射仍在验收：默认 `overlap`，不改变已启动矩阵；[CPU 路由证据](../../../../docs/experiment/results/native-rollout/placement-cpu.json)覆盖小组集中、分卡、响应顺序、冻结恢复和 current 写入前置条件，真实四卡新布局训练尚待验证。下文早期检查按其实际覆盖范围保留，不代表所有后续验收均已完成。
+
 生产目录新增 [policy.py](../../../../verl/verl/workers/rollout/policy.py)，实现不可变模型身份、平面配置解析、全局响应配额、分段预算与端点归约，显式拒绝嵌套和 TCOD。[十三项 CPU 合约检查](../../../../verl/tests/opd/test_native_policy_on_cpu.py)已通过，包含五百组随机配额；Hydra 配置往返也已验证。新增配置默认关闭，现有路径继续使用原入口。这些是契约层证据，尚不表示 worker、权重生命周期或 trainer 集成已完成。
 
 随后新增 [native_executor.py](../../../../verl/verl/workers/rollout/native_executor.py)、[lifecycle.py](../../../../verl/verl/workers/rollout/lifecycle.py)与原生服务端接口，生产 CPU 检查合计四十四项通过。执行层保持原 prompt 与完整响应，保留原始结束原因，核对来源/版本/λ；失败时要求原生 abort/drain。服务端将 actor 权重接收、完整 HF 名称集合、最终 bucket、实际写入序号、缓存失效与 CUDA barrier 纳入发布条件，同版本恢复也不能沿用上一次写入回执。固定来源在服务端和真实 inference worker 均拒绝 actor 流。
@@ -184,7 +186,7 @@ flowchart TD
 
 图示为 $0<\lambda<1$ 的执行语义。`student_teacher_fusion` 的 base 是当前 actor 的推理副本，state 分布会随训练更新；`initial_teacher_fusion` 的 base 固定为 $p_0$，teacher 也固定，因此在固定采样设置下行为分布不随 actor 更新，但每次 fresh 抽样的轨迹仍可不同。两者都由融合分布逐 token 形成一条连续前缀，不能把每个 token 简单归为“teacher 生成”或“student 生成”。
 
-当前已完成的 current fusion 训练用 HF 双模型实现上述语义；目标原生实现把两套 backbone、独立 KV 和 logits 合并放入同一个 vLLM 采样循环。initial fusion、原生精确 fusion 及其正式 trainer 接入尚未完成。
+历史 current fusion 使用 HF 双模型；原生扩展现已将两套 backbone、独立 KV 和 logits 融合接入同一个 vLLM 采样循环，两种 base 均通过四卡短训练。完整 50 步质量矩阵尚未完成，历史 HF 结果保留原运行身份。
 
 在 $T=1$、共同有效词表 $V$ 上 logits 有限的条件下，令 $p_V=\operatorname{softmax}(z_b)$、$q_V=\operatorname{softmax}(z_q)$。对 $0<\lambda<1$，将 $z_b(v)=\log p_V(v)+\log Z_b$ 与 $z_q(v)=\log q_V(v)+\log Z_q$ 代入并消去与 token 无关的归一化因子，可得
 
@@ -615,6 +617,8 @@ env OMP_NUM_THREADS=2 TOKENIZERS_PARALLELISM=false ../envs/opd-state/bin/python 
 当前 Qwen2 配对每模型 BF16 权重约 3.31 GiB，双模型权重约 6.62 GiB；单模型 KV 每序列每 token 为 28 KiB。以每卡 16 条、每条总上下文上限 5,120 计算，一套完整 KV 为 2.1875 GiB，两套为 4.375 GiB。这只是有效 KV 的容量估计，未包含 graph、临时张量、分页浪费、引擎预留与训练对象；不能用约 11 GiB 的权重加 KV 之和承诺整卡峰值。实测历史显存与预算差异见[统一实验报告](../../../../docs/experiment/2026-10-18-rollout来源与logit融合实验.md#显存速度与运行设置)。
 
 batch 路由按来源聚合后，在其可用副本内做负载均衡；小分组优先集中到较少副本，避免全局 64 条再按四卡、两来源拆成每来源每卡约 8 条。副本映射必须显式实现，保留四卡各分组的布局作基线。分段请求先用按阶段归组的简单实现验证，再考虑完成一条第一段就送入第二段的有界队列；后一方案仅在两套引擎都可驻留且实测提高吞吐时启用。同 GPU 两引擎同时跑可能竞争带宽，不能把流水化本身视为加速证据。
+
+`generation_layout=overlap` 将每个来源分配到最多请求数个副本，`split` 为同一阶段的来源分配互不重叠的物理副本；例如 current/teacher 为 7/1 条时使用 3+1 卡，32/32 条时使用 2+2 卡。当前实现只改变请求路由和按需激活，保持来源原 KV 预算与四卡 actor 权重发布次数；未用 current 副本可以休眠，下次使用前仍需完整参数发布。来源预算不会随分卡自动扩大，因此不能把推理基准中每个分卡引擎 0.40 的吞吐直接当成该训练布局的速度。每个 batch 保存阶段请求数和实际选择的副本索引，最终纯 student 验证始终使用验证副本。
 
 优化在不改变算法的前提下进行：
 

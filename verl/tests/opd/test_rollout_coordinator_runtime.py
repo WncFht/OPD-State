@@ -117,6 +117,15 @@ class CoordinatorTests(unittest.TestCase):
         with self.assertRaisesRegex(ValueError, "fresh current-student"):
             self.prepare()
 
+    def test_layout_selection_does_not_change_actor_or_source_memory_budget(self):
+        self.config.actor_rollout_ref.rollout.generation_layout = "split"
+        self.prepare()
+        self.assertEqual(self.config.actor_rollout_ref.rollout.generation_models.teacher.memory_fraction, 0.2)
+        self.assertEqual(self.config.actor_rollout_ref.model.path, str(self.root / "student"))
+        self.config.actor_rollout_ref.rollout.generation_layout = "automatic"
+        with self.assertRaisesRegex(ValueError, "layout"):
+            self.prepare()
+
     def test_prompt_visits_and_eval_samples_have_independent_counters(self):
         self.prepare()
         co = RolloutCoordinator(self.config, self.tokenizer, None, None, None)
@@ -193,6 +202,11 @@ class CoordinatorTests(unittest.TestCase):
         trace = list((self.root / "native-trajectories").glob("step-*.jsonl"))
         self.assertEqual(len(trace), 1)
         self.assertEqual(json.loads(trace[0].read_text())["segments"][0]["identities"][0][0], "teacher")
+        audit = json.loads((trace[0].parent / "batches.jsonl").read_text().splitlines()[0])
+        self.assertEqual(
+            audit["generation_placement"],
+            [{"layout": "overlap", "requests": {"teacher": 1}, "replicas": {"teacher": [0]}}],
+        )
         with patch("ray.get"):
             co.begin_eval(2)
         ev = co.generate_sequences(self.batch(16, validate=True, step=2))

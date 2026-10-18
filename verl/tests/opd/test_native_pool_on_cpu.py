@@ -59,7 +59,117 @@ class Server:
         ]
 
 
+class Replica:
+    def __init__(self, slot, rank, awake, events):
+        self.slot, self.rank, self.awake, self.events = slot, rank, awake, events
+        self._server_handle = NS(native_source_status=RPC(self.status), reopen_native_generation=RPC(self.reopen))
+
+    async def status(self):
+        return {"awake": self.awake}
+
+    async def reopen(self):
+        if not self.awake:
+            raise RuntimeError("Cannot admit requests on a sleeping replica")
+        self.events.append((self.slot, self.rank, "reopen"))
+
+    async def wake_up(self):
+        self.awake = True
+        self.events.append((self.slot, self.rank, "wake"))
+
+    async def sleep(self):
+        self.awake = False
+        self.events.append((self.slot, self.rank, "sleep"))
+
+
+class NativeActivationTests(unittest.IsolatedAsyncioTestCase):
+    def fixture(self):
+        events = []
+        pool = P.NativeModelPool.__new__(P.NativeModelPool)
+        pool.actor_slots = {"current_student", "eval:current_student"}
+        pool.awake = set()
+        pool.replicas = {
+            role: [Replica(role, i, role == "current_student", events) for i in range(4)]
+            for role in ["current_student", "teacher"]
+        }
+        pool.handles = {role: [r._server_handle for r in replicas] for role, replicas in pool.replicas.items()}
+        return pool, events
+
+    async def test_unused_current_replicas_sleep_and_only_selected_frozen_replicas_wake(self):
+        pool, events = self.fixture()
+        await pool.prepare({"current_student": (0, 1), "teacher": (2, 3)})
+        self.assertEqual([r.awake for r in pool.replicas["current_student"]], [True, True, False, False])
+        self.assertEqual([r.awake for r in pool.replicas["teacher"]], [False, False, True, True])
+        self.assertEqual({e[:2] for e in events if e[2] == "wake"}, {("teacher", 2), ("teacher", 3)})
+        self.assertEqual(
+            {e[:2] for e in events if e[2] == "reopen"},
+            {("current_student", 0), ("current_student", 1), ("teacher", 2), ("teacher", 3)},
+        )
+        await pool.sleep_all()
+        self.assertFalse(any(r.awake for replicas in pool.replicas.values() for r in replicas))
+        self.assertFalse(pool.awake)
+
+    async def test_sleeping_current_requires_actor_publication_and_cannot_be_blindly_woken(self):
+        pool, events = self.fixture()
+        pool.replicas["current_student"][0].awake = False
+        with self.assertRaisesRegex(RuntimeError, "fresh actor publication"):
+            await pool.prepare({"current_student": (0,)})
+        self.assertFalse(any(e[2] == "wake" for e in events))
+
+    async def test_invalid_selection_fails_before_any_replica_mutation(self):
+        for indices in [(), (-1,), (4,), (0, 0), (False,)]:
+            pool, events = self.fixture()
+            with self.subTest(indices=indices), self.assertRaises(ValueError):
+                await pool.prepare({"teacher": indices})
+            self.assertEqual(events, [])
+        with self.assertRaisesRegex(ValueError, "no initialized slot"):
+            await pool.prepare({"missing": (0,)})
+        self.assertEqual(events, [])
+
+
 class NativePoolTests(unittest.IsolatedAsyncioTestCase):
+    async def test_split_backend_routes_only_selected_devices_and_keeps_original_order(self):
+        handles = {role: [Server() for _ in range(4)] for role in ["current_student", "teacher"]}
+        prepared = []
+
+        async def prepare(slots):
+            prepared.append(slots)
+
+        backend = P.NativeRayBackend(NS(handles=handles, layout="split", prepare=prepare), {})
+        stages = {role: Policy.Stage((role,), 2) for role in handles}
+        await backend.prepare_phase([(stages["current_student"], 7), (stages["teacher"], 1)])
+        self.assertEqual(prepared, [{"current_student": (0, 1, 2), "teacher": (3,)}])
+        self.assertEqual(backend.placement_audit[0]["requests"], {"current_student": 7, "teacher": 1})
+        for role, count in [("current_student", 7), ("teacher", 1)]:
+            ref = Policy.ModelRef(
+                role, "/" + role, **({"version": 0} if role == "current_student" else {"fingerprint": "sha"})
+            )
+            calls = [E.Call(str(i), (str(i), 0, 0), (1,), 2, i) for i in range(count)]
+            output = await backend.generate(stages[role], calls, [ref])
+            self.assertEqual([r.request_id for r in output], [c.request_id for c in calls])
+            self.assertEqual([r.token_ids for r in output], [(i,) for i in range(count)])
+        self.assertEqual([len(s.calls[0][0]) if s.calls else 0 for s in handles["current_student"]], [3, 2, 2, 0])
+        self.assertEqual([len(s.calls[0][0]) if s.calls else 0 for s in handles["teacher"]], [0, 0, 0, 1])
+
+    async def test_eval_always_uses_pure_current_all_devices_and_empty_phase_does_nothing(self):
+        prepared = []
+
+        async def prepare(slots):
+            prepared.append(slots)
+
+        slot = "eval:current_student"
+        backend = P.NativeRayBackend(
+            NS(handles={slot: [Server() for _ in range(4)]}, eval_slot=slot, layout="split", prepare=prepare),
+            {},
+            validate=True,
+        )
+        await backend.prepare_phase([])
+        self.assertEqual(prepared, [])
+        await backend.prepare_phase([(Policy.Stage(("current_student",), 2), 16)])
+        self.assertEqual(prepared, [{slot: (0, 1, 2, 3)}])
+        self.assertEqual(backend.placement_audit[0]["layout"], "overlap")
+        with self.assertRaisesRegex(ValueError, "pure current"):
+            await backend.prepare_phase([(Policy.Stage(("teacher",), 2), 1)])
+
     async def test_global_routes_survive_replica_sharding_and_empty_replicas(self):
         servers = [Server() for _ in range(4)]
         pool = NS(handles={"teacher": servers})

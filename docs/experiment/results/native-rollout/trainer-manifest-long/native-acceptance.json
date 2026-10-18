@@ -1,0 +1,81 @@
+{
+  "scope": "Real 4-GPU trainer acceptance; short caps do not establish math accuracy",
+  "trainer_gpu_count": 4,
+  "resource_note": null,
+  "frozen_parameter_digests": {},
+  "training": [
+    {
+      "step": 1,
+      "responses": 64,
+      "response_tokens": 246709,
+      "generation_identities": [
+        [
+          "current_student",
+          "/mnt/tidalfs-bdsz01/dataset/llm_dataset/zkn_data/fht_data/models/DeepSeek-R1-Distill-Qwen-1.5B",
+          0
+        ]
+      ],
+      "trace_sha256": "ce2500c5361139d397aa34c4fa5a981573713d0a5b3e500ebbe21ca2b73bd2fb"
+    },
+    {
+      "step": 2,
+      "responses": 64,
+      "response_tokens": 246491,
+      "generation_identities": [
+        [
+          "current_student",
+          "/mnt/tidalfs-bdsz01/dataset/llm_dataset/zkn_data/fht_data/models/DeepSeek-R1-Distill-Qwen-1.5B",
+          1
+        ]
+      ],
+      "trace_sha256": "3b5cc5ef3fdefc8891a731bd346cec82433de7d522e5df9167e9b966ce94cecb"
+    }
+  ],
+  "evaluation_responses": 96,
+  "final_student_version": 2,
+  "evaluation_model_identities": [
+    [
+      "current_student",
+      "/mnt/tidalfs-bdsz01/dataset/llm_dataset/zkn_data/fht_data/models/DeepSeek-R1-Distill-Qwen-1.5B",
+      2
+    ]
+  ],
+  "whole_card_peak_mib": {
+    "0": 50897,
+    "1": 50679,
+    "2": 49751,
+    "3": 50679
+  },
+  "status": {
+    "state": "finished",
+    "exit_code": 0,
+    "elapsed_s": 324.91245675086975,
+    "gpu_after": [
+      [0, 2, 0],
+      [1, 1, 0],
+      [2, 1, 0],
+      [3, 1, 0]
+    ],
+    "source_manifest": "/mnt/tidalfs-bdsz01/dataset/llm_dataset/zkn_data/fht_data/OPD-State/runs/native-rollout-implementation/trainer-manifest-long-v1/source-manifest.json"
+  },
+  "native_manifest_sha256": "548eaa52e1e2070d9240538abf86bd44f9303a932bea063a4d0a1001263a5e32",
+  "math_summary": {
+    "run_name": "trainer-manifest-long-v1",
+    "run_directory": "/mnt/tidalfs-bdsz01/dataset/llm_dataset/zkn_data/fht_data/OPD-State/runs/native-rollout-implementation/trainer-manifest-long-v1",
+    "source_commit": "46a928f7a9a2b1fd2aeae8b834cad412ced77a92",
+    "source_manifest_sha256": "59f15ea5c8149046cd790bc6aaf83dce824f198441ab34043261adc6b0146d3e",
+    "source_identity": "runtime_snapshot",
+    "training_steps": 2,
+    "samples_per_question": 16,
+    "full_benchmarks": false,
+    "checkpoints_saved": false,
+    "wandb_url": null,
+    "training_log_sha256": "66e102888ec8fcdf4f85458b7076d23629cb5ea6adac7598ef1cf7d0d7cc8f41",
+    "training_log_observed_bytes": 229864,
+    "collection_scope": "final_validation",
+    "final_validation_marker_verified": true,
+    "collector_source_sha256": "d55fdb5753b7557a445c8584830f41fdbb3ca450ae53fa888791f2cdf81899fb",
+    "validation_steps": [2]
+  },
+  "collector_source_sha256": "48f150431e53eb6e0335b1b310fab8067ddf7c8725f374976d008de9f4b8ecaf"
+}

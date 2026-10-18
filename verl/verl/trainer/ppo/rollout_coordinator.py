@@ -26,6 +26,8 @@ def prepare_native_config(config, tokenizer, processor):
         return False
     if rollout.get("generation_fusion") is not None:
         raise ValueError("generation_fusion is reserved for the model pool; configure policy.kind=logit_fusion")
+    if rollout.get("generation_layout", "overlap") not in {"overlap", "split"}:
+        raise ValueError("Native generation layout must be overlap or split")
     policy = OmegaConf.to_container(rollout.policy, resolve=True)
     parsed = parse_policy(policy, int(rollout.response_length))
     plan = compile_policy(
@@ -178,6 +180,7 @@ class RolloutCoordinator:
             "train_files": {str(p): digest_file(p) for p in config.data.train_files},
             "dataset_rows_are_not_limited_by_training_steps": True,
             "memory_budget": config.trainer.native_generation_memory_budget,
+            "generation_layout": self.rollout.get("generation_layout", "overlap"),
             "prompt_cap": int(self.rollout.prompt_length),
             "response_cap": int(self.rollout.response_length),
             "seed": int(self.rollout.seed),
@@ -371,6 +374,7 @@ class RolloutCoordinator:
             "identities": sorted({i for r in trajectories for s in r.segments for i in s.identities}),
             "metrics": metrics,
             "generation": timing,
+            "generation_placement": backend.placement_audit,
             "frozen_verifications": backend.verifications,
         }
         with (self.trace_dir / "batches.jsonl").open("a") as stream:

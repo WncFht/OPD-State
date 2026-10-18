@@ -20,6 +20,7 @@ generation_sync_namespace: ""
 generation_fusion: null
 generation_verify_frozen: false
 generation_purpose: evaluation
+generation_layout: overlap
 preserve_source_weights: false
 
 # Number of nodes for standalone rollout server, must be > 0 in one-step-off/fully async training.

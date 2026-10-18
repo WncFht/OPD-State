@@ -1,7 +1,7 @@
 """Native source engines colocated on existing actor GPU placements.
 
-The plain actor engine is also the evaluation engine. Frozen engines have their
-own process/weights and weight-preserving sleep; they never receive actor IPC.
+Training and pure-student evaluation have independent engines. Frozen engines
+have their own process/weights and weight-preserving sleep; they never receive actor IPC.
 The configured memory fraction is a joint budget for concurrent train sources.
 """
 
@@ -12,6 +12,7 @@ import copy
 from dataclasses import asdict
 
 from .native_executor import Completion
+from .placement import place_groups
 from .policy import Fusion, parse_policy
 
 
@@ -25,6 +26,7 @@ class NativeModelPool:
         self.cold_start = {}
         self.actor_slots = {"current_student", self.eval_slot}
         self.fusion_config = None
+        self.layout = config.actor_rollout_ref.rollout.get("generation_layout", "overlap")
 
     async def initialize(self):
         import time
@@ -129,11 +131,29 @@ class NativeModelPool:
             raise ValueError(f"Native model pool has no initialized slot: {sorted(unknown)}")
         # Current weights are woken by the checkpoint writer, not blindly here:
         # sleep2 discarded them and waking allocations alone is insufficient.
-        for slot in slots:
-            if slot not in self.actor_slots and slot not in self.awake:
-                await asyncio.gather(*(r.wake_up() for r in self.replicas[slot]))
-                self.awake.add(slot)
-            await asyncio.gather(*(h.reopen_native_generation.remote() for h in self.handles[slot]))
+        selected = slots if isinstance(slots, dict) else {s: tuple(range(len(self.handles[s]))) for s in slots}
+        if any(
+            not indices
+            or len(set(indices)) != len(indices)
+            or any(type(i) is not int or not 0 <= i < len(self.handles[slot]) for i in indices)
+            for slot, indices in selected.items()
+        ):
+            raise ValueError("Native placement needs distinct valid physical replica indices for every source")
+
+        async def one(slot, index, replica):
+            status = await replica._server_handle.native_source_status.remote()
+            if index not in selected[slot]:
+                if status["awake"]:
+                    await replica.sleep()
+                return
+            if not status["awake"]:
+                if slot in self.actor_slots:
+                    raise RuntimeError("Selected current replica needs a fresh actor publication before generation")
+                await replica.wake_up()
+            await replica._server_handle.reopen_native_generation.remote()
+
+        await asyncio.gather(*(one(s, i, r) for s in selected for i, r in enumerate(self.replicas[s])))
+        self.awake.update(selected)
 
     def describe(self):
         return {
@@ -174,9 +194,24 @@ class NativeRayBackend:
         self.validate = validate
         self.pending = set()
         self.verifications = []
+        self.placements = {}
+        self.placement_audit = []
 
     async def prepare_phase(self, stages):
-        await self.pool.prepare({self.slot(stage) for stage, _ in stages})
+        counts = {}
+        for stage, count in stages:
+            slot = self.slot(stage)
+            counts[slot] = counts.get(slot, 0) + count
+        if not counts:
+            self.placements = {}
+            return
+        sizes = {len(self.pool.handles[slot]) for slot in counts}
+        if len(sizes) != 1:
+            raise ValueError("Native placement requires consistent physical replica indices")
+        layout = "overlap" if self.validate else getattr(self.pool, "layout", "overlap")
+        self.placements = place_groups(counts, sizes.pop(), layout)
+        await self.pool.prepare(self.placements)
+        self.placement_audit.append({"layout": layout, "requests": counts, "replicas": self.placements})
 
     def slot(self, stage):
         if self.validate:
@@ -188,8 +223,9 @@ class NativeRayBackend:
     async def generate(self, stage, calls, refs):
         handles = self.pool.handles[self.slot(stage)]
         shards = [[] for _ in handles]
+        selected = self.placements.get(self.slot(stage), tuple(range(len(handles))))
         for i, call in enumerate(calls):
-            shards[i % len(handles)].append((i, call))
+            shards[selected[i % len(selected)]].append((i, call))
 
         async def fetch(ref, rows):
             records = await ref
