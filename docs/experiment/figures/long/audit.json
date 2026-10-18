@@ -4,17 +4,21 @@
   "style_sha256": "a9670b726e4890688bad9bec5cf5f39dcc6a1604ceebff8043c26cee95726581",
   "matplotlib_version": "3.10.7",
   "source_commit": "4eb96bb1ab62fc7bac735c463dd54bafd315a62a",
-  "logged_through_step": 99,
+  "logged_through_step": 199,
   "log_path": "runs/rollout-sources/math-semi-opd-long-800steps-eval16-20261018-092912/logs/math-semi-opd-long-800steps-eval16-20261018-092912.log",
-  "observed_log_bytes": 471435,
-  "observed_log_prefix_sha256": "c0ebf8d47f0e6122a6795e4a84a144df4d3a635df117aea6272ed1f9b7cdb121",
+  "observed_log_bytes": 803757,
+  "observed_log_prefix_sha256": "0f7f80acad35a1ea7dc026f6865ae7ef21294dc1d0133e88c97de544d29406c7",
   "inputs_sha256": {
-    "docs/experiment/results/long-semi-progress/step-50/summary.json": "1a87135097255084b2b65e0dc719c6cfc2fe0ea1edd6c25741a0867ba0c0854d",
-    "docs/experiment/results/long-semi-progress/step-50/validation-step50.json": "f750cedd65d44974cf0aa9313cc9c14b333d3b1a37f4ab1d297873974cdacedb",
-    "docs/experiment/results/long-semi-progress/step-50/questions-step50.csv": "9e583939d0771ad3e332e37c2623e9069266c74e9d6005c8a2d5ddd1091049b3",
+    "docs/experiment/results/long-semi-progress/step-150/summary.json": "89e6c8d8319fc40aace9cf652c97808e8aa76461c91a0b3775dd3d6eb04b9a85",
+    "docs/experiment/results/long-semi-progress/step-150/validation-step50.json": "f750cedd65d44974cf0aa9313cc9c14b333d3b1a37f4ab1d297873974cdacedb",
+    "docs/experiment/results/long-semi-progress/step-150/questions-step50.csv": "9e583939d0771ad3e332e37c2623e9069266c74e9d6005c8a2d5ddd1091049b3",
+    "docs/experiment/results/long-semi-progress/step-150/validation-step100.json": "dbdb6e015f12fb453638a8f493acc9c413b4d45ef20bed7b7e2e17f538b1905d",
+    "docs/experiment/results/long-semi-progress/step-150/questions-step100.csv": "337fde5548a055819eb56970c2832be4c34a3e5d36bbb135c29077b313efbe5f",
+    "docs/experiment/results/long-semi-progress/step-150/validation-step150.json": "892d26ec5c45e491dd026817bfb6f84b3b8fff72abafd11c8196a29980afaeac",
+    "docs/experiment/results/long-semi-progress/step-150/questions-step150.csv": "a2aa9bf2b7afc7cf5f2c0fa0e69ae30c1bf2bf2265641d37c450f58cad17c093",
     "/mnt/tidalfs-bdsz01/dataset/llm_dataset/zkn_data/fht_data/OPD-State/docs/experiment/results/reference-accuracy.json": "be9a1e7a45994edd356ecab4bad630f85ed29ec38ae4271a6e50dec23c40252f"
   },
-  "completed_validation_steps": [50],
+  "completed_validation_steps": [50, 100, 150],
   "all_cached_lengths_repeat_exactly": true,
   "paired_prefix_batch_statistics": [
     {
@@ -28,6 +32,18 @@
       "matched_batches": 49,
       "token_weighted_rms": 0.3100107387653156,
       "mean_grad_norm": 0.49712140888583906
+    },
+    {
+      "cache_pass": 3,
+      "matched_batches": 49,
+      "token_weighted_rms": 0.20287395481409537,
+      "mean_grad_norm": 0.20529696558203017
+    },
+    {
+      "cache_pass": 4,
+      "matched_batches": 49,
+      "token_weighted_rms": 0.15866056289654892,
+      "mean_grad_norm": 0.13734189405733224
     }
   ],
   "paired_rms_decreases_vs_first_pass": [
@@ -35,13 +51,23 @@
       "cache_pass": 2,
       "matched_batches": 49,
       "lower_rms_batches": 49
+    },
+    {
+      "cache_pass": 3,
+      "matched_batches": 49,
+      "lower_rms_batches": 49
+    },
+    {
+      "cache_pass": 4,
+      "matched_batches": 49,
+      "lower_rms_batches": 49
     }
   ],
   "audit": [],
   "outputs_sha256": {
-    "accuracy-plotted.csv": "1e081414bb288fc94f409734b770b711244a5f7e6da54bd8ed080d92be064404",
-    "long-training-progress.pdf": "a8ad71480481d0ac0a664ffd6147a4a04fc1f239f4caf95b0d3cd9516b60f1ef",
-    "long-training-progress.png": "d5238852ad7b5f5ca6bb4d15390f87d01ca1884256a20e2a2e4e45841e425630",
-    "training-plotted.csv": "991d9cbdf0b5efb40984938ed9e1a0dbca73a22a0f653d38fe062dd0ca9ffa03"
+    "accuracy-plotted.csv": "2e1e59327e055e040082909a156d952ca303895d26429ed864788fcb43c22448",
+    "long-training-progress.pdf": "ca9a06dbf6742edecbce515eb2d56edabf40ff53aa426612fc11c9422a8aabf0",
+    "long-training-progress.png": "d5ac1462989b88990a891d2e4b8d7e976ad285e0e31cbf36378423d8c1cefa19",
+    "training-plotted.csv": "f8d95d62462190f263c9b099c11764cb534bfca6265d9ba0fd28eee791ff9635"
   }
 }

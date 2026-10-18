@@ -1,0 +1,13 @@
+{
+  "checked_at_utc": "2026-10-18T07:01:23.106886+00:00",
+  "run_id": "uq1riryx",
+  "state_before": "running",
+  "state_after": "failed",
+  "state_reason": "User explicitly stopped the run; no successful final validation, so it is not marked finished. SDK supports running-to-failed.",
+  "local_complete_training_rows": 199,
+  "remote_history_rows": 198,
+  "verified_training_steps": [1, 198],
+  "local_steps_without_remote_history": [199],
+  "verified_fields": ["actor/loss", "actor/grad_norm"],
+  "training_csv_sha256": "a5792658c6d85201abb6a60f77916bac30c5fba82ed5a9c97303aec32e5fb3f5"
+}

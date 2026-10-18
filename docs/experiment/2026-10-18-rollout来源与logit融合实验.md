@@ -4,7 +4,7 @@
 
 这是一组统一的 math 蒸馏实验：比较当前 student、固定 teacher、初始 student 缓存三种轨迹来源，再加入共享 prefix 的 logit fusion。四个设置均已完成 50 次 student 更新和最终三基准 eval16，日志、逐题输出与 W&B 指标核对一致。训练、缓存生成和结果处理脚本均随仓保存；正式运行只使用物理 GPU 0–3，不保存模型 checkpoint。
 
-在线 student、teacher 轨迹、Semi-OPD、fusion 的 macro mean@16（三个基准等权平均）分别为 **64.84%、62.52%、64.59%、64.16%**。目前没有证据表明 λ=0.5 fusion 稳定提高平均正确率。四组都只有一个验证预算点，不能据此判断收敛。长时 Semi-OPD 正在运行，同一缓存最多重复训练 800 步，每 50 步执行完整三基准 eval16；第 50 步完整验证已完成，macro mean@16 为 64.80%，已继续第二轮缓存训练；当前仍只有一个长时验证点。
+在线 student、teacher 轨迹、Semi-OPD、fusion 的 macro mean@16（三个基准等权平均）分别为 **64.84%、62.52%、64.59%、64.16%**。目前没有证据表明 λ=0.5 fusion 稳定提高平均正确率。四组都只有一个验证预算点，不能据此判断收敛。独立长时 Semi-OPD 已按用户要求于 2026-10-18 14:58（Asia/Shanghai）停止：完成 200 次更新，完整训练日志到第 199 步；第 50/100/150 步的 macro 分别为 **64.80%/66.92%/67.34%**，第 200 步验证中断，没有最终准确率或 checkpoint。训练队列、每小时观察器和 GPU 遥测均已退出，物理 GPU 0–3 已释放；停止状态与指标见[停止归档](results/long-semi-progress/stopped/summary.json)。
 
 用户指定的两个独立评测 run 分别是 `math_teacher`（u87buult）与 `math_student`（6uorrk2k）。[^reference-teacher][^reference-student] API 已核对模型名称、finished 状态、val_only、三个基准、每题 16 个响应及采样和长度配置；它们提供 teacher 与初始 student 的准确率参考。远端原始响应、数据和权重哈希尚未核对，因此图中将其标为外部参考，不视为本地同一次训练的 step-0 测量。筛选后的配置和指标保存在[参考数据](results/reference-accuracy.json)。
 
@@ -133,7 +133,7 @@ $$
 
 不同 batch 含不同记录，因此 $\overline L_k$ 可以波动。当前 schedule 有 50 个 batch，长时组不 shuffle，重复同一顺序；重复消费同一批记录时应满足 $\overline L_{k+50}=\overline L_k$。整份初始 student 缓存的平均长度始终为 3,900.651875 token。
 
-已实际读取只读 SQLite 并校验数据库哈希：3,200 条初始 student 响应的长度从 417 到 4,096；50 个 batch 均值从 3,728.21875 到 4,028.828125。第 1 批均值 3,993.6875，第 50 批 3,959.734375；全部 50 步的日志均值都与对应缓存精确一致。独立长时组截至诊断快照第 71 步，全部 1–71 步也逐步精确匹配同一缓存；其中 51–71 步重现了首轮 1–21 批的长度，已实际验证跨轮复用。波动来自 batch 内容，没有证据显示 Semi 训练时重新生成了响应。
+已实际读取只读 SQLite 并校验数据库哈希：3,200 条初始 student 响应的长度从 417 到 4,096；50 个 batch 均值从 3,728.21875 到 4,028.828125。第 1 批均值 3,993.6875，第 50 批 3,959.734375；全部 50 步的日志均值都与对应缓存精确一致。早期长时诊断快照覆盖第 1–71 步；停止归档进一步核对了全部 199 条完整日志，第 51–199 步按 50 步周期精确复现首轮对应 batch 的响应长度，缓存命中率始终为 1。波动来自 batch 内容，没有证据显示 Semi 训练时重新生成了响应。
 
 长度核验、每批缓存统计和长时观测保存在[缓存诊断](results/state-diagnostics/summary.json)与同目录 CSV。缓存中的实际 `finish_reason=length` 分别为初始 student 的 2,684/3,200（83.875%）、teacher 的 2,549/3,200（79.65625%）；它们说明当前 4K 预算下大部分轨迹没有自然结束，state 比较须控制深度和截断。
 
@@ -207,7 +207,7 @@ $$
 
 位置选择要对齐 action 之前的 prefix：第一个 response action 对应 prompt 的最后一个隐藏位置，之后依次取前一个 response token 的位置。除整体结果，还按绝对生成深度及轨迹前/中/后段分层；只看相对位置会混入长度变化，只看总覆盖会被 4K 截断支配。采样预算按 prompt/轨迹等权，另报 token 等权占用，明确归约差异。区间重采样 prompt，不能把同一长轨迹中的上千个相邻 token 当作独立样本。
 
-在 rollout 生成后、teacher 评分前保存选中 prefix 的 token ID、prompt 身份、来源、student 权重版本、原响应长度与位置。冻结 teacher 编码时只提取最后层选中位置，不保存全部层和全部 token 的隐藏向量；固定 KL probe 的 LM head 也只投影选中位置。这样可以复用 teacher 前向并控制存储与显存。当前正在运行的私有源码快照未改动，因此上述新指标不会追溯出现在已完成的 50 步运行中。
+在 rollout 生成后、teacher 评分前保存选中 prefix 的 token ID、prompt 身份、来源、student 权重版本、原响应长度与位置。冻结 teacher 编码时只提取最后层选中位置，不保存全部层和全部 token 的隐藏向量；固定 KL probe 的 LM head 也只投影选中位置。这样可以复用 teacher 前向并控制存储与显存。正式训练的私有源码快照未加入上述新指标，因此这些指标不会追溯出现在已有运行中。
 
 表示空间聚类仍是代理：邻近隐藏向量未必给共享参数提供同一更新方向。若覆盖相近但收敛速率仍不同，可进一步在小型固定 probe 上比较末层或 LM head 梯度的余弦冲突与有效秩，明确其只代表所选参数子空间。更直接的辨识实验是在相同固定 prefix 上统一 action 为当前 student 采样，或使用完整条件 KL 更新，再与原 action 缓存更新比较；否则更换 rollout 同时改变 state 与 action，无法把准确率差异单独归因于 state。
 
@@ -406,13 +406,33 @@ $$
 
 验证必须包含三个完整基准、570 个不同题目和每题恰好 16 次二值评分。采集器从原始 JSONL 独立重算，与日志和 W&B 全部精确指标逐项核对，保存逐题 CSV 哈希及内容身份。CSV 固定 LF，避免 Git 换行归一化改变校验值。
 
-长时 Semi-OPD 运行名为 `math-semi-opd-long-800steps-eval16-20261018-092912`，W&B 为 uq1riryx。[^long-run] 其[启动配置证据](results/2026-10-18-semi-long-startup.json)确认完整 eval16、test_freq=50、16 个 epoch、最大 800 步、恒定学习率、无 warmup 和无 checkpoint。模型每 50 步重复同一缓存，适合比较共同状态上的残差窗口；完整验证每次约 95–101 分钟，远长于约七分钟的 50 步缓存更新阶段。
+长时 Semi-OPD 运行名为 `math-semi-opd-long-800steps-eval16-20261018-092912`，W&B 为 uq1riryx。[^long-run] 其[启动配置证据](results/2026-10-18-semi-long-startup.json)确认完整 eval16、test_freq=50、16 个 epoch、最大 800 步、恒定学习率、无 warmup 和无 checkpoint。实际在第 200 次更新后按用户要求停止，3,200 条缓存轨迹已消费四轮；800 步是配置上限。训练器先完成 actor 更新，再验证，验证完成后才记录该步指标；日志已明确进入第 200 步验证，因此完成更新数为 200，完整训练指标只有第 1–199 步。第 200 步没有验证响应文件，不能算成完整评测或最终成绩。
 
-第 50 步阶段结果已完成独立采集：MATH-500 mean@16 为 86.3875%、AMC23 为 80.3125%、AIME25 为 27.7083%，macro 为 64.8028%、micro 为 82.8728%。570 题、9,120 条响应及全部精确指标与训练日志一致，见[阶段摘要](results/long-semi-progress/step-50/summary.json)。该摘要明确为运行中的完整验证快照，不是长时训练已结束。第 50 步的[平台报告](results/long-semi-progress/step-50/plateau-at-step50.json)状态为 `insufficient_observation`；训练已继续，不能从一个验证点宣布平台。
+第 50、100、150 步各包含 570 题、9,120 条响应，均已从原始 JSONL 独立重算，全部精确指标与训练日志、W&B 对应 history 行一致，见[完整阶段归档](results/long-semi-progress/step-150/summary.json)与[远端核验](results/long-semi-progress/step-150/wandb-snapshot-verification.json)。下表单位为百分比，三次评测均只使用当时的 student。
+
+| 更新步 | MATH-500 mean@16 | AMC23 mean@16 | AIME25 mean@16 | macro mean@16 | micro mean@16 | macro pass@16 |
+| ------ | ---------------: | ------------: | -------------: | ------------: | ------------: | ------------: |
+| 50     |          86.3875 |       80.3125 |        27.7083 |       64.8028 |       82.8728 |       82.4889 |
+| 100    |          86.0250 |       82.6563 |        32.0833 |       66.9215 |       82.9496 |       84.3000 |
+| 150    |          85.1000 |       83.5938 |        33.3333 |       67.3424 |       82.2697 |       83.4556 |
+
+第 150 步相比第 50 步，macro mean@16 增加 2.5396 个百分点，micro 降低 0.6031 个百分点：AMC23、AIME25 的 mean@16 上升，MATH-500 下降。macro pass@16 也没有逐次上升。三个验证点支持记录这些方向差异，不能据此宣布所有基准持续改善或已经收敛。停止原因是用户终止，不是平台判据命中或训练预算耗尽；最近的[平台记录](results/long-semi-progress/stopped/plateau-at-step150.json)仍为 `insufficient_observation`。
 
 ![长时 Semi-OPD 的固定缓存训练与完整验证](figures/long/long-training-progress.png)
 
-图中训练观测固定截到第 99 步，准确率只画已经完整采集的第 50 步。比较第 1–49 步与第 51–99 步的相同 49 个 batch：响应长度逐批精确相同，49/49 批的 log-ratio RMS 均下降，token 加权 RMS 从 0.49846 降到 0.31001，平均裁剪前 grad_norm 从 1.10335 降到 0.49712。这支持 student 继续拟合固定轨迹上的监督，尚不足以判断泛化准确率平台或全词表 KL；[绘图审计](figures/long/audit.json)记录日志字节前缀、数据与程序哈希及配对统计。
+图中训练观测到第 199 步，准确率只画完整的第 50、100、150 步。按每轮相同的前 49 个 batch 配对，第 1–49/51–99/101–149/151–199 步的 token 加权 log-ratio RMS 为 0.49846/0.31001/0.20287/0.15866，平均裁剪前 grad_norm 为 1.10335/0.49712/0.20530/0.13734；后三轮各自 49/49 批的 RMS 均低于首轮对应批，响应长度逐批精确相同。这支持 student 持续拟合固定轨迹上的监督，不等于全词表 KL 已归零。[绘图审计](figures/long/audit.json)记录日志字节前缀、数据与程序哈希及配对统计，全部 199 步的奖励、熵、梯度与阶段耗时保存在[训练 CSV](results/long-semi-progress/stopped/training-1-199.csv)。
+
+训练时间与验证时间分别统计如下，单位为分钟；第 151–199 步只有 49 条完整记录。训练器的 `timing_s/step` 不包含另行计时的 `timing_s/testing`，表中可相加；初始化、缓存准备、第 200 步更新与中断验证、清理均不在这些日志合计中。
+
+| 已记录训练步 | 缓存读取、评分与更新等训练时间 | 该窗口末完整验证时间 |
+| ------------ | -----------------------------: | -------------------: |
+| 1–50         |                           6.82 |                98.51 |
+| 51–100       |                           7.51 |                97.04 |
+| 101–150      |                           7.47 |               100.94 |
+| 151–199      |                           7.23 |                    — |
+| 合计         |                          29.03 |               296.49 |
+
+完整验证占上述训练与验证合计的 91.08%。GPU 0 在部分验证期间还承载了独立生成原型测试，其[共享负载时间记录](results/rollout-composition/shared-load-intervals.json)已保存；这里报告实际运行成本，不把整卡峰值或验证速度解释为独占环境性能。停止核验确认原训练进程及其专属子进程全部退出，GPU 0–3 各剩 1 MiB 占用。W&B 第 1–198 步的 loss/grad_norm 与本地逐项相同，第 199 步已保存在本地但没有远端 history 行；远端标记为 `failed` 表示用户中断，没有标成成功完成，见[停止核验](results/long-semi-progress/stopped/wandb-stop-verification.json)。
 
 经验平台判据在长时结果产生前固定：至少 300 步，最后四个连续、间隔 50 步的验证点，macro mean@16 极差不超过 0.01；对应四个训练窗口的 token 加权 RMS 相对极差不超过 5%，平均 grad_norm 相对极差不超过 10%。相对极差为最大值减最小值后除以均值，分母下限 $10^{-12}$。
 
@@ -422,7 +442,7 @@ $$
 r_{\mathrm{window}}=\sqrt{\frac{\sum_b N_b r_b^2}{\sum_b N_b}}.
 $$
 
-batch 均为 64，使用平均响应长度作权重与 $N_b$ 等价。训练器和事后分析共用 `plateau.py`：观察不足为 `insufficient_observation`，达到条件为 `observed_plateau`，其余为 `criterion_not_met`。达到条件后在验证结束时正常退出；800 步仍不满足则记录 `budget_exhausted=true`，再按实际趋势决定预算。该判据是有限预算经验平台，不证明梯度为零、已与 teacher 对齐或渐近收敛。
+batch 均为 64，使用平均响应长度作权重与 $N_b$ 等价。训练器和事后分析共用 `plateau.py`：观察不足为 `insufficient_observation`，达到条件为 `observed_plateau`，其余为 `criterion_not_met`。预设控制规则是在达到条件后于验证结束时正常退出，800 步仍不满足则记录 `budget_exhausted=true`；此次用户停止发生在上述两种退出之前。该判据是有限预算经验平台，不证明梯度为零、已与 teacher 对齐或渐近收敛。
 
 ## 实现核验与性能
 
@@ -613,9 +633,9 @@ $$
 
 ### 数据范围与复现
 
-历史数据来自 W&B 系统采样，仅保存物理 GPU 0–3 的显存、busy 与功率字段；短时峰值和 W&B 启动前的初始化可能漏记。Actor 高水位来自训练日志；缓存预生成没有历史整卡采样。当前长时 Semi 从 2026-10-18 11:09 起另用 `nvidia-smi` 每两秒监控，原始 CSV 在忽略的运行目录中持续追加，不替代上表四个已完成 run 的统计。
+历史数据来自 W&B 系统采样，仅保存物理 GPU 0–3 的显存、busy 与功率字段；短时峰值和 W&B 启动前的初始化可能漏记。Actor 高水位来自训练日志；缓存预生成没有历史整卡采样。长时 Semi 在 2026-10-18 11:09 至 14:58 另用 `nvidia-smi` 每两秒监控，原始 CSV 保存在忽略的运行目录中，随训练停止后不再追加，不替代上表四个已完成 run 的统计。
 
-按用户要求，训练状态复核改为每 3,600 秒一次，由 `eval/watch_math_progress.py` 在后台执行，第一次检查也等待完整一小时。它核对原队列 PID 的启动身份，每小时读取完整日志行和验证记录；有新的完整验证时，在运行目录的 `hourly-watch/` 下调用独立采集器保存阶段快照，完整性条件保持不变。它不重启或修改训练，不发送消息；队列结束或 PID 被复用时停止。两秒 GPU 遥测与每小时状态检查是两个独立任务。
+此前按用户要求，训练状态复核每 3,600 秒一次，由 `eval/watch_math_progress.py` 在后台执行，第一次检查也等待完整一小时。它核对原队列 PID 的启动身份，每小时读取完整日志行和验证记录；有新的完整验证时，在运行目录的 `hourly-watch/` 下调用独立采集器保存阶段快照，完整性条件保持不变。它不重启或修改训练，不发送消息；队列结束或 PID 被复用时停止。两秒 GPU 遥测与每小时状态检查是两个独立任务，现均已随用户停止指令退出。
 
 每小时检查的 PID、下次检查时间与检查记录保存在该目录的 `state.json`；同一目录通过文件锁防止重复启动，归档失败保留日志，后续检查使用新的快照目录。只出现响应文件、尚无完整验证指标的步骤不会归档；仍在写入的后续日志行也不会被计为完成。启动新监控时填现场队列 PID 和运行目录：`.venv/bin/python eval/watch_math_progress.py --pid 实际队列PID --run 实际运行目录 --interval-seconds 3600`。
 
@@ -649,9 +669,9 @@ $$
 
 当前只读缓存保留为已审计实验条件；后续新实验默认考虑每次消费 prompt 都重新生成，把来源模型与生成时机分开配置。按需首次生成并缓存仍可作为独立 replay 变体，不能把它与 fresh 混称为同一算法。已有密封缓存不自动补 miss；新轨迹记录模型/模板/采样身份、每 prompt seed 与实际 token。冻结来源也可预取数个训练 batch，但首轮对照统一逐步生成；后续若比较预取加速，应单独报告批量变化。当前 student 与 fusion 的来源权重每步变化，跨步预取须标注策略滞后。
 
-每步从固定 q/p0 生成不保证更快。现有在线 student 的生成累计 29.79 分钟；一次性初始 student 缓存准备约 8.96 分钟，长时后续只需重复读取。两种生成方式的批量、启动和执行路径不同，这不是严格同条件吞吐对照，但足以说明多轮复用时的缓存成本不能忽略。实时 fresh 会在每轮重新支付生成成本。长时 Semi 每 50 步训练约七分钟、完整验证约 95 分钟，验证约占两者之和的 93.3%，当前首要时间开销也不是初始缓存准备。
+每步从固定 q/p0 生成不保证更快。现有在线 student 的生成累计 29.79 分钟；一次性初始 student 缓存准备约 8.96 分钟，长时后续只需重复读取。两种生成方式的批量、启动和执行路径不同，这不是严格同条件吞吐对照，但足以说明多轮复用时的缓存成本不能忽略。实时 fresh 会在每轮重新支付生成成本。已停止的长时 Semi 每 50 步训练约 6.8–7.5 分钟，三次完整验证各约 97–101 分钟；全部 199 条完整日志对应的训练加验证时间中，验证占 91.08%。验证是该次长时运行的主要时间开销。
 
-训练步数本来就可以与缓存大小分开。当前长时最大 800 步是在 3,200 条轨迹上重复 16 轮，并没有被缓存限制在 50 步；按需生成进一步解决的是遇到新 prompt 时如何扩展轨迹池，而不是训练能否超过一轮。fresh 与固定缓存的后期 state 覆盖不同，若比较它们，应先保持相同 prompt 清单、优化预算与评测，不能同时扩大 prompt 集后把结果全归因于实时生成。
+训练步数本来就可以与缓存大小分开。长时配置上限 800 步对应在 3,200 条轨迹上重复 16 轮，实际停止时完成了 200 次更新、四轮消费，并没有被缓存限制在 50 步；按需生成解决的是遇到新 prompt 时如何扩展轨迹池。fresh 与固定缓存的后期 state 覆盖不同，若比较它们，应先保持相同 prompt 清单、优化预算与评测，不能同时扩大 prompt 集后把结果全归因于实时生成。
 
 实现需要独立的 actor 初始化路径、生成 checkpoint 与轨迹复用策略。不能直接把共用的 `actor_rollout_ref.model.path` 改为 teacher，否则会改变可训练 student 的初始化。固定 q/p0 生成也必须屏蔽 actor 的初始及每步参数覆盖；当前全参数 HYBRID sleep level 2 会释放权重，恢复时默认依赖 actor 参数同步，新增 frozen source 必须有自己的权重恢复路径。[^vllm-sleep]固定 checkpoint 可只读盘一次保留 CPU 权重副本，之后按需恢复 GPU，不需要每步重新读磁盘。
 
@@ -659,7 +679,7 @@ $$
 
 当前两个模型同为相同结构和词表的 Qwen2 1.5B，可优先复用单个 vLLM 引擎，在验证前切换到当前 student，验证后恢复固定生成 checkpoint，并清理旧模型的 prefix/KV cache。若采用两个引擎，则应轮流唤醒，避免各自预留大块 KV 同时占卡。不同架构或词表的 teacher 不能照搬同引擎权重切换方案。source 身份、恢复后的参数、student-only 验证与实际整卡峰值都需要真实短训练核验，当前历史结果不算作这个新模式已通过的证据。
 
-这项重构仍是方案，尚未改变正在运行的固定缓存长时实验。它保留了“固定 states 上持续学习”的收敛对照；fresh 变体应另行记录，不能中途替换其数据后沿用原收敛解释。
+这项重构仍是方案，没有改变现已停止的固定缓存长时实验。已有结果保留为“固定 states 上持续学习”的对照；fresh 变体应另行记录，不能替换其数据后沿用原实验身份。
 
 按源码执行链梳理后的[统一 fresh rollout 架构方案](../../.agents/notes/proposed/architecture/2026-10-18-可组合rollout与原生vLLM推理.md)集中定义当前 student、初始 student、teacher、两种 fusion，以及双向分段切换与 batch 混合；所有设置继续只更新当前 student。新 pipeline 优先使用原生 vLLM：单模型、分段与 batch 混合复用原生生成，精确 fusion 优先验证双原生模型扩展，现有 HF 实现保留作数值参考。模型引用、组合规则、执行后端和复用策略分别配置；方案详细定义切换 token/比例、全局配额、EOS/mask、跨权重重新 prefill、模型驻留与吞吐基准。固定初始 student 的实时采样名为 `initial_student_fresh`，与历史 Semi-OPD replay 区分；这些新模式尚未实现为正式运行。
 
@@ -690,13 +710,13 @@ STEPS=800 TOTAL_EPOCHS=16 OPD_FREEZE_SOURCE=1 \
 
 目标验证步完成后，阶段采集命令在下方普通命令上加 `--snapshot`，`--steps` 填已完成的验证步；默认模式仍要求最终验证成功标志。阶段结果不能通过默认的 finished-run 远端核验冒充完整运行，最终结束后仍重新采集并核对 W&B。
 
-远端核验器也提供显式 `--snapshot` 模式，只接受已声明的阶段快照。该模式按验证步从 W&B history 读取全部精确指标，而不是使用可能已被后续验证覆盖的 summary；同时逐步比对本地与远端 loss、grad_norm，后续记录保留在观察范围信息中。默认模式继续要求 finished 状态、全部步骤与最终 summary 一致。归档 history 若为普通训练行填入空验证字段，按 macro 字段是否有值识别验证行；已存在的验证行仍要求全部指标完整且有限。长时第 50 步的[远端阶段核验](results/long-semi-progress/step-50/wandb-snapshot-verification.json)已实际通过，验证时 run 仍在运行。四项回归覆盖 summary 已变化、未来记录、空字段、非 macro 指标篡改、训练缺步/非有限值及默认完成条件。
+远端核验器也提供显式 `--snapshot` 模式，只接受已声明的阶段快照。该模式按验证步从 W&B history 读取全部精确指标，而不是使用可能已被后续验证覆盖的 summary；同时逐步比对本地与远端 loss、grad_norm，后续记录保留在观察范围信息中。默认模式继续要求 finished 状态、全部步骤与最终 summary 一致。归档 history 若为普通训练行填入空验证字段，按 macro 字段是否有值识别验证行；已存在的验证行仍要求全部指标完整且有限。长时运行已通过[第 150 步阶段核验](results/long-semi-progress/step-150/wandb-snapshot-verification.json)，覆盖三次完整验证及第 1–150 步训练；这一快照核验不要求运行正常完成。四项回归覆盖 summary 已变化、未来记录、空字段、非 macro 指标篡改、训练缺步/非有限值及默认完成条件。
 
 ```bash
 env -u WANDB_API_KEY NETRC="$PWD/../.secrets/netrc" \
     WANDB_CONFIG_DIR="$PWD/../config/wandb" WANDB_BASE_URL=https://api.wandb.ai \
     ../envs/opd-state/bin/python eval/verify_wandb_math.py \
-    --result docs/experiment/results/long-semi-progress/step-50 --snapshot
+    --result docs/experiment/results/long-semi-progress/step-150 --snapshot
 ```
 
 结果采集、远端核验和题目比较：
@@ -737,7 +757,7 @@ Teacher 组训练源码固定于 `350a286be0d586f04e4cd0b0e89624a336b17a81`，�
 
 最初在线链路验证采用 MATH-500 greedy@1、8,192 cap，结果为 355/500，即 71%，W&B 为 finished，50 次更新和无 checkpoint 已核对。它只作为工程链路证据，不能与当前 eval16 三基准成绩直接比较；[原摘要](results/2026-10-18-math-baseline-summary.json)、[训练记录](results/2026-10-18-math-baseline-steps.csv)和[逐题分数](results/2026-10-18-math-baseline-scores.csv)继续保留。早期四卡两步 smoke 的[环境与数据证据](results/2026-10-17-math-smoke.json)同样不作为准确率结论。
 
-剩余工作是取得长时 Semi 的每 50 步完整评测，检查共同缓存上的残差与经验平台；若仍有持续趋势，再决定延长预算。更强的来源效应结论还需多 seed、长度与有效 token 预算控制，以及相同 prefix/action 测度的诊断。缓存 miss 在线补采样、旧学生概率替代当前 PPO 锚点、teacher 被更新、fusion 两模型接收不同 prefix、验证使用 teacher/fusion、缺基准或缺采样数均属于失败条件，不能计为有效结果。
+长时 Semi 已停止并归档，不安排继续观察或自动重启。后续重构以可组合原生 rollout 的 Agent Note 为依据，独立生成原型不能替代正式 trainer 的权重同步、评分、反向传播与 student-only 验证验收。更强的来源效应结论还需多 seed、长度与有效 token 预算控制，以及相同 prefix/action 测度的诊断。缓存 miss 在线补采样、旧学生概率替代当前 PPO 锚点、teacher 被更新、fusion 两模型接收不同 prefix、验证使用 teacher/fusion、缺基准或缺采样数均属于失败条件，不能计为有效结果。
 
 ### 参考文献
 
