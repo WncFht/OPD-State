@@ -71,7 +71,7 @@ CUDA_VISIBLE_DEVICES='' .venv/bin/python docs/research/occupancy/experiments/plo
 
 上游声明的运行栈为 Python 3.12、vLLM 0.28、Torch 2.13 和 Transformers 5.x。本机 math 配方使用独立的 CUDA 12.6 环境：Torch 2.7.1+cu126、vLLM 0.10.0+cu126、Transformers 4.57.6，通过 PYTHONPATH 选择本仓源码。针对旧版 vLLM 的导入、CLI 与缓存生命周期做了兼容适配，已用本地 Qwen2 架构 student/teacher 完成四卡两步更新与最终评测。该验证不覆盖其他模型或全部上游功能，也不等于满足上游 setup.py 的全部新版本依赖声明。
 
-工作区 `envs/opd-state` 指向本机缓存中的独立环境；已核对 Torch 实际加载路径与四卡 CUDA 运算，并通过 229 个已安装包的依赖检查。共享 `envs/opd` 保持原样。正式 math 50 步配方为 `bash recipe/math_baseline.sh`，W&B project 固定为 OPD-State，中途不验证且不保存 checkpoint；最终在 MATH-500、AMC23、AIME25 各题采样 16 次。固定来源和 fusion 分别使用 `recipe/math_cached.sh` 与 `recipe/math_fusion.sh`，长时固定来源每 50 步验证；配置、缓存准备、GPU 验收和已完成结果见[统一实验协议](experiment/2026-10-18-rollout来源与logit融合实验.md)。
+工作区 `envs/opd-state` 指向本机缓存中的独立环境；已核对 Torch 实际加载路径与四卡 CUDA 运算，并通过 229 个已安装包的依赖检查。共享 `envs/opd` 保持原样。正式 math 50 步配方为 `bash recipe/math_baseline.sh`，W&B project 固定为 OPD-State，中途不验证且不保存 checkpoint；最终在 MATH-500、AMC23、AIME25 各题采样 16 次。固定来源和 fusion 分别使用 `recipe/math_cached.sh` 与 `recipe/math_fusion.sh`，长时固定来源每 50 步验证；配置、缓存准备、GPU 验收和已完成结果见[统一实验协议](experiment/2026-10-19-rollout来源与logit融合实验.md)。
 
 训练模型、数据准备与完整参数遵循 [README](../README.md) 和 [数据说明](../data/README.md)。准备完成后，从本仓根目录启动的形式为：
 
@@ -96,4 +96,4 @@ CUDA_VISIBLE_DEVICES='' PYTHONPATH=verl ../envs/opd-state/bin/python \
     -m unittest discover -s verl/tests/opd -p test_rollout_coordinator_runtime.py -v
 ```
 
-`eval/run_native_acceptance.py` 保存完整源码快照、参数、退出状态与四卡遥测，`eval/collect_native_acceptance.py` 独立核对轨迹和最终指标。它们的短响应结果仅作训练链验收，运行实例和证据见[统一实验报告](experiment/2026-10-18-rollout来源与logit融合实验.md)。
+`eval/run_native_acceptance.py` 保存完整源码快照、参数、退出状态与四卡遥测，`eval/collect_native_acceptance.py` 独立核对轨迹和最终指标。它们的短响应结果仅作训练链验收，运行实例和证据见[统一实验报告](experiment/2026-10-19-rollout来源与logit融合实验.md)。

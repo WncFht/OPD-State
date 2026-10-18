@@ -74,7 +74,7 @@ Fusion 随后完成全部 50 步和三基准 eval16，进程退出码 0，W&B g5
 
 用户再次确认 teacher rollout 的语义后，复核实际缓存 manifest 的 source=cached_teacher、生成器模型选择、训练 actor 更新与冻结教师的 requires_grad=False/no_grad 路径：teacher 生成轨迹，始终由 student 接受更新，最终验证也由 student 独立生成。统一协议补齐四设置的生成方、生成时机与参数更新方；同步 README、架构和开发入口，移除 teacher 报告中“尚无其他同协议结果”的过时状态。已有运行源码快照保持原样。长时任务 PID 3881040 和会话 77179 仍存活，第 50 步完整验证已完成 4/18 批，尚无平台判断。
 
-按用户要求将整个来源与融合对照统一为一项实验，七篇分散的实验文档合并为 docs/experiment/2026-10-18-rollout来源与logit融合实验.md，更新 README、架构、开发和历史工作记录的引用；原始 CSV/JSON 与来源核验保留。新增 eval/export_math_references.py，实际导出用户指定的 u87buult（math_teacher、JustRL）和 6uorrk2k（math_student、R1-Distill）评测摘要，核对 val_only、模型名、三基准与 eval16/0.7/0.9/31744 配置；不宣称核验了远端原始响应和资产哈希。新增 eval/plot_math_experiment.py，用四组已完成结果绘制优化六指标、rollout 四指标、末步准确率与 pass@k 四张图，输出 PNG/PDF、绘图 CSV、来源/输出哈希和机器审计。逐张查看后无重叠或裁切，四图审计均为空；signed log-ratio 明确为 KL proxy，缓存组不冒称完整条件 KL，准确率不补造中间轨迹。长时训练继续原进程与私有源码快照，第 50 步验证推进到 7/18 批。
+按用户要求将整个来源与融合对照统一为一项实验，七篇分散的实验文档合并为 docs/experiment/2026-10-19-rollout来源与logit融合实验.md，更新 README、架构、开发和历史工作记录的引用；原始 CSV/JSON 与来源核验保留。新增 eval/export_math_references.py，实际导出用户指定的 u87buult（math_teacher、JustRL）和 6uorrk2k（math_student、R1-Distill）评测摘要，核对 val_only、模型名、三基准与 eval16/0.7/0.9/31744 配置；不宣称核验了远端原始响应和资产哈希。新增 eval/plot_math_experiment.py，用四组已完成结果绘制优化六指标、rollout 四指标、末步准确率与 pass@k 四张图，输出 PNG/PDF、绘图 CSV、来源/输出哈希和机器审计。逐张查看后无重叠或裁切，四图审计均为空；signed log-ratio 明确为 KL proxy，缓存组不冒称完整条件 KL，准确率不补造中间轨迹。长时训练继续原进程与私有源码快照，第 50 步验证推进到 7/18 批。
 
 按用户反馈，将 acc 改为按基准独立缩放的点图，pass@k 同样缩放并加入初始 student/teacher 的精确 pass@k 六曲线，保留 PNG/PDF、坐标范围与参考绘图 CSV。只对不同基准的纵轴一致性审计声明作用域豁免，其他图件规则继续执行。新增 CPU 缓存诊断脚本：核对两个 SQLite 完整性/哈希、3,200 个配对 prompt、Semi 全部 50 步与长时已记录 49 步的 batch 均值，均与固定缓存精确一致；固定的逐样本长度与不同 batch 的均值波动分开解释。穷举二元 token、长度 1–4 的 900 对序列，验证 action 前 prefix 计数及终止边界。真实共同前缀中位数 10、均值 16.675625，配对位置 Jaccard 0.227%，明确不是语义覆盖，也没有同来源重复采样的对照。
 
@@ -253,3 +253,7 @@ CUDA Graph 连续解码随后通过：λ=0.5、两条 prompt 各八步，实际�
 远端 W&B 核验 pl0yl6nt 与 0hbo3l5t 均 finished、五十条训练记录、仅 step50 验证。原通用 verifier 在缺少 legacy rollout_source 时将原生来源标成 student_online；现改为显式保存原生 policy/backend，并校验远端 policy 与已审计的本地 native manifest 哈希，相关匹配及篡改反例通过。它只修正核验元数据，训练源码仍固定 d59a7c3。第三组 teacher_fresh 已运行，现有调度进程保持原序列。
 
 正式前两组的远端 policy 绑定与质量/计时对照提交为 15765ce。检查排队后续任务时，命令实际传入了完整 570 题文件，与原定六题×16 的工程验收不符；新增确定性两题/基准的 Parquet 准备器和无 PyArrow 的哈希校验器，保留 prompt、答案、schema 及原文件。控制入口固定 n=16，保存准备计划与 manifest 哈希，每个 case 开始前复核文件，最终审计要求恰好九十六条响应。真实源文件的行数为 500/40/30，输出各两行；三项 Parquet/篡改检查与五项布局/计划检查通过。已启动的正式矩阵、训练来源与质量评测协议未修改，后续 GPU 任务仍待运行。
+
+2026-10-19：串行控制器 1762045 已保留 teacher_fresh 与下一组之间的 GPU 验收窗口；只暂停调度器 1317263，当前训练 1664892 持续运行，结束后执行固定 f1bcea0 的两步/九十六条短响应 KL canary，审计并释放 GPU 后自动恢复原调度器。控制状态与当前进程已核验，观察超时不会重启或终止健康训练。
+
+固定前缀 bank 新增真实输入准备、生产原生 RPC 生成入口及组装器。完整 MATH-500/AMC23/AIME25 各选三十题，按身份哈希加 seed42 排序；模型指纹、共同 tokenizer 和原始 token 固定。实际预处理在 token 合法性检查内反复调用 fast tokenizer 的 **len**，py-spy 定位到该热点；终止这个独立 CPU 准备进程并缓存词表大小后，同一九十题在约 15 秒内完成。词表查询次数回归检查、原生 admission 初始化和双来源/原始 prefix/EOS/评分器兼容共六项检查通过。bank 输入与 CPU 合成轨迹不是实际 GPU 生成证据，真实输出和完整 bank KL 仍待完成。

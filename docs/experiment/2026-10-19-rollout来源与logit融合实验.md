@@ -2,9 +2,9 @@
 
 ## 进度与主要结果
 
-这是一组统一的 math 蒸馏实验：比较当前 student、固定 teacher、初始 student 缓存三种轨迹来源，再加入共享 prefix 的 logit fusion。四个设置均已完成 50 次 student 更新和最终三基准 eval16，日志、逐题输出与 W&B 指标核对一致。训练、缓存生成和结果处理脚本均随仓保存；正式运行只使用物理 GPU 0–3，不保存模型 checkpoint。
+本页统一记录 math 蒸馏研究的历史缓存/融合对照和后续原生实时 rollout 矩阵。历史四组已完成五十次 student 更新和三基准 eval16；新的十五组矩阵已有当前来源、固定初始来源两组完成，teacher 来源仍在运行。新版本还在接入全量验证 KL 与固定前缀对照，完整研究任务尚未完成。日志、逐题输出和 W&B 按各自源码/协议核对；正式运行使用物理 GPU 0–3，不保存模型 checkpoint。
 
-在线 student、teacher 轨迹、Semi-OPD、fusion 的 macro mean@16（三个基准等权平均）分别为 **64.84%、62.52%、64.59%、64.16%**。目前没有证据表明 λ=0.5 fusion 稳定提高平均正确率。四组都只有一个验证预算点，不能据此判断收敛。独立长时 Semi-OPD 已按用户要求于 2026-10-18 14:58（Asia/Shanghai）停止：完成 200 次更新，完整训练日志到第 199 步；第 50/100/150 步的 macro 分别为 **64.80%/66.92%/67.34%**，第 200 步验证中断，没有最终准确率或 checkpoint。训练队列、每小时观察器和 GPU 遥测均已退出，物理 GPU 0–3 已释放；停止状态与指标见[停止归档](results/long-semi-progress/stopped/summary.json)。
+历史在线 student、teacher 轨迹、Semi-OPD、fusion 的 macro mean@16（三个基准等权平均）分别为 **64.84%、62.52%、64.59%、64.16%**。目前没有证据表明 λ=0.5 fusion 稳定提高平均正确率。四组都只有一个验证预算点，不能据此判断收敛。独立长时 Semi-OPD 已按用户要求于 2026-10-18 14:58（Asia/Shanghai）停止：完成 200 次更新，完整训练日志到第 199 步；第 50/100/150 步的 macro 分别为 **64.80%/66.92%/67.34%**，第 200 步验证中断，没有最终准确率或 checkpoint。训练队列、每小时观察器和 GPU 遥测均已退出，物理 GPU 0–3 已释放；停止状态与指标见[停止归档](results/long-semi-progress/stopped/summary.json)。
 
 用户指定的两个独立评测 run 分别是 `math_teacher`（u87buult）与 `math_student`（6uorrk2k）。[^reference-teacher][^reference-student] API 已核对模型名称、finished 状态、val_only、三个基准、每题 16 个响应及采样和长度配置；它们提供 teacher 与初始 student 的准确率参考。远端原始响应、数据和权重哈希尚未核对，因此图中将其标为外部参考，不视为本地同一次训练的 step-0 测量。筛选后的配置和指标保存在[参考数据](results/reference-accuracy.json)。
 
@@ -933,6 +933,8 @@ Teacher 组训练源码固定于 `350a286be0d586f04e4cd0b0e89624a336b17a81`，�
 KL 主方案复用全部 570×16 验证响应，对全部有效位置计算完整词表散度，不另生成 student 探针；共享的 initial-student/teacher 固定 bank 用于相同状态对照。开发源码已接入可选评分 hook，`trainer.validation_kl.enabled=True` 时先休眠原生引擎，再直接读取最终 actor 与冻结 teacher。验证采样维持 temperature=0.7、top-p=0.9，累计量标注验证状态来源。KL 原始 token 与报告放在 `validation/kl/`，原准确率采集器继续只读取顶层数字 step 文件。冻结的 d59a7c3 矩阵保持原协议，已结束且未保存最终权重的运行不能仅由文本补算最终 KL。
 
 [完整评分链路 CPU 验收](results/native-rollout/validation-scoring-cpu.json)通过七十七项原生 CPU 与四十二项训练环境运行检查，包含真实小型 Qwen2 的分块/直接前向比较、临时 hook 清理、RNG/模式/参数保持、DP 补齐和输入哈希/版本校验，以及新增诊断文件不干扰原准确率采集。[两进程 CPU FSDP 实验](results/native-rollout/validation-fsdp-cpu.json)进一步验证不同 rank 响应长度、正常参数收集、真实优化器更新后读取新 student，以及 teacher 参数不变；它使用随机初始化的小模型，不代表真实 1.5B checkpoint 或 GPU 性能。完整 bank 生成、四卡评分、长响应显存/耗时和完整数据验收仍待完成，整体实施状态见 [Agent Note](../../.agents/notes/proposed/architecture/2026-10-18-可组合rollout与原生vLLM推理.md)。
+
+[固定前缀 bank 的 CPU 验收](results/native-rollout/prefix-bank-cpu.json)已从真实完整验证文件准备每基准三十题，共九十题，按固定 seed 的题目身份哈希排序选择，无超长题被排除。六项检查覆盖双冻结来源、准确原始 prefix、EOS、完整身份和位置权重及实际评分器读取；生成入口使用生产原生 vLLM RPC、四卡副本和冻结参数校验。当前只有输入准备与合成轨迹的 CPU 证据，真实 bank 仍待串行 GPU 生成，不能把九十个准备好的 prompt 当成已生成状态。
 
 ## 历史调试与后续范围
 

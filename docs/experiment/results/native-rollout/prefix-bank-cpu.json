@@ -1,0 +1,55 @@
+{
+  "schema": "prefix-bank-cpu-v1",
+  "scope": "real input preparation and synthetic native-trajectory/scorer-loading checks",
+  "questions": 90,
+  "per_benchmark": 30,
+  "prompt_tokens": 8518,
+  "input_sha256": "3d4b4d7e6aeee65d262c0db08f7a124ad6e45a1d757d7dc36e8b491e6dbf8a05",
+  "input_files": [
+    {
+      "path": "/mnt/tidalfs-bdsz01/dataset/llm_dataset/zkn_data/fht_data/MD-OPD/data/math/MATH-500/test.parquet",
+      "sha256": "49e1b2c7bddd84791f38287bcdd4a99639c599e699d5906c238c74d0b31ccf8c",
+      "rows": 500
+    },
+    {
+      "path": "/mnt/tidalfs-bdsz01/dataset/llm_dataset/zkn_data/fht_data/MD-OPD/data/math/AMC23/test.parquet",
+      "sha256": "02389cd00016eb8330134f4fe4fb47bb6fadf0c57b19af48aafd2d115c798072",
+      "rows": 40
+    },
+    {
+      "path": "/mnt/tidalfs-bdsz01/dataset/llm_dataset/zkn_data/fht_data/MD-OPD/data/math/AIME25/test.parquet",
+      "sha256": "3fcf0118e87348af9a1c996438aa5fb00e91c4df5a5a00fe29a0c909886075b6",
+      "rows": 30
+    }
+  ],
+  "models": {
+    "initial_student": {
+      "path": "/mnt/tidalfs-bdsz01/dataset/llm_dataset/zkn_data/fht_data/models/DeepSeek-R1-Distill-Qwen-1.5B",
+      "fingerprint": "2fc42a962d3f6f5281e99686ab9a5ae32c8cb9529c8e3fd07709c5c056613f48"
+    },
+    "teacher": {
+      "path": "/mnt/tidalfs-bdsz01/dataset/llm_dataset/zkn_data/fht_data/models/JustRL-DeepSeek-1.5B",
+      "fingerprint": "2736b59eeb53f416088992a3d7ecb3376274c74e685c358214360072395631f0"
+    }
+  },
+  "tokenizer_signature": "ac73ad8e421aab1d9fff928ea3b8c8bdf30c614ffa6aad6c821dae5013e68e7c",
+  "vocab_size": 151665,
+  "sampling": {
+    "temperature": 1.0,
+    "top_p": 1.0,
+    "top_k": -1
+  },
+  "response_cap": 4096,
+  "positions_per_response": 8,
+  "runtime_tests": 6,
+  "real_preparation_wall_seconds": 14.988679870963097,
+  "actual_frozen_model_generation_verified": false,
+  "source_sha256": {
+    "data/prep/prepare_prefix_bank.py": "b94981b81ba48decd411521eac65c0011bed547fbeaa4a142b8d67b1fb7c8901",
+    "verl/verl/trainer/ppo/prefix_bank.py": "dcdebb0cf16289f913b0b61b4e20d59f5f62458cb28f3d56e8b94861a9ba714e",
+    "eval/generate_prefix_bank.py": "fad8acbafccb4bbc41100e00d3ca80a98f3e26fd11e432dfd3ab5542bae2fa62",
+    "verl/tests/opd/test_prefix_bank_runtime.py": "4f745b814c4ce5e5a03ffa519fb6f355fd9a5a46cb5761b9556e0dd858ef3441"
+  },
+  "full_runtime_regression_tests": 51,
+  "runtime_log_sha256": "b55710a518d16b97d0fe796ecc645cb142f9f8418ac383affe1ecaebbc1d6271"
+}

@@ -4,7 +4,7 @@ Status: proposed
 
 ## 问题
 
-生成时机、模型来源与混合策略目前分别耦合到 trainer 分支、actor 参数同步和解码实现。用户要求统一实时生成，支持当前 student、初始 student、teacher、logit fusion、双向分段切换和 batch 内来源混合，并优先采用原生 vLLM。本文集中保存重构提案、真实替代方案、实现调研与实验依据；当前训练链路仍以[代码结构](../../../../docs/architecture.md)和[统一实验报告](../../../../docs/experiment/2026-10-18-rollout来源与logit融合实验.md)为准。
+生成时机、模型来源与混合策略目前分别耦合到 trainer 分支、actor 参数同步和解码实现。用户要求统一实时生成，支持当前 student、初始 student、teacher、logit fusion、双向分段切换和 batch 内来源混合，并优先采用原生 vLLM。本文集中保存重构提案、真实替代方案、实现调研与实验依据；当前训练链路仍以[代码结构](../../../../docs/architecture.md)和[统一实验报告](../../../../docs/experiment/2026-10-19-rollout来源与logit融合实验.md)为准。
 
 此提案补充已有的[源码根目录与文档归属决策](../../implemented/architecture/2026-10-17-训练基线与研究分层.md)，不取代其仓库布局、维护工具与 docs 归属。原有方案从 architecture.md 迁入本记录；实验数据仍归统一实验结果目录。
 
@@ -24,7 +24,7 @@ Status: proposed
 
 ### 实施进展
 
-正式矩阵的 student_fresh 与 initial_student_fresh 均完成五十步、完整 570×16 最终评测、独立路由/版本审计与 W&B finished 核验，没有保存 checkpoint；两组 macro mean@16 为 64.30%/64.17%，配对题目 bootstrap 区间跨零，不据此给来源排序。同设置的原生生成吞吐均约 14.98k token/s，训练侧权重发布差约 121.30 s；详见[统一实验报告](../../../../docs/experiment/2026-10-18-rollout来源与logit融合实验.md)。题面核验和敏感性分析保留完整基准与排除重合两种口径。其余矩阵、新布局 GPU 验收、参数扫描与后续探针仍未完成，Status 保持 proposed。
+正式矩阵的 student_fresh 与 initial_student_fresh 均完成五十步、完整 570×16 最终评测、独立路由/版本审计与 W&B finished 核验，没有保存 checkpoint；两组 macro mean@16 为 64.30%/64.17%，配对题目 bootstrap 区间跨零，不据此给来源排序。同设置的原生生成吞吐均约 14.98k token/s，训练侧权重发布差约 121.30 s；详见[统一实验报告](../../../../docs/experiment/2026-10-19-rollout来源与logit融合实验.md)。题面核验和敏感性分析保留完整基准与排除重合两种口径。其余矩阵、新布局 GPU 验收、参数扫描与后续探针仍未完成，Status 保持 proposed。
 
 原生单模型、四个分段方向、两种 batch 混合与两种 fusion 已完成四卡短训练；连续解码、graph 热更新和原生排空也已有下文的独立证据。正式十五组 50 步/570 题×16 矩阵已使用 d59a7c3 冻结源码启动，质量比较尚未完成。新增 `generation_layout=split` 的生产副本映射仍在验收：默认 `overlap`，不改变已启动矩阵；[CPU 路由证据](../../../../docs/experiment/results/native-rollout/placement-cpu.json)覆盖小组集中、分卡、响应顺序、冻结恢复和 current 写入前置条件，真实四卡新布局训练尚待验证。下文早期检查按其实际覆盖范围保留，不代表所有后续验收均已完成。
 
@@ -616,7 +616,7 @@ env OMP_NUM_THREADS=2 TOKENIZERS_PARALLELISM=false ../envs/opd-state/bin/python 
 
 优先用前一种布局验证语义与真实内存预算，并以后一种布局作为吞吐对照。两套引擎不能各沿用历史 `gpu_memory_utilization=0.55`，各实例预算总和还必须为 actor/teacher 评分、通信与非 KV 临时张量留空间。vLLM 0.10.0 的 sleep allocator 限定每进程一个实例，多引擎应有独立 worker 进程及明确的 Ray 资源归属，不能在原 worker 内直接重复建立两个启用 sleep 的 LLM。固定 $p_0/q$ 首次读盘后保留只读 CPU 权重或使用保留权重的 sleep；恢复不得依赖 actor 流。引擎 sleep/wake 要实测显存和恢复时间，本仓 KV-only 空接口不能作为已释放的证据。[^vllm-sleep]
 
-当前 Qwen2 配对每模型 BF16 权重约 3.31 GiB，双模型权重约 6.62 GiB；单模型 KV 每序列每 token 为 28 KiB。以每卡 16 条、每条总上下文上限 5,120 计算，一套完整 KV 为 2.1875 GiB，两套为 4.375 GiB。这只是有效 KV 的容量估计，未包含 graph、临时张量、分页浪费、引擎预留与训练对象；不能用约 11 GiB 的权重加 KV 之和承诺整卡峰值。实测历史显存与预算差异见[统一实验报告](../../../../docs/experiment/2026-10-18-rollout来源与logit融合实验.md#显存速度与运行设置)。
+当前 Qwen2 配对每模型 BF16 权重约 3.31 GiB，双模型权重约 6.62 GiB；单模型 KV 每序列每 token 为 28 KiB。以每卡 16 条、每条总上下文上限 5,120 计算，一套完整 KV 为 2.1875 GiB，两套为 4.375 GiB。这只是有效 KV 的容量估计，未包含 graph、临时张量、分页浪费、引擎预留与训练对象；不能用约 11 GiB 的权重加 KV 之和承诺整卡峰值。实测历史显存与预算差异见[统一实验报告](../../../../docs/experiment/2026-10-19-rollout来源与logit融合实验.md#显存速度与运行设置)。
 
 batch 路由按来源聚合后，在其可用副本内做负载均衡；小分组优先集中到较少副本，避免全局 64 条再按四卡、两来源拆成每来源每卡约 8 条。副本映射必须显式实现，保留四卡各分组的布局作基线。分段请求先用按阶段归组的简单实现验证，再考虑完成一条第一段就送入第二段的有界队列；后一方案仅在两套引擎都可驻留且实测提高吞吐时启用。同 GPU 两引擎同时跑可能竞争带宽，不能把流水化本身视为加速证据。
 
@@ -709,6 +709,8 @@ $$
 | KL 探针        | student→teacher 与 teacher→student 条件 KL、student/teacher entropy、按前缀深度分层的 KL  | 全词表归一化；固定 bank 与当前 student 轨迹分别记录                    |
 | 全部准确率响应 | `…/student_teacher_kl/cumulative_on_states`、token 加权 KL、题目等权 KL、题目聚类置信区间 | 全有效位置；原验证采样设置；保存有效长度与截断比例                     |
 | 资源           | 准确率生成、KL 生成、student 评分、teacher 评分、归约/写盘的独立耗时与峰值显存            | KL 新增成本单列；端到端 token/s 与响应/s 不混入评分耗时                |
+
+固定 bank 已新增 `data/prep/prepare_prefix_bank.py` 输入准备、`eval/generate_prefix_bank.py` 原生生成入口与 `trainer/ppo/prefix_bank.py` 组装器。题目按身份哈希和固定 seed 均衡选择，两套冻结模型使用完全相同的原始 token prefix；组装时拒绝缺失/重复问题、错误 checkpoint 身份、改写 prefix、提前 EOS 后继续生成和不完整预算。四卡初始化逐引擎绑定端口后再并行生成，保存实际 worker UUID、冻结摘要、布局、冷启动/生成时间和整卡采样。已准备真实九十题并通过[六项 CPU 检查](../../../../docs/experiment/results/native-rollout/prefix-bank-cpu.json)，实际生成与新模型评分仍待 GPU 验收。
 
 #### 接入、开销与验收
 

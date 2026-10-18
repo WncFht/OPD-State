@@ -24,3 +24,11 @@ condition = "AND"
 regexTarget = "line"
 paths = ['''^docs/experiment/results/[^/]+/cache-manifest\.json$''']
 regexes = ['''^\s*"tokenizer_signature"\s*:\s*"[a-f0-9]{64}"\s*,?\s*$''']
+
+# The fixed-prefix input audit records the same computed tokenizer SHA-256.
+[[allowlists]]
+description = "Computed tokenizer SHA-256 in the fixed-prefix CPU audit"
+condition = "AND"
+regexTarget = "line"
+paths = ['''^docs/experiment/results/native-rollout/prefix-bank-cpu\.json$''']
+regexes = ['''^\s*"tokenizer_signature"\s*:\s*"[a-f0-9]{64}"\s*,?\s*$''']
