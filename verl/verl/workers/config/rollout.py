@@ -199,6 +199,14 @@ class RolloutConfig(BaseConfig):
     n: int = 1
     repetition_penalty: float = 1.0
 
+    # None preserves the legacy generation path. Policies are flat: single,
+    # logit_fusion, one sequence_switch, or a mixture of two single models.
+    policy: Optional[dict] = None
+    generation_backend: str = "vllm_native"
+    collection: dict = field(default_factory=lambda: {"mode": "fresh"})
+    # Resolved by the trainer; frozen paths must not change actor initialization.
+    generation_models: dict = field(default_factory=dict)
+
     # Whether to enable full determinism for reproducibility.
     full_determinism: bool = False
 

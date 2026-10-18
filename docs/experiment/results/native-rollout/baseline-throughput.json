@@ -1,0 +1,133 @@
+{
+  "scope": "Unmodified standalone native-vLLM baseline before production integration. B=2/8/16, cap128, three repetitions. Shared GPU0; not an isolated or four-card training benchmark.",
+  "all_checks_passed": true,
+  "case_count": 38,
+  "benchmark_cases": 36,
+  "settings": {
+    "gpu": 0,
+    "baseline": {
+      "time": 1792309920.6410658,
+      "total_mib": 81559,
+      "used_mib": 6921,
+      "busy_percent": 0
+    },
+    "memory_fraction_per_engine": 0.1,
+    "max_model_len": 5120,
+    "response_cap": 128,
+    "max_num_seqs": 16,
+    "max_num_batched_tokens": 2048,
+    "enforce_eager": true,
+    "prefix_caching": false,
+    "shared_gpu_load": true,
+    "mode": "throughput",
+    "long_response_cap": 0,
+    "weight_switch_test": false,
+    "vllm_enable_v1_multiprocessing": true,
+    "vocab_size": 151665,
+    "eos_token_id": 151643,
+    "models": {
+      "student": "/mnt/tidalfs-bdsz01/dataset/llm_dataset/zkn_data/fht_data/models/DeepSeek-R1-Distill-Qwen-1.5B",
+      "teacher": "/mnt/tidalfs-bdsz01/dataset/llm_dataset/zkn_data/fht_data/models/JustRL-DeepSeek-1.5B"
+    },
+    "schedule_sha256": "578b41e53de162b41ccada99164bc3e611740fbe0c70b7e321bf3ce2fbe8c854",
+    "sources": {
+      "eval/probe_vllm_composition.py": "a101f4cf8064ad57a3b6972fa91bfadbc6237f2436f9493cac1cc597d22fd844",
+      "eval/rollout_composition.py": "750900dec9cc15d439667fc707da1d5b1e6360a45203c65d0a0535650153449d"
+    },
+    "cold_starts": {
+      "student": {
+        "ready": true,
+        "model": "student",
+        "cold_start_seconds": 21.47447955608368,
+        "pid": 717840
+      },
+      "teacher": {
+        "ready": true,
+        "model": "teacher",
+        "cold_start_seconds": 22.26247049868107,
+        "pid": 718078
+      }
+    },
+    "after_cleanup": {
+      "time": 1792310063.1085496,
+      "total_mib": 81559,
+      "used_mib": 1,
+      "busy_percent": 0
+    }
+  },
+  "timings": {
+    "B2/single": {
+      "repeats": 3,
+      "mean_seconds": 1.1580710684259732,
+      "minimum_seconds": 1.1396132484078407,
+      "maximum_seconds": 1.1931004896759987
+    },
+    "B2/mixture-serial": {
+      "repeats": 3,
+      "mean_seconds": 2.1681452145179114,
+      "minimum_seconds": 2.1432204991579056,
+      "maximum_seconds": 2.1999706476926804
+    },
+    "B2/mixture-concurrent": {
+      "repeats": 3,
+      "mean_seconds": 1.1284628237287204,
+      "minimum_seconds": 1.1266994625329971,
+      "maximum_seconds": 1.1307987421751022
+    },
+    "B2/switch": {
+      "repeats": 3,
+      "mean_seconds": 1.3088713611165683,
+      "minimum_seconds": 1.2841922044754028,
+      "maximum_seconds": 1.3463450372219086
+    },
+    "B8/single": {
+      "repeats": 3,
+      "mean_seconds": 1.5141074980298679,
+      "minimum_seconds": 1.5060033574700356,
+      "maximum_seconds": 1.5234292149543762
+    },
+    "B8/mixture-serial": {
+      "repeats": 3,
+      "mean_seconds": 2.549522064626217,
+      "minimum_seconds": 2.517571695148945,
+      "maximum_seconds": 2.5744884237647057
+    },
+    "B8/mixture-concurrent": {
+      "repeats": 3,
+      "mean_seconds": 1.348196638127168,
+      "minimum_seconds": 1.329062782227993,
+      "maximum_seconds": 1.3699947446584702
+    },
+    "B8/switch": {
+      "repeats": 3,
+      "mean_seconds": 2.0548120960593224,
+      "minimum_seconds": 2.011569529771805,
+      "maximum_seconds": 2.083601288497448
+    },
+    "B16/single": {
+      "repeats": 3,
+      "mean_seconds": 1.9593543484807014,
+      "minimum_seconds": 1.9425185397267342,
+      "maximum_seconds": 1.980713352560997
+    },
+    "B16/mixture-serial": {
+      "repeats": 3,
+      "mean_seconds": 3.0082200715939202,
+      "minimum_seconds": 2.9808102175593376,
+      "maximum_seconds": 3.056557685136795
+    },
+    "B16/mixture-concurrent": {
+      "repeats": 3,
+      "mean_seconds": 1.5799570977687836,
+      "minimum_seconds": 1.540261596441269,
+      "maximum_seconds": 1.6186592802405357
+    },
+    "B16/switch": {
+      "repeats": 3,
+      "mean_seconds": 2.9347656443715096,
+      "minimum_seconds": 2.9172281101346016,
+      "maximum_seconds": 2.9525969102978706
+    }
+  },
+  "raw_summary_sha256": "c27684e570432479e31505706c15660a843af9baef07a8d795fb5907e3c88200"
+}

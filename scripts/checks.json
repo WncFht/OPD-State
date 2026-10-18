@@ -60,6 +60,24 @@
       "allow_failure": false
     },
     {
+      "id": "native-rollout-tests",
+      "command": [
+        "python3",
+        "-m",
+        "unittest",
+        "discover",
+        "-s",
+        "verl/tests/opd",
+        "-p",
+        "test_native_*_on_cpu.py",
+        "-v"
+      ],
+      "modes": ["test", "ci"],
+      "needs": [],
+      "timeout": 120,
+      "allow_failure": false
+    },
+    {
       "id": "training-source",
       "command": ["python3", "scripts/check_source.py"],
       "modes": ["test", "ci"],

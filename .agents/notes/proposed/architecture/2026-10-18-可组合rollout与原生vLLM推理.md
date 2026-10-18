@@ -22,6 +22,12 @@ Status: proposed
 
 正式 trainer 尚未接入新的生成模式，独立原型与实测证据见后文。审阅基线为 `d17d6c6`，范围是当前 math 的 FSDP、vLLM/HF fusion、权重同步、teacher 评分与验证执行链，涉及 32 个相关文件；另核对安装环境的 vLLM 0.10.0 V1 模型注册、采样、键值缓存（KV cache）与 worker 扩展接口。[代码核验清单](../../../../docs/experiment/results/2026-10-18-rollout-refactor-code-audit.json)保存范围、哈希与源码观察。方案优先使用 vLLM 原生执行；正式实验保留各自固定的源码快照。后续流程图描述目标算法和拟议接入方式，具体实现状态以“vLLM 后端能力与实现边界”和“独立原型”中的证据为准。
 
+### 实施进展
+
+生产目录新增 [policy.py](../../../../verl/verl/workers/rollout/policy.py)，实现不可变模型身份、平面配置解析、全局响应配额、分段预算与端点归约，显式拒绝嵌套和 TCOD。[十三项 CPU 合约检查](../../../../verl/tests/opd/test_native_policy_on_cpu.py)已通过，包含五百组随机配额；Hydra 配置往返也已验证。新增配置默认关闭，现有路径继续使用原入口。这些是契约层证据，尚不表示 worker、权重生命周期或 trainer 集成已完成。
+
+实施前的原生 vLLM 基准已完成三十八个场景，其中三十六个为 B=2/8/16、cap=128 的三次重复，见[基准记录](../../../../docs/experiment/results/native-rollout/baseline-throughput.json)。启动时 GPU 0 已有 6,921 MiB 其他负载，按共享 GPU 微基准记录，不当作独占或四卡训练吞吐。后续仍须完成真实 actor 热同步、固定引用保护、分段与 batch 混合、原生 fusion、阶段耗时和整卡显存、两步训练与正式 math 对照。
+
 ### 目标与算法含义
 
 建议将新实验统一为训练时实时生成（fresh rollout），把生成权重来源单独配置。所有设置都只训练当前 student $p_\theta$，teacher $q$ 始终冻结；初始 student $p_0$ 是训练开始前的固定权重。实时生成描述生成时机，on-policy 描述生成分布与当前 student 的关系，二者不能混用。

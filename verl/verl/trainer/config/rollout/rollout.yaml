@@ -7,6 +7,14 @@ name: ???
 # sync: LLM, async: AsyncLLM
 mode: async
 
+# Optional flat generation policy. Null keeps the historical rollout path.
+policy: null
+generation_backend: vllm_native
+collection:
+  mode: fresh
+# Filled from the canonical actor / distillation paths before worker startup.
+generation_models: {}
+
 # Number of nodes for standalone rollout server, must be > 0 in one-step-off/fully async training.
 nnodes: 0
 

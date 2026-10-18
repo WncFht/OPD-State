@@ -755,6 +755,8 @@ Teacher 组训练源码固定于 `350a286be0d586f04e4cd0b0e89624a336b17a81`，�
 
 ## 历史调试与后续范围
 
+可组合原生 rollout 开始实施，当前仅完成生产策略与模型身份契约，十三项 CPU 检查和 Hydra 配置往返通过；新 trainer 路径尚未接通。已有三十八场景的[实施前原生基准](results/native-rollout/baseline-throughput.json)保留实际输入、源码哈希、引擎冷启动和三十六个性能子测；GPU 0 启动占用 6,921 MiB，属于共享负载测试。后续生成、更新、验证和资源结果继续并入本文，不另建实验正文；实施状态归对应 Agent Note。
+
 最初在线链路验证采用 MATH-500 greedy@1、8,192 cap，结果为 355/500，即 71%，W&B 为 finished，50 次更新和无 checkpoint 已核对。它只作为工程链路证据，不能与当前 eval16 三基准成绩直接比较；[原摘要](results/2026-10-18-math-baseline-summary.json)、[训练记录](results/2026-10-18-math-baseline-steps.csv)和[逐题分数](results/2026-10-18-math-baseline-scores.csv)继续保留。早期四卡两步 smoke 的[环境与数据证据](results/2026-10-17-math-smoke.json)同样不作为准确率结论。
 
 长时 Semi 已停止并归档，不安排继续观察或自动重启。后续重构以可组合原生 rollout 的 Agent Note 为依据，独立生成原型不能替代正式 trainer 的权重同步、评分、反向传播与 student-only 验证验收。更强的来源效应结论还需多 seed、长度与有效 token 预算控制，以及相同 prefix/action 测度的诊断。缓存 miss 在线补采样、旧学生概率替代当前 PPO 锚点、teacher 被更新、fusion 两模型接收不同 prefix、验证使用 teacher/fusion、缺基准或缺采样数均属于失败条件，不能计为有效结果。
