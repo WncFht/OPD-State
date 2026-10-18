@@ -43,7 +43,14 @@ export STEPS=${STEPS:-50}
 export EXPERIMENT_NAME=${EXPERIMENT_NAME:-math-native-${SOURCE}-${STEPS}steps-$(TZ=Asia/Shanghai date +%Y%m%d-%H%M%S)}
 export OPD_ROOT=${OPD_ROOT:-${ROOT}/runs/native-rollout/${EXPERIMENT_NAME}}
 export WANDB_JOB_TYPE=native_rollout WANDB_RUN_GROUP=math-native-rollout-sources
-if [[ -z ${NATIVE_DATA_MANIFEST:-} && -z ${TRAIN_FILES:-} ]]; then
+native_cli_data=false
+for native_override in "$@"; do
+    case "$native_override" in
+        data.train_files=*|+data.train_files=*|++data.train_files=*|trainer.native_data_manifest=*|+trainer.native_data_manifest=*|++trainer.native_data_manifest=*)
+            native_cli_data=true ;;
+    esac
+done
+if [[ -z ${NATIVE_DATA_MANIFEST:-} && -z ${TRAIN_FILES:-} && $native_cli_data == false ]]; then
     NATIVE_DATA_MANIFEST="$ROOT/runs/native-data/math-full/manifest.json"
 fi
 if [[ -n ${NATIVE_DATA_MANIFEST:-} ]]; then

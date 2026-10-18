@@ -1,0 +1,41 @@
+{
+  "schema": "native-cli-data-entry-cpu-v1",
+  "scope": "CLI input routing regression and real CPU configuration validation; no GPU training",
+  "source_sha256": {
+    "recipe/math_native.sh": "ac89c262cafda6c764110aa499b26fd67034daf5facc80c8fe28c730c35c9a04",
+    "scripts/tests/test_native_recipe_data.py": "522c2fef63b269954988ec2ae056a00b618517cd8d083b8e1f81bb217d88a0c8"
+  },
+  "regression_before": {
+    "methods": 6,
+    "failures": 3,
+    "causes": [
+      "CLI data with missing default manifest",
+      "CLI data with available but unrelated default manifest",
+      "CLI manifest/data pair blocked by missing default manifest"
+    ]
+  },
+  "after": {
+    "methods": 6,
+    "passed": true,
+    "covers": [
+      "bare default prepared pool",
+      "missing default stops before downstream",
+      "explicit environment TRAIN_FILES",
+      "explicit environment manifest with spaces",
+      "explicit CLI training files",
+      "explicit CLI manifest/data pair"
+    ]
+  },
+  "actual_runtime": {
+    "scope": "Real CLI data override and pre-Ray config validation; no GPU inference",
+    "train_files": [
+      "/mnt/tidalfs-bdsz01/dataset/llm_dataset/zkn_data/fht_data/OPD-State/runs/native-rollout-implementation/native-cli-custom-data.parquet"
+    ],
+    "native_data_manifest": null,
+    "pre_ray_validation_passed": true,
+    "cuda_initialized": false,
+    "input_sha256": "d90202ad9b5bb75c9788b36acc111aae38347cf68fe1ace18048c14cc84cb974",
+    "log_sha256": "d7054c68fb27e9bfc18330be985e532a0f51241948c2118e95bb022059a22630"
+  },
+  "unchanged_protocols": "No live GPU process, frozen neural source or queued command was changed"
+}

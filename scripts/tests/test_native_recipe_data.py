@@ -31,13 +31,15 @@ class NativeRecipeDataTests(unittest.TestCase):
         for key in ("TRAIN_FILES", "NATIVE_DATA_MANIFEST"):
             self.environment.pop(key, None)
 
-    def run_launcher(self, **environment):
+    def run_launcher(self, *overrides, **environment):
+        self.capture.unlink(missing_ok=True)
         result = subprocess.run(
             [
                 "bash",
                 str(self.root / "recipe/math_native.sh"),
                 "student_fresh",
                 "trainer.total_training_steps=2",
+                *overrides,
             ],
             cwd=self.root,
             env={**self.environment, **environment},
@@ -78,6 +80,32 @@ class NativeRecipeDataTests(unittest.TestCase):
         self.assertEqual(captured["train"], train)
         self.assertIsNone(captured["manifest"])
         self.assertFalse(any("native_data_manifest" in arg for arg in captured["args"]))
+
+    def test_cli_training_files_do_not_require_or_bind_the_default_manifest(self):
+        override = "data.train_files=[/fixture/repeated-question.parquet]"
+        for has_default in (False, True):
+            if has_default:
+                self.manifest("runs/native-data/math-full/manifest.json")
+            result, captured = self.run_launcher(override)
+            with self.subTest(has_default=has_default):
+                self.assertEqual(result.returncode, 0, result.stderr)
+                self.assertIsNone(captured["manifest"])
+                self.assertIn(override, captured["args"])
+                self.assertFalse(
+                    any("native_data_manifest" in arg for arg in captured["args"])
+                )
+
+    def test_cli_manifest_and_data_pair_are_forwarded_without_a_second_binding(self):
+        manifest = "++trainer.native_data_manifest=/fixture/prepared/manifest.json"
+        train = "data.train_files=[/fixture/prepared/ordered.parquet]"
+        result, captured = self.run_launcher(manifest, train)
+        self.assertEqual(result.returncode, 0, result.stderr)
+        self.assertIsNone(captured["manifest"])
+        self.assertIn(manifest, captured["args"])
+        self.assertIn(train, captured["args"])
+        self.assertEqual(
+            sum("native_data_manifest" in arg for arg in captured["args"]), 1
+        )
 
     def test_explicit_manifest_with_spaces_and_matching_file_override_are_preserved(
         self,

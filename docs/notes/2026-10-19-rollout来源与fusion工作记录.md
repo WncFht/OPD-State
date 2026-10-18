@@ -327,3 +327,5 @@ Bank/长响应验收提交为 f334951，完整 CI 与 hooks 通过。核对入�
 默认清单入口提交为 8f128cc，完整 CI（八十七项原生、十八项维护工具、一百三十六项维护检查）通过，原有显式工程数据继续使用原设置。全量 gate 2233555 仍健康运行；日志实际启动参数确认验证引擎是 max_num_seqs=8、context=32768，训练引擎是 8/1088，并发继承了 B8，不能把这次生成耗时直接当成正式 B64 的验证速度。
 
 新增可选 generation_eval_max_num_seqs，默认 null；显式值只进入主验证 manager 的独立配置副本，训练配置和预算保留。Worker 回执增加实际 max_num_seqs/max_num_batched_tokens/max_model_len，避免只用配置声明作为接入证明。四类策略的真实 pool 初始化代码、配置幂等性、legacy、冲突值、非法类型和扩展 worker 方法已在 CPU/训练环境检查；八十七项原生与五十八项运行检查通过。三个维护测试包含七个错误回执，全部拒绝。真实 Hydra/pre-Ray 验证保持训练 batch=8、训练上限=8、验证上限=64、同步 namespace 不变，CUDA 未初始化。三组 GPU 工程对照继续排队，当前任务未调整。
+
+独立验证并发提交为 972c7bc，完整 CI 与 hooks 通过；三组 GPU 接入 watcher 2316853 已实际核验存活，等待前置 profiling owner。继续审计默认数据入口时，新增回归先复现了 CLI data.train_files 仍被默认清单绑定的问题：默认产物不存在时退出、存在时注入无关清单，显式 CLI 清单/数据对也被默认产物前置检查阻止。入口现识别这些 Hydra 数据覆盖，仅在没有环境或 CLI 数据选择时应用默认池。六项 Bash 检查通过，另以十六行真实工程数据执行 actual Hydra 与 pre-Ray 校验，CLI 文件保留、清单为 None、CUDA 未初始化。没有触发 GPU 训练。

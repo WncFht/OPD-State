@@ -67,8 +67,8 @@ CUDA_VISIBLE_DEVICES='' PYTHONPATH=verl ../envs/opd-state/bin/python \
 OPD_FREEZE_SOURCE=1 bash recipe/math_native.sh student_fresh
 ```
 
-The native launcher defaults to `runs/native-data/math-full/manifest.json` when neither `NATIVE_DATA_MANIFEST` nor `TRAIN_FILES` is set. Prepare this pool before the first run; a missing default manifest stops the launcher before training starts.
+The native launcher defaults to `runs/native-data/math-full/manifest.json` when neither environment data settings nor Hydra data overrides are supplied. Prepare this pool before the first run; a missing default manifest stops the launcher before training starts.
 
-Set `NATIVE_DATA_MANIFEST` to select another prepared pool. Explicit `TRAIN_FILES` still supports custom engineering inputs; without a manifest, that override does not certify a complete deduplicated pool.
+Set `NATIVE_DATA_MANIFEST` to select another prepared pool. CLI `data.train_files=...` and `++trainer.native_data_manifest=...` are explicit data choices and are forwarded without an extra default binding. Explicit `TRAIN_FILES` still supports custom engineering inputs; without a manifest, that override does not certify a complete deduplicated pool.
 
 Use a fresh output directory when rebuilding. The launcher binds a selected manifest to the exact Parquet, tokenizer/template and prompt cap before initializing GPU workers. The native path supports `student_teacher_fusion` and `initial_teacher_fusion` with `TEACHER_WEIGHT`, sequence directions with `SWITCH_TOKENS`, and batch mixtures with `TEACHER_FRACTION`; the experiment report distinguishes verified short runs from full quality results.
