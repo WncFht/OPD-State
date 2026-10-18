@@ -560,13 +560,54 @@ GPU busy 均值先按每张卡在对应阶段的有效采样求算术平均，�
 
 vLLM 的 `gpu_memory_utilization=0.55` 是推理实例的预算，包括权重、非 KV 开销与 KV pool，不是只给权重的比例，也不是整个作业的整卡上限。[^vllm-memory] 增大 KV pool 可以使显存占用升高，却不保证更多有效请求或更高吞吐。Fusion 训练在 vLLM worker 进程中另建 HF student/teacher 与双 StaticCache；同步后原生 vLLM KV 也会恢复，HF 解码器不受原生调度器的 `max_num_seqs` 控制。这里存在重复驻留与时分释放的优化空间，尚未用新配置做 GPU 验收。
 
-两个 BF16 权重文件各约 3.31 GiB。每个模型的 KV 为
+### 推理阶段、batch 与多卡关系
+
+自回归推理分为预填充（prefill）与逐 token 解码（decode）。prefill 的 prompt token 已知，各层可并行处理这些位置并建立 K/V；decode 对每条序列每次产生一个新 token，下一 token 依赖已生成结果，随后继续前向。KV cache 保存每层过去位置的 K/V，避免重新计算旧 token 的这些投影；新 token 仍需经过模型各层，并读取过去的 K/V 做注意力。[^hf-kv] 这里的 KV cache 是生成过程内部的中间张量，与 Semi 保存整条响应的 SQLite 轨迹缓存不同。
+
+以单卡单模型、全注意力、固定 KV 精度且不计 prefix sharing 为例，设活跃序列数为 $b$、第 $i$ 条当前上下文长度为 $L_i$，推理显存可分为
+
+$$
+M_{\mathrm{GPU}}\approx M_W+c_{\mathrm{KV}}\sum_{i=1}^{b}L_i+M_{\mathrm{temp}}(b,\{L_i\})+M_{\mathrm{runtime}}.
+$$
+
+$M_W$ 是固定模型权重，$c_{\mathrm{KV}}$ 是单序列每 token 的 KV 字节数，$M_{\mathrm{temp}}$ 包括激活、logits 和 kernel workspace，$M_{\mathrm{runtime}}$ 包括 context、调度缓冲等。减小 batch 会降低活跃 KV 和部分临时工作量，但不会减小同一模型的参数量。分页取整、共享 prefix、量化和静态预分配会改变实际分配量，因此该式不是整卡最高采样的预测式。
+
+两个 BF16 权重文件各约 3.31 GiB。按本地配置，单模型的 KV 系数为
 
 $$
 2\times28\times2\times128\times2=28{,}672\ \mathrm{bytes/token}.
 $$
 
-各因子依次为 K/V、层数、KV head 数、head 维度、BF16 字节数。16 条、容量 5,120 token 时，单模型 KV 约 2.19 GiB，Fusion 双模型约 4.38 GiB；64 条时单模型约 8.75 GiB。这只是 KV 张量估计，不含激活、logits、CUDA context、workspace、图缓冲和 allocator 保留。权重文件大小不足以推算整卡峰值。
+各因子依次为 K/V、层数、KV head 数、head 维度、BF16 字节数，即每序列每 token 28 KiB。模型有 12 个 query head，但只有 2 个 KV head，KV 存储按后者计算。若每条上下文都达到 5,120 token，单卡 batch 16/64/128 的单模型 KV 分别约为 2.19/8.75/17.50 GiB；Fusion 双模型在 batch 16 时约 4.38 GiB。把上下文从 5,120 增到 32,768，KV 需求再乘 6.4；短训练与长验证的可用 batch 因此可能不同。
+
+vLLM 0.10.0 先按实例预算减去非 KV 开销，确定 KV 容量，再分配底层缓存张量。[^vllm-kv-pool] 活跃 batch 下降可以增加池内空闲块，却不自动降低整个池的预留量。若要把这部分空间交给另一个模型，需要调整预算或释放缓存池；仅把请求数从 64 降到 16 不保证整卡占用随之下降。StaticCache 与 CUDA Graph 也可能保留按容量建立的缓冲，须同时检查容量与生命周期。
+
+在单卡 decode 中，较大 batch 可以让多个序列共同摊销权重读取和 kernel 调度，将更多工作合成较大的矩阵运算。prefill 通常更偏计算受限，decode 则常受访存限制；上下文更长时，读取 KV 的成本也会上升。[^nvidia-inference] 设相近长度 $L$ 下、一轮 decode 的耗时为 $\tau(b,L)$，忽略起步、收尾与请求排队，单卡输出吞吐约为
+
+$$
+Q_{\mathrm{GPU}}(b,L)\approx\frac{b}{\tau(b,L)}.
+$$
+
+同一轮每条序列贡献一个 token，因此合计 $b$ 个 token；单条序列的 token 间隔约为 $\tau(b,L)$。增加 batch 若使每轮耗时增长慢于 $b$，总吞吐就提高，但单条响应可能变慢。达到算力或带宽饱和后，收益会减小；KV 不足时还可能排队或抢占重算，进一步伤害吞吐与延迟。[^vllm-tuning] 空闲显存能容纳更长上下文、更大模型或额外缓冲，但不会自动增加显存带宽或减少前向算子。
+
+当前四卡生成属于四个独立的完整模型副本，按请求分发，类似数据并行；每个引擎自己的 TP/DP/PP 均为 1。这与把一个模型切到四卡的张量并行（TP）不同：TP 每轮需要卡间通信，主要用于模型放不下或需要降低每卡权重压力的情况。[^vllm-dp][^vllm-tuning] 在完整副本模式下，$G$ 张卡均衡分担全局 batch $B$，每卡约 $b=B/G$，稳态总输出吞吐约为
+
+$$
+Q_{\mathrm{total}}\approx G\frac{B/G}{\tau(B/G,L)}=\frac{B}{\tau(B/G,L)}.
+$$
+
+这不是关于 $G$ 的线性保证：增加卡数同时减小每卡 batch，会改变 $\tau$ 与每卡效率。固定每卡 batch 并提供足够请求，更有机会接近线性扩展，但全局工作量也随卡数增加。以下为上下文全部达到 5,120 token 的张量存储估计，不是实测显存或测速结果。
+
+| 推理卡数 | 全局活跃 batch | 平均每卡 batch | 每卡单模型 KV 估计 |
+| -------- | -------------: | -------------: | -----------------: |
+| 1        |             64 |             64 |           8.75 GiB |
+| 2        |             64 |             32 |           4.38 GiB |
+| 4        |             64 |             16 |           2.19 GiB |
+| 4        |            256 |             64 |           8.75 GiB |
+
+每卡仍需完整模型权重；增加副本会增加总权重存储。较多卡可以分担相同的 64 条请求，但每卡更小的 batch 也可能降低每 GPU 的吞吐效率，不能仅按总显存或卡数判断速度。我们实际在线与离线处于表中后两种提交规模，batch/预算/生成分数等贡献仍待受控实验，不由这些近似公式直接给出实际加速比。
+
+### 固定训练预算下的性能验证
 
 优化应以吞吐、阶段耗时和准确率协议为目标，而不是将显存数字填到 100%。在线可先测生成 log-probability 的必要性，以及全局 batch 64 不变时 1/2/4 个推理副本的吞吐；直接把全局 batch 改到 256 或增加每题 rollout 数会改变实验预算与更新频率，需要另列对照。Fusion 可测 HF 解码期间是否能释放原生 KV pool，并核验之后的权重恢复与 student-only 验证。已有正式结果保持原设置，不能用尚未运行的新方案解释实测加速。
 
@@ -725,6 +766,16 @@ Teacher 组训练源码固定于 `350a286be0d586f04e4cd0b0e89624a336b17a81`，�
 [^oneshot-state]: Fu 等。Rethinking On-Policy Distillation of Large Language Models II: One Training Example. arXiv 2609.04172, 2026. [论文](https://arxiv.org/abs/2609.04172). 状态定义和覆盖方法按工作区 Sections/4_Mechanism-Data.tex 与 Appendix.tex 核对。
 
 [^nvml-util]: NVIDIA. NVML API Reference Guide, nvmlUtilization_t. NVIDIA 2024. [GPU utilization 定义](https://docs.nvidia.com/deploy/archive/R535/nvml-api/structnvmlUtilization__t.html).
+
+[^hf-kv]: Hugging Face. Caching. Transformers v4.57.1, 2025. [Caching](https://huggingface.co/docs/transformers/v4.57.1/cache_explanation).
+
+[^nvidia-inference]: Verma S, Vaidya N. Mastering LLM Techniques: Inference Optimization. NVIDIA Technical Blog 2023. [Prefill、decode、batch 与访存](https://developer.nvidia.com/blog/mastering-llm-techniques-inference-optimization/).
+
+[^vllm-kv-pool]: vLLM contributors. GPU worker and GPU model runner. vLLM v0.10.0, 2025. [KV 预算与初始化](https://github.com/vllm-project/vllm/blob/v0.10.0/vllm/v1/worker/gpu_worker.py)、[KV 张量分配](https://github.com/vllm-project/vllm/blob/v0.10.0/vllm/v1/worker/gpu_model_runner.py).
+
+[^vllm-tuning]: vLLM contributors. Optimization and Tuning. vLLM v0.10.0, 2025. [Prefill、decode 与调参](https://docs.vllm.ai/en/v0.10.0/configuration/optimization.html).
+
+[^vllm-dp]: vLLM contributors. Data Parallel Deployment. vLLM v0.10.0, 2025. [完整模型副本与独立 KV cache](https://docs.vllm.ai/en/v0.10.0/serving/data_parallel_deployment.html).
 
 [^vllm-memory]: vLLM Team. Engine Arguments, v0.10.0. vLLM 文档，访问于 2026. [显存预算参数](https://docs.vllm.ai/en/v0.10.0/configuration/engine_args.html).
 

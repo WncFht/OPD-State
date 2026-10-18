@@ -107,3 +107,5 @@ Fusion 随后完成全部 50 步和三基准 eval16，进程退出码 0，W&B g5
 用户要求停止频繁盯跑、改为每小时检查。新增 eval/watch_math_progress.py，首次也等待 3,600 秒，之后每小时核对 PID 启动身份和完整日志；仅对具有原始响应文件及完整验证日志的候选步调用既有采集器，输出保存在忽略的 hourly-watch/，不修改正式训练。两个回归验证响应文件不能单独证明完成、部分写入的未来行不被计入。后台进程 PID 304315 已启动，状态文件位于 runs/rollout-sources/math-semi-opd-long-800steps-eval16-20261018-092912/hourly-watch/state.json；首次检查时间为 2026-10-18 13:16:37（Asia/Shanghai），启动核验确认 last_checked_at_utc 仍为 null。后续 agent 不再按分钟检查 Semi，按该小时状态记录处理结果；独立两秒 GPU 遥测继续用于曲线。
 
 补充速度判断边界：同 checkpoint、实际 batch、长度分布、生成分数与推理执行路径一致时，纯 rollout 吞吐应接近；仅统一参数上限不等于实际 batch 一致。完整首轮还包含参数同步、阶段切换与缓存/初始化成本，两者总时间不保证相同。当前两组都重新做 teacher 评分，没有将尚未实现的 teacher 分数缓存归为当前收益。
+
+按用户追问，核对 vLLM 0.10.0 的 GPU worker/model runner 与 HF 4.57.1 缓存说明，补充 prefill/decode、模型权重/活跃 KV/临时张量/引擎预留池的区别。活跃 batch 变小不保证 vLLM 固定池在 nvidia-smi 中变小，也不会自动把空间让给另一模型。按本地 28 层、2 KV head、128 head dim 与 BF16 推导每序列每 token 28 KiB，给出固定全局 batch 与固定每卡 batch 的多卡 KV 表和稳态吞吐近似，明确不是实测加速。内容继续归统一报告。仅终止等待下次时点的会话内计时 cell 724，以便响应用户问题；后台每小时检查 PID 304315 和 GPU 遥测均未停止，没有提前读取 Semi 进度。
