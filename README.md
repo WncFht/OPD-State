@@ -205,7 +205,7 @@ The code in this repository is released under the Apache License 2.0. The releas
 
 本仓直接基于 One-Shot-OPD 修改。训练入口在 `recipe/`，数据准备在 `data/prep/`，评测在 `eval/`，训练实现及其原有脚本在 `verl/`。导入版本与许可见[来源说明](docs/provenance.md)。
 
-[访问测度研究](docs/research/occupancy/2026-10-17-OPD访问测度与收敛机制研究.md)保存推导、精确实验与小型结果；[math 实验方案](docs/experiment/2026-10-17-math基线与rollout来源对照.md)定义在线基线和固定轨迹来源对照，[50 步结果](docs/experiment/2026-10-18-math50步基线结果.md)保存已完成的核验；[开发指南](docs/development.md)说明维护工具、hooks 与复现命令；[代码结构](docs/architecture.md)说明算法修改位置。研究过程记录统一保存在 `docs/notes/`。
+[访问测度研究](docs/research/occupancy/2026-10-17-OPD访问测度与收敛机制研究.md)保存推导、精确实验与小型结果；[math 实验方案](docs/experiment/2026-10-17-math基线与rollout来源对照.md)解释算法，[统一实验协议](docs/experiment/2026-10-18-三基准评测与轨迹来源实验.md)定义三基准 eval16、固定缓存和复现入口。已完成的正式结果见[三种来源 50 步对照](docs/experiment/2026-10-18-三种轨迹来源50步对照.md)和 [logit fusion 50 步对照](docs/experiment/2026-10-18-logit融合50步结果.md)；长时 Semi-OPD 按每 50 步验证继续检查收敛。[开发指南](docs/development.md)说明维护工具与 hooks，[代码结构](docs/architecture.md)说明算法修改位置。研究过程记录统一保存在 `docs/notes/`。
 
 维护环境与 GPU 训练环境分别准备。安装维护工具并启用 hooks：
 

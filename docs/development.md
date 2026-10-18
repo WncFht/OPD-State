@@ -58,7 +58,7 @@ CUDA_VISIBLE_DEVICES='' .venv/bin/python docs/research/occupancy/experiments/plo
 
 上游声明的运行栈为 Python 3.12、vLLM 0.28、Torch 2.13 和 Transformers 5.x。本机 math 配方使用独立的 CUDA 12.6 环境：Torch 2.7.1+cu126、vLLM 0.10.0+cu126、Transformers 4.57.6，通过 PYTHONPATH 选择本仓源码。针对旧版 vLLM 的导入、CLI 与缓存生命周期做了兼容适配，已用本地 Qwen2 架构 student/teacher 完成四卡两步更新与最终评测。该验证不覆盖其他模型或全部上游功能，也不等于满足上游 setup.py 的全部新版本依赖声明。
 
-工作区 `envs/opd-state` 指向本机缓存中的独立环境；已核对 Torch 实际加载路径与四卡 CUDA 运算，并通过 229 个已安装包的依赖检查。共享 `envs/opd` 保持原样。正式 math 50 步配方为 `bash recipe/math_baseline.sh`，W&B project 固定为 OPD-State，中途不验证且不保存 checkpoint；设置与对照方案见[实验文档](experiment/2026-10-17-math基线与rollout来源对照.md)。
+工作区 `envs/opd-state` 指向本机缓存中的独立环境；已核对 Torch 实际加载路径与四卡 CUDA 运算，并通过 229 个已安装包的依赖检查。共享 `envs/opd` 保持原样。正式 math 50 步配方为 `bash recipe/math_baseline.sh`，W&B project 固定为 OPD-State，中途不验证且不保存 checkpoint；最终在 MATH-500、AMC23、AIME25 各题采样 16 次。固定来源和 fusion 分别使用 `recipe/math_cached.sh` 与 `recipe/math_fusion.sh`，长时固定来源每 50 步验证；配置、缓存准备、GPU 验收和已完成结果见[统一实验协议](experiment/2026-10-18-三基准评测与轨迹来源实验.md)。
 
 训练模型、数据准备与完整参数遵循 [README](../README.md) 和 [数据说明](../data/README.md)。准备完成后，从本仓根目录启动的形式为：
 
@@ -72,4 +72,4 @@ CUDA_VISIBLE_DEVICES=0,1,2,3 N_GPUS_PER_NODE=4 \
 
 模型、数据与训练环境需要实际存在；四卡规模、显存预算和 batch 参数仍需实测。使用 `bash -o pipefail` 使训练失败通过上游 tee 管道传回调用方。`OPD_DRY_RUN=1` 仍导入训练依赖，并非无依赖检查；本仓 launcher 测试用替身 Python 核验参数与路径，不代表 Hydra 配置或 GPU 训练通过。
 
-GPU 验收至少记录 checkpoint、数据哈希、随机种子、有效 token 数、采样配置、时间和峰值显存，先跑原算法小规模基线，再比较候选变体。GPU 限物理编号 0–3；后续覆盖率与准确率结论必须基于真实结果。初始化阶段未运行 GPU 训练。
+GPU 验收至少记录初始模型身份、权重保存策略、数据哈希、随机种子、有效 token 数、采样配置、时间和峰值显存，先跑原算法小规模基线，再比较候选变体。GPU 限物理编号 0–3；覆盖率与准确率结论必须基于真实结果。三种轨迹来源和 λ=0.5 fusion 已完成四卡 50 步及完整三基准验证；这些单 seed、单预算结果不证明长时收敛。
