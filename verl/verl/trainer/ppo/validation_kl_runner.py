@@ -66,9 +66,10 @@ def load_fixed_bank(path, config, tokenizer):
 
     raw = Path(path).read_bytes()
     bank = json.loads(raw)
+    vocab_size = len(tokenizer)
     expected = {
         "schema": "fixed-prefix-bank-v1",
-        "vocab_size": len(tokenizer),
+        "vocab_size": vocab_size,
         "tokenizer_signature": tokenizer_signature(tokenizer),
         "initial_student_fingerprint": model_signature(config.actor_rollout_ref.model.path),
         "teacher_fingerprint": model_signature(config.distillation.fsdp_teacher.model_path),
@@ -81,7 +82,7 @@ def load_fixed_bank(path, config, tokenizer):
     keys = set()
     questions = defaultdict(dict)
     for row in records:
-        validate_record(row, len(tokenizer))
+        validate_record(row, vocab_size)
         if tokenizer.eos_token_id in row["response_ids"][:-1]:
             raise ValueError("Fixed prefix bank response continued after EOS")
         key = row["state_source"], row["source"], row["uid"], row["sample"]
@@ -163,8 +164,11 @@ def run_validation_kl(trainer, records):
     all_records = records + bank
     if not records:
         raise ValueError("Validation KL requires the complete validation response set")
+    # get_vocab_size(with_added_tokens=True) is costly in the pinned tokenizer;
+    # use one consistent support for validation, worker metadata and reporting.
+    vocab_size = len(trainer.tokenizer)
     for row in all_records:
-        validate_record(row, len(trainer.tokenizer))
+        validate_record(row, vocab_size)
     non_tensors = np.empty(len(all_records), dtype=object)
     for index, row in enumerate(all_records):
         non_tensors[index] = row
@@ -173,7 +177,7 @@ def run_validation_kl(trainer, records):
         non_tensors={"validation_kl_records": non_tensors},
         meta_info={
             "student_version": trainer.global_steps,
-            "vocab_size": len(trainer.tokenizer),
+            "vocab_size": vocab_size,
             "position_chunk_size": int(settings.position_chunk_size),
             "vocab_chunk_size": int(settings.vocab_chunk_size),
         },
@@ -217,7 +221,7 @@ def run_validation_kl(trainer, records):
         "schema": "validation-kl-v1",
         "student_version": trainer.global_steps,
         "scoring_temperature": 1,
-        "effective_vocab_size": len(trainer.tokenizer),
+        "effective_vocab_size": vocab_size,
         "generation_sampling": {key: generation.get(key) for key in ("temperature", "top_p", "top_k")},
         "strict_raw_sequence_kl": False,
         "scoring_started_epoch_s": score_started,

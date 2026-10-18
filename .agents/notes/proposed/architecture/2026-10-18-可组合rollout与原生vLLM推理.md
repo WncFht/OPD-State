@@ -683,7 +683,7 @@ prompt 池由 `data.train_files`、清洗、去重与 sampler 决定，训练步
 
 ### 验证 KL 与 rollout 诊断提案
 
-开发源码已用 `trainer.validation_kl.enabled=True` 接入完整条件 KL 的可选验证 hook，默认关闭以保留原实验协议。它复用整轮准确率响应，在原生引擎休眠后使用同卡的最终 student 和冻结 teacher 评分，保存逐响应累计量、均值、分层统计及原始 token。开发版长度/EOS/解析/多样性指标和 KL 链路已通过真实 Torch/DataProto、实际 trainer 方法与小型 Qwen2 的 CPU 检查；两进程 CPU FSDP 还验证优化器更新后读取新 student、teacher 参数不变。真实四卡短响应 checkpoint 已通过下文验收，长响应显存/速度与完整 bank 仍待验证。冻结的 d59a7c3 矩阵不含新增指标，已结束且未保存最终权重的运行不能仅凭响应文本补算最终 KL。
+开发源码已用 `trainer.validation_kl.enabled=True` 接入完整条件 KL 的可选验证 hook，默认关闭以保留原实验协议。输入校验对整个调用复用一次有效词表大小；本环境 tokenizer 的长度查询存在实测开销，不能放在逐响应循环内重复执行。缓存值同时用于记录支持集、worker metadata 和报告，保持词表解释一致。[CPU 对照](../../../../docs/experiment/results/native-rollout/tokenizer-vocab-cache-cpu.json)在相同 180 条真实 bank 记录上验证位置/权重输出逐值一致，只描述校验成本，不作为神经网络评分加速证据。它复用整轮准确率响应，在原生引擎休眠后使用同卡的最终 student 和冻结 teacher 评分，保存逐响应累计量、均值、分层统计及原始 token。开发版长度/EOS/解析/多样性指标和 KL 链路已通过真实 Torch/DataProto、实际 trainer 方法与小型 Qwen2 的 CPU 检查；两进程 CPU FSDP 还验证优化器更新后读取新 student、teacher 参数不变。真实四卡短响应 checkpoint 已通过下文验收，长响应显存/速度与完整 bank 仍待验证。冻结的 d59a7c3 矩阵不含新增指标，已结束且未保存最终权重的运行不能仅凭响应文本补算最终 KL。
 
 #### 散度方向、状态来源与归约
 

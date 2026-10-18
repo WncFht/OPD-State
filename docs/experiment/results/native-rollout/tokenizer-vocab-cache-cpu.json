@@ -1,0 +1,77 @@
+{
+  "schema": "tokenizer-vocab-cache-cpu-v1",
+  "scope": "CPU support validation only; no GPU scoring or end-to-end speed claim",
+  "source_sha256": {
+    "verl/verl/trainer/ppo/validation_kl_runner.py": "132b3377590de34edc1ecc46609a48dd030721643e2532fcbda15d8470bb2681"
+  },
+  "original_neural_source_commit": "b528c6d29425e368ff7add630bfc845f060cb8b8",
+  "microbenchmark": {
+    "scope": "Actual installed tokenizer length query, twenty CPU measurements only",
+    "vocab_size": 151665,
+    "calls": 20,
+    "seconds": [
+      0.03627437353134155, 0.03838001936674118, 0.025018446147441864,
+      0.023743942379951477, 0.02503388375043869, 0.024464108049869537,
+      0.028830893337726593, 0.025470882654190063, 0.023690253496170044,
+      0.023118585348129272, 0.023302756249904633, 0.026393838226795197,
+      0.04223817586898804, 0.03153524547815323, 0.02370525151491165,
+      0.022986240684986115, 0.023287296295166016, 0.023054786026477814,
+      0.024488404393196106, 0.023020043969154358
+    ],
+    "median_seconds": 0.02447625622153282,
+    "mean_seconds": 0.02690187133848667,
+    "estimated_9300_call_seconds_from_sample_mean": 250.18740344792604
+  },
+  "real_record_abba": {
+    "scope": "CPU validation of the same 180 real bank records, ABBA order; no neural forward",
+    "records": 180,
+    "bank_sha256": "a341443cd3a5802e4a35693a99f87cf53ef2510ae896657b9626da58d3292e69",
+    "observations": [
+      {
+        "mode": "per_record",
+        "seconds": 4.48121877014637,
+        "validation_output_sha256": "f2cb8987f7a4e3d6b5d2bf8ae57e552589103e1fd627a5a6406b41555e5c69c5"
+      },
+      {
+        "mode": "once",
+        "seconds": 0.09598923474550247,
+        "validation_output_sha256": "f2cb8987f7a4e3d6b5d2bf8ae57e552589103e1fd627a5a6406b41555e5c69c5"
+      },
+      {
+        "mode": "once",
+        "seconds": 0.08381206542253494,
+        "validation_output_sha256": "f2cb8987f7a4e3d6b5d2bf8ae57e552589103e1fd627a5a6406b41555e5c69c5"
+      },
+      {
+        "mode": "per_record",
+        "seconds": 4.329312019050121,
+        "validation_output_sha256": "f2cb8987f7a4e3d6b5d2bf8ae57e552589103e1fd627a5a6406b41555e5c69c5"
+      }
+    ],
+    "outputs_identical": true,
+    "cuda_initialized": false
+  },
+  "correctness": {
+    "same_position_weight_outputs": true,
+    "validation_runner_runtime_methods": 10,
+    "prefix_bank_runtime_methods": 6,
+    "no_live_task_modified": true
+  },
+  "observed_frozen_stack_locations": [
+    "validation_kl_runner.py:167 / tokenizer __len__",
+    "validation_kl_runner.py:187 / scoring RPC"
+  ],
+  "limitations": [
+    "The 9300-call time is extrapolated from twenty measurements",
+    "ABBA compares only input validation, not neural forward or CPU serialization",
+    "Current full gate retains its original frozen implementation"
+  ],
+  "software_versions": {
+    "python": "3.12.15",
+    "transformers": "4.57.6",
+    "tokenizers": "0.22.2"
+  },
+  "tokenizer_length_wrapper_sha256": "558e454ee6850e90e8bc5d1782e35878dfda1da9bfdf997ae113fa7ff771a0f3",
+  "validation_function_module_sha256": "cd04972a549662c042a27cd03c351916c5a0aaf55ff23c5d4e83ced1e3d1ed3b",
+  "validation_function_matches_baseline_commit": true
+}

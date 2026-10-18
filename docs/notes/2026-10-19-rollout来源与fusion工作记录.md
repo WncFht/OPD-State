@@ -333,3 +333,7 @@ Bank/长响应验收提交为 f334951，完整 CI 与 hooks 通过。核对入�
 CLI 数据覆盖兼容性提交为 b094d75，六项入口检查与完整 CI 通过。全量 gate 等待期间另读取完成批次的完整 JSONL 前缀，未读取或修改未完成尾行；十二批对应 6,144 条响应、33,246,903 个输出 token，native generate 调用累计 5,767.732 s，均长 5,411.280 token，约 5,764.294 token/s。正式 Current 对应十二批是 26,718,952 token、2,259.461 s、约 11,825.364 token/s。相同批次位置的响应数与总 prefill token 一致，但未完成运行不能逐响应重审 prompt 身份。两者是 student2/B8 与 student50/B64，记录的验证 max_num_seqs 分别 8/64；耗时比 2.5527 等于工作量比 1.2443 乘吞吐倒数比 2.0515，只是核算恒等式，不能将它当成并发的因果效应。生成前缀快照与逐批表单独标为 incomplete，不进入最终准确率或 KL 结果。
 
 审阅 Agent Note 时，将五处早期“仍待”描述改为对应证据的实际范围，避免与已完成的 Graph/热更新/排空检查冲突。核对的冻结 graph 排空记录为 d59a7c3，abort 前已有 13 个 decode token、排空后 active=0；四卡 graph 训练记录 finished、九十六条最终 student2 验证。单 token 数值检查仍只支撑其自身范围，完整质量矩阵与最终性能没有据此标为完成。
+
+全量十八批生成返回后，用 py-spy 非阻塞栈读取确认 TaskRunner 已在 run_validation_kl 的逐响应校验循环，采样位置为 tokenizer.**len**。实际 tokenizer 二十次长度查询均为 151665，均值 26.9019 ms、中位数 24.4763 ms；按均值外推 9300 次约 250.19 s，这是估算，不是整轮已测分项。180 条同一真实 bank 记录的 ABBA 校验为每条查询 4.4812/4.3293 s、复用一次 0.0960/0.0838 s，位置与权重输出摘要完全相同。
+
+后续源码的 run_validation_kl 和 load_fixed_bank 已将词表大小移出循环，并在 metadata/报告复用；十项实际小模型/runner 与六项 bank 运行检查通过。未修改或重启冻结全量任务；再次非阻塞读取确认其已进入 scoring RPC（frozen runner line187），GPU 使用降至约 10.9 GB 并恢复计算。CPU 校验优化不宣称 GPU 评分加速。
