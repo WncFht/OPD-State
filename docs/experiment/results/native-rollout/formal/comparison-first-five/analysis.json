@@ -1,0 +1,169 @@
+{
+  "analysis_source_sha256": "c5aececcd62df3ee7f4fb397b9f661d20acf9055fb2f6ba174dc8db2368a0041",
+  "plateau_source_sha256": "51de1d5276834ff76270084250da00ddec20cebc2c008af13522c1a416bd198d",
+  "numpy_version": "1.26.4",
+  "step": 50,
+  "reference": "Current",
+  "bootstrap_replicates": 5000,
+  "bootstrap_seed": 42,
+  "interval_semantics": "paired question bootstrap, stratified by benchmark; not training-seed uncertainty",
+  "run_provenance": {
+    "Current": {
+      "run_name": "student_fresh",
+      "run_directory": "/mnt/tidalfs-bdsz01/dataset/llm_dataset/zkn_data/fht_data/OPD-State/runs/native-formal-suite-20261018/student_fresh",
+      "source_commit": "d59a7c3463244ef7533ca4acf73855e988043848",
+      "source_manifest_sha256": "dda265c9626c89ea19018c50b535a9c789d5701be6e400381c19bd5db7fde9fc",
+      "source_identity": "runtime_snapshot",
+      "training_steps": 50,
+      "samples_per_question": 16,
+      "full_benchmarks": true,
+      "checkpoints_saved": false,
+      "wandb_url": "https://wandb.ai/wncfht/OPD-State/runs/0hbo3l5t",
+      "training_log_sha256": "33fcb51b77a628713ec05b64cea4a173fa1f998bd701febeb8a70b672bde4f81",
+      "training_log_observed_bytes": 409580,
+      "collection_scope": "final_validation",
+      "final_validation_marker_verified": true,
+      "collector_source_sha256": "d55fdb5753b7557a445c8584830f41fdbb3ca450ae53fa888791f2cdf81899fb",
+      "validation_steps": [50]
+    },
+    "Initial": {
+      "run_name": "initial_student_fresh",
+      "run_directory": "/mnt/tidalfs-bdsz01/dataset/llm_dataset/zkn_data/fht_data/OPD-State/runs/native-formal-suite-20261018/initial_student_fresh",
+      "source_commit": "d59a7c3463244ef7533ca4acf73855e988043848",
+      "source_manifest_sha256": "dda265c9626c89ea19018c50b535a9c789d5701be6e400381c19bd5db7fde9fc",
+      "source_identity": "runtime_snapshot",
+      "training_steps": 50,
+      "samples_per_question": 16,
+      "full_benchmarks": true,
+      "checkpoints_saved": false,
+      "wandb_url": "https://wandb.ai/wncfht/OPD-State/runs/pl0yl6nt",
+      "training_log_sha256": "467db68b8d85fac5dc571047a7f378ef8585ea60c78425dc07eef06a4146db21",
+      "training_log_observed_bytes": 405466,
+      "collection_scope": "final_validation",
+      "final_validation_marker_verified": true,
+      "collector_source_sha256": "d55fdb5753b7557a445c8584830f41fdbb3ca450ae53fa888791f2cdf81899fb",
+      "validation_steps": [50]
+    },
+    "Teacher": {
+      "run_name": "teacher_fresh",
+      "run_directory": "/mnt/tidalfs-bdsz01/dataset/llm_dataset/zkn_data/fht_data/OPD-State/runs/native-formal-suite-20261018/teacher_fresh",
+      "source_commit": "d59a7c3463244ef7533ca4acf73855e988043848",
+      "source_manifest_sha256": "dda265c9626c89ea19018c50b535a9c789d5701be6e400381c19bd5db7fde9fc",
+      "source_identity": "runtime_snapshot",
+      "training_steps": 50,
+      "samples_per_question": 16,
+      "full_benchmarks": true,
+      "checkpoints_saved": false,
+      "wandb_url": "https://wandb.ai/wncfht/OPD-State/runs/4skr6m3x",
+      "training_log_sha256": "f30a7f1c2433f707ed02b4d95538973f9e87990bbd8b8b8fa02f4f3590146919",
+      "training_log_observed_bytes": 402906,
+      "collection_scope": "final_validation",
+      "final_validation_marker_verified": true,
+      "collector_source_sha256": "d55fdb5753b7557a445c8584830f41fdbb3ca450ae53fa888791f2cdf81899fb",
+      "validation_steps": [50]
+    },
+    "CurrentFusion": {
+      "run_name": "student_teacher_fusion",
+      "run_directory": "/mnt/tidalfs-bdsz01/dataset/llm_dataset/zkn_data/fht_data/OPD-State/runs/native-formal-suite-20261018/student_teacher_fusion",
+      "source_commit": "d59a7c3463244ef7533ca4acf73855e988043848",
+      "source_manifest_sha256": "dda265c9626c89ea19018c50b535a9c789d5701be6e400381c19bd5db7fde9fc",
+      "source_identity": "runtime_snapshot",
+      "training_steps": 50,
+      "samples_per_question": 16,
+      "full_benchmarks": true,
+      "checkpoints_saved": false,
+      "wandb_url": "https://wandb.ai/wncfht/OPD-State/runs/7fxvmrcv",
+      "training_log_sha256": "680ebde09dcc9333a4e7bda23b485742f89c5f4d4e346b14da89d745e26482e2",
+      "training_log_observed_bytes": 417686,
+      "collection_scope": "final_validation",
+      "final_validation_marker_verified": true,
+      "collector_source_sha256": "d55fdb5753b7557a445c8584830f41fdbb3ca450ae53fa888791f2cdf81899fb",
+      "validation_steps": [50]
+    },
+    "InitialFusion": {
+      "run_name": "initial_teacher_fusion",
+      "run_directory": "/mnt/tidalfs-bdsz01/dataset/llm_dataset/zkn_data/fht_data/OPD-State/runs/native-formal-suite-20261018/initial_teacher_fusion",
+      "source_commit": "d59a7c3463244ef7533ca4acf73855e988043848",
+      "source_manifest_sha256": "dda265c9626c89ea19018c50b535a9c789d5701be6e400381c19bd5db7fde9fc",
+      "source_identity": "runtime_snapshot",
+      "training_steps": 50,
+      "samples_per_question": 16,
+      "full_benchmarks": true,
+      "checkpoints_saved": false,
+      "wandb_url": "https://wandb.ai/wncfht/OPD-State/runs/nxi4xac6",
+      "training_log_sha256": "4263bd3338ebfaf0c01cd90352be7c690c7d4c402cee79a83aec56e84bb1bba2",
+      "training_log_observed_bytes": 412541,
+      "collection_scope": "final_validation",
+      "final_validation_marker_verified": true,
+      "collector_source_sha256": "d55fdb5753b7557a445c8584830f41fdbb3ca450ae53fa888791f2cdf81899fb",
+      "validation_steps": [50]
+    }
+  },
+  "plateau_assessments": {
+    "Current": {
+      "criterion": {
+        "minimum_steps": 300,
+        "validation_points": 4,
+        "macro_mean_range": 0.01,
+        "relative_rms_span": 0.05,
+        "relative_gradient_span": 0.1
+      },
+      "training_steps": 50,
+      "validation_points": 1,
+      "windows": [],
+      "status": "insufficient_observation"
+    },
+    "Initial": {
+      "criterion": {
+        "minimum_steps": 300,
+        "validation_points": 4,
+        "macro_mean_range": 0.01,
+        "relative_rms_span": 0.05,
+        "relative_gradient_span": 0.1
+      },
+      "training_steps": 50,
+      "validation_points": 1,
+      "windows": [],
+      "status": "insufficient_observation"
+    },
+    "Teacher": {
+      "criterion": {
+        "minimum_steps": 300,
+        "validation_points": 4,
+        "macro_mean_range": 0.01,
+        "relative_rms_span": 0.05,
+        "relative_gradient_span": 0.1
+      },
+      "training_steps": 50,
+      "validation_points": 1,
+      "windows": [],
+      "status": "insufficient_observation"
+    },
+    "CurrentFusion": {
+      "criterion": {
+        "minimum_steps": 300,
+        "validation_points": 4,
+        "macro_mean_range": 0.01,
+        "relative_rms_span": 0.05,
+        "relative_gradient_span": 0.1
+      },
+      "training_steps": 50,
+      "validation_points": 1,
+      "windows": [],
+      "status": "insufficient_observation"
+    },
+    "InitialFusion": {
+      "criterion": {
+        "minimum_steps": 300,
+        "validation_points": 4,
+        "macro_mean_range": 0.01,
+        "relative_rms_span": 0.05,
+        "relative_gradient_span": 0.1
+      },
+      "training_steps": 50,
+      "validation_points": 1,
+      "windows": [],
+      "status": "insufficient_observation"
+    }
+  }
+}

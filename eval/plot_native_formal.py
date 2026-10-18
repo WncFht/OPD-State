@@ -1,7 +1,8 @@
 """Plot completed native formal runs without mixing legacy cached rollouts.
 
-Semantic ledger: one color is one training rollout policy throughout all four
-figures. Training points are raw optimizer steps, accuracy points are the final
+Semantic ledger: colors identify single-model policies and the fusion family;
+the two fusion bases use distinct markers and line styles in the five-run view.
+Training points are raw optimizer steps, accuracy points are the final
 student's complete evaluation, and pass@k is recomputed from question counts.
 Gray dashed/dotted series are external initial-student/teacher evaluations,
 not local step-zero measurements. No training-seed uncertainty is estimated.
@@ -264,8 +265,8 @@ def main():
         for value in args.result
     ]
     require(
-        1 <= len(specs) <= 4 and len({label for label, _ in specs}) == len(specs),
-        "Use one to four unique labels",
+        1 <= len(specs) <= 5 and len({label for label, _ in specs}) == len(specs),
+        "Use one to five unique labels",
     )
     training, accuracy, resources, references, inputs, identities, protocol = (
         load_evidence(specs, args.references.resolve())
@@ -286,6 +287,7 @@ def main():
 
     fv.apply_rc("paper", fontsize=7.6)
     args.output.mkdir(parents=True, exist_ok=True)
+    styles = {label: {"marker": "o", "ls": "-"} for label, _ in specs}
     colors = dict(
         zip(
             (name for name, _ in specs),
@@ -293,9 +295,29 @@ def main():
             strict=True,
         )
     )
+    if len(specs) == 5:
+        fusion = {
+            label: identity["policy"]["base"]
+            for label, identity in identities.items()
+            if identity["policy"]["kind"] == "logit_fusion"
+        }
+        require(
+            len(fusion) == 2
+            and set(fusion.values()) == {"current_student", "initial_student"},
+            "Five-run view requires three single-model baselines and the current/initial fusion pair",
+        )
+        palette = fv.series_colors("paper", 4)
+        singles = [label for label, _ in specs if label not in fusion]
+        colors = {
+            label: color for label, color in zip(singles, palette[:3], strict=True)
+        }
+        for label, base in fusion.items():
+            colors[label] = palette[3]
+            if base == "initial_student":
+                styles[label] = {"marker": "D", "ls": "--"}
     neutral, ink = fv.NEUTRALS["baseline"], fv.NEUTRALS["vink"]
     handles = [
-        Line2D([], [], color=color, marker="o", ms=3, lw=1, label=name)
+        Line2D([], [], color=color, ms=3, lw=1, label=name, **styles[name])
         for name, color in colors.items()
     ]
     reference_styles = {"initial_student": ("--", neutral), "teacher": (":", ink)}
@@ -314,6 +336,8 @@ def main():
     def save(
         fig, stem, caption, with_references=False, bottom=0.15, independent_y=False
     ):
+        if len(specs) == 5:
+            bottom = max(bottom, 0.19 if with_references else 0.14)
         for ax in fig.axes:
             fv.apply_frame(ax, "open")
             fv.apply_grid(ax, "y-only")
@@ -350,6 +374,7 @@ def main():
                 [row["step"] for row in selected],
                 [row[name] for row in selected],
                 color=color,
+                ls=styles[label]["ls"],
                 lw=1,
                 label=label,
             )
@@ -383,7 +408,7 @@ def main():
             ax.plot(
                 position,
                 score,
-                marker="o",
+                marker=styles[row["source"]]["marker"],
                 color=colors[row["source"]],
                 ls="none",
                 label=row["source"],
@@ -428,7 +453,7 @@ def main():
                 KS,
                 scores,
                 color=colors[row["source"]],
-                marker="o",
+                **styles[row["source"]],
                 ms=3,
                 lw=1,
                 label=row["source"],
@@ -467,12 +492,17 @@ def main():
             ax.plot(
                 position,
                 row[key],
-                marker="o",
+                marker=styles[row["source"]]["marker"],
                 ls="none",
                 color=colors[row["source"]],
                 label=row["source"],
             )
-        ax.set_xticks(range(len(specs)), colors, rotation=30, ha="right")
+        ax.set_xticks(
+            range(len(specs)),
+            [name for name, _ in specs],
+            rotation=60 if len(specs) == 5 else 30,
+            ha="right",
+        )
         ax.set_ylabel("minutes")
         ax.set_title(title, loc="left")
     ax = panels[2]
@@ -481,7 +511,7 @@ def main():
             range(4),
             [row[f"gpu_{gpu}_peak_gib"] for gpu in range(4)],
             color=colors[row["source"]],
-            marker="o",
+            **styles[row["source"]],
             ms=3,
             lw=1,
             label=row["source"],
@@ -530,6 +560,7 @@ def main():
         "runs": identities,
         "common_recorded_protocol": protocol,
         "colors": colors,
+        "series_styles": styles,
         "training_rows": len(training),
         "accuracy_rows": len(accuracy),
         "question_count": 570,

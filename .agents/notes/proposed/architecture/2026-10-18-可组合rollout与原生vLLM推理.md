@@ -24,7 +24,7 @@ Status: proposed
 
 ### 实施进展
 
-正式矩阵的三种单模型来源与 current/teacher fusion 均完成五十步、完整 570×16 最终评测、独立路由/版本审计和 W&B finished 核验，无 checkpoint；current/initial/teacher/fusion 的 macro mean@16 为 64.30%/64.17%/63.80%/63.89%。相对 current 的三个题目 bootstrap 区间均跨零，不据此排序。三种单模型原生生成吞吐均接近 15k token/s，fusion 约 8.79k；完整结果与四组图见[统一报告](../../../../docs/experiment/2026-10-19-rollout来源与logit融合实验.md)。Bank 首次 GPU 尝试未通过跨接口 UUID 校验，原调度器已恢复 initial/teacher fusion。PCI 映射修复提交为 900a59c，v2 控制器 2084206 等待当前健康训练结束后重测，神经网络源码与 bank 输入保持原值；长响应及全量 KL 仍待验收。剩余质量、布局、参数扫描与探针未完成，Status 保持 proposed。
+正式矩阵的三种单模型来源与两种 fusion 均完成五十步、完整 570×16 最终评测、独立路由/版本审计和 W&B finished 核验，无 checkpoint；current/initial/teacher/current-fusion/initial-fusion 的 macro mean@16 为 64.30%/64.17%/63.80%/63.89%/63.85%。相对 current 的四个题目 bootstrap 区间均跨零，不据此排序。三种单模型原生生成接近 15k token/s，两种 fusion 为 8.79k/8.55k；完整结果与五组图见[统一报告](../../../../docs/experiment/2026-10-19-rollout来源与logit融合实验.md)。Bank 首次 GPU 尝试未通过跨接口 UUID 校验；PCI 映射修复后，v2 已发布 180 条两来源轨迹，长响应 KL 已通过，完整 570×16 验证 KL 正在串行执行，独立 bank 证据继续归档。神经网络源码与 bank 输入保持原值。剩余质量、布局、参数扫描与探针未完成，Status 保持 proposed。
 
 原生单模型、四个分段方向、两种 batch 混合与两种 fusion 已完成四卡短训练；连续解码、graph 热更新和原生排空也已有下文的独立证据。正式十五组 50 步/570 题×16 矩阵已使用 d59a7c3 冻结源码启动，质量比较尚未完成。新增 `generation_layout=split` 的生产副本映射仍在验收：默认 `overlap`，不改变已启动矩阵；[CPU 路由证据](../../../../docs/experiment/results/native-rollout/placement-cpu.json)覆盖小组集中、分卡、响应顺序、冻结恢复和 current 写入前置条件，真实四卡新布局训练尚待验证。下文早期检查按其实际覆盖范围保留，不代表所有后续验收均已完成。
 

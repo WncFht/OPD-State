@@ -307,3 +307,9 @@ Fusion 归档与四组图提交为 74e5288。随后补齐同模型控制缺口�
 正式轨迹诊断提交为 3d64430，完整 CI 与 hooks 通过；提交后图件、输入和源码哈希均再次核对。新增原生 kernel profiling 诊断，复用 vLLM 自带 profiler，按实际 scheduler output 区分 prefill/decode/mixed，CPU launch 关联取代异步 GPU/CPU 时间区间猜测。重叠 kernel 同时报时长总和及按设备的区间并集；混合步骤不按 token 比例分摊。八项维护检查、真实安装调度结构及 CPU profiler 的两项运行检查通过，CPU-only trace 不会当成 CUDA 证据。十组固定 32-token 的条件保留两次无 profiler 对照，eager/graph 和原生双模型分别测量，真实 GPU profiler 尚未执行。
 
 initial_teacher_fusion 正式第五组随后正常退出，50 步运行状态为 finished、退出码 0；GPU 已交给 v2 bank 2207290，原总调度器继续由 controller 2084206 持有。原始 status 计时为 6,176.604964 s；准确率、路由和 W&B 的正式归档仍待核验，不能仅凭成功退出计为质量验收完成。
+
+原生计时探针提交为 56ecc1e，完整 CI、八项维护测试、两项真实安装接口运行测试与 hooks 通过；提交后的源码哈希核对一致，十条件 committed plan 已执行，watcher 2219004 等待版本探针队列，未增加并行 GPU 负载。第五组预核验 nxi4xac6 finished，macro mean@16 63.854861%，完整 570×16 与五十条训练记录及最终 student50 独立核验通过；将八个已验证文件保持字节不变归入正式结果目录。
+
+新增五组图，两种 fusion 共享色系，以线型和标记区分固定/当前 base，真实输入重评分、机器审计与目视检查全部通过。固定 initial/teacher fusion 的 12,419,694 个训练 token、1,451.791 s native generation 对应 8,554.74 token/s；step timer 33.2532 min、最终 eval 65.5861 min、运行计时 102.9434 min，整轮整卡采样最高 55,137 MiB。相对 Current 的 macro 差 −0.441667 个百分点，题目 bootstrap 区间 [−2.178125,1.177778]，仍不足以排序或证明收敛。原父调度器尚由 bank owner 持有；恢复后可能再次采集第五组，最终交付前须重新核对格式化文件与图件所绑定的输入字节，不能把当前归档忽略为永不改变。
+
+v2 bank 后续完成生成，canonical bank 含 180 条轨迹、1,440 个抽样位置、652,012 个有效响应 token，八个初始化 worker 身份已保存。控制器已串行启动长响应 KL 2220037，bank 的独立 token/位置/物理回执核验继续进行；成功生成不替代后续实际评分和全量验收。

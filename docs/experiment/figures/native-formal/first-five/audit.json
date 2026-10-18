@@ -1,0 +1,271 @@
+{
+  "schema": "native-formal-figures-v1",
+  "command": [
+    "/mnt/tidalfs-bdsz01/dataset/llm_dataset/zkn_data/fht_data/OPD-State/.venv/bin/python",
+    "eval/plot_native_formal.py",
+    "--result",
+    "Current=docs/experiment/results/native-rollout/formal/student_fresh",
+    "--result",
+    "Initial=docs/experiment/results/native-rollout/formal/initial_student_fresh",
+    "--result",
+    "Teacher=docs/experiment/results/native-rollout/formal/teacher_fresh",
+    "--result",
+    "Cur+Q=docs/experiment/results/native-rollout/formal/student_teacher_fusion",
+    "--result",
+    "Init+Q=docs/experiment/results/native-rollout/formal/initial_teacher_fusion",
+    "--output",
+    "docs/experiment/figures/native-formal/first-five"
+  ],
+  "plotter_sha256": "3225140335357f54b5ce0b752907329c995da7c0f0d42447b4bd50ba2c803851",
+  "helper_sha256": "709b0bb98aa17110b875e78f3e04f559f6c3db01de373c43e08749b579f439f3",
+  "style_sha256": "a9670b726e4890688bad9bec5cf5f39dcc6a1604ceebff8043c26cee95726581",
+  "matplotlib_version": "3.10.7",
+  "inputs": {
+    "/mnt/tidalfs-bdsz01/dataset/llm_dataset/zkn_data/fht_data/OPD-State/docs/experiment/results/native-rollout/formal/student_fresh/summary.json": "b465bfd33afc86d4a459fa6e5acc459e6731fbcfc4c829c1158a577c456310fb",
+    "/mnt/tidalfs-bdsz01/dataset/llm_dataset/zkn_data/fht_data/OPD-State/docs/experiment/results/native-rollout/formal/student_fresh/native-acceptance.json": "389556d34edf0617bceb383c12453c79a59fc2f5296a6e37051058006c5b7e50",
+    "/mnt/tidalfs-bdsz01/dataset/llm_dataset/zkn_data/fht_data/OPD-State/docs/experiment/results/native-rollout/formal/student_fresh/wandb-verification.json": "65151ec01b734a3163591e495fe79020785321a5c5b4bf2e84cea2170fa6ea7c",
+    "/mnt/tidalfs-bdsz01/dataset/llm_dataset/zkn_data/fht_data/OPD-State/docs/experiment/results/native-rollout/formal/student_fresh/validation-step50.json": "4169edab036fa5e6114ca61cb2e69b2fcd619e5eb8ad345e82e98b6e930c0d33",
+    "/mnt/tidalfs-bdsz01/dataset/llm_dataset/zkn_data/fht_data/OPD-State/docs/experiment/results/native-rollout/formal/student_fresh/training-1-50.csv": "dc9e3f2453bb0290e077f125a82cc57e81682a87ef539baf353d6159c40bd4f4",
+    "/mnt/tidalfs-bdsz01/dataset/llm_dataset/zkn_data/fht_data/OPD-State/docs/experiment/results/native-rollout/formal/student_fresh/questions-step50.csv": "6af7a8d3bf74e04201230b0d84957accd762b523650385c2f85cf596c4f45618",
+    "/mnt/tidalfs-bdsz01/dataset/llm_dataset/zkn_data/fht_data/OPD-State/docs/experiment/results/native-rollout/formal/initial_student_fresh/summary.json": "de53a44b6e2eb8405d075b7b8f1f76f4e3ac806a528bd3d7c5897ff800e7f003",
+    "/mnt/tidalfs-bdsz01/dataset/llm_dataset/zkn_data/fht_data/OPD-State/docs/experiment/results/native-rollout/formal/initial_student_fresh/native-acceptance.json": "92dd08f6c541182b6c62899187455ac6024c21f4c2fffddfb0c966b8c9efbdc8",
+    "/mnt/tidalfs-bdsz01/dataset/llm_dataset/zkn_data/fht_data/OPD-State/docs/experiment/results/native-rollout/formal/initial_student_fresh/wandb-verification.json": "ca29701b2c418d403c80cca2e6b4d5a738bd7be7a2f448f841f5654839aa8249",
+    "/mnt/tidalfs-bdsz01/dataset/llm_dataset/zkn_data/fht_data/OPD-State/docs/experiment/results/native-rollout/formal/initial_student_fresh/validation-step50.json": "a9541d66dece01f43444800b2a98217db56befc0c71775efcb15b02eb970de38",
+    "/mnt/tidalfs-bdsz01/dataset/llm_dataset/zkn_data/fht_data/OPD-State/docs/experiment/results/native-rollout/formal/initial_student_fresh/training-1-50.csv": "73e0c747d64dc96ec53634f18d3188ff0bab50c726648fd2cd0f05da986fb609",
+    "/mnt/tidalfs-bdsz01/dataset/llm_dataset/zkn_data/fht_data/OPD-State/docs/experiment/results/native-rollout/formal/initial_student_fresh/questions-step50.csv": "33ae01807bb8719880ebc1ddea609216a2de628f5108747bdc7d1b9b251e9846",
+    "/mnt/tidalfs-bdsz01/dataset/llm_dataset/zkn_data/fht_data/OPD-State/docs/experiment/results/native-rollout/formal/teacher_fresh/summary.json": "196b8621d17a66158c2eddf4eb32f5058d4d9f4994aad5d45b88f32ce089562a",
+    "/mnt/tidalfs-bdsz01/dataset/llm_dataset/zkn_data/fht_data/OPD-State/docs/experiment/results/native-rollout/formal/teacher_fresh/native-acceptance.json": "ae2b0cfeaeebd43df42abe11ab34899d1fa5e56da0d6fc2c1948fd9578d42c60",
+    "/mnt/tidalfs-bdsz01/dataset/llm_dataset/zkn_data/fht_data/OPD-State/docs/experiment/results/native-rollout/formal/teacher_fresh/wandb-verification.json": "3384f4baae89e209c289031c3872cdcf3b5bf0b709d3db6084e24c9e3bf73ff4",
+    "/mnt/tidalfs-bdsz01/dataset/llm_dataset/zkn_data/fht_data/OPD-State/docs/experiment/results/native-rollout/formal/teacher_fresh/validation-step50.json": "6174d2c94c282af5526e71ed4fe3348c6f543b8b599f8248a5303a42b8cc9af1",
+    "/mnt/tidalfs-bdsz01/dataset/llm_dataset/zkn_data/fht_data/OPD-State/docs/experiment/results/native-rollout/formal/teacher_fresh/training-1-50.csv": "b073b307cd51c8e66a0c1d881b5d9ffb5d95af64ee1a6dc8b08e0a3609dd638e",
+    "/mnt/tidalfs-bdsz01/dataset/llm_dataset/zkn_data/fht_data/OPD-State/docs/experiment/results/native-rollout/formal/teacher_fresh/questions-step50.csv": "a4791ab8e354898dbef167f035ba710d8a008ba23fbf353f24424a2c8edbeaa9",
+    "/mnt/tidalfs-bdsz01/dataset/llm_dataset/zkn_data/fht_data/OPD-State/docs/experiment/results/native-rollout/formal/student_teacher_fusion/summary.json": "429b605644db6d5f593f76468c7491dd0826bb331af862a8c2cb2335e0b062c7",
+    "/mnt/tidalfs-bdsz01/dataset/llm_dataset/zkn_data/fht_data/OPD-State/docs/experiment/results/native-rollout/formal/student_teacher_fusion/native-acceptance.json": "0ba616ea0c57e16f51d557a4f1fe9a5a03f5699855f8d6a9e6e32958636899bc",
+    "/mnt/tidalfs-bdsz01/dataset/llm_dataset/zkn_data/fht_data/OPD-State/docs/experiment/results/native-rollout/formal/student_teacher_fusion/wandb-verification.json": "7418da2cef472f58a6ab8572e6ff05bf2c040991b4d9416fafe9b62e301f38f6",
+    "/mnt/tidalfs-bdsz01/dataset/llm_dataset/zkn_data/fht_data/OPD-State/docs/experiment/results/native-rollout/formal/student_teacher_fusion/validation-step50.json": "bbd0a98dab08840b92818ab87a044478d82cafd44239e1ca5a9d366fa810a41f",
+    "/mnt/tidalfs-bdsz01/dataset/llm_dataset/zkn_data/fht_data/OPD-State/docs/experiment/results/native-rollout/formal/student_teacher_fusion/training-1-50.csv": "0369ce09288fb3282a88e523ef716f1a7e85218df31c96632f70d908402e127a",
+    "/mnt/tidalfs-bdsz01/dataset/llm_dataset/zkn_data/fht_data/OPD-State/docs/experiment/results/native-rollout/formal/student_teacher_fusion/questions-step50.csv": "66e00f565978bcb6953a6b7230d17e7e669d0af4b13287f85bcb907336f774b5",
+    "/mnt/tidalfs-bdsz01/dataset/llm_dataset/zkn_data/fht_data/OPD-State/docs/experiment/results/native-rollout/formal/initial_teacher_fusion/summary.json": "50fe6a2ab3c9b7a392ab5fe7a2d813e6ed1fb8d2a0273446245df97939dbf426",
+    "/mnt/tidalfs-bdsz01/dataset/llm_dataset/zkn_data/fht_data/OPD-State/docs/experiment/results/native-rollout/formal/initial_teacher_fusion/native-acceptance.json": "cd5aca064585ff139788d09ffcdb6b01d22099d537c2377643dce3c259c2cfac",
+    "/mnt/tidalfs-bdsz01/dataset/llm_dataset/zkn_data/fht_data/OPD-State/docs/experiment/results/native-rollout/formal/initial_teacher_fusion/wandb-verification.json": "4a1e6701dfc4f42e74c2de51564bebae1b3dadec6c56e28a9c30418adfd3dc5f",
+    "/mnt/tidalfs-bdsz01/dataset/llm_dataset/zkn_data/fht_data/OPD-State/docs/experiment/results/native-rollout/formal/initial_teacher_fusion/validation-step50.json": "eb46711ba9d07edd2947638e572c70cfe4d35218b407b26758fd691f3e2a797e",
+    "/mnt/tidalfs-bdsz01/dataset/llm_dataset/zkn_data/fht_data/OPD-State/docs/experiment/results/native-rollout/formal/initial_teacher_fusion/training-1-50.csv": "ac48945850feb0dfe5fe748248f727127541676c1caa5794558d1950cf51a7b5",
+    "/mnt/tidalfs-bdsz01/dataset/llm_dataset/zkn_data/fht_data/OPD-State/docs/experiment/results/native-rollout/formal/initial_teacher_fusion/questions-step50.csv": "e773217fb61a46b0bf70bee7f6512f0596c8a6e259a8671c48b3b7f9cf86b435",
+    "/mnt/tidalfs-bdsz01/dataset/llm_dataset/zkn_data/fht_data/OPD-State/docs/experiment/results/reference-accuracy.json": "be9a1e7a45994edd356ecab4bad630f85ed29ec38ae4271a6e50dec23c40252f"
+  },
+  "runs": {
+    "Current": {
+      "run": "student_fresh",
+      "source_commit": "d59a7c3463244ef7533ca4acf73855e988043848",
+      "policy": {
+        "kind": "single",
+        "model": "current_student"
+      },
+      "wandb_url": "https://wandb.ai/wncfht/OPD-State/runs/0hbo3l5t"
+    },
+    "Initial": {
+      "run": "initial_student_fresh",
+      "source_commit": "d59a7c3463244ef7533ca4acf73855e988043848",
+      "policy": {
+        "kind": "single",
+        "model": "initial_student"
+      },
+      "wandb_url": "https://wandb.ai/wncfht/OPD-State/runs/pl0yl6nt"
+    },
+    "Teacher": {
+      "run": "teacher_fresh",
+      "source_commit": "d59a7c3463244ef7533ca4acf73855e988043848",
+      "policy": {
+        "kind": "single",
+        "model": "teacher"
+      },
+      "wandb_url": "https://wandb.ai/wncfht/OPD-State/runs/4skr6m3x"
+    },
+    "Cur+Q": {
+      "run": "student_teacher_fusion",
+      "source_commit": "d59a7c3463244ef7533ca4acf73855e988043848",
+      "policy": {
+        "base": "current_student",
+        "kind": "logit_fusion",
+        "teacher_weight": 0.5
+      },
+      "wandb_url": "https://wandb.ai/wncfht/OPD-State/runs/7fxvmrcv"
+    },
+    "Init+Q": {
+      "run": "initial_teacher_fusion",
+      "source_commit": "d59a7c3463244ef7533ca4acf73855e988043848",
+      "policy": {
+        "base": "initial_student",
+        "kind": "logit_fusion",
+        "teacher_weight": 0.5
+      },
+      "wandb_url": "https://wandb.ai/wncfht/OPD-State/runs/nxi4xac6"
+    }
+  },
+  "common_recorded_protocol": {
+    "source_commit": "d59a7c3463244ef7533ca4acf73855e988043848",
+    "student_model": "/mnt/tidalfs-bdsz01/dataset/llm_dataset/zkn_data/fht_data/models/DeepSeek-R1-Distill-Qwen-1.5B",
+    "teacher_model": "/mnt/tidalfs-bdsz01/dataset/llm_dataset/zkn_data/fht_data/models/JustRL-DeepSeek-1.5B",
+    "rollout_source": "native_policy",
+    "generation_backend": "vllm_native",
+    "train_files": [
+      "/mnt/tidalfs-bdsz01/dataset/llm_dataset/zkn_data/fht_data/OPD-State/runs/native-rollout-implementation/fresh-math-data-v2/ordered.parquet"
+    ],
+    "val_files": [
+      "/mnt/tidalfs-bdsz01/dataset/llm_dataset/zkn_data/fht_data/MD-OPD/data/math/MATH-500/test.parquet",
+      "/mnt/tidalfs-bdsz01/dataset/llm_dataset/zkn_data/fht_data/MD-OPD/data/math/AMC23/test.parquet",
+      "/mnt/tidalfs-bdsz01/dataset/llm_dataset/zkn_data/fht_data/MD-OPD/data/math/AIME25/test.parquet"
+    ],
+    "seed": 42,
+    "train_batch_size": 64,
+    "prompt_cap": 1024,
+    "training_response_cap": 4096,
+    "validation": {
+      "n": 16,
+      "top_k": -1,
+      "top_p": 0.9,
+      "_target_": "verl.workers.config.SamplingConfig",
+      "do_sample": true,
+      "max_tokens": 31744,
+      "temperature": 0.7
+    }
+  },
+  "colors": {
+    "Current": "#4F8FA5",
+    "Initial": "#EE995B",
+    "Teacher": "#C95B5B",
+    "Cur+Q": "#8A74B5",
+    "Init+Q": "#8A74B5"
+  },
+  "series_styles": {
+    "Current": {
+      "marker": "o",
+      "ls": "-"
+    },
+    "Initial": {
+      "marker": "o",
+      "ls": "-"
+    },
+    "Teacher": {
+      "marker": "o",
+      "ls": "-"
+    },
+    "Cur+Q": {
+      "marker": "o",
+      "ls": "-"
+    },
+    "Init+Q": {
+      "marker": "D",
+      "ls": "--"
+    }
+  },
+  "training_rows": 250,
+  "accuracy_rows": 20,
+  "question_count": 570,
+  "responses_per_run": 9120,
+  "axis_limits": {
+    "training": [
+      {
+        "x": [1.0, 50.0],
+        "y": [0.280167550575064, 0.5741758904120042]
+      },
+      {
+        "x": [1.0, 50.0],
+        "y": [-0.12620452125531215, 0.09779064516366533]
+      },
+      {
+        "x": [1.0, 50.0],
+        "y": [0.4459946811199188, 2.0602403223514556]
+      },
+      {
+        "x": [1.0, 50.0],
+        "y": [3660.7296875, 4071.6140625]
+      },
+      {
+        "x": [1.0, 50.0],
+        "y": [0.6512639850378037, 0.8912512332201004]
+      },
+      {
+        "x": [1.0, 50.0],
+        "y": [22.96737259924412, 70.12609460651875]
+      }
+    ],
+    "accuracy": [
+      {
+        "x": [-0.5, 4.5],
+        "y": [82.0, 91.0]
+      },
+      {
+        "x": [-0.5, 4.5],
+        "y": [69.0, 92.0]
+      },
+      {
+        "x": [-0.5, 4.5],
+        "y": [21.0, 42.0]
+      },
+      {
+        "x": [-0.5, 4.5],
+        "y": [57.0, 75.0]
+      }
+    ],
+    "pass-at-k": [
+      {
+        "x": [0.8705505632961241, 18.37917367995256],
+        "y": [81.0, 99.0]
+      },
+      {
+        "x": [0.8705505632961241, 18.37917367995256],
+        "y": [68.0, 100.0]
+      },
+      {
+        "x": [0.8705505632961241, 18.37917367995256],
+        "y": [17.0, 70.0]
+      },
+      {
+        "x": [0.8705505632961241, 18.37917367995256],
+        "y": [55.0, 89.0]
+      }
+    ],
+    "resources": [
+      {
+        "x": [-0.2, 4.2],
+        "y": [21.32028185940658, 35.295341731564456]
+      },
+      {
+        "x": [-0.2, 4.2],
+        "y": [63.31868898859869, 69.08254556639741]
+      },
+      {
+        "x": [-0.15000000000000002, 3.15],
+        "y": [47.4544921875, 54.1490234375]
+      }
+    ]
+  },
+  "audit": {
+    "training": [],
+    "accuracy": [],
+    "pass-at-k": [],
+    "resources": []
+  },
+  "audit_scope": "Accuracy/pass axes zoom independently by benchmark; training panels have different metrics; resource panels separate training and final-validation durations",
+  "limitations": [
+    "One training seed per policy; no training-seed confidence bands or convergence claim",
+    "Training sampled-action log-ratio RMS is not full-vocabulary KL",
+    "External initial-student/teacher references are not paired local step-zero measurements",
+    "Whole-card sampled GPU peaks are not kernel/allocator peaks or free KV capacity"
+  ],
+  "outputs": {
+    "training.png": "91c35f0eb5da46c30f322639d2d20670247c111ce9564c8cf2a43d3736635822",
+    "training.pdf": "eeb0895060d52e41f3d5ff1debae8fa885c8bceaaac8682e0b6de8b53af8f2dd",
+    "accuracy.png": "2d01b781322b30e7f3e50974be9ce9aa42e6b8bdbf71999eb217d6d5dec93a52",
+    "accuracy.pdf": "9a45b6d92680508d0b520015be58d951a816bfbb091391597504eb96dfd41445",
+    "pass-at-k.png": "8600ba058481890dfaf4425e3927c64ceb29c4e4630187f7156fe0ca310d8103",
+    "pass-at-k.pdf": "e1a97fa5d2fb2b434e7cea369b12fad20a8951a10f948eda6f97aea3c8b0a4d0",
+    "resources.png": "b92cf57fe393b4a702de80ea0621b606591ade824deb87222ba9105dc42b96b8",
+    "resources.pdf": "40bafedc469e2c1c62ca8022595e60b35cf32fb6d5635d29c7643035c2ad84ea",
+    "training-plotted.csv": "c8bfb4a79edccc7f54367f8ba1379a21fd1cb16e104351d8f5a0b3fab114ab0d",
+    "accuracy-plotted.csv": "19b05158ae798ae9e67dff9e1c0f8e5e80076cc887917ce344960e74f08be82a",
+    "resources-plotted.csv": "989322f7e7b749e67e6c79b39f0e1e8d269be6e4634ad5519b9ca2fc9c423f85",
+    "references-plotted.csv": "246cf2e567046895b68b822590105a55e355f58122b5afc00f5912b26b81d5e6"
+  }
+}
