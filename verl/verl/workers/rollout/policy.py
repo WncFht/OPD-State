@@ -173,8 +173,11 @@ def parse_policy(config, cap):
             raise ValueError("teacher_weight must be in [0,1]")
         return Single(base) if weight == 0 else Single("teacher") if weight == 1 else Fusion(base, weight)
     if kind == "sequence_switch":
-        _fields(config, {"first", "second", "boundary"})
+        _fields(config, {"first", "second", "boundary", "keep_request_boundary"})
         first, second = _single_ref(config.get("first")), _single_ref(config.get("second"))
+        keep = config.get("keep_request_boundary", False)
+        if type(keep) is not bool or (keep and first != second):
+            raise ValueError("keep_request_boundary must be boolean and is reserved for same-model execution controls")
         boundary = config.get("boundary")
         if not isinstance(boundary, Mapping) or set(boundary) != {"kind", "value"}:
             raise ValueError("Switch boundary needs exactly kind and value")
@@ -189,7 +192,13 @@ def parse_policy(config, cap):
             k = math.floor(value * cap)
         else:
             raise ValueError("Switch boundary must use response_tokens or budget_fraction")
-        return Single(second) if k == 0 else Single(first) if k >= cap or first == second else Switch(first, second, k)
+        return (
+            Single(second)
+            if k == 0
+            else Single(first)
+            if k >= cap or (first == second and not keep)
+            else Switch(first, second, k)
+        )
     if kind == "batch_mix":
         _fields(config, {"components", "assignment", "routing_unit"})
         if config.get("assignment", "exact_count") != "exact_count":

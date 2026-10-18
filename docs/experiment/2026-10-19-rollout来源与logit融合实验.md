@@ -774,7 +774,7 @@ $$
 
 [eager 连续解码](results/native-rollout/fusion-decode-eager/receipt.json)扩展到两条 prompt 各八步，共四十八个 prefix/λ 位置，每个位置比较完整 151,665 词表。λ=0 的跨 HF/native 最大 logits 差为 0.125、TV 为 0.027081；λ=0.5/1 的误差为零，全部满足预先采用的 BF16 界限。固定模型完整参数摘要和 sleep/wake 后原生输出均保持一致。
 
-[CUDA Graph 检查](results/native-rollout/fusion-decode-graph/receipt.json)使用 λ=0.5、相同两条 prompt 与八步生成，实际捕获 114 个图，十六个位置的完整 logits/分布与 HF 参考相同。恢复后的参数内容、参数地址、输出和 logits 一致。该证据证明所测固定权重条件；重复 prompt 下的 FSDP 热更新、实际原生 abort/drain 与正式长响应性能仍需独立验收。
+[CUDA Graph 检查](results/native-rollout/fusion-decode-graph/receipt.json)使用 λ=0.5、相同两条 prompt 与八步生成，实际捕获 114 个图，十六个位置的完整 logits/分布与 HF 参考相同。恢复后的参数内容、参数地址、输出和 logits 一致。该证据证明所测固定权重条件；重复 prompt 下的 FSDP 热更新、实际原生 abort/drain 与正式长响应性能仍需独立验收。另新增[同模型请求边界的 CPU 证据](results/native-rollout/request-boundary-cpu.json)：显式保留相同模型的两段请求，区分请求分段和模型切换；APC 开/关下的六组短训练、四组完整质量/KL 控制尚待串行 GPU 验收，不以 CPU 构造结果解释已有分段质量差异。
 
 ## 复现与结果位置
 

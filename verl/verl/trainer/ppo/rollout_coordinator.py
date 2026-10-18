@@ -385,7 +385,11 @@ class RolloutCoordinator:
             "source/revisited_responses": sum(r.request.visit > 0 for r in trajectories),
             "source/output_tokens": sum(len(r.token_ids) for r in trajectories),
             "source/prefill_tokens": sum(g["input_tokens"] for g in timing["groups"]),
-            "source/switched_responses": sum(len(r.segments) > 1 for r in trajectories),
+            "source/segmented_responses": sum(len(r.segments) > 1 for r in trajectories),
+            "source/switched_responses": sum(
+                any(a.identities != b.identities for a, b in zip(r.segments, r.segments[1:], strict=False))
+                for r in trajectories
+            ),
             "source/eos_responses": sum(r.termination == "eos" for r in trajectories),
         }
         for role in plan.models:

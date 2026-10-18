@@ -291,3 +291,7 @@ CUDA Graph 连续解码随后通过：λ=0.5、两条 prompt 各八步，实际�
 设备身份修复提交为 900a59c，完整 CI 通过；v2 控制器 2084206 已持有调度器的下一串行窗口，initial_teacher_fusion 2022419 继续运行。随后完成第四组 current/teacher fusion 的最终归档：7fxvmrcv finished、五十条有限 loss/grad 记录、唯一 step50 验证，policy 与本地 manifest 及文件字节哈希一致。三基准 Mean@16 为 86.30%/75.78125%/29.58333%，macro 为 63.88819%；相对 Current 为 −0.40833 个百分点，5,000 次题目 bootstrap 区间 [−1.77851,0.99792] 个百分点，仍不足以排序或证明收敛。
 
 Fusion 的 12,439,895 个有效训练 token 使用 1,414.86 s 原生生成，约 8,792.34 token/s；五十步 step timer 34.66 min、最终评测 66.96 min、运行计时 105.77 min，整卡采样最高 51,187 MiB。四组图新增 fusion 曲线与外部参考，按基准缩放的准确率/pass、训练与资源四张图均通过机器审计和目视检查；统一报告的表格、配对结果与图件链接同步更新，历史三来源图保留其原输入与源码哈希。原冻结矩阵仍没有新增完整词表 KL，训练 reward 接近零不作为 KL 对齐证据。
+
+Fusion 归档与四组图提交为 74e5288。随后补齐同模型控制缺口：默认编译器会将相同 first/second 合并，新 `keep_request_boundary=true` 仅为同模型内部边界保留两次调用，端点继续合并。current/initial/teacher 的三个 recipe 入口只改变生成执行；学习与最终验证仍为当前 student。CPU executor 与真实 Torch/Hydra coordinator 检查覆盖连续 token prefix、相同版本、EOS 边界、单份模型预算、来源响应去重，以及实际分段数与模型切换数分离。
+
+八十七项原生 CPU、五十二项运行环境检查通过，其中 coordinator 十二项；控制协议四项、W&B 八项检查通过。实际 `OPD_DRY_RUN=1` 组合出的 current 控制包含内部边界和 APC=false。新增队列驱动先六组两步验收，再做 APC 开/关各自的单次/两次请求五十步完整 eval16，并算完整词表 KL/固定 bank；它不会改已冻结十五组。W&B 的 APC 期望值只在显式请求时核验并记录，既有报告格式与已归档图件保持原输入关系。GPU 对照尚未执行，两个阶段的独立 seed 也不支持将所有 token 差异直接归因于浮点 kernel。

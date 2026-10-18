@@ -79,6 +79,18 @@ def fixture(directory, *, snapshot=True):
 
 
 class WandbSnapshotTests(unittest.TestCase):
+    def test_prefix_caching_controls_require_the_actual_remote_boolean(self):
+        with tempfile.TemporaryDirectory() as temporary:
+            directory = Path(temporary)
+            run, api, _, _ = fixture(directory)
+            run.config["actor_rollout_ref"]["rollout"]["enable_prefix_caching"] = False
+            report = VERIFY(
+                directory, api, snapshot=True, expected_prefix_caching=False
+            )
+            self.assertIs(report["settings"]["enable_prefix_caching"], False)
+            with self.assertRaisesRegex(ValueError, "prefix caching"):
+                VERIFY(directory, api, snapshot=True, expected_prefix_caching=True)
+
     def test_partial_native_verification_is_explicit_and_checks_exact_kl_history(self):
         with tempfile.TemporaryDirectory() as temporary:
             directory = Path(temporary)

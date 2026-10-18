@@ -110,6 +110,21 @@ class NativeExecutorTests(unittest.TestCase):
             self.assertEqual(row.termination, "eos")
             self.assertEqual(row.segments[0].finish_reason, "length")
 
+    def test_same_model_control_issues_two_raw_prefix_calls_with_one_immutable_version(self):
+        for role in P.MODEL_ROLES:
+            config = {**self.switch(role, role, 3), "keep_request_boundary": True}
+            (rows, timing), backend = self.run_case(config)
+            self.assertEqual(len(backend.calls), 2)
+            self.assertEqual([row["phase"] for row in timing["groups"]], [0, 1])
+            self.assertEqual(backend.calls[0][2], backend.calls[1][2])
+            self.assertEqual(backend.calls[1][1][0].prompt_ids, (1, 5) + rows[0].token_ids[:3])
+            self.assertNotEqual(backend.calls[0][1][0].seed, backend.calls[1][1][0].seed)
+            self.assertTrue(all(row.segments[0].identities == row.segments[1].identities for row in rows))
+            self.assertTrue(all(row.response_mask == (1,) * 8 for row in rows))
+            (stopped, _), early = self.run_case(config, Backend(stop_at=3))
+            self.assertEqual(len(early.calls), 1)
+            self.assertTrue(all(len(row.token_ids) == 3 and row.termination == "eos" for row in stopped))
+
     def test_early_eos_prevents_unused_second_stage(self):
         (rows, _), backend = self.run_case(self.switch(k=4), Backend(stop_at=2))
         self.assertEqual(len(backend.calls), 1)

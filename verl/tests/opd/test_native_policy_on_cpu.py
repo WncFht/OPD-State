@@ -109,6 +109,24 @@ class NativePolicyTests(unittest.TestCase):
                 self.assertEqual(stages[0].max_tokens, expected)
                 self.assertEqual(sum(s.max_tokens for s in stages), 7)
 
+    def test_explicit_same_model_control_keeps_internal_boundary_and_prunes_endpoints(self):
+        for role in P.MODEL_ROLES:
+            config = {**switch(role, role, 3), "keep_request_boundary": True}
+            plan = self.compile(config)
+            self.assertEqual(plan.models, {role})
+            self.assertEqual(plan.requests[0].stages, (P.Stage((role,), 3), P.Stage((role,), 5)))
+            self.assertEqual(plan.uses_actor, role == "current_student")
+            for endpoint in (0, 8, 9):
+                endpoint_plan = self.compile({**config, "boundary": {"kind": "response_tokens", "value": endpoint}})
+                self.assertEqual(endpoint_plan.requests[0].stages, (P.Stage((role,), 8),))
+
+    def test_boundary_control_rejects_invalid_flags_and_cross_model_use(self):
+        for value in (None, 0, 1, "true"):
+            with self.subTest(value=value), self.assertRaisesRegex(ValueError, "keep_request_boundary"):
+                self.compile({**switch("teacher", "teacher", 3), "keep_request_boundary": value})
+        with self.assertRaisesRegex(ValueError, "same-model"):
+            self.compile({**switch(), "keep_request_boundary": True})
+
     def test_global_quota_is_assigned_before_dp_slicing(self):
         plan = self.compile(mixture())
         models = [r.stages[0].models[0] for r in plan.requests]

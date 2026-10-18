@@ -15,7 +15,7 @@ from pathlib import Path
 from urllib.parse import urlparse
 
 
-def verify(directory, api, *, snapshot=False, engineering=False, kl_report=None):
+def verify(directory, api, *, snapshot=False, engineering=False, kl_report=None, expected_prefix_caching=None):
     directory = Path(directory)
     local = json.loads((directory / "summary.json").read_text())
     is_snapshot = local.get("collection_scope") == "through_step_snapshot"
@@ -27,6 +27,8 @@ def verify(directory, api, *, snapshot=False, engineering=False, kl_report=None)
         raise ValueError("Expected an OPD-State W&B run URL")
     run = api.run("/".join((parts[0], parts[1], parts[3])))
     trainer, rollout = run.config["trainer"], run.config["actor_rollout_ref"]["rollout"]
+    if expected_prefix_caching is not None and rollout.get("enable_prefix_caching") is not expected_prefix_caching:
+        raise ValueError("W&B prefix caching setting disagrees with the requested control")
     native_policy = rollout.get("policy")
     native_binding = None
     if native_policy is not None:
@@ -209,6 +211,8 @@ def verify(directory, api, *, snapshot=False, engineering=False, kl_report=None)
         },
         "verifier_source_sha256": hashlib.sha256(Path(__file__).read_bytes()).hexdigest(),
     }
+    if expected_prefix_caching is not None:
+        report["settings"]["enable_prefix_caching"] = rollout["enable_prefix_caching"]
     return report
 
 
@@ -217,6 +221,7 @@ def main():
 
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--result", required=True)
+    parser.add_argument("--expected-prefix-caching", choices=["true", "false"])
     parser.add_argument(
         "--engineering", action="store_true", help="Verify an explicitly partial native engineering run"
     )
@@ -233,6 +238,9 @@ def main():
         snapshot=args.snapshot,
         engineering=args.engineering,
         kl_report=args.kl_report,
+        expected_prefix_caching=None
+        if args.expected_prefix_caching is None
+        else args.expected_prefix_caching == "true",
     )
     path = Path(args.result) / ("wandb-snapshot-verification.json" if args.snapshot else "wandb-verification.json")
     path.write_text(json.dumps(report, indent=2) + "\n")

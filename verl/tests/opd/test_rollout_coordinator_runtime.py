@@ -234,6 +234,66 @@ class CoordinatorTests(unittest.TestCase):
         with self.assertRaises(ValueError):
             epochs_for_budget(5, 0)
 
+    def test_same_model_two_requests_keep_source_counts_and_final_student_only_evaluation(self):
+        from verl.workers.rollout.native_executor import Completion
+
+        with open_dict(self.config):
+            self.config.actor_rollout_ref.rollout.policy = {
+                "kind": "sequence_switch",
+                "first": "teacher",
+                "second": "teacher",
+                "boundary": {"kind": "response_tokens", "value": 2},
+                "keep_request_boundary": True,
+            }
+        self.prepare()
+        self.assertEqual(self.config.trainer.native_required_models, ["teacher"])
+        self.assertEqual(self.config.actor_rollout_ref.rollout.generation_models.teacher.memory_fraction, 0.2)
+        calls = []
+
+        class Backend:
+            placement_audit, execution_audit, verifications = [], [], []
+
+            def __init__(self, pool, sampling, *, validate):
+                self.validate = validate
+
+            async def generate(self, stage, batch, refs):
+                calls.append((self.validate, stage.models, refs[0].identity))
+                return [
+                    Completion(
+                        row.request_id,
+                        row.prompt_ids,
+                        (4,) * row.max_tokens,
+                        tuple(ref.identity for ref in refs),
+                        "length",
+                    )
+                    for row in batch
+                ]
+
+        class Pool:
+            async def sleep_all(self):
+                pass
+
+        class Reward:
+            def compute_rm_score(self, batch):
+                return DataProto.from_dict(
+                    tensors={"rm_scores": torch.zeros_like(batch.batch["responses"], dtype=torch.float32)}
+                )
+
+        coordinator = RolloutCoordinator(self.config, self.tokenizer, Pool(), None, Reward())
+        with patch("verl.trainer.ppo.rollout_coordinator.NativeRayBackend", Backend):
+            training = coordinator.generate_sequences(self.batch())
+            coordinator.eval_version = 2
+            evaluation = coordinator.generate_sequences(self.batch(16, validate=True, step=2))
+        metrics = training.meta_info["native_metrics"]
+        self.assertEqual(metrics["source/segmented_responses"], 1)
+        self.assertEqual(metrics["source/switched_responses"], 0)
+        self.assertEqual(metrics["source/teacher/responses"], 1)
+        self.assertEqual(metrics["source/teacher/tokens"], 4)
+        self.assertEqual(training.batch["response_mask"].tolist(), [[1] * 4])
+        self.assertEqual([item[1] for item in calls], [("teacher",), ("teacher",), ("current_student",)])
+        self.assertEqual(calls[-1][2][-1], 2)
+        self.assertEqual(evaluation.meta_info["native_metrics"]["source/segmented_responses"], 0)
+
     def test_prepared_manifest_is_bound_to_data_tokenizer_template_and_prompt_cap(self):
         manifest = {
             "ordered_parquet_sha256": digest_file(self.root / "train.parquet"),

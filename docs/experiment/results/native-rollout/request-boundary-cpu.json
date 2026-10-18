@@ -1,0 +1,62 @@
+{
+  "schema": "same-model-request-boundary-cpu-v1",
+  "scope": "Real compiler/executor, Torch/Hydra coordinator, launcher configuration and metadata audit only; GPU controls not run",
+  "base_commit": "74e52884280ee1919bf422277a3f1e3d76e92434",
+  "source_sha256": {
+    "verl/verl/workers/rollout/policy.py": "7ea1b7b103c80052e8db30e7a02bec6aa7c1f56b0b24a321a9eb19f9e6889885",
+    "verl/verl/trainer/ppo/rollout_coordinator.py": "ffc2f5b076d17d5febbf404b1cc8cb9ad3618feecd07c8a45f556a3fd3124a16",
+    "recipe/math_native.sh": "75d41a5520410e5ff81b6354068dec6976040440bdd350bb15cfe43991d6b946",
+    "verl/tests/opd/test_native_policy_on_cpu.py": "18c99527658a86c4eb365eda6021611814eb30cbd41890051ff772692a59cea4",
+    "verl/tests/opd/test_native_executor_on_cpu.py": "a24382f0fe08a2800e1de52f2f64ccd77b08da7bd82cc41082a44081dce46727",
+    "verl/tests/opd/test_rollout_coordinator_runtime.py": "39613a9b730d1d1f20e523b82e0cdb3e4e6c95acf082fb2c90e370e23566bdfc",
+    "eval/run_request_split_controls.py": "a2bdfae264165976b067e92e03c5f97e33242eea961e6d7129cdaf3ef13f79b5",
+    "eval/verify_wandb_math.py": "8b16b3a156dcc029d0c0b7ee630eda14ef26c618bcb7b806ef7745bb43ec88b4",
+    "scripts/tests/test_request_split_controls.py": "d282680fe3a553a7f555f9209cde3cadf71d4ca28c741fa02d22140bef02e9fa",
+    "scripts/tests/test_wandb_snapshots.py": "c3411f8667a1fa4d17d1cc1695caa220ea68eead5dbc6f154332b26deb55560b"
+  },
+  "tests": {
+    "native_cpu": 87,
+    "coordinator_runtime": 12,
+    "all_runtime": 52,
+    "control_protocol": 4,
+    "wandb_verification": 8,
+    "real_launcher_hydra_dry_run": true
+  },
+  "semantics": {
+    "option": "sequence_switch.keep_request_boundary",
+    "default": false,
+    "requires_same_model": true,
+    "endpoints_still_prune": true,
+    "effective_two_request_budget": "k + (cap-k), unchanged total",
+    "phase_seeds": "existing independent prompt/visit/sample/phase derivation; no strict full-request replay claim",
+    "segmented_and_model_switched_counts": "separate; unique source response counts do not double-count"
+  },
+  "gpu_protocol": {
+    "engineering_conditions": 6,
+    "roles": ["current_student", "initial_student", "teacher"],
+    "apc_settings": [false, true],
+    "engineering_steps": 2,
+    "engineering_batch": 8,
+    "engineering_cap": 64,
+    "engineering_boundary": 32,
+    "engineering_validation_responses": 96,
+    "formal_conditions": 4,
+    "formal_pairs": "single vs same-model split at each APC setting",
+    "formal_steps": 50,
+    "formal_batch": 64,
+    "formal_cap": 4096,
+    "formal_boundary": 2048,
+    "formal_validation_questions": 570,
+    "formal_validation_samples": 16,
+    "formal_validation_cap": 31744,
+    "formal_full_vocab_kl": true,
+    "shared_fixed_bank_required": true,
+    "gpus": [0, 1, 2, 3]
+  },
+  "limitations": [
+    "APC-on may reuse first-stage KV; not a forced-cold-prefill comparison",
+    "Marginal sampling protocol is preserved but phase seed changes prevent interpreting token mismatches purely as kernel error",
+    "Single training seed does not establish convergence/equivalence",
+    "Frozen 15-policy suite is unchanged; these are additional controls"
+  ]
+}

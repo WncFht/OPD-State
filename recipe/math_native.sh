@@ -8,6 +8,14 @@ case "$SOURCE" in
     student_fresh) POLICY='{kind:single,model:current_student}' ;;
     initial_student_fresh) POLICY='{kind:single,model:initial_student}' ;;
     teacher_fresh) POLICY='{kind:single,model:teacher}' ;;
+    current_request_split|initial_request_split|teacher_request_split)
+        case "$SOURCE" in
+            current_request_split) MODEL=current_student ;;
+            initial_request_split) MODEL=initial_student ;;
+            teacher_request_split) MODEL=teacher ;;
+        esac
+        POLICY="{kind:sequence_switch,first:${MODEL},second:${MODEL},boundary:{kind:response_tokens,value:${SWITCH_TOKENS:-2048}},keep_request_boundary:true}"
+        ;;
     student_teacher_fusion|initial_teacher_fusion)
         BASE=current_student
         [[ "$SOURCE" != initial_teacher_fusion ]] || BASE=initial_student
