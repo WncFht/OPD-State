@@ -11,6 +11,7 @@ import sys
 import time
 from pathlib import Path
 
+from native_devices import query_devices, validate_visibility
 from native_validation_subset import BENCHMARKS
 from native_validation_subset import paths as subset_paths
 from native_validation_subset import verify as verify_subset
@@ -182,11 +183,28 @@ def main():
             state["state"] = "resource_busy"
             save()
             raise RuntimeError("GPU 0–3 are occupied; do not start another training process")
-        uuids = subprocess.check_output(
-            ["nvidia-smi", "--id=0,1,2,3", "--query-gpu=uuid", "--format=csv,noheader"], text=True
-        ).splitlines()
-        env = {**os.environ, **case["parameters"], "NATIVE_DATA_MANIFEST": str(args.data_manifest.resolve())}
-        item.update(state="running", started=time.time(), allowed_gpu_uuids=uuids)
+        devices = query_devices()
+        # The unchanged training recipe selects numeric CUDA ordinals 0–3.
+        # Prove that this mask selects the allowed physical cards on this host.
+        validate_visibility(devices, "0,1,2,3")
+        identity_path = output.with_name(output.name + "-device-identities.json")
+        identity_path.write_text(json.dumps(devices, indent=2) + "\n")
+        identity_sha = hashlib.sha256(identity_path.read_bytes()).hexdigest()
+        uuids = [row["nvml_uuid"] for row in devices.values()]
+        env = {
+            **os.environ,
+            **case["parameters"],
+            "NATIVE_DATA_MANIFEST": str(args.data_manifest.resolve()),
+            "NATIVE_DEVICE_IDENTITIES_SHA256": identity_sha,
+            "CUDA_DEVICE_ORDER": "PCI_BUS_ID",
+        }
+        item.update(
+            state="running",
+            started=time.time(),
+            allowed_gpu_uuids=uuids,
+            device_identity_file=str(identity_path),
+            device_identity_sha256=identity_sha,
+        )
         with (directory / (case["name"] + "-driver.log")).open("w") as stream:
             process = subprocess.Popen(cmd, cwd=ROOT, env=env, stdout=stream, stderr=subprocess.STDOUT)
             item["pid"] = process.pid
@@ -219,8 +237,8 @@ def main():
                 str(result),
                 "--steps",
                 str(case["steps"]),
-                "--gpu-uuids",
-                *uuids,
+                "--device-identities",
+                str(identity_path),
             ],
         ]
         for audit in audits:

@@ -24,7 +24,7 @@ Status: proposed
 
 ### 实施进展
 
-正式矩阵的三种单模型来源均完成五十步、完整 570×16 最终评测、独立路由/版本审计和 W&B finished 核验，无 checkpoint；current/initial/teacher 来源的 macro mean@16 为 64.30%/64.17%/63.80%。相对 current 的两个题目 bootstrap 区间均跨零，不据此排序。同设置的原生生成吞吐均接近 15k token/s，固定来源省去训练侧 actor 发布；详见[统一报告](../../../../docs/experiment/2026-10-19-rollout来源与logit融合实验.md)。Current/teacher fusion 的训练与完整评测进程现已成功退出，结果待调度器最终归档和 W&B 核验；独立 bank 生成已进入串行窗口，后接长响应验收。剩余质量、布局、参数扫描与探针仍未完成，Status 保持 proposed。
+正式矩阵的三种单模型来源均完成五十步、完整 570×16 最终评测、独立路由/版本审计和 W&B finished 核验，无 checkpoint；current/initial/teacher 来源的 macro mean@16 为 64.30%/64.17%/63.80%。相对 current 的两个题目 bootstrap 区间均跨零，不据此排序。同设置的原生生成吞吐均接近 15k token/s，固定来源省去训练侧 actor 发布；详见[统一报告](../../../../docs/experiment/2026-10-19-rollout来源与logit融合实验.md)。Current/teacher fusion 已成功结束并通过本地完整采集，结果待最终归档；bank 首次 GPU 尝试未通过跨接口 UUID 校验，原调度器已恢复 initial/teacher fusion。PCI 映射修复与保留失败记录的入口已经补齐，真实重测、长响应及全量 KL 仍待后续串行窗口。剩余质量、布局、参数扫描与探针仍未完成，Status 保持 proposed。
 
 原生单模型、四个分段方向、两种 batch 混合与两种 fusion 已完成四卡短训练；连续解码、graph 热更新和原生排空也已有下文的独立证据。正式十五组 50 步/570 题×16 矩阵已使用 d59a7c3 冻结源码启动，质量比较尚未完成。新增 `generation_layout=split` 的生产副本映射仍在验收：默认 `overlap`，不改变已启动矩阵；[CPU 路由证据](../../../../docs/experiment/results/native-rollout/placement-cpu.json)覆盖小组集中、分卡、响应顺序、冻结恢复和 current 写入前置条件，真实四卡新布局训练尚待验证。下文早期检查按其实际覆盖范围保留，不代表所有后续验收均已完成。
 
@@ -629,6 +629,8 @@ batch 路由按来源聚合后，在其可用副本内做负载均衡；小分�
 `generation_layout=overlap` 将每个来源分配到最多请求数个副本，`split` 为同一阶段的来源分配互不重叠的物理副本；例如 current/teacher 为 7/1 条时使用 3+1 卡，32/32 条时使用 2+2 卡。当前实现只改变请求路由和按需激活，保持来源原 KV 预算与四卡 actor 权重发布次数；未用 current 副本可以休眠，下次使用前仍需完整参数发布。来源预算不会随分卡自动扩大，因此不能把推理基准中每个分卡引擎 0.40 的吞吐直接当成该训练布局的速度。每个 batch 保存阶段请求数和实际选择的副本索引，最终纯 student 验证始终使用验证副本。
 
 新增物理执行记录从 native worker 获取 CUDA UUID、进程和本地设备信息，由服务端附加副本编号；协调器核对实际应答编号后记录各 RPC 的请求身份和数量。后续验收对照 GPU 0–3 的 UUID，避免只用声明的映射证明分卡。正确性六组两步开启冻结摘要，速度四组五步按 overlap/split/split/overlap 观察并关闭摘要，二者使用独立结果目录。[CPU 审计证据](../../../../docs/experiment/results/native-rollout/physical-routing-cpu.json)已具备，真实新版本 GPU 验收和速度结论尚待完成。后续短验证显式绑定每基准两题的六题子集，保存源文件和 Parquet 输出哈希，并在每组前检查字节完整性；最终审计要求九十六条响应。原始 570×16 正式矩阵不使用该子集，已具备的[子集 CPU 证据](../../../../docs/experiment/results/native-rollout/validation-subset-cpu.json)不构成 GPU 验收。
+
+首次 bank 的物理核验失败后，[独立设备身份检查](../../../../docs/experiment/results/native-rollout/device-identity-cpu.json)确认该机 CUDA 与 NVML 在相同 PCI 地址上返回不同 UUID。`eval/native_devices.py` 现在以唯一 PCI 地址关联两个命名空间，保留原值；初始化和生成后的 worker UUID 都须匹配该物理卡的已验证标识，未知设备、重复 PCI 和跨卡别名仍拒绝。布局审计先转为统一 NVML 身份，再检查 rank 稳定性和分卡互斥，不能用不同别名把同一硬件算成两卡。该机的 CUDA UUID 掩码还出现 Driver 可见一张卡、Torch/NVML 计数为零的情况；因此执行使用 PCI 验证过的 CUDA 序号，并在加载模型前验证完整可见性掩码。检查只枚举元数据，没有创建 CUDA context。Bank 每个引擎启动后立即保存并核验身份，生成轨迹和执行记录先落盘，再决定是否发布正式 bank；失败不再丢失已生成的审计输入。三十二项维护检查、六项 bank 运行环境检查及历史二十八条件回归通过，仍须真实 GPU 重测。
 
 独立微基准保留来源内局部编号和显式物理 GPU 映射，已修复新执行记录接口接入后的 split 编号不匹配。十五条件扫描器覆盖 1/2/4 卡、并发序列数、batched-token 预算、chunked prefill、KV 预算与 graph；使用冻结源码/配置、实际 UUID 和整卡显存采样，按固定工作量与自然长度分别记录预热和重复。[CPU 与历史数据回归](../../../../docs/experiment/results/native-rollout/benchmark-controls-cpu.json)通过；实际 GPU 扫描及单引擎换权重成本仍待完成，不以参数可配置代替性能证据。
 

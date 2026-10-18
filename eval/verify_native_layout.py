@@ -9,10 +9,7 @@ from collections import Counter
 from pathlib import Path
 
 from collect_math_experiment import parse_steps, sha256
-
-
-def normalize_uuid(value):
-    return str(value).lower().removeprefix("gpu-")
+from native_devices import identity_aliases, normalize_uuid
 
 
 def trajectory_counts(rows):
@@ -44,7 +41,8 @@ def check_batch(batch, expected, gpu_count, rank_devices, allowed):
         phase, slot, rank = receipt["phase"], receipt["slot"], receipt["replica_rank"]
         if phase not in expected or slot not in expected[phase] or type(rank) is not int or not 0 <= rank < gpu_count:
             raise ValueError("Worker receipt has an unexpected phase/source/replica")
-        uuid = normalize_uuid(receipt["device_uuid"])
+        observed = normalize_uuid(receipt["device_uuid"])
+        uuid = allowed.get(observed) if isinstance(allowed, dict) else observed
         if uuid not in allowed or not isinstance(receipt["pid"], int) or receipt["pid"] <= 0:
             raise ValueError("Worker receipt is outside the allowed physical GPUs or lacks a process")
         if rank in rank_devices and rank_devices[rank] != uuid:
@@ -173,7 +171,8 @@ def verify(run, output, steps, allowed):
                 raise ValueError("Actual training layout differs from the run manifest")
         observations.extend(check_batch(batch, expected, manifest["trainer_gpu_count"], devices, allowed))
     result = {
-        "scope": "Actual worker CUDA UUIDs, request placement and sampled-action metric reductions",
+        "scope": "Actual worker identities, request placement and sampled-action metric reductions",
+        "rank_device_namespace": "nvml_via_pci" if isinstance(allowed, dict) else "provided_uuid_set",
         "base_audit_sha256": sha256(base_path),
         "batches_sha256": sha256(directory / "batches.jsonl"),
         "trainer_log_sha256": sha256(logs[0]),
@@ -191,9 +190,22 @@ def main():
     parser.add_argument("--run", required=True, type=Path)
     parser.add_argument("--output", required=True, type=Path)
     parser.add_argument("--steps", required=True, type=int)
-    parser.add_argument("--gpu-uuids", required=True, nargs="+")
+    selection = parser.add_mutually_exclusive_group(required=True)
+    selection.add_argument("--gpu-uuids", nargs="+")
+    selection.add_argument("--device-identities", type=Path)
     args = parser.parse_args()
-    result = verify(args.run, args.output, args.steps, {normalize_uuid(v) for v in args.gpu_uuids})
+    if args.device_identities:
+        command = json.loads((args.run / "command.json").read_text())
+        expected = command["environment"].get("NATIVE_DEVICE_IDENTITIES_SHA256")
+        if not expected or expected != sha256(args.device_identities):
+            raise ValueError("Device identity map changed since the training launch")
+        allowed = identity_aliases(json.loads(args.device_identities.read_text()))
+    else:
+        allowed = {normalize_uuid(value) for value in args.gpu_uuids}
+    result = verify(args.run, args.output, args.steps, allowed)
+    if args.device_identities:
+        result["device_identities_sha256"] = expected
+        (args.output / "native-layout-acceptance.json").write_text(json.dumps(result, indent=2) + "\n")
     print(json.dumps({"layout": result["layout"], "physical_shards": len(result["observations"])}))
 
 

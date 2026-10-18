@@ -1,0 +1,92 @@
+{
+  "schema": "native-device-identity-cpu-v1",
+  "scope": "Physical inventory/visibility and CPU contracts; corrected bank generation has not run",
+  "base_commit": "5916515f932451a1f9006d341c71e706ce49bea0",
+  "source_sha256": {
+    "eval/native_devices.py": "2f2eb8dd1d1a38f7e597706f614636faec12ae697f146418d929b0a6439dc592",
+    "eval/generate_prefix_bank.py": "67dc0886e6cacd562eea7b9d2534b56dfe4b60755136616a2346835b992fab87",
+    "eval/benchmark_native_policies.py": "007474714885cbf7b791ecda8c6fda903d109e25870a323fd92fef3309ec0432",
+    "eval/summarize_native_benchmarks.py": "d44b712b92ff25d4fa584cfdbf7c01c32fdafb34be6a8337a21b1f7574355fb0",
+    "eval/verify_native_layout.py": "afe65feb56122d34c69b2ab590e5bfd7da3ecef4b4f1f1206fd05e3e7edef862",
+    "eval/run_native_acceptance.py": "6ea124422c0ea0cf754265ace66ec5651ddc33e0d8733e3a9e25fcc80a34f114",
+    "eval/run_native_followups.py": "bdddba3385a3e5ca818df6bfd42bf4cdc25b4ee11a9c4b00f5622317a7fd6b92",
+    "scripts/tests/test_native_devices.py": "a1ef9a4b175638b0f5a37cd012b04123364371424932491fe0b3b0d59916614e",
+    "scripts/tests/test_native_benchmark_analysis.py": "3a1a4957ca7919ef4eecb76a5c334e272d36b3d101a79dc7e25b7c7a4794a8be",
+    "scripts/tests/test_native_layout_acceptance.py": "763d2faff4b6ddd92657e13406acbe0e88e08aebf53ca89915d54cbf75257933"
+  },
+  "physical_device_identities": {
+    "0": {
+      "physical_index": 0,
+      "pci_bus_id": "0000:63:00.0",
+      "nvml_uuid": "GPU-cb48e54c-5152-b595-cd31-bde2562e143e",
+      "cuda_uuid": "GPU-62abd129-d043-0dca-91cb-373a0393b23d",
+      "cuda_uuid_v2": "GPU-62abd129-d043-0dca-91cb-373a0393b23d",
+      "cuda_ordinal": 0
+    },
+    "1": {
+      "physical_index": 1,
+      "pci_bus_id": "0000:67:00.0",
+      "nvml_uuid": "GPU-563e2493-6610-81f0-59fd-20324f42e71f",
+      "cuda_uuid": "GPU-d143e95d-02e2-0180-ce73-8e9689441720",
+      "cuda_uuid_v2": "GPU-d143e95d-02e2-0180-ce73-8e9689441720",
+      "cuda_ordinal": 1
+    },
+    "2": {
+      "physical_index": 2,
+      "pci_bus_id": "0000:6b:00.0",
+      "nvml_uuid": "GPU-ecc2a4cb-762d-1079-e78f-08790fec88ce",
+      "cuda_uuid": "GPU-0bbddb66-bde8-7568-e65d-7589c045ab2f",
+      "cuda_uuid_v2": "GPU-0bbddb66-bde8-7568-e65d-7589c045ab2f",
+      "cuda_ordinal": 2
+    },
+    "3": {
+      "physical_index": 3,
+      "pci_bus_id": "0000:6f:00.0",
+      "nvml_uuid": "GPU-8059084a-ff75-6775-1834-4f2c79cbfb7d",
+      "cuda_uuid": "GPU-7386c5ae-ab75-b0e2-2169-355435eef268",
+      "cuda_uuid_v2": "GPU-7386c5ae-ab75-b0e2-2169-355435eef268",
+      "cuda_ordinal": 3
+    }
+  },
+  "metadata_visibility": {
+    "numeric_mask": {
+      "cuda_count": 4,
+      "torch_count": 4,
+      "current_context": null
+    },
+    "cuda_uuid_mask": {
+      "cuda_count": 1,
+      "torch_count": 0,
+      "current_context": null
+    },
+    "scope": "Driver/NVML metadata only; no model, tensor on CUDA, kernel, or retained primary context"
+  },
+  "tests": {
+    "native_maintenance_methods": 32,
+    "prefix_bank_runtime_methods": 6,
+    "historical_conditions_reaudited": 28,
+    "historical_engine_records": 19
+  },
+  "original_failure": {
+    "output": "runs/native-prefix-bank-20261019-v1",
+    "source_commit": "0f2c1d8d45f67c6e1f071a2102f53c563c55be5f",
+    "process_exit_code": 1,
+    "error": "bank gate failed with exit 1",
+    "controller_sha256": "d4f258e848068b1a1af7146655e06494ab390117ae61c4593d57df29dd72c193",
+    "driver_log_sha256": "dd4e0a4f98775dc4d75a24880917a10f270fe03d0de900a0ae76aa93dbe99061",
+    "scheduler_resume_verified": true,
+    "diagnosis": "The failed validator assumed equality between NVML and CUDA UUID namespaces. Same-PCI metadata proves this assumption false on this host. Original worker receipts were not persisted, so the corrected mapping still requires native GPU retest.",
+    "canonical_bank_created": false
+  },
+  "changes": [
+    "Join unique selected PCI addresses, retain both UUID namespaces and reject ambiguous aliases",
+    "Use numeric CUDA ordinals whose PCI selection and Torch count pass independent metadata checks",
+    "Validate actual worker identity immediately after each engine starts and before generation",
+    "Save initialization, raw trajectories and execution receipts before deciding whether to publish a canonical bank",
+    "Apply the same identity reconciliation to benchmark and trainer-layout audits; hash the launch identity map"
+  ],
+  "pending": [
+    "Native four-GPU bank generation with the corrected identity audit",
+    "Long/full KL gates after the corrected bank passes"
+  ]
+}

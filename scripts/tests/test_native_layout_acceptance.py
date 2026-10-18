@@ -58,6 +58,22 @@ def fixture():
 
 
 class NativeLayoutAcceptanceTests(unittest.TestCase):
+    def test_cuda_aliases_canonicalize_to_physical_nvml_before_rank_uniqueness_checks(
+        self,
+    ):
+        batch, expected = fixture()
+        aliases = {f"card-{i}": f"card-{i}" for i in range(4)}
+        aliases.update({f"cuda-{i}": f"card-{i}" for i in range(4)})
+        for row in batch["generation_execution"]:
+            row["device_uuid"] = f"GPU-cuda-{row['replica_rank']}"
+        ranks = {}
+        verify.check_batch(batch, expected, 4, ranks, aliases)
+        self.assertEqual(ranks, {i: f"card-{i}" for i in range(4)})
+        # A different alias of the same hardware must not make two ranks valid.
+        batch["generation_execution"][1]["device_uuid"] = "GPU-card-0"
+        with self.assertRaisesRegex(ValueError, "share one physical GPU"):
+            verify.check_batch(batch, expected, 4, {}, aliases)
+
     def test_plan_only_preserves_short_acceptance_and_unhashed_abba_observations(self):
         with tempfile.TemporaryDirectory() as temporary:
             path = Path(temporary)

@@ -8,15 +8,14 @@ import csv
 import hashlib
 import json
 import os
-import subprocess
 import sys
 import threading
 import time
 import uuid
 from pathlib import Path
 
+from native_devices import matches_device, query_devices
 from run_native_acceptance import gpu_rows
-from verify_native_layout import normalize_uuid
 
 ROOT = Path(__file__).resolve().parents[1]
 
@@ -50,6 +49,9 @@ def benchmark_server_class():
     from verl.workers.rollout.vllm_rollout.vllm_async_server import vLLMHttpServer
 
     class BenchmarkServer(vLLMHttpServer):
+        async def execution_identity(self):
+            return {**self.native_worker_execution, "replica_rank": self.replica_rank}
+
         async def probe_full_logits(self, prompts, identity, vocabulary):
             import numpy as np
 
@@ -79,8 +81,8 @@ def benchmark_server_class():
 
 def weight_sender_class():
     class CachedWeightSender:
-        def __init__(self, gpu, paths, fingerprints):
-            os.environ["CUDA_VISIBLE_DEVICES"] = str(gpu)
+        def __init__(self, gpu, visible_device, paths, fingerprints):
+            os.environ["CUDA_VISIBLE_DEVICES"] = visible_device
             import torch
             from safetensors import safe_open
 
@@ -118,6 +120,7 @@ def weight_sender_class():
                 "fingerprints": fingerprints,
             }
             torch.cuda.set_device(0)
+            self.info["device_uuid"] = str(torch.cuda.get_device_properties(0).uuid)
 
         def describe(self):
             return self.info
@@ -160,9 +163,12 @@ def check_execution(executions, engines, gpu_uuids):
         if (
             type(rank) is not int
             or not 0 <= rank < len(gpus)
-            or normalize_uuid(record["device_uuid"]) != normalize_uuid(gpu_uuids[gpus[rank]])
+            or not matches_device(record["device_uuid"], gpu_uuids[gpus[rank]])
         ):
-            raise ValueError("Benchmark local replica rank does not match its assigned physical GPU")
+            raise ValueError(
+                f"Benchmark GPU mismatch: rank={rank}, observed={record['device_uuid']}, "
+                f"assigned={gpus}, inventory={gpu_uuids}"
+            )
 
 
 def main():
@@ -211,8 +217,9 @@ def main():
         args.reference_dir = args.reference_dir.resolve()
     if args.weight_mode == "staged" and not (args.reference_dir / "reference.json").is_file():
         parser.error("Run a resident reference benchmark before the staged benchmark")
-    if any(used > 128 for gpu, used, _ in gpu_rows() if gpu < args.replicas):
+    if any(used > 128 for _, used, _ in gpu_rows()):
         raise RuntimeError("Requested benchmark GPUs are occupied; wait for the existing job")
+    gpu_identities = query_devices()
     args.output.mkdir(parents=True, exist_ok=False)
     from native_source_snapshot import freeze
 
@@ -224,7 +231,8 @@ def main():
     sys.path.insert(0, str(source))
     os.environ["PYTHONPATH"] = str(source) + os.pathsep + os.environ.get("PYTHONPATH", "")
     os.environ.update(
-        CUDA_VISIBLE_DEVICES="0,1,2,3",
+        CUDA_VISIBLE_DEVICES=",".join(str(gpu_identities[gpu]["cuda_ordinal"]) for gpu in range(4)),
+        CUDA_DEVICE_ORDER="PCI_BUS_ID",
         VLLM_USE_V1="1",
         VLLM_WORKER_MULTIPROC_METHOD="spawn",
         VERL_USE_EXTERNAL_PLUGINS="none",
@@ -241,10 +249,16 @@ def main():
                 "driver_pid": os.getpid(),
                 "started_at": time.time(),
                 "driver_sha256": hashlib.sha256(Path(__file__).read_bytes()).hexdigest(),
+                "driver_dependencies_sha256": {
+                    name: hashlib.sha256((ROOT / "eval" / name).read_bytes()).hexdigest()
+                    for name in ("benchmark_native_policies.py", "native_devices.py")
+                },
                 "source_manifest_sha256": hashlib.sha256(
                     (args.output / "source-manifest.json").read_bytes()
                 ).hexdigest(),
-                "environment": {key: os.environ[key] for key in ("RAY_TMPDIR", "CUDA_VISIBLE_DEVICES")},
+                "environment": {
+                    key: os.environ[key] for key in ("RAY_TMPDIR", "CUDA_VISIBLE_DEVICES", "CUDA_DEVICE_ORDER")
+                },
             },
             indent=2,
         )
@@ -302,12 +316,8 @@ def main():
     senders = []
     specs = {}
     cold = {}
-    gpu_uuids = {
-        int(row.split(",")[0]): row.split(",")[1].strip()
-        for row in subprocess.check_output(
-            ["nvidia-smi", "--id=0,1,2,3", "--query-gpu=index,uuid", "--format=csv,noheader"], text=True
-        ).splitlines()
-    }
+    gpu_uuids = {gpu: row["nvml_uuid"] for gpu, row in gpu_identities.items()}
+    (args.output / "device-identities.json").write_text(json.dumps(gpu_identities, indent=2) + "\n")
     stop_sampling = threading.Event()
     sampling_errors = []
 
@@ -378,7 +388,7 @@ def main():
                 node_rank=0,
                 gpus_per_node=1,
                 nnodes=1,
-                cuda_visible_devices=str(gpu),
+                cuda_visible_devices=str(gpu_identities[gpu]["cuda_ordinal"]),
             )
             handles.append(h)
             servers.append(h)
@@ -386,6 +396,15 @@ def main():
             # before binding it, so concurrent cold starts can select the same
             # ephemeral port. Warm-call timing remains parallel below.
             ray.get(h.launch_server.remote())
+            execution = ray.get(h.execution_identity.remote())
+            with (args.output / "engine-initialization.jsonl").open("a") as stream:
+                stream.write(
+                    json.dumps(
+                        {"slot": slot, "physical_gpu": gpu, "expected": gpu_identities[gpu], "observed": execution}
+                    )
+                    + "\n"
+                )
+            check_execution([{"slot": slot, **execution}], {slot: {"gpus": list(gpus)}}, gpu_identities)
             layouts.append(ray.get(h.collective_rpc.remote("native_model_layout")))
             ray.get(h.sleep.remote())
         pool.handles[slot] = handles
@@ -608,7 +627,7 @@ def main():
             )
         )
         count = sum(len(o.token_ids) for o in output)
-        check_execution(backend.execution_audit, specs, gpu_uuids)
+        check_execution(backend.execution_audit, specs, gpu_identities)
         row = {
             "policy": policy,
             "batch": batch,
@@ -652,10 +671,27 @@ def main():
             create("current_student", "current_student", all_gpus, args.budget)
             sender_cls = ray.remote(weight_sender_class())
             senders.extend(
-                sender_cls.options(num_cpus=1).remote(gpu, paths, {role: ref.fingerprint for role, ref in refs.items()})
+                sender_cls.options(num_cpus=1).remote(
+                    gpu,
+                    str(gpu_identities[gpu]["cuda_ordinal"]),
+                    paths,
+                    {role: ref.fingerprint for role, ref in refs.items()},
+                )
                 for gpu in all_gpus
             )
             sender_cache = ray.get([sender.describe.remote() for sender in senders])
+            check_execution(
+                [
+                    {
+                        "slot": "current_student",
+                        "replica_rank": info["physical_gpu"],
+                        "device_uuid": info["device_uuid"],
+                    }
+                    for info in sender_cache
+                ],
+                specs,
+                gpu_identities,
+            )
         else:
             create("initial_student", "initial_student", p_gpus, fraction)
             create("teacher", "teacher", q_gpus, fraction)
@@ -721,6 +757,7 @@ def main():
                 "chunked_prefill": args.chunked_prefill,
             },
             "physical_gpu_uuids": gpu_uuids,
+            "physical_gpu_identities": gpu_identities,
             "physical_receipts_required": True,
             "prompt_manifest_sha256": hashlib.sha256(prompt_bytes).hexdigest(),
             "weight_mode": args.weight_mode,

@@ -10,6 +10,8 @@ import math
 import statistics
 from pathlib import Path
 
+from native_devices import matches_device, normalize_uuid
+
 
 def policy_name(policy):
     kind = policy["kind"]
@@ -55,8 +57,15 @@ def collect(run):
                 physical_gpus = summary["engines"][slot]["gpus"]
                 if type(rank) is not int or not 0 <= rank < len(physical_gpus):
                     raise ValueError("Physical benchmark receipt has an invalid source-local replica rank")
-                expected_uuid = summary["physical_gpu_uuids"][str(physical_gpus[rank])].lower().removeprefix("gpu-")
-                if execution["device_uuid"].lower().removeprefix("gpu-") != expected_uuid:
+                physical_index = str(physical_gpus[rank])
+                expected_uuid = summary["physical_gpu_uuids"][physical_index]
+                identity = summary.get("physical_gpu_identities", {}).get(physical_index, expected_uuid)
+                if isinstance(identity, dict) and (
+                    identity["physical_index"] != int(physical_index)
+                    or normalize_uuid(identity["nvml_uuid"]) != normalize_uuid(expected_uuid)
+                ):
+                    raise ValueError("Benchmark physical inventory changed its NVML index/UUID binding")
+                if not matches_device(execution["device_uuid"], identity):
                     raise ValueError("Physical benchmark receipt used a different GPU")
                 ids = execution["request_ids"]
                 if len(ids) != execution["requests"] or len(set(ids)) != len(ids) or request_ids.intersection(ids):

@@ -2,7 +2,7 @@
 
 ## 进度与主要结果
 
-本页统一记录 math 蒸馏研究的历史缓存/融合对照和后续原生实时 rollout 矩阵。历史四组已完成五十次 student 更新和三基准 eval16；新的十五组矩阵已有当前、固定初始、teacher 三种来源完成，current/teacher fusion 的训练与评测进程也已成功退出，结果待最终归档和 W&B 核验。新版本的固定前缀 bank 已开始串行生成，后续长响应与全量验证 KL 仍待验收，完整研究任务尚未完成。日志、逐题输出和 W&B 按各自源码/协议核对；正式运行使用物理 GPU 0–3，不保存模型 checkpoint。
+本页统一记录 math 蒸馏研究的历史缓存/融合对照和后续原生实时 rollout 矩阵。历史四组已完成五十次 student 更新和三基准 eval16；新的十五组矩阵已有当前、固定初始、teacher 三种来源完成，current/teacher fusion 也已成功退出并完成本地完整采集，结果待最终归档。固定前缀 bank 首次 GPU 尝试未通过跨接口 UUID 核验，原矩阵已恢复 initial/teacher fusion；修复后的重测、长响应和全量验证 KL 仍待串行验收，完整研究任务尚未完成。日志、逐题输出和 W&B 按各自源码/协议核对；正式运行使用物理 GPU 0–3，不保存模型 checkpoint。
 
 历史在线 student、teacher 轨迹、Semi-OPD、fusion 的 macro mean@16（三个基准等权平均）分别为 **64.84%、62.52%、64.59%、64.16%**。目前没有证据表明 λ=0.5 fusion 稳定提高平均正确率。四组都只有一个验证预算点，不能据此判断收敛。独立长时 Semi-OPD 已按用户要求于 2026-10-18 14:58（Asia/Shanghai）停止：完成 200 次更新，完整训练日志到第 199 步；第 50/100/150 步的 macro 分别为 **64.80%/66.92%/67.34%**，第 200 步验证中断，没有最终准确率或 checkpoint。训练队列、每小时观察器和 GPU 遥测均已退出，物理 GPU 0–3 已释放；停止状态与指标见[停止归档](results/long-semi-progress/stopped/summary.json)。
 
@@ -938,7 +938,7 @@ KL 主方案复用全部 570×16 验证响应，对全部有效位置计算完�
 
 [完整评分链路 CPU 验收](results/native-rollout/validation-scoring-cpu.json)通过七十七项原生 CPU 与四十二项训练环境运行检查，包含真实小型 Qwen2 的分块/直接前向比较、临时 hook 清理、RNG/模式/参数保持、DP 补齐和输入哈希/版本校验，以及新增诊断文件不干扰原准确率采集。[两进程 CPU FSDP 实验](results/native-rollout/validation-fsdp-cpu.json)进一步验证不同 rank 响应长度、正常参数收集、真实优化器更新后读取新 student，以及 teacher 参数不变；它使用随机初始化的小模型，不代表真实 1.5B checkpoint 或 GPU 性能。完整 bank 生成、长响应显存/耗时和完整数据四卡验收仍待完成，整体实施状态见 [Agent Note](../../.agents/notes/proposed/architecture/2026-10-18-可组合rollout与原生vLLM推理.md)。
 
-[固定前缀 bank 的 CPU 验收](results/native-rollout/prefix-bank-cpu.json)已从真实完整验证文件准备每基准三十题，共九十题，按固定 seed 的题目身份哈希排序选择，无超长题被排除。六项检查覆盖双冻结来源、准确原始 prefix、EOS、完整身份和位置权重及实际评分器读取；生成入口使用生产原生 vLLM RPC、四卡副本和冻结参数校验。当前只有输入准备与合成轨迹的 CPU 证据，真实 bank 仍待串行 GPU 生成，不能把九十个准备好的 prompt 当成已生成状态。
+[固定前缀 bank 的 CPU 验收](results/native-rollout/prefix-bank-cpu.json)已从真实完整验证文件准备每基准三十题，共九十题，按固定 seed 的题目身份哈希排序选择，无超长题被排除。六项检查覆盖双冻结来源、准确原始 prefix、EOS、完整身份和位置权重及实际评分器读取；生成入口使用生产原生 vLLM RPC、四卡副本和冻结参数校验。首次 GPU 尝试在物理校验处退出，未发布正式 bank；[设备身份与失败证据](results/native-rollout/device-identity-cpu.json)确认 CUDA/NVML 的同 PCI 双 UUID，并记录序号可见性检查、修复入口与原失败范围。真实重测尚未完成，不能把九十个准备好的 prompt 当成已生成状态，也不能把原失败视作通过。
 
 新增[KL 结果独立审计与聚类统计](results/native-rollout/validation-kl-audit-cpu.json)：按原始准确率响应的 benchmark/UID/sample 和有效长度逐条绑定 KL，重新归约题目等权、token 加权、累计量与深度统计，并用 benchmark 分层的题目 bootstrap 生成区间。同题十六条响应共同重采样；区间条件于已训练模型和固定 bank，不覆盖训练 seed、bank 构造和位置抽样变化。八项正反例及 CLI 检查通过，当前属于合成记录证据，不替代真实 checkpoint 数值复算。
 

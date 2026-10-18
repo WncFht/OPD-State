@@ -3,11 +3,13 @@
 import hashlib
 import importlib.util
 import json
+import sys
 import tempfile
 import unittest
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[2]
+sys.path.insert(0, str(ROOT / "eval"))
 spec = importlib.util.spec_from_file_location(
     "native_benchmark_analysis", ROOT / "eval/summarize_native_benchmarks.py"
 )
@@ -45,6 +47,52 @@ def fixture(directory):
 
 
 class NativeBenchmarkAnalysisTests(unittest.TestCase):
+    def test_cuda_and_nvml_uuid_aliases_require_the_recorded_physical_index_binding(
+        self,
+    ):
+        with tempfile.TemporaryDirectory() as temporary:
+            path = Path(temporary)
+            rows = fixture(path)
+            summary = json.loads((path / "summary.json").read_text())
+            summary.update(
+                physical_receipts_required=True,
+                physical_gpu_uuids={"0": "GPU-nvml-card"},
+                physical_gpu_identities={
+                    "0": {
+                        "physical_index": 0,
+                        "nvml_uuid": "GPU-nvml-card",
+                        "cuda_uuid": "GPU-cuda-card",
+                        "cuda_uuid_v2": "GPU-cuda-card",
+                        "pci_bus_id": "0000:63:00.0",
+                    }
+                },
+            )
+            summary["engines"] = {
+                "initial_student": {
+                    "gpus": [0],
+                    "budget_per_engine": 0.4,
+                    "layouts": [{"parameter_bytes": 1, "kv_regions": []}],
+                }
+            }
+            for row in rows:
+                row["groups"][0].update(phase=0, slot="initial_student", requests=4)
+                row["physical_execution"] = [
+                    {
+                        "slot": "initial_student",
+                        "phase": 0,
+                        "replica_rank": 0,
+                        "device_uuid": "GPU-cuda-card",
+                        "requests": 4,
+                        "request_ids": list(map(str, range(4))),
+                    }
+                ]
+            self.save_fixture(path, summary, rows)
+            MODULE.collect(path)
+            summary["physical_gpu_identities"]["0"]["physical_index"] = 1
+            self.save_fixture(path, summary, rows)
+            with self.assertRaisesRegex(ValueError, "index/UUID"):
+                MODULE.collect(path)
+
     def staged_fixture(self, path):
         import numpy as np
 
