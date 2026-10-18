@@ -1,0 +1,82 @@
+{
+  "date": "2026-10-18",
+  "scope": "Targeted source review; native GPU probe uses our standalone prototype, not these foreign training frameworks.",
+  "repositories": [
+    {
+      "name": "prefix_rft",
+      "url": "https://github.com/ZeroYuHuang/prefix_rft",
+      "commit": "5f5d2a1fb18f0efb6d5ac51839b2750490cefaf8",
+      "committed_at": "2025-09-15T05:34:30+08:00",
+      "files": [
+        {
+          "path": "recipe/prefix_rft/rl_dataset.py",
+          "sha256": "120b675dbdcd34d5c39291ad57a4142eb1b2550042022fa2083f30e702399fd4",
+          "reviewed_scope": "_get_prefix and __getitem__: offline demonstration cut, text decoding and template continuation"
+        },
+        {
+          "path": "recipe/prefix_rft/ray_trainer.py",
+          "sha256": "987096d004807d429b5acf0c6c67d2b3733366f227b6a71c0408d7d801414712",
+          "reviewed_scope": "prefix reconstruction, explicit prefix mask and full response packing"
+        }
+      ],
+      "foreign_runtime_tested": false
+    },
+    {
+      "name": "Relay-OPD",
+      "url": "https://github.com/ZJU-REAL/Relay-OPD",
+      "commit": "eab21451f99e1a40fbb244f556de766d153c88f5",
+      "committed_at": "2026-07-29T02:27:11-04:00",
+      "files": [
+        {
+          "path": "relay-opd/opd/patches/vllm/speculative_decode.py",
+          "sha256": "0ac0107ffd8fd6350c7d988e754a1b78bb55cce4218be631b90db784a0eea334",
+          "reviewed_scope": "_relay_opd_rejection_sample and _record_token_source_events: trigger, takeover, paragraph cap and source masks"
+        },
+        {
+          "path": "relay-opd/environment/requirements.lock.txt",
+          "sha256": "693489b8ebb68350b9603fad07486c05e60fcd84aa2842305e19d2c6e26b5685",
+          "reviewed_scope": "vLLM runtime version"
+        },
+        {
+          "path": "relay-opd/README.md",
+          "sha256": "f2257f5b180662ade61a322d9cbcf8f0ad88f51a8531be6a1e04effefbe1a0e1",
+          "reviewed_scope": "published configuration and objective scope"
+        }
+      ],
+      "foreign_runtime_tested": false
+    },
+    {
+      "name": "LUFFY",
+      "url": "https://github.com/ElliottYan/LUFFY",
+      "commit": "01f4ae066249e6965ce0d5512ccdf99a12895c74",
+      "committed_at": "2026-03-20T18:50:44+08:00",
+      "files": [
+        {
+          "path": "luffy/verl/verl/mix_src/mix_vllm_rollout.py",
+          "sha256": "b527d9705c996bb1c31d36d03f8303bd91b0d70d1176054d72cb918f48230291",
+          "reviewed_scope": "generate_sequences: cached target prefixes, per-prompt n expansion, raw-ID append and prefix mask"
+        },
+        {
+          "path": "luffy/verl/verl/mix_src/mix_trainer.py",
+          "sha256": "5a2fbcfb0161ea72876e27105743df3d44e8570cb0a9db957e6b7fb2016a2a74",
+          "reviewed_scope": "mixed on/off-policy metrics and common group processing"
+        }
+      ],
+      "foreign_runtime_tested": false
+    },
+    {
+      "name": "TRL GKD",
+      "url": "https://github.com/huggingface/trl",
+      "commit": "6d6901c5e3963108076131ac4979d344566b13a2",
+      "committed_at": "2026-10-16T16:15:20Z",
+      "files": [
+        {
+          "path": "trl/experimental/gkd/gkd_trainer.py",
+          "sha256": "0f4e9f47a2c722fbd925ea006ba3172448ef4d15679883df3400569b49c254cd",
+          "reviewed_scope": "generate_on_policy_outputs and training_step, lambda source choice and EOS-aware labels"
+        }
+      ],
+      "foreign_runtime_tested": false
+    }
+  ]
+}

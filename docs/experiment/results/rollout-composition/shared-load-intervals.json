@@ -1,0 +1,58 @@
+{
+  "scope": "Our probe intervals conservatively cover CPU startup through cleanup; existing long Semi GPU0 telemetry during these intervals includes this extra load. Do not attribute whole-card peaks or uncontended validation speed solely to Semi.",
+  "intervals": [
+    {
+      "run": "composition-probe-20261018-1350",
+      "physical_gpu": 0,
+      "start_epoch": 1792302517.1145897,
+      "end_epoch": 1792302595.1211736,
+      "baseline_used_mib": 48503,
+      "after_cleanup_used_mib": 48503,
+      "metadata_sha256": "46fbff5e710ed8cb7337d1138617d65336f310a364e82ced554e05de502115bc"
+    },
+    {
+      "run": "composition-probe-20261018-correctness-v2",
+      "physical_gpu": 0,
+      "start_epoch": 1792302741.3941023,
+      "end_epoch": 1792302881.5940843,
+      "baseline_used_mib": 48503,
+      "after_cleanup_used_mib": 48503,
+      "metadata_sha256": "65b552b608347a351c7eac026f3cc272ad7218b1d7c579e138807500cf5d7983"
+    },
+    {
+      "run": "composition-probe-20261018-correctness-v3",
+      "physical_gpu": 0,
+      "start_epoch": 1792303052.3994315,
+      "end_epoch": 1792303507.2371337,
+      "baseline_used_mib": 48503,
+      "after_cleanup_used_mib": 48503,
+      "metadata_sha256": "703872fa8f7c96f67526ade8e07316c5c1d31a420e05d76e30cc06a748ecb324"
+    },
+    {
+      "run": "composition-probe-20261018-correctness-v4",
+      "physical_gpu": 0,
+      "start_epoch": 1792303658.1902966,
+      "end_epoch": 1792304137.3866043,
+      "baseline_used_mib": 48503,
+      "after_cleanup_used_mib": 48503,
+      "metadata_sha256": "a0a6b8b332702a8ad9e55222ab205c5d3f699a31fd54e09bf0b458b3231e9de6"
+    },
+    {
+      "run": "composition-probe-20261018-throughput",
+      "physical_gpu": 0,
+      "start_epoch": 1792304470.8453946,
+      "end_epoch": 1792304619.6525645,
+      "baseline_used_mib": 48503,
+      "after_cleanup_used_mib": 48503,
+      "metadata_sha256": "0cbf3ce0430585660cb3e7b126e2cbdb87a48bbb7b4274d0fc1199dc61d4adc0"
+    },
+    {
+      "run": "composition-probe-20261018-numerics",
+      "physical_gpu": 0,
+      "start_epoch": 1792304364.17627,
+      "end_epoch": 1792304394.6928775,
+      "baseline_used_mib": 48503,
+      "after_cleanup_used_mib": 48503
+    }
+  ]
+}

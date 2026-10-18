@@ -135,3 +135,17 @@ Fusion 随后完成全部 50 步和三基准 eval16，进程退出码 0，W&B g5
 方案继续以原生非 speculative 的精确 wrapper 为首个验收目标，参考仓外注册、双 hidden/LM head、权重映射和 KV 总预算；CoS 在保持同一融合目标分布、正确拒绝采样与 KV 回退后再做加速基准。原有“普通 speculative 不是 fusion”的限制保留，同时明确融合目标 CoS 属于可验证的后续优化。调研及取舍仍归 docs/architecture.md，未另建实验文档，外部缓存位于忽略的 runs/code-review/。
 
 调研交付核验：59 个项目、环境和外部固定提交的文件哈希匹配，架构正文 70 个数学表达式通过 KaTeX，docs 模式与 Markdown/Prettier 检查通过；中文间距检查指出的一处混合拼接表达已改为中文。没有安装外部依赖或运行其 GPU canary，新增后端仍属于待实施方案。
+
+用户要求继续做真实实验并把提案归 Agent Note。已将 architecture.md 中全部拟议重构与外部实现调研迁入 .agents/notes/proposed/architecture/2026-10-18-可组合rollout与原生vLLM推理.md，保留 proposed 状态；架构页只保留已实现行为和入口链接，统一实验报告改链。补查 Relay-OPD eab21451、Prefix-RFT 5f5d2a1f、TRL GKD 6d6901c5 与 LUFFY 01f4ae06，8 个源码记录写入 docs/experiment/results/rollout-composition/review.json，区分动态接管、离线前缀、整批随机选择与同批精确配额。
+
+新增 eval/rollout_composition.py 独立生成原型及 eval/probe_vllm_composition.py 原生 GPU 验证入口，尚未接入正式 trainer。CPU 回归涵盖 500 组随机配额、864 组 EOS/边界组合、身份/来源/预算/顺序与并发失败；检查已加入 scripts/checks.json。真实验证仅在 GPU 0 的独立进程组运行两个 0.10 预算的 native vLLM，不改共享环境或现有训练；prefix cache 关闭，固定 checkpoint 只做推理。每次退出均核对 GPU 回到原 48,503 MiB 基线。
+
+三项真实边界促成修正：默认 V1 多进程相同 greedy 请求仅 9/16 条逐 token 一致，官方要求关闭多进程固定调度，因此把 correctness 与默认调度 throughput 模式分开；EOS 恰好达到阶段 cap 时原生优先报告 length，原型改为保留原 reason 并以实际 EOS 终止整条响应；reset_prefix_cache 的公开 bool 注解与 V1 实际 None 返回不一致，原生换权重验证取消 bool 断言，增加 idle 检查和 CPU 回归。APC 关闭的测试不被解释为 APC 开启时的缓存失效验收。
+
+初始尝试 runs/composition-probe-20261018-1350、correctness-v2、correctness-v3 的原始调用、metadata、源码快照与失败证据均保留；v3 已完成两方向分段、比例/嵌套、EOS、固定 seed、4096 长响应、吞吐扫描和 sleep/wake 后，在权重切换的返回值断言处退出。correctness-v4 正在重跑完整矩阵，加入逐 case JSONL 和 checks.json 原子记录，结束后还需跑默认调度吞吐、生成紧凑结果表、补 Note 的实测结论并最终检查提交。运行中的 harness/core 不再编辑；旧生产 Semi 进程与每小时观察不受代码变更影响。
+
+完整实测结束：correctness-v4 完成 71 个场景、774 条场景响应、135,668 个输出 token，35 项契约/恢复检查通过；原生同模型分段与一次到底的位等价负对照为 14/16，严格 all_checks_passed=false 保留。独立 numerics 原生 Top-5 复测重现相同的响应 109/126 位置分歧，同一 token 前缀下候选 log-odds 在并列与 0.125 之间变化；没有将 Top-5 当作完整分布误差上界。新增接受这项观察的显式投影参数，负测试证明不会放过错误段落或其他失败。
+
+默认多进程 throughput 完成 38 场景、316 条场景响应、39,968 个输出 token。B16 的单模型/串行混合/同卡并发混合/分段均值为 2.206/3.400/1.975/3.199 秒；B2/8/16 各 3 次并发相对串行快约 1.64–1.72 倍，限定共享 GPU、128 token 与本轮布局，不外推独占卡或训练吞吐。原生同引擎 q↔p0 两轮每次覆盖 199 参数并匹配独立引擎，缓存热激活约 0.62/0.67 秒；两引擎 sleep/wake 后输出恢复。整卡基线/最高采样为 48,503/66,540 MiB，所有自有进程退出后回到基线，共卡区间归档避免把测试负载算作原长时实验峰值。
+
+汇总与源码/环境/CPU 反例保存在 docs/experiment/results/rollout-composition/，Agent Note 写入实测设置、3×4 吞吐表、否决的位等价假设与后续四卡/FSDP/APC/Graph 验收；没有新增实验正文 Markdown。18 项新增 CPU 回归与包含 12 项原融合检查的 30 项产品 CPU 测试通过，完整 CI 通过。正式 trainer 与在线 actor 参数热同步仍未接入，Note 继续为 proposed；没有改变原训练算法、保存 checkpoint 或原地升级环境。

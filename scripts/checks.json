@@ -42,6 +42,24 @@
       "allow_failure": false
     },
     {
+      "id": "rollout-composition-tests",
+      "command": [
+        "python3",
+        "-m",
+        "unittest",
+        "discover",
+        "-s",
+        "verl/tests/opd",
+        "-p",
+        "test_rollout_composition_on_cpu.py",
+        "-v"
+      ],
+      "modes": ["test", "ci"],
+      "needs": [],
+      "timeout": 120,
+      "allow_failure": false
+    },
+    {
       "id": "training-source",
       "command": ["python3", "scripts/check_source.py"],
       "modes": ["test", "ci"],

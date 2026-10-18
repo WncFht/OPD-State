@@ -1,0 +1,22 @@
+{
+  "artifact_negative_checks": {
+    "rejects_corrupted_segment": true,
+    "numerical_allowance_does_not_hide_other_failure": true
+  },
+  "source_sha256": {
+    "eval/rollout_composition.py": "750900dec9cc15d439667fc707da1d5b1e6360a45203c65d0a0535650153449d",
+    "eval/probe_vllm_composition.py": "a101f4cf8064ad57a3b6972fa91bfadbc6237f2436f9493cac1cc597d22fd844",
+    "eval/summarize_rollout_composition.py": "6d3322c61cc782946020a7a30993be3b8d3e4b6fa3fff4e977db7a2e12f26226",
+    "verl/tests/opd/test_rollout_composition_on_cpu.py": "c1fc9fc09b0f6054510a3fd16d073a67eeffb406bdd3d2a79b4b06d1d86594be"
+  },
+  "composition": {
+    "tests": 18,
+    "passed": true,
+    "log_sha256": "7451132e3ada18673220b411417b5f1406e7771a6abf8bdbb01bb119410c30ae"
+  },
+  "product": {
+    "tests": 30,
+    "passed": true,
+    "log_sha256": "bff3b9a2a48d88feaa0de62f415f35a8f82549caa3931c945f9595c82d7c6a44"
+  }
+}

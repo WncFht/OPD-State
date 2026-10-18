@@ -1,0 +1,62 @@
+{
+  "scope": "Native BF16 top-5 numerical diagnostic; no full-vocabulary error bound is claimed.",
+  "responses": 16,
+  "bitwise_equal_responses": 14,
+  "differences": [
+    {
+      "response_index": 1,
+      "first_divergence": 126,
+      "shared_input_token_prefix_verified": true,
+      "direct_token": 15159,
+      "split_token": 62,
+      "direct_logprob_a": -0.6326442956924438,
+      "direct_logprob_b": -0.7576442956924438,
+      "split_logprob_a": -0.6931933164596558,
+      "split_logprob_b": -0.6931933164596558,
+      "direct_candidate_log_odds_gap": 0.125,
+      "split_candidate_log_odds_gap": 0.0,
+      "max_common_top5_logprob_difference": 0.06445121765136719
+    },
+    {
+      "response_index": 3,
+      "first_divergence": 109,
+      "shared_input_token_prefix_verified": true,
+      "direct_token": 358,
+      "split_token": 1988,
+      "direct_logprob_a": -0.942448616027832,
+      "direct_logprob_b": -0.942448616027832,
+      "split_logprob_a": -0.9986143708229065,
+      "split_logprob_b": -0.8736143708229065,
+      "direct_candidate_log_odds_gap": 0.0,
+      "split_candidate_log_odds_gap": 0.125,
+      "max_common_top5_logprob_difference": 0.06883430480957031
+    }
+  ],
+  "vllm_enable_v1_multiprocessing": false,
+  "eager": true,
+  "prefix_caching": false,
+  "baseline": {
+    "time": 1792304364.17627,
+    "total_mib": 81559,
+    "used_mib": 48503,
+    "busy_percent": 50
+  },
+  "engine": {
+    "ready": true,
+    "model": "student",
+    "cold_start_seconds": 15.239758923649788,
+    "pid": 572997
+  },
+  "source_sha256": {
+    "eval/probe_composition_numerics.py": "64fbfe8a0c5abb0f514246d1e464a2ecd987df9f273fab537d5b91d1d25b5928",
+    "eval/probe_vllm_composition.py": "a101f4cf8064ad57a3b6972fa91bfadbc6237f2436f9493cac1cc597d22fd844"
+  },
+  "raw_numerics_sha256": "69d45b3c8a7234e18611bf6da2119ce903e61fc530fa0133a3ae3883c072471c",
+  "raw_scores_sha256": "e2a1f2febaa610c442c7b18ef62bc7bb672c60f68f9769f7cef0e26ff6dbc8a7",
+  "cleanup": {
+    "time": 1792304394.6928775,
+    "total_mib": 81559,
+    "used_mib": 48503,
+    "busy_percent": 63
+  }
+}
