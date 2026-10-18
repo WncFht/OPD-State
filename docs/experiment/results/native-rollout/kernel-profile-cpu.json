@@ -1,0 +1,66 @@
+{
+  "schema": "native-kernel-profile-cpu-v1",
+  "scope": "CPU classification, constructed trace tests and installed CPU interfaces; no GPU model or CUDA profiling acceptance",
+  "base_commit": "3d644305d47defe73821959ad8eefa4e22af78a4",
+  "source_sha256": {
+    "eval/native_profile_metrics.py": "af360c3a0b1753a63428aede064af5dbcce2c7df5d0abffc4812d5a8b3b45220",
+    "eval/profile_native_kernels.py": "77847e93b4b75552f19c3fc214f1025403283b9c20cba05c2bf233da4e924290",
+    "eval/run_native_profile_controls.py": "a1e714af4ff068e88e9369ad7a79df2954826599c3ad7dd3ea51bbdcbcff6b30",
+    "scripts/tests/test_native_profile_metrics.py": "d2e9514eb816784929bd8593ba7b0f58e1095bcbf920ea70fc8c674188d0cfcc",
+    "verl/tests/opd/test_native_profile_runtime.py": "5d0d1fc513046158c83893df7a6c73fb6ef096035e9f70edfe852068c6b3005b"
+  },
+  "tests": {
+    "maintenance_methods": 8,
+    "training_environment_runtime_methods": 2,
+    "actual_runtime_interfaces": [
+      "vLLM 0.10.0+cu126 SchedulerOutput/NewRequestData/CachedRequestData",
+      "Torch 2.7.1 CPU profiler user-annotation and External id schema"
+    ],
+    "cpu_only_trace_rejected_as_gpu_evidence": true,
+    "cuda_initialized": false,
+    "covered_edge_cases": [
+      "single-query prefill tail",
+      "nonconserving scheduler count",
+      "missing or ambiguous causal launch link",
+      "missing or wrong phase marker",
+      "CPU-only trace",
+      "invalid GPU intervals"
+    ]
+  },
+  "gpu_protocol": {
+    "conditions": 10,
+    "physical_gpu": 0,
+    "requires_all_physical_0_3_idle": true,
+    "stack": "vLLM 0.10.0+cu126 / Torch 2.7.1+cu126",
+    "modes": ["eager", "CUDA Graph"],
+    "roles": [
+      "initial_student",
+      "teacher",
+      "fixed initial_student+teacher native fusion lambda=0.5"
+    ],
+    "batch": [4, 16],
+    "fixed_output_tokens": 32,
+    "ignore_eos_for_fixed_work_only": true,
+    "joint_memory_budget": 0.4,
+    "prefix_caching": false,
+    "batched_token_budgets": [8192, 64],
+    "unprofiled_control_calls": 2,
+    "phase_categories": ["prefill", "decode", "mixed", "empty"],
+    "kernel_attribution": "CPU launch correlation/External id; never GPU/CPU temporal containment",
+    "retained_evidence": [
+      "checkpoint/input/source identity",
+      "worker physical/KV/graph receipt",
+      "original scheduler query records",
+      "profiled and unprofiled token IDs",
+      "compressed Kineto trace",
+      "CUDA stream envelopes",
+      "kernel metrics and artifact hashes"
+    ]
+  },
+  "pending": [
+    "Actual GPU/CUPTI trace export and causal attribution",
+    "Unchanged native output tokens under profiling",
+    "Actual mixed-iteration exercise at low token budget",
+    "Kernel decomposition for single models and native fusion"
+  ]
+}

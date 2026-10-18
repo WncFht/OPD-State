@@ -303,3 +303,7 @@ Fusion 归档与四组图提交为 74e5288。随后补齐同模型控制缺口�
 固定模型栈探针提交为 ac17086，七项针对性检查、完整 CI 与提交 hooks 通过；绑定提交的 plan-only 也已执行。新 watcher 2187227 经实际进程核验后等待同模型请求边界队列，未启动额外 GPU 工作。
 
 四组已归档正式训练补齐完整五十步的精确 prefix 分析，相对 current 的三个配对均为 3,200 题、首次 visit，无重复题或完全相同响应。共同响应前缀均值 2.8440625/2.7403125/2.504375，pooled Jaccard 0.0495167%/0.0482004%/0.0452198%。采样 seed 的 stage slot 含模型角色，故小重合率不能分离来源差异与随机分叉。绘图时额外从原始 token 用 NumPy 第一分歧位置重算全部 9,600 对，三组配对分别核对 106 个文件哈希；这独立于原 prefix counter。前缀计数四项既有测试通过。图的语义台账、逐步数据、ECDF 与源码/输入哈希共同保存，统一报告保留早期 canary 的真实范围。
+
+正式轨迹诊断提交为 3d64430，完整 CI 与 hooks 通过；提交后图件、输入和源码哈希均再次核对。新增原生 kernel profiling 诊断，复用 vLLM 自带 profiler，按实际 scheduler output 区分 prefill/decode/mixed，CPU launch 关联取代异步 GPU/CPU 时间区间猜测。重叠 kernel 同时报时长总和及按设备的区间并集；混合步骤不按 token 比例分摊。八项维护检查、真实安装调度结构及 CPU profiler 的两项运行检查通过，CPU-only trace 不会当成 CUDA 证据。十组固定 32-token 的条件保留两次无 profiler 对照，eager/graph 和原生双模型分别测量，真实 GPU profiler 尚未执行。
+
+initial_teacher_fusion 正式第五组随后正常退出，50 步运行状态为 finished、退出码 0；GPU 已交给 v2 bank 2207290，原总调度器继续由 controller 2084206 持有。原始 status 计时为 6,176.604964 s；准确率、路由和 W&B 的正式归档仍待核验，不能仅凭成功退出计为质量验收完成。

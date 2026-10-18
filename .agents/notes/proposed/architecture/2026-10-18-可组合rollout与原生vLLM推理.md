@@ -597,6 +597,10 @@ correctness 模式完成 71 个场景，包含功能、恢复、长序列与 36 
 
 在这组共享负载、128 token 的测量中，并发混合比串行混合快约 1.64–1.72 倍。分段会重新 prefill 后段前缀，也会多一次请求执行；不能把分段耗时简单归为模型读盘。这里没有用 CUDA events/Nsight 将 kernel、prefill 和主机调度逐项分离，不以这些墙钟数字反推唯一瓶颈。四卡布局、长上下文大 batch、CUDA Graph 和同总显存预算的单引擎吞吐仍待单独基准。
 
+内核计时的独立 MVP 使用原生 vLLM profiler 保存 Kineto trace，按调度器的实际 prompt 长度、已计算位置和查询数标记纯 prefill、纯 decode 与 mixed 步骤。目标是把已有调用墙钟拆到可核验的设备事件；成功要求实际物理 GPU 0、完整独立 KV、实际 graph 状态、输入/输出固定工作量和两次无 profiler 对照的 token 一致。trace 必须包含真实 CUDA kernel，kernel 依 CPU launch 的 correlation/External id 归属，不能按异步 GPU 时间戳落在哪个 CPU 区间猜测。缺失或歧义关联保留为未归属，不接受完整归因；低 token-budget 条件还必须实际出现 mixed。CPU 范围、CUDA event 的 stream envelope、kernel 时长和按设备求并集的 busy 时间分别保存；mixed 不按 token 比例分摊。vLLM 官方说明 profiler 会显著增加开销，因此这项诊断不替代无 profiler 的吞吐基准。[^vllm-profiler]
+
+`eval/run_native_profile_controls.py` 安排十条件：eager/graph 各包含 p0 B4、p0/q/固定 p0+q 原生 fusion B16，以及 B16、64-token 调度预算的混合步骤对照；其余调度预算 8,192，生成固定 32 个 token，共同显存预算 0.4，APC 关闭。仅微基准设置 ignore_eos 以固定工作量，不作为 math 回答或训练轨迹。源码与冻结训练模块绑定提交，模型及输入身份、原始调度记录、响应和压缩 trace 全部保留；归档重新校验字节和原始 trace 的归约。块大小和 trace 关联实现仍可按真实 GPU 证据调整。[CPU 与安装接口证据](../../../../docs/experiment/results/native-rollout/kernel-profile-cpu.json)覆盖八项协议/数值检查、真实 vLLM 调度 dataclass 和实际 CPU profiler trace 的两项运行检查；未执行 CUDA profiling，CPU trace 被明确拒绝为 GPU 证据。真实条件继续等待既有串行队列。
+
 原生权重激活在一个引擎内往返 teacher/student 两轮，每次验证实际加载集合覆盖 199 个原生参数，恢复后的 16 条短响应与对应独立引擎逐 token 相同；另一个 teacher 引擎恢复后也保持参考输出。首次 CPU 权重映射后的激活约 0.80 秒，CPU 缓存命中的两次激活约 0.62/0.67 秒，计时包含 native loader 与 CUDA 同步，不是纯 PCIe 带宽测试。这证明同结构配对可以复用引擎换权重，不证明已接通在线 actor 的分桶同步。
 
 单引擎 level-1 sleep API 约 2.32/2.60 秒，wake API 约 0.084/0.114 秒；每次实际让出约 8,040 MiB，唤醒后输出通过参考检查。这些是 API 墙钟，不能拆成已测的磁盘、CPU 分配和设备复制分项。`LLM.reset_prefix_cache` 虽标注 bool，0.10 V1 的包装层实际返回 None；原型先确认无 active request，再调用并保留返回值。prefix cache 在本轮关闭，不能把这一结果当作 APC 开启时旧版本 KV 已正确失效的证据。
@@ -859,3 +863,5 @@ $$
 [^vllm015-invariance-source]: vLLM contributors. Batch invariant kernels and initialization. vLLM v0.15.1，2026. [导入时开关、后端限制与初始化](https://github.com/vllm-project/vllm/blob/v0.15.1/vllm/model_executor/layers/batch_invariant.py).
 
 [^cuda-minor-version]: NVIDIA. Minor Version Compatibility. CUDA Compatibility，2026. [版本范围、特性与 PTX 限制](https://docs.nvidia.com/deploy/cuda-compatibility/minor-version-compatibility.html).
+
+[^vllm-profiler]: vLLM. Profiling vLLM. v0.10.0 官方文档，2025. [原生 worker profiler 与测量开销](https://docs.vllm.ai/en/v0.10.0/contributing/profiling.html).

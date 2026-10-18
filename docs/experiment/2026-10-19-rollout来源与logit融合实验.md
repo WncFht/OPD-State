@@ -577,7 +577,7 @@ GPU busy 均值先按每张卡在对应阶段的有效采样求算术平均，�
 
 在线生成阶段包含请求分发、生成、评分返回、整理与 vLLM sleep；`update_weights` 包含 actor 到 rollout 的权重传输与恢复 KV。引擎在训练前创建，在线 `load_format=dummy`，随后接收 actor 参数；循环没有每步从磁盘读取 checkpoint、重建引擎。缓存组只在末次验证前同步一次，在线与 Fusion 每步都同步。
 
-在线逐步最慢生成请求的延迟累计 1,723.94 秒，占生成阶段的 96.47%；按生成加评分的最慢请求链计为 1,754.49 秒，其外残差为 32.63 秒。请求延迟仍包含路由、排队、prefill/decode、生成 log-probability 与返回，不能把 1,723.94 秒全当作 GPU kernel 时间，也不能再与嵌套的 1,787.12 秒相加。
+在线逐步最慢生成请求的延迟累计 1,723.94 秒，占生成阶段的 96.47%；按生成加评分的最慢请求链计为 1,754.49 秒，其外残差为 32.63 秒。请求延迟仍包含路由、排队、prefill/decode、生成 log-probability 与返回，不能把 1,723.94 秒全当作 GPU kernel 时间，也不能再与嵌套的 1,787.12 秒相加。新增的[内核计时 CPU 证据](results/native-rollout/kernel-profile-cpu.json)只核验调度阶段、异步 launch 关联、重叠区间归约和已安装接口；十组短原生 GPU profiler 对照仍待执行，不能据此将现有墙钟补写成设备 kernel 时间。
 
 缓存准备的 537.48 秒从四个生成子进程启动前计起，包含子进程导入、vLLM 构造与加载、生成、shard 汇总、SQLite 写入和模型签名计算；较早的父进程 tokenizer 与 schedule 检查不在其中。因此它既不是纯 decode 时间，也不是整个命令的完整墙钟时间。原始阶段表与互斥求和核验见[资源汇总](results/resources/summary.json)。
 
