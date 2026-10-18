@@ -125,3 +125,13 @@ Fusion 随后完成全部 50 步和三基准 eval16，进程退出码 0，W&B g5
 设计继续放 docs/architecture.md，统一实验报告仅更新链接与当前推荐，未增加实验正文文件。没有修改训练实现、共享环境或运行中任务，也没有提前读取长时 Semi 进度。
 
 设计核验：32 个项目源码和 15 个环境源码哈希均匹配，22 项观察定位仍有效；两段拟议 YAML 可解析，架构正文 57 个数学表达式通过 KaTeX。docs 模式、本地链接、研究正文审计、Markdown lint、Prettier、中文间距与 diff 检查通过。没有为文档变更重跑 GPU 实验，以上检查不证明新增生成策略已可运行。
+
+按用户要求调研多模型融合推理，复核当前 math_fusion→trainer→worker/RPC→HF decoder→teacher 评分/student 更新的链路，在架构说明补充实际计算后端、两模型共同 token 流、独立 KV、prefill eager、仅 decode 前向入 graph、图外采样、StaticCache 无连续补槽、端点仍双前向与参数双写。明确训练对象是单独 actor，生成 student 只接收参数副本，验证始终单独 student。温度 1 下 logit fusion 对应有效词表分布的归一化几何平均，概率平均不同；未改变正式运行或历史指标。
+
+外部实现审阅固定到 vllm-logits a987755（2026-08-18）和 CoS b7c5553（2025-06-16），12 个文件及其哈希追加到既有代码审阅 JSON。前者在一个 vLLM 模型内运行两个 native backbone、两个 LM head，最接近拟议 paired wrapper，但依赖 0.15.x、模式取进程环境变量、默认 protected-token 覆盖和短同权重 canary 均不能直接用于本项目。CoS 基于 0.6.5 安装路径，有 ensemble worker/sampler 与融合目标拒绝采样；默认 we 配方混概率并返回第一模型 log-prob，不能直接作为本项目 raw-logit fusion 与行为分数。
+
+执行外部 compute_logits 的 AST 提取方法作 CPU 算术核验，使用两个三维合成 logits、identity head、λ=0.5。无 protected token 时等于当前 FP32 加权与归一化几何平均；概率平均和 protected-token 覆盖相对目标分布的 TV 分别为 0.13520、0.26861。该核验没有建立 vLLM 引擎、读取 checkpoint 或调用 CUDA，不证明外部运行时正确。UltraFuser 附录 C 的多实例逐步交互与 ThinkMerge §4.1 的多上下文合并仅作为论文层参考，未称为已核验可运行的双 checkpoint 源码。
+
+方案继续以原生非 speculative 的精确 wrapper 为首个验收目标，参考仓外注册、双 hidden/LM head、权重映射和 KV 总预算；CoS 在保持同一融合目标分布、正确拒绝采样与 KV 回退后再做加速基准。原有“普通 speculative 不是 fusion”的限制保留，同时明确融合目标 CoS 属于可验证的后续优化。调研及取舍仍归 docs/architecture.md，未另建实验文档，外部缓存位于忽略的 runs/code-review/。
+
+调研交付核验：59 个项目、环境和外部固定提交的文件哈希匹配，架构正文 70 个数学表达式通过 KaTeX，docs 模式与 Markdown/Prettier 检查通过；中文间距检查指出的一处混合拼接表达已改为中文。没有安装外部依赖或运行其 GPU canary，新增后端仍属于待实施方案。

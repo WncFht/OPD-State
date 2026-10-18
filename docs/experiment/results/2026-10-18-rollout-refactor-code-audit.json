@@ -429,5 +429,138 @@
       }
     ],
     "proposed_not_implemented": ["sequence_switch", "batch_mix", "vllm_paired"]
+  },
+  "external_inference_review": {
+    "reviewed_at": "2026-10-18",
+    "project_review_baseline": "cd7f781",
+    "scope": "Pinned-source comparison and CPU arithmetic only; no package installation, foreign GPU test, or active-run mutation.",
+    "repositories": [
+      {
+        "name": "vllm-logits",
+        "url": "https://github.com/NizarIslah/vllm-logits",
+        "commit": "a987755aad1a94689745843676d491bc77201e51",
+        "committed_at": "2026-08-18T20:19:44-04:00",
+        "files": [
+          {
+            "path": "src/vllm_logits/backbones.py",
+            "sha256": "c53d58a43fd170de8cb80790e046e73bd19c357b47bd7b62302fa97d21622cda",
+            "reviewed_scope": "DualQwen2 forward, compute_logits, layer remapping, load_weights, repair variant"
+          },
+          {
+            "path": "src/vllm_logits/_compat.py",
+            "sha256": "4b864a1013f1186eb2af94f656301a1f98136f8ab270d5139f34544e471b29c5",
+            "reviewed_scope": "vLLM internal imports and native model accessors"
+          },
+          {
+            "path": "src/vllm_logits/register.py",
+            "sha256": "a7b36a0f2c70197ebd00e68174b142beba9cabfbb4ad55343c453647938bd0bd",
+            "reviewed_scope": "model registration and exception handling"
+          },
+          {
+            "path": "pyproject.toml",
+            "sha256": "7efda248ff149f8d5ca51a76aa0e0f88a8d0ce0d48db478a33600ebaddb766c9",
+            "reviewed_scope": "version range and general plugin entry point"
+          },
+          {
+            "path": "tests/test_dual_load_qwen.py",
+            "sha256": "fcd942502ab0d0742a9d71e91be32076bd8caeab929eea1e8c1e636d81b1c099",
+            "reviewed_scope": "full five-token, same-checkpoint eager canary"
+          },
+          {
+            "path": "src/vllm_logits/repair.py",
+            "sha256": "af3d78f617c23bd82474e35ab528327c874d70e6c9f6492b7b87a583f1d1f7fc",
+            "reviewed_scope": "dual config construction and eager LLM initialization"
+          }
+        ],
+        "gpu_runtime_validated_here": false
+      },
+      {
+        "name": "CoS",
+        "url": "https://github.com/Kamichanw/CoS",
+        "commit": "b7c555324539bb476d39a4002922973e296d1e18",
+        "committed_at": "2025-06-16T02:09:38+08:00",
+        "files": [
+          {
+            "path": "readme.md",
+            "sha256": "2078768bdf67ae6e752344fd6769348121685f417bcee613e0f46a8b4670e6d1",
+            "reviewed_scope": "setup version and code navigation"
+          },
+          {
+            "path": "vllm/vllm/ensemble_decode/ensemble_decode_worker.py",
+            "sha256": "6c3ec382271f1e01130606730999fd4f4b2b180d242f09ddfdd88b846da89f56",
+            "reviewed_scope": "multi-worker execution and total KV block budget"
+          },
+          {
+            "path": "vllm/vllm/ensemble_decode/ensemble_sampler.py",
+            "sha256": "42c3d72ffd137512ece5fe9e096e64b87de4d683fbd5d9dcf3459f2f314a2df1",
+            "reviewed_scope": "raw-logits, logits and probabilities branches"
+          },
+          {
+            "path": "vllm/vllm/chef/chef_sampler.py",
+            "sha256": "35c282655dcbd855b622774822b6fb9884343f76b66a1eb6c3489c427b6b90c9",
+            "reviewed_scope": "fusion target probabilities passed to rejection sampler"
+          },
+          {
+            "path": "configs/method/we.yaml",
+            "sha256": "c2cc014febdb4d74d0a481d11f00d5ae733c9cb6d5e57c6bab6fa58fc08e33f5",
+            "reviewed_scope": "default probability mixture and first-model logprob return"
+          },
+          {
+            "path": "configs/method/cd.yaml",
+            "sha256": "4079bab0536e5073a7475c190a9922c04b363e17141d16c1990fd99b867e7399",
+            "reviewed_scope": "raw-logits branch example"
+          }
+        ],
+        "gpu_runtime_validated_here": false
+      }
+    ],
+    "paper_only_sources": [
+      {
+        "title": "Fusing Highly Specialized Language Models for Comprehensive Expertise",
+        "url": "https://aclanthology.org/2025.acl-long.42.pdf",
+        "reviewed_scope": "Appendix C: multi-instance step synchronization",
+        "pdf_sha256": "6bbbbc0c4573dfebb112e3e775cdc93f2ed42837c45e8eb86d335b4c506bbf12",
+        "runtime_source_verified": false
+      },
+      {
+        "title": "Think in Parallel, Answer as One: Logit Averaging for Open-Ended Reasoning",
+        "url": "https://arxiv.org/html/2512.02874v1",
+        "reviewed_scope": "Section 4.1 and algorithm: multi-context shared answer; two-stage vLLM versus one-stage HF",
+        "runtime_source_verified": false
+      },
+      {
+        "title": "Fast Large Language Model Collaborative Decoding via Speculation",
+        "url": "https://proceedings.mlr.press/v267/fu25c.html",
+        "reviewed_scope": "Published abstract and linked official implementation; reported speedup not reproduced here"
+      }
+    ],
+    "cpu_semantics": {
+      "scope": "CPU arithmetic check of AST-extracted foreign compute_logits with synthetic identity heads; no vLLM engine, checkpoint, or CUDA was instantiated.",
+      "review_commit": "a987755aad1a94689745843676d491bc77201e51",
+      "source_sha256": "c53d58a43fd170de8cb80790e046e73bd19c357b47bd7b62302fa97d21622cda",
+      "dtype": "float32",
+      "raw_logit_mix_matches_reference": true,
+      "normalized_geometric_mean_matches": true,
+      "probability_mix_total_variation_from_target": 0.13520191609859467,
+      "protected_token_override_total_variation_from_target": 0.2686089277267456,
+      "gpu_runtime_validated": false,
+      "synthetic_logits": {
+        "a": [[3.0, 1.0, -1.0]],
+        "b": [[-1.0, 2.0, 1.0]],
+        "alpha": 0.5,
+        "protected_id_probe": 0
+      }
+    },
+    "reuse_decision": "Prefer a minimal native V1 paired wrapper inspired by dual-native-model registration; evaluate CoS-style fusion-target speculation only after exact non-speculative baseline. Do not install or copy an entire version-mismatched engine.",
+    "required_adaptations": [
+      "vLLM 0.10.0 V1 attention registry and unique KV identities",
+      "FP32 raw-logit mix without protected-token overrides",
+      "Only execute active endpoint models",
+      "Request-scoped policy metadata instead of global env mutation",
+      "Strict actual-loaded parameter set and targeted actor-version updates",
+      "Frozen teacher/initial references and student-only eval",
+      "Long-context and CUDA Graph parity",
+      "Fused target logprobs and KV rollback if speculation is added"
+    ]
   }
 }
