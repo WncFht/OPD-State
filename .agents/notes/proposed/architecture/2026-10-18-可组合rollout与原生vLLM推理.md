@@ -20,7 +20,7 @@ Status: proposed
 
 可变选择包括单引擎换权重/双引擎驻留、副本布局、批量分组与流水化、CUDA Graph 和后续 speculative fusion。验证原型保持已归档训练的源码和实验条件，也不以独立生成检查冒充完整 trainer 集成通过；真实训练热更新和两步端到端验收仍是正式接入前的独立条件。
 
-正式 trainer 已接入可选原生路径。三种单模型、四种分段方向、两种 batch 混合与两种 fusion 均已有四卡两步和最终短验证证据；分段/batch 使用固定的 4994d2b，fusion 使用后续运行源码快照。统一训练/验证引擎后的完整质量对照、CUDA Graph 与原生排空仍待验收。初始审阅基线为 `d17d6c6`，范围是当前 math 的 FSDP、vLLM/HF fusion、权重同步、teacher 评分与验证执行链，涉及 32 个相关文件；另核对安装环境的 vLLM 0.10.0 V1 模型注册、采样、键值缓存（KV cache）与 worker 扩展接口。[代码核验清单](../../../../docs/experiment/results/2026-10-18-rollout-refactor-code-audit.json)保存范围、哈希与源码观察。方案优先使用 vLLM 原生执行；正式实验保留各自固定的源码快照。后续流程图描述目标算法和接入方式，具体实现状态以“实施进展”与对应验收证据为准。
+正式 trainer 已接入可选原生路径。三种单模型、四种分段方向、两种 batch 混合与两种 fusion 均已有四卡两步和最终短验证证据；分段/batch 使用固定的 4994d2b，fusion 使用后续运行源码快照。统一训练/验证引擎后的完整质量矩阵和最终性能对照仍待验收；CUDA Graph 与原生排空已有独立场景证据，范围见下文。初始审阅基线为 `d17d6c6`，范围是当前 math 的 FSDP、vLLM/HF fusion、权重同步、teacher 评分与验证执行链，涉及 32 个相关文件；另核对安装环境的 vLLM 0.10.0 V1 模型注册、采样、键值缓存（KV cache）与 worker 扩展接口。[代码核验清单](../../../../docs/experiment/results/2026-10-18-rollout-refactor-code-audit.json)保存范围、哈希与源码观察。方案优先使用 vLLM 原生执行；正式实验保留各自固定的源码快照。后续流程图描述目标算法和接入方式，具体实现状态以“实施进展”与对应验收证据为准。
 
 ### 实施进展
 
@@ -28,7 +28,7 @@ Status: proposed
 
 原生单模型、四个分段方向、两种 batch 混合与两种 fusion 已完成四卡短训练；连续解码、graph 热更新和原生排空也已有下文的独立证据。正式十五组 50 步/570 题×16 矩阵已使用 d59a7c3 冻结源码启动，质量比较尚未完成。新增 `generation_layout=split` 的生产副本映射仍在验收：默认 `overlap`，不改变已启动矩阵；[CPU 路由证据](../../../../docs/experiment/results/native-rollout/placement-cpu.json)覆盖小组集中、分卡、响应顺序、冻结恢复和 current 写入前置条件，真实四卡新布局训练尚待验证。下文早期检查按其实际覆盖范围保留，不代表所有后续验收均已完成。
 
-生产目录新增 [policy.py](../../../../verl/verl/workers/rollout/policy.py)，实现不可变模型身份、平面配置解析、全局响应配额、分段预算与端点归约，显式拒绝嵌套和 TCOD。[十三项 CPU 合约检查](../../../../verl/tests/opd/test_native_policy_on_cpu.py)已通过，包含五百组随机配额；Hydra 配置往返也已验证。新增配置默认关闭，现有路径继续使用原入口。这些是契约层证据，尚不表示 worker、权重生命周期或 trainer 集成已完成。
+生产目录新增 [policy.py](../../../../verl/verl/workers/rollout/policy.py)，实现不可变模型身份、平面配置解析、全局响应配额、分段预算与端点归约，显式拒绝嵌套和 TCOD。[十三项 CPU 合约检查](../../../../verl/tests/opd/test_native_policy_on_cpu.py)已通过，包含五百组随机配额；Hydra 配置往返也已验证。新增配置默认关闭，现有路径继续使用原入口。这些 CPU 结果只覆盖契约层，不能单独证明 worker、权重生命周期或 trainer 集成；对应 GPU 证据单列。
 
 随后新增 [native_executor.py](../../../../verl/verl/workers/rollout/native_executor.py)、[lifecycle.py](../../../../verl/verl/workers/rollout/lifecycle.py)与原生服务端接口，生产 CPU 检查合计四十四项通过。执行层保持原 prompt 与完整响应，保留原始结束原因，核对来源/版本/λ；失败时要求原生 abort/drain。服务端将 actor 权重接收、完整 HF 名称集合、最终 bucket、实际写入序号、缓存失效与 CUDA barrier 纳入发布条件，同版本恢复也不能沿用上一次写入回执。固定来源在服务端和真实 inference worker 均拒绝 actor 流。
 
@@ -38,9 +38,9 @@ Status: proposed
 
 [rollout_coordinator.py](../../../../verl/verl/trainer/ppo/rollout_coordinator.py)与[native_pool.py](../../../../verl/verl/workers/rollout/native_pool.py)已接入 trainer 的可选原生路径：生成来源独立于 actor 初始化，复用同一 verifier，固定来源跳过训练权重同步，验证显式切回最新 student；数据遍历轮数由实际 dataloader 长度和更新预算计算。每次运行使用独立的权重传输命名空间，避免不同 Ray 集群重复 job ID。四十七项原生 CPU 检查与五项训练环境桥接检查通过，后者使用真正的 metadata-only DataProto 输入。
 
-[current-student 四卡接入证据](../../../../docs/experiment/results/native-rollout/trainer-current/native-acceptance.json)包含两步 FSDP 更新和六题各十六次最终验证。训练生成版本为 0/1，验证独占最终 student 版本 2；完整响应、阶段身份和配额由独立采集器复核，实际 verifier 指标与日志一致，没有保存 checkpoint。运行源码以 d187a4b 为基线的完整文件哈希快照标识，不能只用基线提交代替运行身份。其余单模型、分段、batch 混合、原生 fusion、graph/缓存/排空与正式 50 步完整 math 对照尚待验收，提案保持 proposed。
+[current-student 四卡接入证据](../../../../docs/experiment/results/native-rollout/trainer-current/native-acceptance.json)包含两步 FSDP 更新和六题各十六次最终验证。训练生成版本为 0/1，验证独占最终 student 版本 2；完整响应、阶段身份和配额由独立采集器复核，实际 verifier 指标与日志一致，没有保存 checkpoint。运行源码以 d187a4b 为基线的完整文件哈希快照标识，不能只用基线提交代替运行身份。该接入证据仅覆盖当前来源；其他来源、分段、batch、fusion 与 graph/缓存/排空的独立结果见下文。正式矩阵仍有未完成项，提案保持 proposed。
 
-[teacher-fresh 四卡接入](../../../../docs/experiment/results/native-rollout/trainer-teacher/native-acceptance.json)随后通过：训练始终使用固定 q，无 actor→生成权重同步，最终验证仍是更新后的 student 版本 2。独立数值检查也已验证[native 双 Qwen2 模型](../../../../verl/verl/workers/rollout/fusion/vllm_model.py)：λ=0/0.5/1 的两条短 prefix 在完整有效词表上与 HF 参考逐值相同，paired 有 56 个独立 KV 区域，端点有 28 个，sleep/wake 后一致；见[数值证据](../../../../docs/experiment/results/native-rollout/fusion-numerics/receipt.json)。该检查每条只生成一个 token，连续 decode、actor 热更新、graph 与 fusion trainer 尚待完成，不能据此开放正式 fusion 训练。
+[teacher-fresh 四卡接入](../../../../docs/experiment/results/native-rollout/trainer-teacher/native-acceptance.json)随后通过：训练始终使用固定 q，无 actor→生成权重同步，最终验证仍是更新后的 student 版本 2。独立数值检查也已验证[native 双 Qwen2 模型](../../../../verl/verl/workers/rollout/fusion/vllm_model.py)：λ=0/0.5/1 的两条短 prefix 在完整有效词表上与 HF 参考逐值相同，paired 有 56 个独立 KV 区域，端点有 28 个，sleep/wake 后一致；见[数值证据](../../../../docs/experiment/results/native-rollout/fusion-numerics/receipt.json)。该数值检查每条只生成一个 token，不覆盖连续 decode、actor 热更新、graph 或 fusion trainer；这些能力须依据各自的独立验收，不能由单 token 结果外推。
 
 [initial-student 四卡接入](../../../../docs/experiment/results/native-rollout/trainer-initial/native-acceptance.json)也已通过：生成身份保持为固定 p0，两步重新采样，actor 正常更新，验证仍是最终 student 版本 2。分段和简单 batch 的独立矩阵固定使用 4994d2b 源码，逐项成功后才继续，任意失败均保留现场；它们不复用正在修改的训练代码。
 
@@ -67,7 +67,7 @@ flowchart TD
 
 current 与 initial 的 λ=0.5 原生 fusion 均完成两步四卡更新和九十六条最终 student 响应，完整冻结参数摘要跨步骤/副本一致；见[current fusion](../../../../docs/experiment/results/native-rollout/trainer-current-fusion/native-acceptance.json)与[initial fusion](../../../../docs/experiment/results/native-rollout/trainer-initial-fusion/native-acceptance.json)。分段/batch 的六项矩阵也完成，包括 teacher 仅一条响应、其余三个推理副本无该来源请求的情况。一次并行调试导致 vLLM 显存探测失败，串行原参数重跑通过；共享负载结果不作独占速度证据。
 
-[连续解码检查](../../../../docs/experiment/results/native-rollout/fusion-decode-eager/receipt.json)覆盖 λ=0/0.5/1、两条 prompt 各八步和完整有效词表；最大跨后端 logits 差为 0.125、TV 为 0.027081，满足已定 BF16 界限。λ=0.5 的[CUDA Graph 检查](../../../../docs/experiment/results/native-rollout/fusion-decode-graph/receipt.json)实际捕获 114 个图，十六个 prefix 的完整 logits 与参考相同，sleep/wake 后内容、地址和输出一致；当前仍需真实训练热更新、原生 abort/drain、长响应性能和完整质量对照，Status 保持 proposed。
+[连续解码检查](../../../../docs/experiment/results/native-rollout/fusion-decode-eager/receipt.json)覆盖 λ=0/0.5/1、两条 prompt 各八步和完整有效词表；最大跨后端 logits 差为 0.125、TV 为 0.027081，满足已定 BF16 界限。λ=0.5 的[CUDA Graph 检查](../../../../docs/experiment/results/native-rollout/fusion-decode-graph/receipt.json)实际捕获 114 个图，十六个 prefix 的完整 logits 与参考相同，sleep/wake 后内容、地址和输出一致；该数值探针不覆盖训练热更新或原生 abort/drain，其独立结果见下文；长响应性能和完整质量对照仍未完成，Status 保持 proposed。
 
 ### 原生排空与缓存恢复
 

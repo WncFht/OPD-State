@@ -331,3 +331,5 @@ Bank/长响应验收提交为 f334951，完整 CI 与 hooks 通过。核对入�
 独立验证并发提交为 972c7bc，完整 CI 与 hooks 通过；三组 GPU 接入 watcher 2316853 已实际核验存活，等待前置 profiling owner。继续审计默认数据入口时，新增回归先复现了 CLI data.train_files 仍被默认清单绑定的问题：默认产物不存在时退出、存在时注入无关清单，显式 CLI 清单/数据对也被默认产物前置检查阻止。入口现识别这些 Hydra 数据覆盖，仅在没有环境或 CLI 数据选择时应用默认池。六项 Bash 检查通过，另以十六行真实工程数据执行 actual Hydra 与 pre-Ray 校验，CLI 文件保留、清单为 None、CUDA 未初始化。没有触发 GPU 训练。
 
 CLI 数据覆盖兼容性提交为 b094d75，六项入口检查与完整 CI 通过。全量 gate 等待期间另读取完成批次的完整 JSONL 前缀，未读取或修改未完成尾行；十二批对应 6,144 条响应、33,246,903 个输出 token，native generate 调用累计 5,767.732 s，均长 5,411.280 token，约 5,764.294 token/s。正式 Current 对应十二批是 26,718,952 token、2,259.461 s、约 11,825.364 token/s。相同批次位置的响应数与总 prefill token 一致，但未完成运行不能逐响应重审 prompt 身份。两者是 student2/B8 与 student50/B64，记录的验证 max_num_seqs 分别 8/64；耗时比 2.5527 等于工作量比 1.2443 乘吞吐倒数比 2.0515，只是核算恒等式，不能将它当成并发的因果效应。生成前缀快照与逐批表单独标为 incomplete，不进入最终准确率或 KL 结果。
+
+审阅 Agent Note 时，将五处早期“仍待”描述改为对应证据的实际范围，避免与已完成的 Graph/热更新/排空检查冲突。核对的冻结 graph 排空记录为 d59a7c3，abort 前已有 13 个 decode token、排空后 active=0；四卡 graph 训练记录 finished、九十六条最终 student2 验证。单 token 数值检查仍只支撑其自身范围，完整质量矩阵与最终性能没有据此标为完成。
