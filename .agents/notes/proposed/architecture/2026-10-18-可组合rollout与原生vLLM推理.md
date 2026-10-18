@@ -16,13 +16,42 @@ Status: proposed
 
 成功条件是 CPU 边界/随机属性检查通过，真实 student/teacher checkpoint 的分段与 batch 混合可运行，保存原始 token 和结束原因、证明配额与拼接正确，并得到同会话显存与耗时证据。否决条件包括二次模板化、提前 EOS 后继续生成、预算翻倍、路由后记录错配、跨权重复用 KV、隐式 HF 回退或无法界定资源所有权。
 
-可变选择包括单引擎换权重/双引擎驻留、副本布局、批量分组与流水化、CUDA Graph 和后续 speculative fusion。验证原型不修改正在运行的实验，也不以独立生成检查冒充完整 trainer 集成通过；真实训练热更新和两步端到端验收仍是正式接入前的独立条件。
+可变选择包括单引擎换权重/双引擎驻留、副本布局、批量分组与流水化、CUDA Graph 和后续 speculative fusion。验证原型保持已归档训练的源码和实验条件，也不以独立生成检查冒充完整 trainer 集成通过；真实训练热更新和两步端到端验收仍是正式接入前的独立条件。
 
-正式 trainer 尚未接入新的生成模式，独立原型与实测证据见后文。审阅基线为 `d17d6c6`，范围是当前 math 的 FSDP、vLLM/HF fusion、权重同步、teacher 评分与验证执行链，涉及 32 个相关文件；另核对安装环境的 vLLM 0.10.0 V1 模型注册、采样、键值缓存（KV cache）与 worker 扩展接口。[代码核验清单](../../../../docs/experiment/results/2026-10-18-rollout-refactor-code-audit.json)保存范围、哈希与源码观察。方案优先使用 vLLM 原生执行；运行中的实验保留自己的固定源码快照。
+正式 trainer 尚未接入新的生成模式，独立原型与实测证据见后文。审阅基线为 `d17d6c6`，范围是当前 math 的 FSDP、vLLM/HF fusion、权重同步、teacher 评分与验证执行链，涉及 32 个相关文件；另核对安装环境的 vLLM 0.10.0 V1 模型注册、采样、键值缓存（KV cache）与 worker 扩展接口。[代码核验清单](../../../../docs/experiment/results/2026-10-18-rollout-refactor-code-audit.json)保存范围、哈希与源码观察。方案优先使用 vLLM 原生执行；正式实验保留各自固定的源码快照。后续流程图描述目标算法和拟议接入方式，具体实现状态以“vLLM 后端能力与实现边界”和“独立原型”中的证据为准。
 
 ### 目标与算法含义
 
 建议将新实验统一为训练时实时生成（fresh rollout），把生成权重来源单独配置。所有设置都只训练当前 student $p_\theta$，teacher $q$ 始终冻结；初始 student $p_0$ 是训练开始前的固定权重。实时生成描述生成时机，on-policy 描述生成分布与当前 student 的关系，二者不能混用。
+
+#### State 的定义与共同训练阶段
+
+第 $u$ 次训练更新前使用 actor 参数 $\theta_{u-1}$。对题目 $x$ 和实际生成的响应 $y$，第 $t$ 个动作之前的 state 定义为
+
+$$
+s_t=(x,y_{<t}),\qquad a_t=y_t,\qquad s_{t+1}=(x,y_{\le t}).
+$$
+
+state 是 token 前缀；同一个前缀在不同模型中的隐藏表示和 KV 数值可以不同。训练对每个有效响应 token 取其生成前的 prefix；返回的 EOS 也是有效动作，终止后的前缀不再额外产生训练位置。对同一道题，所有来源的第一个 state 都是题目本身，差异从生成动作及其后续前缀开始。方案中的变体通过改变采样策略 $\mu$ 形成不同的轨迹及 state 访问分布；它们也同时改变 action、长度和截断，不能仅凭最终准确率把效果全部归因于 state。
+
+下图是所有变体共用的训练阶段。生成组件只决定响应及前缀；当前 student 和冻结 teacher 都在相同的实际 prefix/action 上重新评分。$p_0$ 和生成用的 teacher 都不接收优化器更新。
+
+```mermaid
+flowchart TD
+    X["共同题目批 x；模板与 token ID 一致"] --> G["按所选策略生成或读取响应 y"]
+    G --> S["逐位置构造 state=(x, y 的已有前缀)<br/>action=实际下一个 token；保留有效响应 mask"]
+    S --> P["当前 student 重新计算 log pθ(action | state)"]
+    S --> Q["冻结 teacher 计算 log q(action | state)<br/>无梯度；只提供监督"]
+    P --> L["共同 OPD 信号与 actor loss<br/>行为分数另作诊断"]
+    Q --> L
+    L --> U["只更新训练 student：θ(u−1) → θ(u)"]
+    U -. "下一批仅同步需要 current 的组件" .-> G
+    U --> V["到验证点时：仅用更新后的 student 评测"]
+```
+
+#### 基础变体与模型版本
+
+`single` 选择一个模型负责整条响应。`student_fresh` 随 actor 更新改变生成分布；`initial_student_fresh` 和 `teacher_fresh` 保持生成权重固定，每次消费 prompt 时仍重新采样。后两者的分布固定，不意味着每次抽到同一条有限轨迹。
 
 | 设置名                   | 生成策略                   | 生成权重是否随 student 更新 | 需要每步同步 actor 的生成组件 |
 | ------------------------ | -------------------------- | --------------------------- | ----------------------------- |
@@ -32,7 +61,45 @@ Status: proposed
 | `student_teacher_fusion` | 当前 $p_\theta$ 与固定 $q$ | λ<1 时更新                  | λ<1 时为当前 student          |
 | `initial_teacher_fusion` | 固定 $p_0$ 与固定 $q$      | 否                          | 无                            |
 
+#### 三种单模型 state 来源
+
+表中前三行对应下面三个互斥分支；后两行的双模型流程见“逐 token 融合的 state 来源”。
+
+```mermaid
+flowchart TD
+    X["当前 prompt 与本次 visit 对应的采样 seed"] --> C{"single.model 选择一个来源"}
+    C -->|current_student| P["激活当前 pθ(u−1)<br/>每步接收 actor 最新版本"]
+    C -->|initial_student| I["激活固定 p0<br/>拒绝 actor 参数覆盖"]
+    C -->|teacher| Q["激活固定 q<br/>拒绝 actor 参数覆盖"]
+    P --> PG["原生 vLLM：整条响应由当前 student 采样"]
+    I --> IG["原生 vLLM：整条响应由初始 student 重新采样"]
+    Q --> QG["原生 vLLM：整条响应由 teacher 重新采样"]
+    PG --> T["保存实际响应及其全部 prefix states"]
+    IG --> T
+    QG --> T
+    T --> L["共同训练阶段：只更新当前 student"]
+```
+
+执行上复用原生 `generate`，区别在模型引用和权重恢复路径。第 $u$ 步中 current 的生成版本固定为 $u-1$；$p_0/q$ 按不可变 checkpoint 身份恢复。不能因为生成来源是 teacher 就将 actor 初始化改成 teacher。三种模式使用同一 prompt 清单与训练预算，state 来源不决定题目池大小。
+
+#### 固定模型 fresh 与固定轨迹 replay
+
 `initial_student_fresh` 每次消费 prompt 都重新采样，不能继续称为论文的固定缓存 Semi-OPD。历史缓存保留为 `collection=replay` 的复现适配器；新实验默认 `fresh`，响应复用策略与模型来源分开。固定生成来源可以更早预取，但首轮公平对照先统一逐步生成，避免只给固定来源跨步大批量预取而引入另一个性能变量。
+
+```mermaid
+flowchart TD
+    X["同一道题再次被训练消费"] --> C{"collection 选择"}
+    C -->|fresh| F["固定 p0 或 q + 新 visit 的 seed<br/>再次执行原生 vLLM 采样"]
+    F --> N["得到本次抽样的响应与 prefix states<br/>允许与先前轨迹不同"]
+    C -->|replay| R["按题目身份读取预生成缓存<br/>不再调用生成模型"]
+    R --> O["复用原响应的相同 token 与 prefix states"]
+    N --> L["当前 student 与冻结 teacher 重新评分<br/>只更新当前 student"]
+    O --> L
+```
+
+Semi-OPD 的 replay 固定的是有限响应和 state 集；initial fresh 固定的是模型 $p_0$，抽样的有限 state 集可随访问变化。缓存 teacher 与 teacher fresh 也有同样区别。重复消费多少题、每题访问几次仍由数据清单与训练预算决定，不能从 `fresh/replay` 自动推导。
+
+#### 逐 token 融合的 state 来源
 
 双模型模式保持现有 logit fusion 的数学语义：对同一 state $s$，取 base 模型 $b\in\{p_\theta,p_0\}$ 和 teacher 的 logits，先在 FP32 中组合，再使用共同的词表支持、温度与采样规则。
 
@@ -42,6 +109,25 @@ z_\lambda(s)=(1-\lambda)z_b(s)+\lambda z_q(s),\qquad
 $$
 
 上式在共同有效词表内定义，首版保持 $T=1$、top-p=1、top-k=-1、repetition penalty=1。两个模型每次都接收同一个实际采样 token，保留各自 KV；不能让它们先独立续写再混合答案。λ=0/1 的计划可以归约为只激活相应单模型，避免无用前向；端点的分布与正常采样仍需核验。
+
+```mermaid
+flowchart TD
+    X["原 prompt；响应初始为空"] --> S["共同的当前 prefix state"]
+    S --> B["base 前向与独立 KV<br/>选择当前 pθ 或固定 p0"]
+    S --> Q["冻结 teacher q 前向<br/>使用自己的独立 KV"]
+    B --> Z["FP32 logits 加权<br/>z=(1−λ)·z_base + λ·z_teacher"]
+    Q --> Z
+    Z --> A["共同温度与采样规则<br/>只采样一个实际 token"]
+    A --> H["同一个 token 加入共享响应<br/>两模型下一轮都消费它"]
+    H --> E{"EOS 或达到总响应上限？"}
+    E -->|否| S
+    E -->|是| T["整条混合轨迹及其 prefix states"]
+    T --> L["共同训练阶段：只更新当前 student"]
+```
+
+图示为 $0<\lambda<1$ 的执行语义。`student_teacher_fusion` 的 base 是当前 actor 的推理副本，state 分布会随训练更新；`initial_teacher_fusion` 的 base 固定为 $p_0$，teacher 也固定，因此在固定采样设置下行为分布不随 actor 更新，但每次 fresh 抽样的轨迹仍可不同。两者都由融合分布逐 token 形成一条连续前缀，不能把每个 token 简单归为“teacher 生成”或“student 生成”。
+
+当前已完成的 current fusion 训练用 HF 双模型实现上述语义；目标原生实现把两套 backbone、独立 KV 和 logits 合并放入同一个 vLLM 采样循环。initial fusion、原生精确 fusion 及其正式 trainer 接入尚未完成。
 
 在 $T=1$、共同有效词表 $V$ 上 logits 有限的条件下，令 $p_V=\operatorname{softmax}(z_b)$、$q_V=\operatorname{softmax}(z_q)$。对 $0<\lambda<1$，将 $z_b(v)=\log p_V(v)+\log Z_b$ 与 $z_q(v)=\log q_V(v)+\log Z_q$ 代入并消去与 token 无关的归一化因子，可得
 
@@ -64,6 +150,8 @@ $$
 | `sequence_switch` | `first`、`second`、`boundary` | 前 $k$ 个响应 token 用第一策略，随后换第二策略续写      | 两段响应，只更新当前 student |
 | `batch_mix`       | `components`、权重、分配规则  | 一个 batch 的不同响应交给不同策略；同一响应保持已选策略 | 所有响应，只更新当前 student |
 
+#### 双向分段切换的 state 来源
+
 分段切换的第一版支持两个单模型叶节点：teacher→current student、current student→teacher，以及把 current 换成 initial 的设置。给定 prompt $x$、生成中的响应 $y_{<t}$ 与切换位置 $k$，第 $t$ 个响应 token 的行为分布为
 
 $$
@@ -78,9 +166,70 @@ $$
 
 第二阶段接收原 prompt token 与第一段响应 token 的直接拼接，不再应用 chat template，也不经过文本解码再编码。总响应预算始终是 $L_{\max}$，不是每段各生成 $L_{\max}$。第一段 token 仍属于训练响应，训练 mask 覆盖两段；若以后研究仅训练某一段，需要另设实验条件。
 
+| 方向            | 前 $k$ 个 token 的来源 | 第二段如何形成 state                                                  |
+| --------------- | ---------------------- | --------------------------------------------------------------------- |
+| teacher→current | 冻结 $q$               | 当前 $p_\theta$ 在 teacher 已生成的前缀上继续采样，随后继承自己的续写 |
+| current→teacher | 当前 $p_\theta$        | $q$ 在 student 已生成的前缀上继续采样，保留已有 token                 |
+| teacher→initial | 冻结 $q$               | 固定 $p_0$ 在 teacher 前缀上继续采样                                  |
+| initial→teacher | 固定 $p_0$             | $q$ 在初始 student 前缀上继续采样                                     |
+
+下面两条路径显示方向差异，均以第一段没有提前结束为前提。第二段起点的 state 由第一模型已经生成的 token 决定；换模型不会重置题目或改写第一段。
+
+```mermaid
+flowchart TD
+    subgraph TS["teacher → current student"]
+        TX["题目 x"] --> TQ["q 生成前 k 个 token"]
+        TQ --> TP["pθ 用 x + teacher 原始 token 重新 prefill"]
+        TP --> TC["pθ 在 teacher 前缀上继续采样<br/>后续 state 同时包含两段"]
+    end
+    subgraph ST["current student → teacher"]
+        SX["题目 x"] --> SP["pθ 生成前 k 个 token"]
+        SP --> SQ["q 用 x + student 原始 token 重新 prefill"]
+        SQ --> SC["q 在 student 前缀上继续采样<br/>已有 student token 保持原样"]
+    end
+    TC --> L["两段全部作为训练响应<br/>共同评分后只更新当前 student"]
+    SC --> L
+```
+
+具体执行计划将 `first=A`、`second=B` 和边界编译为最多两次原生调用。两模型之间仅传递实际 token，B 用自己的权重建立 KV，A 的 KV 不直接交给 B。下面的结束判断使用实际 EOS token 和语义停止状态，而非只看原生 `finish_reason`。
+
+```mermaid
+flowchart TD
+    C["编译 first=A、second=B、总预算 L、切换点 k"] --> K{"边界是否需要两段？"}
+    K -->|k=0| B0["只用 B 生成；上限 L"]
+    K -->|k≥L 或 A、B同身份同版本| A0["只用 A 生成；上限 L"]
+    K -->|0＜k＜L| A["A 原生生成；第一段上限 k"]
+    A --> E{"实际 EOS 或共同停止条件？"}
+    E -->|是| T["返回已有响应及所有有效 token"]
+    E -->|否：已达到 k| P["原 prompt token ID + 第一段 token ID<br/>B 重新 prefill；不套新模板"]
+    P --> B["B 原生续写；剩余上限 L−k"]
+    B --> T
+    B0 --> T
+    A0 --> T
+    T --> L["全部已生成响应 token 都参与训练<br/>EOS 保留；进入共同训练阶段"]
+```
+
+例如总 cap 为 4,096、$k=2,048$ 时，第一段最多生成 2,048 个 token，第二段最多再生成 2,048 个。切换后第一个 action 所处的 state 仍是完整第一段前缀；B 的第一个 token 只从下一个 state 起加入访问轨迹。`budget_fraction=0.5` 表示总预算的一半，提前 EOS 时不保证实际响应恰好一半来自各模型。原型已支持整数 `boundary`，比例到整数的配置编译仍属正式接入方案。
+
 第一版沿当前 math 设置使用 EOS 与长度停止，不新增文字 stop、最小响应长度或非平凡的 frequency/presence penalty。以后开放这些选项时，判定必须针对完整响应，包含跨切换边界的 stop 字符串，不能在第二段重新从零计数。
 
-batch 混合默认以响应为路由单位。对一个有 $B$ 条响应的 batch，teacher 比例 α 对应 $N_q=\lfloor\alpha B+0.5\rfloor$ 条 teacher 响应；其余交给 student。用有 seed 的随机排列分配位置，再按来源聚合请求，生成后恢复原顺序。多来源时用最大余数法分配整数条数，并固定平局规则，保证总数为 $B$。独立 Bernoulli 分配可以作为另一选项，但必须记录每步实际数量；它不保证每个 batch 的比例相同。
+#### Batch 混合的 state 来源
+
+batch 混合默认以响应为路由单位，用最大余数法分配整数配额：先对每个组件的理想条数向下取整，再将剩余名额依次分给余数最大的组件，余数平局按 `components` 声明顺序决定，与原型 `exact_routes` 一致。二来源的 teacher 配置权重为 α，base 为 $1-\alpha$；记 teacher 在 $B$ 条响应中实际分到 $N_q$ 条，其余交给 base。用有 seed 的随机排列分配位置，再按来源聚合请求，生成后恢复原顺序。多来源也使用相同取整规则，保证总数为 $B$；独立 Bernoulli 分配可作为另一选项，但不保证每个 batch 的比例相同，必须记录实际数量。
+
+```mermaid
+flowchart TD
+    X["全局 B 条请求；尚未按 GPU 拆分"] --> R["按 α 和全局路由 seed 分配来源<br/>保存 request ID；固定整数配额"]
+    R --> T["teacher 请求组<br/>每条完整响应都由固定 q 生成"]
+    R --> P["base 请求组<br/>每条完整响应都由 pθ 或 p0 生成"]
+    T --> TG["原生 vLLM 按来源批量生成<br/>得到 teacher 轨迹及 states"]
+    P --> PG["原生 vLLM 按来源批量生成<br/>得到 base 轨迹及 states"]
+    TG --> O["按 request ID 恢复全局原顺序<br/>保留每条响应的来源和有效长度"]
+    PG --> O
+    O --> L["合成一个训练 batch；全部响应共同评分<br/>只更新当前 student"]
+```
+
+base 选 $p_\theta$ 时为 current/teacher batch 混合，选 $p_0$ 时为 initial/teacher batch 混合；同一抽象也允许三来源配额。单条响应不会在模型之间接力，批内 state 集来自各来源的不同完整轨迹。比如 $B=64,\alpha=0.25$ 时有 16 条 teacher 和 48 条 base 响应；这不能解释为每条响应有 25% teacher token，也不能解释为逐 token 的 λ=0.25 fusion。图中的分叉表示来源分组；两组可以串行执行，是否并发由模型驻留与联合显存预算决定。
 
 路由在全局 batch 上决定，随后按模型负载分发到副本，避免每个 GPU 单独取整造成比例偏差。每题多响应时，选择“每题同一来源”还是“每条响应独立来源”必须显式配置；当前训练 $n=1$，两者相同。来源占 50% 的响应不等于占 50% 的 token：不同来源的响应长度和提前 EOS 比例会改变实际 token 占比。
 
@@ -93,6 +242,25 @@ $$
 整数取整时 $\alpha_B$ 可以与配置的 α 不同；Bernoulli 分配的边缘权重才直接为 α。精确配额会让同批来源选择相关，但每条响应仍只有一个来源。batch 混合与每步融合 logits 的 $\mu_\lambda$ 不相同，α、λ 和切换位置 $k$ 分别控制三个独立维度。若记录行为分数，应同时标记来源条件分数与是否计算了边缘混合分数，不能把前者冒充后者。
 
 组合结构可以表达“半个 batch 为纯 teacher，另半个先 student 后 teacher”，也可以表达分段的一段使用 fusion。第一版只开放已经通过后端验收的组合：原生单模型、单模型之间的一次切换、这些策略之间的 batch 混合；fusion 叶节点通过原生双模型扩展验收后再开放。配置编译阶段拒绝能力不匹配，避免运行时静默换后端。
+
+#### 分段与 batch 混合的组合
+
+`batch_mix.components` 保存的是策略，不限于模型引用。下面以 64 条请求中 32 条纯 teacher、32 条 current→teacher 为例；它把两类轨迹放进同一个训练 batch，不会先生成两份完整答案再拼接。图中配额和 2,048/4,096 长度为说明语义的配置示例，真实原型的嵌套测试规模见后文实测表。
+
+```mermaid
+flowchart TD
+    X["B=64；总 cap=4096；全局路由一次"] --> R["两个组件各分配 32 条请求"]
+    R --> Q["组件一：single(teacher)<br/>q 生成整条响应"]
+    R --> S["组件二：switch(current, teacher, k=2048)<br/>pθ 先生成；提前 EOS 就结束"]
+    S --> E{"第一段结束整条响应？"}
+    E -->|是| M["按原始身份恢复顺序<br/>汇集 64 条完整或提前结束的响应"]
+    E -->|否| T["q 在已有 student 前缀上重新 prefill<br/>续写剩余预算"]
+    Q --> M
+    T --> M
+    M --> L["全部响应的两类 states 一起训练当前 student"]
+```
+
+若暂不考虑提前 EOS 且每条都达到 cap，此例的 teacher token 占比为 75%，尽管只有 50% 的响应选择“纯 teacher”组件。实际统计必须按段落和有效 token 计算。把 current 换成 initial 只改变模型引用与版本规则；包含 fusion 的嵌套策略还需要原生 fusion 能力，首版原型不会自动回退 HF。
 
 ### 当前代码的耦合与影响
 
@@ -210,7 +378,7 @@ fusion_example:
 | 生成策略                  | vLLM 实现路径                                  | 当前状态                                       |
 | ------------------------- | ---------------------------------------------- | ---------------------------------------------- |
 | 当前 student 单模型       | 现有原生 `generate` 与 actor 参数同步          | 已有正式在线结果                               |
-| 固定 initial / teacher    | 原生 `generate`，增加独立加载与恢复            | 离线生成已有；训练内生命周期待接入             |
+| 固定 initial / teacher    | 原生 `generate`，增加独立加载与恢复            | 离线与独立原型已验证；训练内生命周期待接入     |
 | teacher→student，反向亦然 | 两次原生 token-in/token-out 请求，传递已有前缀 | 独立原型已验证；正式 worker/coordinator 待接入 |
 | batch 内来源混合          | 原生请求按来源聚合、路由与重排                 | 独立原型已验证；正式 worker/coordinator 待接入 |
 | 同 prefix 的精确 fusion   | 注册原生双模型，必要时适配 V1 model runner     | 新扩展待验证；现有已验收版本仍是 HF 计算后端   |
@@ -409,7 +577,7 @@ prompt 池由 `data.train_files`、清洗、去重与 sampler 决定，训练步
 3. 独立验证原生双模型扩展，按 λ=0/0.5/1 对照完整 logits、共同 prefix 与采样分布；检查双 KV 是否完整计入预算、参数名映射及 graph。比较现有 0.10 的受控 wrapper 与独立 0.15 环境的插件/batch-invariance 路线；选定后同一正式对照固定一个版本，现有生产环境不原地升级。
 4. 在空闲 GPU 0–3 做各已开放策略两步训练，覆盖 current→initial→teacher→切换/混合→current-eval 的恢复，验证固定模型不变、actor 版本正确、分段 mask 完整、验证始终来自最终 student。原生 fusion 单独验收后纳入。
 5. 建立同 checkpoint、输入、采样和实际 batch 的原生基线。短确定长度序列测内核，真实 math 长度分布测端到端；扫描有效 batch 与 KV 预算，比较单引擎换权重/双引擎驻留，再测 graph 与流水。先披露冷启动和热成本，不承诺尚未实测的提升比例。
-6. 固定新数据 manifest、学习率、全局 batch 与预算后开展正式对照：单模型端点；分段方向与 $k\in\{0,1024,2048,4096\}$；batch 比例 $\alpha\in\{0,0.5,1\}$；fusion 的 λ 对照。端点复用相同基线，先用一个内部参数值筛选，避免一开始枚举所有嵌套组合。每组先 50 步、完整 eval16，质量结论补充训练 seed；当前缓存长时实验保留原算法。
+6. 固定新数据 manifest、学习率、全局 batch 与预算后开展正式对照：单模型端点；分段方向与 $k\in\{0,1024,2048,4096\}$；batch 比例 $\alpha\in\{0,0.5,1\}$；fusion 的 λ 对照。端点复用相同基线，先用一个内部参数值筛选，避免一开始枚举所有嵌套组合。每组先 50 步、完整 eval16，质量结论补充训练 seed；历史缓存结果保留原算法和实验条件。
 
 首版目标是三种来源、双向分段与 batch 混合在同一训练链上使用原生 vLLM，student 初始化/更新/验证独立于生成来源；原生精确 fusion 是独立的第二项验收。成功证据须包括参数版本、固定权重不变、配额/阶段语义、两步恢复与完整 eval16；只通过构造测试不等于真实训练可用。若固定模型被 actor 覆盖、验证来自错误来源、分段预算或训练 mask 改变、评分归一化改变主 loss，或执行中静默回退 HF，该版本不能进入正式对照。引擎布局、副本映射、graph 与预取仍由基准结果决定。
 
