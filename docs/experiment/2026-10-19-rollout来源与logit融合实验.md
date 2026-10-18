@@ -863,20 +863,14 @@ $$
 从仓库根目录执行。正式模型、数据和独立环境位于工作区相邻目录。已有缓存或 schedule 时生成器拒绝覆盖；独立复核应换输出目录。`OPD_SOURCE_COMMIT` 可固定历史提交；正式生产源码使用每个 run 的私有快照，后续开发不会改变已运行任务。
 
 ```bash
-CUDA_VISIBLE_DEVICES='' PYTHONPATH="$PWD/verl" \
-    ../envs/opd-state/bin/python data/prep/build_rollout_cache.py schedule \
-    --baseline-config data/prep/configs/math-rollout-schedule.json \
-    --output runs/rollout-sources/paired-schedule --steps 50 --batch-size 64
+CUDA_VISIBLE_DEVICES='' PYTHONPATH="$PWD/verl" ../envs/opd-state/bin/python data/prep/build_rollout_cache.py schedule --baseline-config data/prep/configs/math-rollout-schedule.json --output runs/rollout-sources/paired-schedule --steps 50 --batch-size 64
 OPD_FREEZE_SOURCE=1 bash recipe/prepare_math_cache.sh cached_teacher runs/rollout-sources/teacher-cache
 OPD_FREEZE_SOURCE=1 bash recipe/prepare_math_cache.sh cached_initial_student runs/rollout-sources/student-cache
 OPD_FREEZE_SOURCE=1 bash recipe/math_online.sh
 OPD_FREEZE_SOURCE=1 bash recipe/math_cached.sh cached_teacher runs/rollout-sources/teacher-cache
 OPD_FREEZE_SOURCE=1 bash recipe/math_cached.sh cached_initial_student runs/rollout-sources/student-cache
-FUSION_LAMBDA=0.5 FUSION_BACKEND=cuda_graph_flash OPD_FREEZE_SOURCE=1 \
-    bash recipe/math_fusion.sh
-STEPS=800 TOTAL_EPOCHS=16 OPD_FREEZE_SOURCE=1 \
-    bash recipe/math_cached.sh cached_initial_student runs/rollout-sources/student-cache \
-    +trainer.plateau_min_steps=300
+FUSION_LAMBDA=0.5 FUSION_BACKEND=cuda_graph_flash OPD_FREEZE_SOURCE=1 bash recipe/math_fusion.sh
+STEPS=800 TOTAL_EPOCHS=16 OPD_FREEZE_SOURCE=1 bash recipe/math_cached.sh cached_initial_student runs/rollout-sources/student-cache +trainer.plateau_min_steps=300
 ```
 
 这些训练依次运行，不能同时占用同一四张卡。持久串行调度入口 `recipe/run_math_sources.py` 保存 source commit、命令、日志和退出码，等待指定 teacher pipeline 完成后安排 GPU 核验和后续阶段；复用它时必须填写现场 PID 和实际运行目录。失败阶段先检查日志，不覆盖缓存，也不停止其他 Ray 作业。W&B 使用既有 netrc，配方设置 project 为 OPD-State 并清除不匹配的继承 API key。
@@ -888,32 +882,21 @@ STEPS=800 TOTAL_EPOCHS=16 OPD_FREEZE_SOURCE=1 \
 远端核验器也提供显式 `--snapshot` 模式，只接受已声明的阶段快照。该模式按验证步从 W&B history 读取全部精确指标，而不是使用可能已被后续验证覆盖的 summary；同时逐步比对本地与远端 loss、grad_norm，后续记录保留在观察范围信息中。默认模式继续要求 finished 状态、全部步骤与最终 summary 一致。归档 history 若为普通训练行填入空验证字段，按 macro 字段是否有值识别验证行；已存在的验证行仍要求全部指标完整且有限。长时运行已通过[第 150 步阶段核验](results/long-semi-progress/step-150/wandb-snapshot-verification.json)，覆盖三次完整验证及第 1–150 步训练；这一快照核验不要求运行正常完成。四项回归覆盖 summary 已变化、未来记录、空字段、非 macro 指标篡改、训练缺步/非有限值及默认完成条件。
 
 ```bash
-env -u WANDB_API_KEY NETRC="$PWD/../.secrets/netrc" \
-    WANDB_CONFIG_DIR="$PWD/../config/wandb" WANDB_BASE_URL=https://api.wandb.ai \
-    ../envs/opd-state/bin/python eval/verify_wandb_math.py \
-    --result docs/experiment/results/long-semi-progress/step-150 --snapshot
+env -u WANDB_API_KEY NETRC="$PWD/../.secrets/netrc" WANDB_CONFIG_DIR="$PWD/../config/wandb" WANDB_BASE_URL=https://api.wandb.ai ../envs/opd-state/bin/python eval/verify_wandb_math.py --result docs/experiment/results/long-semi-progress/step-150 --snapshot
 ```
 
 结果采集、远端核验和题目比较：
 
 ```bash
-python3 eval/collect_math_experiment.py --run runs/rollout-sources/实际运行名 \
-    --output docs/experiment/results/实际结果目录 --steps 实际步数 --interval 50
-env -u WANDB_API_KEY NETRC="$PWD/../.secrets/netrc" WANDB_CONFIG_DIR="$PWD/../config/wandb" \
-    WANDB_BASE_URL=https://api.wandb.ai ../envs/opd-state/bin/python \
-    eval/verify_wandb_math.py --result docs/experiment/results/实际结果目录
-.venv/bin/python eval/analyze_math_sources.py \
-    --result student-online=在线结果目录 --result teacher=teacher结果目录 \
-    --result semi-opd=Semi结果目录 --result fusion-lambda05=融合结果目录 \
-    --reference student-online --output 比较结果目录 --step 50
+python3 eval/collect_math_experiment.py --run runs/rollout-sources/实际运行名 --output docs/experiment/results/实际结果目录 --steps 实际步数 --interval 50
+env -u WANDB_API_KEY NETRC="$PWD/../.secrets/netrc" WANDB_CONFIG_DIR="$PWD/../config/wandb" WANDB_BASE_URL=https://api.wandb.ai ../envs/opd-state/bin/python eval/verify_wandb_math.py --result docs/experiment/results/实际结果目录
+.venv/bin/python eval/analyze_math_sources.py --result student-online=在线结果目录 --result teacher=teacher结果目录 --result semi-opd=Semi结果目录 --result fusion-lambda05=融合结果目录 --reference student-online --output 比较结果目录 --step 50
 ```
 
 参考 run 导出与 Python 绘图已实际执行。绘图只读取已归档结果，离线重画不访问 W&B；`FIGURE_VIZ_HOME` 可指定外部 figure-viz 技能根目录，默认使用工作区 `.agents/skills/figure-viz`。该资源不随训练仓库复制，跨机器须另外准备。
 
 ```bash
-env -u WANDB_API_KEY NETRC="$PWD/../.secrets/netrc" WANDB_CONFIG_DIR="$PWD/../config/wandb" \
-    WANDB_BASE_URL=https://api.wandb.ai ../envs/opd-state/bin/python \
-    eval/export_math_references.py --output docs/experiment/results/reference-accuracy.json
+env -u WANDB_API_KEY NETRC="$PWD/../.secrets/netrc" WANDB_CONFIG_DIR="$PWD/../config/wandb" WANDB_BASE_URL=https://api.wandb.ai ../envs/opd-state/bin/python eval/export_math_references.py --output docs/experiment/results/reference-accuracy.json
 .venv/bin/python eval/plot_math_experiment.py
 ```
 
@@ -938,11 +921,25 @@ KL 主方案复用全部 570×16 验证响应，对全部有效位置计算完�
 
 [完整评分链路 CPU 验收](results/native-rollout/validation-scoring-cpu.json)通过七十七项原生 CPU 与四十二项训练环境运行检查，包含真实小型 Qwen2 的分块/直接前向比较、临时 hook 清理、RNG/模式/参数保持、DP 补齐和输入哈希/版本校验，以及新增诊断文件不干扰原准确率采集。[两进程 CPU FSDP 实验](results/native-rollout/validation-fsdp-cpu.json)进一步验证不同 rank 响应长度、正常参数收集、真实优化器更新后读取新 student，以及 teacher 参数不变；它使用随机初始化的小模型，不代表真实 1.5B checkpoint 或 GPU 性能。完整 bank 生成、长响应显存/耗时和完整数据四卡验收仍待完成，整体实施状态见 [Agent Note](../../.agents/notes/proposed/architecture/2026-10-18-可组合rollout与原生vLLM推理.md)。
 
-[固定前缀 bank 的 CPU 验收](results/native-rollout/prefix-bank-cpu.json)已从真实完整验证文件准备每基准三十题，共九十题，按固定 seed 的题目身份哈希排序选择，无超长题被排除。六项检查覆盖双冻结来源、准确原始 prefix、EOS、完整身份和位置权重及实际评分器读取；生成入口使用生产原生 vLLM RPC、四卡副本和冻结参数校验。首次 GPU 尝试在物理校验处退出，未发布正式 bank；[设备身份与失败证据](results/native-rollout/device-identity-cpu.json)确认 CUDA/NVML 的同 PCI 双 UUID，并记录序号可见性检查、修复入口与原失败范围。v2 重测现已发布同九十题的两来源共 180 条轨迹和八个 worker 的初始化身份记录，独立 bank 审计与长响应评分验收继续进行；原失败保留，不以 v2 覆盖。
+[固定前缀 bank 的 CPU 验收](results/native-rollout/prefix-bank-cpu.json)已从真实完整验证文件准备每基准三十题，共九十题，按固定 seed 的题目身份哈希排序选择，无超长题被排除。六项检查覆盖双冻结来源、准确原始 prefix、EOS、完整身份和位置权重及实际评分器读取；生成入口使用生产原生 vLLM RPC、四卡副本和冻结参数校验。首次 GPU 尝试在物理校验处退出，未发布正式 bank；[设备身份与失败证据](results/native-rollout/device-identity-cpu.json)确认 CUDA/NVML 的同 PCI 双 UUID，并记录序号可见性检查、修复入口与原失败范围。v2 重测已发布两来源共 180 条轨迹，独立 bank 审计与真实长响应评分已通过，证据见下节；原失败保留，不以 v2 覆盖。
 
 新增[KL 结果独立审计与聚类统计](results/native-rollout/validation-kl-audit-cpu.json)：按原始准确率响应的 benchmark/UID/sample 和有效长度逐条绑定 KL，重新归约题目等权、token 加权、累计量与深度统计，并用 benchmark 分层的题目 bootstrap 生成区间。同题十六条响应共同重采样；区间条件于已训练模型和固定 bank，不覆盖训练 seed、bank 构造和位置抽样变化。八项正反例及 CLI 检查通过，当前属于合成记录证据，不替代真实 checkpoint 数值复算。
 
 [四卡 KL 短验收](results/native-rollout/validation-kl-canary/kl-short-gpu.json)已使用 f1bcea0 完成两次 student 更新，最终九十六条响应各 128 个有效 token，共 12,288 个位置；[独立覆盖审计](results/native-rollout/validation-kl-canary/kl-independent-audit.json)绑定原准确率响应，归约一致，[W&B 核验](results/native-rollout/validation-kl-canary/wandb-verification.json)确认同一最终 history 行的 110 项 KL 指标。宏平均 student→teacher 条件 KL 为 0.059322 nat/token，累计量为 7.59325 nat/response。评分 wall time 为 5.955 s，四 worker 各约 5.46–5.47 s；[阶段资源记录](results/native-rollout/validation-kl-canary/kl-resource-profile.json)有十二条整卡采样，评分区间采样峰值为 8,283/8,263/8,283/8,283 MiB，单 worker head 快照 466,747,392 byte。该峰值是两秒采样观察，不是 allocator/kernel 峰值；此验收只覆盖短响应，不能外推完整 570×16 或 31,744 token 上限的耗时/显存。资源释放后，原十五组矩阵已恢复执行 current/teacher fusion。
+
+#### 长响应与固定前缀验收
+
+固定 bank v2 继续使用同一准备输入和 0f2c1d8 神经网络源码，由 p0/q 各生成每基准三十题、每题一条、cap=4,096 的响应。180 条轨迹含 1,440 个抽样位置，按原始 token 前缀哈希去重为 1,350 个状态；两来源共享的九十个 prompt-only 前缀各计两次。[独立 bank 审计](results/native-rollout/prefix-bank-gpu/audit.json)核对完整轨迹、抽样 seed、分层位置/权重、checkpoint 身份、八个 worker 的物理设备和每来源各四份一致的冻结摘要，并逐文件核对 582 个冻结源码。它是 artifact 核验，不重新执行神经模型。两项 CPU 方法及九种语义篡改对照也已通过；bank 只供验证对照，不参与训练更新。
+
+两次 B8、64-token 工程更新后，完成六题×16 的最终 student2 验证：temperature=0.7、top-p=0.9、cap=31,744，实际最长响应触及上限。[独立 KL 审计](results/native-rollout/validation-kl-long/kl-independent-audit.json)绑定九十六条准确率响应和全部 605,977 个有效位置，另覆盖固定 bank 的 1,440 个位置；词表为 151,665。[W&B 核验](results/native-rollout/validation-kl-long/wandb-verification.json)确认 1sndtege finished、两次训练与唯一末步验证，KL 来自同一最终行。下表均为 student→teacher；token 加权先在基准内计算，再对三基准等权平均，累计量单位为 nat/response，其余为 nat/token。
+
+| 状态来源     | 响应数 | 评分位置数 | Token 加权 KL | 题目等权 KL | 累计条件 KL |
+| ------------ | -----: | ---------: | ------------: | ----------: | ----------: |
+| 当前验证轨迹 |     96 |    605,977 |      0.089226 |    0.080735 |     631.559 |
+| 固定 p0 前缀 |     90 |        720 |      0.107019 |    0.105274 |     394.084 |
+| 固定 q 前缀  |     90 |        720 |      0.101336 |    0.098971 |     367.806 |
+
+固定 bank 的统计使用分层抽样权重；累计量保留验证轨迹的来源解释，不命名为严格原始分布 sequence KL。三行题目与深度分布不同，不能据此比较训练策略效果。[评分资源](results/native-rollout/validation-kl-long/kl-resource-profile.json)记录 wall time 46.749 s，四卡评分区间各二十次整卡采样，观察峰值为 10,761/10,363/8,817/8,817 MiB；每 worker 的 student head 快照为 466,747,392 byte。采样间隔两秒，worker 分项包含通信与等待，均不是 allocator/kernel 峰值或纯 kernel 计时。该验收证明实际长响应与共同 bank 可评分，完整 570×16 仍由独立全量 gate 验收，也不替代五十步质量训练。
 
 ## 历史调试与后续范围
 

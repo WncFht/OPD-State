@@ -1,0 +1,47 @@
+{
+  "schema": "validation-kl-gate-collection-v1",
+  "scope": "Complete evidence/coverage audit; no independent neural-model forward recomputation",
+  "student_version": 2,
+  "full_benchmarks": false,
+  "responses": 96,
+  "all_validation_positions": true,
+  "effective_vocab_size": 151665,
+  "coverage": {
+    "on_validation_states": {
+      "responses": 96,
+      "response_tokens": 605977,
+      "evaluated_positions": 605977,
+      "min_length": 852,
+      "max_length": 31744,
+      "mean_length": 6312.260416666667
+    },
+    "on_initial_states": {
+      "responses": 90,
+      "response_tokens": 325511,
+      "evaluated_positions": 720,
+      "min_length": 1183,
+      "max_length": 4096,
+      "mean_length": 3616.788888888889
+    },
+    "on_teacher_states": {
+      "responses": 90,
+      "response_tokens": 326501,
+      "evaluated_positions": 720,
+      "min_length": 307,
+      "max_length": 4096,
+      "mean_length": 3627.788888888889
+    }
+  },
+  "scoring_samples_cover_all_gpus": true,
+  "source_sha256": "7bbea3afa4bd3bd60d252dfd4c5148aa0e4b5f2a736b7dc5067144fbf18c1900",
+  "audit_source_sha256": "c6492d2d47d508db88e90c5b1afcb3af65a0f066e109f97796eeec7bb596238d",
+  "inputs_sha256": {
+    "/mnt/tidalfs-bdsz01/dataset/llm_dataset/zkn_data/fht_data/OPD-State/runs/native-validation-kl-long-20261019-v2/validation/kl/kl-step-2.json": "3c29b0cf33aacf16b7e28ca64e7cb2dfa52c638873eca1e8e931c001ab3130d1",
+    "/mnt/tidalfs-bdsz01/dataset/llm_dataset/zkn_data/fht_data/OPD-State/runs/native-validation-kl-long-20261019-v2/validation/kl/kl-tokens-step-2.jsonl": "7083d2f2db6b18f05c11fdea6b9365f91b4922025e0e444efc77d99d39f243a4",
+    "/mnt/tidalfs-bdsz01/dataset/llm_dataset/zkn_data/fht_data/OPD-State/runs/native-validation-kl-long-20261019-v2/status.json": "a286bfce68c578fa3e467454ed17544f2194b76635d621dd3c33936c4cb9937f",
+    "/mnt/tidalfs-bdsz01/dataset/llm_dataset/zkn_data/fht_data/OPD-State/runs/native-validation-kl-long-20261019-v2/gpu.csv": "586c2e8e3bbcee4c3e622604f419fa6d8a82ed3ec52e8a282268c187e9a7e045"
+  },
+  "native_acceptance_path": "/mnt/tidalfs-bdsz01/dataset/llm_dataset/zkn_data/fht_data/OPD-State/docs/experiment/results/native-rollout/validation-kl-long/native-acceptance.json",
+  "native_acceptance_canonical_sha256": "ee3c02f6e8538c490018b6413feaa9be1be9267e2005dae1d086da68096ec991",
+  "fixed_bank_sha256": "a341443cd3a5802e4a35693a99f87cf53ef2510ae896657b9626da58d3292e69"
+}

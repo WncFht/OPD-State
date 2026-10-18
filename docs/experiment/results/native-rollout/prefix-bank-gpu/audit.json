@@ -1,0 +1,73 @@
+{
+  "scope": "Audit a published prefix bank against prepared prompts and native receipts.\n\nThis is a CPU artifact audit. It does not rerun a neural model or establish\nCUDA Graph execution from a requested configuration flag.\n",
+  "passed": true,
+  "audit_source_sha256": "0b2678be362a5e7921a1890695747305992d30a886c8465cf1234b82922a4b3f",
+  "input_files_sha256": {
+    "input.json": "3d4b4d7e6aeee65d262c0db08f7a124ad6e45a1d757d7dc36e8b491e6dbf8a05",
+    "prefix-bank.json": "a341443cd3a5802e4a35693a99f87cf53ef2510ae896657b9626da58d3292e69",
+    "source-manifest.json": "eeb219ea4b9fef392a241bba3f7b5a683c59c12c60eb91adf5af19ccbe944849",
+    "device-identities.json": "bb0af43107b84237492e7c41074e25df2340f802238e550d282d827ae1f55efc",
+    "engine-initialization.jsonl": "08a67f051dcdf90ac769b5e06fe0a2900dc015c50c06a43817fe7753315c502d",
+    "initial_student-trajectories.jsonl": "656e333facfe0e0ca3ff55f5ee39a02c7d89afc8a61283244c134af1abf812cf",
+    "initial_student-execution.json": "4c1655a35bd5364d51be7cb87e3e11691d526e3d7a1c507cc0bfaf788943ab3c",
+    "teacher-trajectories.jsonl": "fd9b3ffddb9f7583aeb3213133c7e5a10d856ee43ae8fa2ef2269367dd97f0b1",
+    "teacher-execution.json": "fd6f1051a53e4178cac04a5c024c13e9b5ac5c4889e875f7e9d68829af8ac96f"
+  },
+  "original_prepared_input": "/mnt/tidalfs-bdsz01/dataset/llm_dataset/zkn_data/fht_data/OPD-State/runs/native-rollout-implementation/prefix-bank-input-20261019-v1.json",
+  "neural_source_commit": "0f2c1d8d45f67c6e1f071a2102f53c563c55be5f",
+  "neural_source_files_verified": 582,
+  "driver_dependencies_sha256": {
+    "generate_prefix_bank.py": "67dc0886e6cacd562eea7b9d2534b56dfe4b60755136616a2346835b992fab87",
+    "native_devices.py": "2f2eb8dd1d1a38f7e597706f614636faec12ae697f146418d929b0a6439dc592",
+    "benchmark_native_policies.py": "007474714885cbf7b791ecda8c6fda903d109e25870a323fd92fef3309ec0432"
+  },
+  "graph_requested": true,
+  "initialization_receipts": 8,
+  "question_count": 90,
+  "responses": 180,
+  "states": {
+    "on_initial_states": {
+      "responses": 90,
+      "positions": 720,
+      "response_tokens": 325511,
+      "length": {
+        "min": 1183,
+        "mean": 3616.788888888889,
+        "max": 4096
+      },
+      "termination": {
+        "eos": 27,
+        "length": 63
+      },
+      "frozen_worker_digest": "207eb42c211107fe0abf4af27c9329f846bc4770e5a040cb2693babb158472f1",
+      "native_generation_seconds": 24.360720969736576
+    },
+    "on_teacher_states": {
+      "responses": 90,
+      "positions": 720,
+      "response_tokens": 326501,
+      "length": {
+        "min": 307,
+        "mean": 3627.788888888889,
+        "max": 4096
+      },
+      "termination": {
+        "eos": 35,
+        "length": 55
+      },
+      "frozen_worker_digest": "d2b8590c5fbe30c911a23ba4dec1dda4ee1a9154ea78a85cf565b62ee888d7e9",
+      "native_generation_seconds": 24.395814962685108
+    }
+  },
+  "selected_positions": 1440,
+  "distinct_hashed_token_prefixes": 1350,
+  "cold_engine_seconds": {
+    "initial_student": 224.79208725690842,
+    "teacher": 228.07865554839373
+  },
+  "limitations": [
+    "Does not rerun the neural models",
+    "Positions are not distinct states; both sources share each prompt-only prefix",
+    "Fixed bank stops at its own response cap; full validation KL has a separate longer cap"
+  ]
+}

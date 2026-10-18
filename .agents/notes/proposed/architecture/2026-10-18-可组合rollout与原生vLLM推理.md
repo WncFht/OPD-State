@@ -24,7 +24,7 @@ Status: proposed
 
 ### 实施进展
 
-正式矩阵的三种单模型来源与两种 fusion 均完成五十步、完整 570×16 最终评测、独立路由/版本审计和 W&B finished 核验，无 checkpoint；current/initial/teacher/current-fusion/initial-fusion 的 macro mean@16 为 64.30%/64.17%/63.80%/63.89%/63.85%。相对 current 的四个题目 bootstrap 区间均跨零，不据此排序。三种单模型原生生成接近 15k token/s，两种 fusion 为 8.79k/8.55k；完整结果与五组图见[统一报告](../../../../docs/experiment/2026-10-19-rollout来源与logit融合实验.md)。Bank 首次 GPU 尝试未通过跨接口 UUID 校验；PCI 映射修复后，v2 已发布 180 条两来源轨迹，长响应 KL 已通过，完整 570×16 验证 KL 正在串行执行，独立 bank 证据继续归档。神经网络源码与 bank 输入保持原值。剩余质量、布局、参数扫描与探针未完成，Status 保持 proposed。
+正式矩阵的三种单模型来源与两种 fusion 均完成五十步、完整 570×16 最终评测、独立路由/版本审计和 W&B finished 核验，无 checkpoint；current/initial/teacher/current-fusion/initial-fusion 的 macro mean@16 为 64.30%/64.17%/63.80%/63.89%/63.85%。相对 current 的四个题目 bootstrap 区间均跨零，不据此排序。三种单模型原生生成接近 15k token/s，两种 fusion 为 8.79k/8.55k；完整结果与五组图见[统一报告](../../../../docs/experiment/2026-10-19-rollout来源与logit融合实验.md)。Bank 首次 GPU 尝试未通过跨接口 UUID 校验；PCI 映射修复后，v2 已发布 180 条两来源轨迹，长响应 KL 已通过，完整 570×16 验证 KL 正在串行执行，独立 bank 证据继续归档。Bank 的独立 artifact 审计已核对 180 条轨迹、1,440 个抽样位置、八个 worker 与冻结源码，长响应验收覆盖九十六条准确率响应的全部 605,977 个位置。神经网络源码与 bank 输入保持原值。剩余质量、布局、参数扫描与探针未完成，Status 保持 proposed。
 
 原生单模型、四个分段方向、两种 batch 混合与两种 fusion 已完成四卡短训练；连续解码、graph 热更新和原生排空也已有下文的独立证据。正式十五组 50 步/570 题×16 矩阵已使用 d59a7c3 冻结源码启动，质量比较尚未完成。新增 `generation_layout=split` 的生产副本映射仍在验收：默认 `overlap`，不改变已启动矩阵；[CPU 路由证据](../../../../docs/experiment/results/native-rollout/placement-cpu.json)覆盖小组集中、分卡、响应顺序、冻结恢复和 current 写入前置条件，真实四卡新布局训练尚待验证。下文早期检查按其实际覆盖范围保留，不代表所有后续验收均已完成。
 
@@ -724,7 +724,7 @@ $$
 
 等式由 tail 内写成 $p_a=P_Tp(a\mid T)$、$q_a=Q_Tq(a\mid T)$ 后展开对数得到；空 tail 的附加项取零。因此合并 tail 的量是完整 KL 的下界，但只记录两侧 tail mass 小并不能保证缺失项小；还需与同一批 prefix 的 full-vocab 对照。这条近似路线不替换主实验指标，当前评分器继续使用完整词表。
 
-固定前缀对照的起始预算为每个 benchmark 固定抽取 30 题，共 90 题；AIME25 使用全部 30 题，其余按固定 ID 抽取。由 $p_0$ 和 $q$ 各生成每题一条、上限 4,096 的响应，每条初版选至多八个固定位置，合计至多 1,440 个共同状态。第一个动作必选，将其余 $L_i-1$ 个位置划为最多七个非空连续区间，每区间均匀抽一个位置；短响应直接选取全部位置。若区间 $h$ 有 $n_h$ 个位置、抽中位置为 $T_h$，固定来源轨迹上的累计估计为 $\widehat S_i=k(s_{i,1})+\sum_h n_h k(s_{i,T_h})$；对区间采样取期望即恢复 $S_i$，归一化时除以实际有效长度。该位置抽样仅服务固定前缀 bank，不缩减主验证的评分范围。
+固定前缀对照的起始预算为每个 benchmark 固定抽取 30 题，共 90 题；AIME25 使用全部 30 题，其余按固定 ID 抽取。由 $p_0$ 和 $q$ 各生成每题一条、上限 4,096 的响应，每条初版选至多八个固定位置，合计至多 1,440 个抽样位置（包含两来源共同的 prompt-only 前缀）。第一个动作必选，将其余 $L_i-1$ 个位置划为最多七个非空连续区间，每区间均匀抽一个位置；短响应直接选取全部位置。若区间 $h$ 有 $n_h$ 个位置、抽中位置为 $T_h$，固定来源轨迹上的累计估计为 $\widehat S_i=k(s_{i,1})+\sum_h n_h k(s_{i,T_h})$；对区间采样取期望即恢复 $S_i$，归一化时除以实际有效长度。该位置抽样仅服务固定前缀 bank，不缩减主验证的评分范围。
 
 固定前缀 bank 保存完整生成 token IDs、抽中位置、区间权重、采样配置与清单哈希，所有变体使用相同 bank。分别报告 `on_initial_states` 和 `on_teacher_states` 的完整条件 KL，不把两者合并后称为 sequence KL。它衡量相同状态下分布如何变化；全量验证响应则衡量模型实际访问到的状态。固定前缀的 teacher 结果可按完整身份缓存，student 每次重算；当前 student 新生成的前缀不能套用旧 bank 的 teacher 分数。bank 的规模与 GPU 开销仍需真实验证。
 
@@ -753,6 +753,8 @@ $$
 `eval/audit_validation_kl.py` 独立校验原始 token 哈希、响应身份、全位置/深度覆盖、固定 bank、四 worker 记录与归约数值，可绑定原准确率 JSONL；主验证缺失响应或多算 padding 都会拒绝。统计按 benchmark 分层，对题目成组 bootstrap，同题样本共用抽样索引，分别计算题目均值、累计量和 token 总量比值。区间条件于已训练模型及固定 bank，不能充当训练 seed 或 bank/位置构造的不确定性。[八项 CPU 与 CLI 检查](../../../../docs/experiment/results/native-rollout/validation-kl-audit-cpu.json)已通过；它审计证据与聚合，不声称重新执行了神经网络。
 
 真实[四卡 KL canary](../../../../docs/experiment/results/native-rollout/validation-kl-canary/kl-short-gpu.json)固定 f1bcea0：两次更新后对最终 student2 的九十六条原生验证响应逐有效位置评分，共 12,288 个位置。独立 artifact 审计与 W&B 最终行 110 项指标核对通过，生成和准确率采集保持原路径；评分 wall time 5.955 s，四 worker 调用各约 5.47 s，阶段整卡采样约 8.1 GiB，之后 GPU 释放并恢复原矩阵。该证据不覆盖长上下文、完整 570×16 或固定 bank；相关门槛继续保留。调用时间含通信、参数恢复与框架开销，不能解释成纯 head kernel 吞吐。
+
+真实 [bank 独立审计](../../../../docs/experiment/results/native-rollout/prefix-bank-gpu/audit.json)与[四卡长响应审计](../../../../docs/experiment/results/native-rollout/validation-kl-long/kl-independent-audit.json)随后通过。v2 的输入与 0f2c1d8 神经网络源码不变，设备选择使用已核验的 PCI/序号映射；两来源共 180 条轨迹和 1,440 个位置对应 1,350 个不同的完整 token 前缀。两次工程更新后的六题×16 验证覆盖 605,977 个有效位置，实际最长 31,744；固定 bank 另计 1,440 个位置。完整词表评分 wall time 为 46.749 s，四卡区间采样最高 10,761 MiB，W&B 1sndtege 与最终行 KL 核对通过。它不包含完整 570 题，不能外推全量成本或来源训练效果；完整规模 gate 已串行启动。
 
 完整规模验收增加 `eval/run_validation_kl_gate.py` 和 `eval/collect_validation_kl.py`，等待真实 bank/长响应前置验收后独立执行。两次 B8、64-token 工程更新后，以原准确率采样、31,744 cap 验证完整 500/40/30 题×16；主指标对 9,120 条响应的全部有效位置评分，另算固定 bank 的 180 条轨迹，不把 bank 选中的九十题当成完整验证。核对最终版本、完整词表、同一 bank、输入哈希、逐题 bootstrap 与 W&B 最终行；评分阶段的整卡采样和 worker 分项单列，缺少阶段采样时不宣称显存覆盖。归档保留原始报告/输入校验值与每类实际长度范围；`--audit-only` 可重试归档而不重新训练。[九项 CPU 检查](../../../../docs/experiment/results/native-rollout/validation-kl-full-cpu.json)包括完整 9,120+180 条合成记录、缺失采样、错误版本/输入/范围及 CLI 计划；真实三个 Parquet 的行数、data_source 和文件哈希也已核对。合成记录不是模型输出，完整规模 GPU 数值与资源结论仍待实测；这两步验收也不替代五十步质量对照。
 

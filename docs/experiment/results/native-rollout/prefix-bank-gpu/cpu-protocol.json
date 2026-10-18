@@ -1,0 +1,22 @@
+{
+  "schema": "prefix-bank-independent-cpu-v1",
+  "scope": "Constructed artifact semantics only; real GPU bank evidence is in audit.json",
+  "maintenance_methods": 2,
+  "negative_semantics_controls": 9,
+  "negative_controls": [
+    "position weights",
+    "EOS continuation despite matching copies",
+    "wrong physical worker",
+    "disagreeing frozen receipts",
+    "duplicate native RPC request",
+    "matching but wrong raw/bank model identity",
+    "missing paired response",
+    "changed original prepared input",
+    "changed frozen source bytes"
+  ],
+  "source_sha256": {
+    "eval/audit_prefix_bank.py": "0b2678be362a5e7921a1890695747305992d30a886c8465cf1234b82922a4b3f",
+    "scripts/tests/test_prefix_bank_audit.py": "59737e3bd93d66ac02dd16213f80fd0fce2cabac98713d7d7a09563b87d88416"
+  },
+  "actual_bank_artifact": "audit.json"
+}

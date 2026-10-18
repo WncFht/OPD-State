@@ -216,6 +216,48 @@ class IntegrationTests(unittest.TestCase):
                 digest,
                 1,
             ),
+            (
+                "docs/experiment/results/native-rollout/validation-kl-long/kl-summary.json",
+                "tokens_sha256",
+                digest,
+                0,
+            ),
+            (
+                "docs/experiment/results/native-rollout/validation-kl-long/kl-independent-audit.json",
+                "tokens_sha256",
+                digest,
+                0,
+            ),
+            (
+                "docs/experiment/results/native-rollout/validation-kl-long/kl-summary.json",
+                "api_key",
+                digest,
+                1,
+            ),
+            (
+                "docs/experiment/results/native-rollout/validation-kl-long/other.json",
+                "tokens_sha256",
+                digest,
+                1,
+            ),
+            (
+                "docs/experiment/results/native-rollout/validation-kl-long/kl-summary.json",
+                "tokens_sha256",
+                digest.upper(),
+                1,
+            ),
+            (
+                "docs/experiment/results/native-rollout/validation-kl-long/kl-collection.json",
+                "/fixture/runs/native-validation-kl-long-20261019-v2/validation/kl/kl-tokens-step-2.jsonl",
+                digest,
+                0,
+            ),
+            (
+                "docs/experiment/results/native-rollout/validation-kl-long/kl-collection.json",
+                "/fixture/runs/native-validation-kl-long-20261019-v2/validation/kl/kl-tokens-step-3.jsonl",
+                digest,
+                1,
+            ),
         ]
         command = [
             str(Path(sys.executable).parent / "gitleaks"),

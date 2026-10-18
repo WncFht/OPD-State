@@ -1,0 +1,18 @@
+{
+  "run_name": "native-validation-kl-long-20261019-v2",
+  "run_directory": "/mnt/tidalfs-bdsz01/dataset/llm_dataset/zkn_data/fht_data/OPD-State/runs/native-validation-kl-long-20261019-v2",
+  "source_commit": "0f2c1d8d45f67c6e1f071a2102f53c563c55be5f",
+  "source_manifest_sha256": "8f957e6825ff126b2f6800ed948946e00e357ef113995fb61ba1e04a01da6e50",
+  "source_identity": "runtime_snapshot",
+  "training_steps": 2,
+  "samples_per_question": 16,
+  "full_benchmarks": false,
+  "checkpoints_saved": false,
+  "wandb_url": "https://wandb.ai/wncfht/OPD-State/runs/1sndtege",
+  "training_log_sha256": "435ab1e2e93cc6413c27a721ebde29a42cfd542a16df5b5606462f9cdad5be1e",
+  "training_log_observed_bytes": 344275,
+  "collection_scope": "final_validation",
+  "final_validation_marker_verified": true,
+  "collector_source_sha256": "d55fdb5753b7557a445c8584830f41fdbb3ca450ae53fa888791f2cdf81899fb",
+  "validation_steps": [2]
+}
