@@ -49,6 +49,7 @@ def audit(run, output, steps, *, require_full=False, resource_note=None):
     seed = int(manifest.get("seed", 42))
     policy = load_policy(run / "source/verl/verl/workers/rollout/policy.py")
     reports = []
+    consumed_row_ids = set()
     for step in range(1, steps + 1):
         path = directory / f"step-{step}.jsonl"
         rows = [json.loads(line) for line in path.read_text().splitlines()]
@@ -58,6 +59,8 @@ def audit(run, output, steps, *, require_full=False, resource_note=None):
         keys = set()
         for row, entry in zip(rows, plan.requests, strict=True):
             request = row["request"]
+            if request.get("row_id") is not None:
+                consumed_row_ids.add(request["row_id"])
             key = (request["prompt_id"], request["visit"], request["sample"])
             if key in keys or row["route"] != entry.route:
                 raise ValueError("Native trajectories duplicate requests or disagree with global routing")
@@ -122,6 +125,16 @@ def audit(run, output, steps, *, require_full=False, resource_note=None):
     if any(any(i[0] != "current_student" or i[2] != steps for i in b["identities"]) for b in evaluations):
         raise ValueError("Evaluation did not use the final current student exclusively")
     summary = collect(run, output, steps=steps, interval=steps, require_full=require_full)
+    if require_full and manifest.get("prepared_data_manifest_sha256") is not None:
+        from audit_native_train_overlap import apply_definition
+
+        apply_definition(
+            ROOT / "docs/experiment/results/native-rollout/train-eval-overlap-definition.json",
+            locations[0],
+            consumed_row_ids,
+            output / f"questions-step{steps}.csv",
+            output / "train-test-overlap.json",
+        )
     with (run / "gpu.csv").open() as stream:
         telemetry = list(csv.DictReader(stream))
     peaks = {str(i): max(int(r["used_mib"]) for r in telemetry if int(r["gpu"]) == i) for i in range(4)}

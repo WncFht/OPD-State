@@ -786,6 +786,19 @@ $$
 
 正式矩阵已固定 d59a7c3 源码和 17,235 题清单启动，使用 `overlap` 布局，首组为 `student_fresh`。工作区后续布局修改不会进入该矩阵；待所有 run 结束、逐题结果与 W&B 核对后再形成质量结论。[同清单两步长响应验收](results/native-rollout/trainer-manifest-long/native-acceptance.json)此前以 B64、4K 响应和 CUDA Graph 完成，两步各生成 246,709/246,491 token，最终仅验证六题×16，整卡采样峰值为 50,897/50,679/49,751/50,679 MiB；该短验证不提供正式准确率结论。
 
+[首组正式 student_fresh](results/native-rollout/formal/student_fresh/native-acceptance.json)已完成五十次更新、完整 570 题×16 最终评测，无 checkpoint；[W&B 核验](results/native-rollout/formal/student_fresh/wandb-verification.json)确认 finished、五十条训练记录和唯一的 step50 验证。它消费 3,200 道不同题，生成 12,370,198 个有效训练响应 token，574 条响应以 EOS 结束，最终仅使用 student 版本 50。其余正式变体尚未全部完成，当前不作来源优劣结论。
+
+| 基准     |       题数 | Mean@16 | Pass@16 |
+| -------- | ---------: | ------: | ------: |
+| MATH-500 |        500 |  86.59% |  96.40% |
+| AMC23    |         40 |  78.59% |  95.00% |
+| AIME25   |         30 |  27.71% |  53.33% |
+| Macro    | 三基准等权 |  64.30% |  81.58% |
+
+五十个训练 step timer 合计 24.65 min，其中 native generate 为 13.76 min；最终评测 timer 为 63.74 min，不能再次计入训练时间。运行计时合计 92.16 min，另有 3.76 min 未归入上述两个 timer；源码归档复制在该计时之外。GPU 0/1/2/3 的整卡采样峰值为 50,369/50,759/48,905/50,759 MiB。具体条件和原始步骤见同目录附件，不能与历史不同题目清单或计时范围直接计算架构加速比。
+
+[训练与评测题面核验](results/native-rollout/formal/student_fresh/train-test-overlap.json)确认全训练池与评测集存在九道规范化 user 题面精确重合：MATH-500 四道、AMC23 五道、AIME25 零道。首组实际训练消费其中三道 MATH 题；排除后共 567 题，macro mean@16 为 64.2989%。保守排除全部九道后共 561 题，macro mean@16 为 64.1634%。完整 570 题结果继续保留，后续每组按实际消费记录附加这两种敏感性分析；这些检查不覆盖语义近重复或预训练数据暴露。
+
 ### 副本布局与自然长度结果
 
 [统一基准数据](results/native-rollout/throughput/combined/receipt.json)核对每次实际输出 token、原生分组计数、时间与吞吐，预热单列，不以两次重复计算置信区间。全局 B64、cap128、相同 prompt 和相同 50/50 整轨迹配额下，batch 混合的单卡双模型为 8.29k token/s，四卡各双模型为 8.91k，四卡按 2+2 分模型为 15.43k。对应实际模型副本数为 2/8/4，吞吐不能只按卡数推算。
