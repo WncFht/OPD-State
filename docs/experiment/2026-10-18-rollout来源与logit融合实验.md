@@ -742,6 +742,12 @@ $$
 
 ## 复现与结果位置
 
+### 统一原生推理基准与正式矩阵
+
+[四卡重叠布局基准](results/native-rollout/throughput/overlap4-graph.json)完成三十六次原生生成，包含每项一次预热与两次计量。固定工作量为每条 128 token、全局 batch 16/64，测时时屏蔽 EOS，清理 APC 后执行；它只测推理，不包含 FSDP 更新。每个 GPU 同时承载 initial/teacher 两引擎，各分配 0.20 预算；fusion 使用单个双模型引擎、预算 0.40，全部使用 CUDA Graph。B64 的单模型均值约 16.35k token/s，双向分段约 15.60k，batch 混合约 8.91k，fusion 约 9.36k。两次重复不构成稳定性能置信区间；不同模型分卡、单副本和 4K 自然 EOS 条件另行核验。
+
+`eval/run_native_math_suite.py` 保存固定源码、数据清单、参数与逐项状态，顺序执行十五组正式 case：三种单模型、两种 λ=0.5 fusion、四个分段方向各 k=2048/1024，以及两种 teacher 占比 0.5 的 batch 混合。λ/α 的 0/1 与 k 的 0/4096 端点复用编译后完全相同的单模型基线。所有设置统一 50 步、batch 64、lr=1e-6、T=1/top-p=1/top-k=-1、训练 1,024+4,096、验证 1,024+31,744，最终仅做 570 题×16，保存频率 -1，W&B 项目 `OPD-State`。完整 CLI 已核验三份验证文件、完整评测开关、数据清单和最终验证设置；正式结果须等进程与独立采集器成功，不能用预检代替。
+
 ### 真实排空与权重缓存检查
 
 [真实服务端检查](results/native-rollout/runtime/receipt.json)覆盖 eager 与 CUDA Graph。current 通过生产 CUDA IPC 接收 p0→teacher→p0 的完整权重流，prefix cache 原先命中 128/80 个 token，切换后两条请求均为零命中；完整词表 logits 与独立 teacher 引擎逐值相同，恢复 p0 后 logits 逐值恢复。APC 命中改变 BF16 的计算形状，复用前后最大 logits 差为 0.15625、TV 为 $1.293\times10^{-5}$，满足既定跨内核界限。

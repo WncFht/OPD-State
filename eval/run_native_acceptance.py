@@ -37,7 +37,8 @@ def main():
     parser.add_argument("--response-cap", type=int, default=64)
     parser.add_argument("--val-response-cap", type=int, default=128)
     parser.add_argument("--memory-budget", type=float, default=0.15)
-    parser.add_argument("--validation", type=Path, required=True)
+    parser.add_argument("--validation", type=Path, action="append", required=True)
+    parser.add_argument("--full-eval", action="store_true", help="Require all 570 benchmark questions and final eval16")
     parser.add_argument("--wandb", action="store_true")
     parser.add_argument("--source-commit", help="Freeze a committed verl tree instead of the current worktree")
     args, overrides = parser.parse_known_args()
@@ -78,7 +79,7 @@ def main():
         "MAX_VAL_RESP_LENGTH": str(args.val_response_cap),
         "GPU_MEMORY_UTILIZATION": str(args.memory_budget),
         "TRAINER_LOGGER": "['console','wandb']" if args.wandb else "['console']",
-        "VAL_FILES": f"[{args.validation.resolve()}]",
+        "VAL_FILES": "[" + ",".join(str(p.resolve()) for p in args.validation) + "]",
         "OPD_ROOT": str(run),
         "EXPERIMENT_NAME": run.name,
         "RAY_TMPDIR": str(ray_dir),
@@ -93,8 +94,8 @@ def main():
         "bash",
         str(root / "recipe/math_native.sh"),
         args.policy,
-        "trainer.math_eval_require_full=False",
-        "data.val_batch_size=6",
+        f"trainer.math_eval_require_full={args.full_eval}",
+        f"data.val_batch_size={32 if args.full_eval else 6}",
         f"+trainer.run_source_manifest={run / 'source-manifest.json'}",
         *overrides,
     ]

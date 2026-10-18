@@ -219,3 +219,5 @@ CUDA Graph 连续解码随后通过：λ=0.5、两条 prompt 各八步，实际�
 真实 eager native 检查先暴露 APC 的计算形状导致非逐值 logits 差异，保存全词表数据后按既定 BF16 界限核对：最大差 0.15625、TV 1.293e-5，命中 128/80。随后实际 abort 触发输出协程不唤醒、排空超时，按 vLLM0.10 代码和真实现象修复生成 task 的登记/取消/等待；eager v3 与 graph v1 均在 decode 后成功终止，active/frontend 均清空，p0→q→p0 的完整 IPC、APC 失效和恢复 logits 通过。补充超时覆盖整个 abort/barrier/reset、drain-pending禁止复用及GPU变更前空闲检查，当前57项CPU检查通过。早期GPU检查未冻结源码，附件明确区分采集时源码哈希与后续源码快照。
 
 性能基准采用生产 RPC/executor，固定长度工作负载只在测时屏蔽 EOS，真实 math 样本另保留 EOS。首轮并行冷启动撞到 vLLM TCPStore 临时端口，确认失败并清理后改成串行初始化，稳态请求仍并行。正式 50 步/570 题×16 的完整配置及 17235 题 manifest CPU 预检通过，尚未将预检当作正式训练。
+
+排空修复提交为 46a928f，完整隔离 CI 与提交 hooks 通过。四卡 graph overlap 基准完成 36 次生成，所有固定长度输出数与预算核验通过，B64 单模型约 16.35k token/s，batch约8.91k，fusion约9.36k；分卡、单副本、最新源码冻结后的graph运行检查与完整manifest两步长响应检查进入串行门控。新增十五case正式调度器与完整eval CLI，固定 50 步/B64/4K 训练/570×16 最终评测，任一训练或审计失败则停下后续 case；目前不将该调度器视为已经取得正式结果。

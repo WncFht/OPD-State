@@ -1,0 +1,107 @@
+{
+  "scope": "Inference-only native RPCs/executor; fixed-length runs mask EOS, natural runs retain EOS",
+  "conditions": {
+    "output": "runs/native-rollout-implementation/benchmark-overlap4-graph-v2",
+    "layout": "overlap",
+    "replicas": 4,
+    "graph": true,
+    "budget": 0.4,
+    "batches": [16, 64],
+    "cap": 128,
+    "repeats": 2,
+    "natural_cap": 0
+  },
+  "raw_summary_sha256": "384601b0078049a7c33e8a839946809031b869edbfc66e11663e39703ce3211e",
+  "raw_observations_sha256": "1a4398104e0a2334788f5c527db7a59f050f6a0f04251da0f2e2594862176bd9",
+  "cold_seconds": {
+    "initial_student": 195.94364760816097,
+    "teacher": 200.8651557713747,
+    "fusion:initial_student": 237.11131098121405
+  },
+  "means": [
+    {
+      "policy": "batch_mix:mixed",
+      "second": "",
+      "batch": 16,
+      "repeats": 2,
+      "tokens_per_second": 2313.20550326594
+    },
+    {
+      "policy": "batch_mix:mixed",
+      "second": "",
+      "batch": 64,
+      "repeats": 2,
+      "tokens_per_second": 8913.21919678688
+    },
+    {
+      "policy": "logit_fusion:initial_student",
+      "second": "",
+      "batch": 16,
+      "repeats": 2,
+      "tokens_per_second": 2484.48907130262
+    },
+    {
+      "policy": "logit_fusion:initial_student",
+      "second": "",
+      "batch": 64,
+      "repeats": 2,
+      "tokens_per_second": 9355.100506182294
+    },
+    {
+      "policy": "sequence_switch:initial_student",
+      "second": "teacher",
+      "batch": 16,
+      "repeats": 2,
+      "tokens_per_second": 4228.026987797415
+    },
+    {
+      "policy": "sequence_switch:initial_student",
+      "second": "teacher",
+      "batch": 64,
+      "repeats": 2,
+      "tokens_per_second": 15593.033060211892
+    },
+    {
+      "policy": "sequence_switch:teacher",
+      "second": "initial_student",
+      "batch": 16,
+      "repeats": 2,
+      "tokens_per_second": 4266.484874894482
+    },
+    {
+      "policy": "sequence_switch:teacher",
+      "second": "initial_student",
+      "batch": 64,
+      "repeats": 2,
+      "tokens_per_second": 15605.046536973194
+    },
+    {
+      "policy": "single:initial_student",
+      "second": "",
+      "batch": 16,
+      "repeats": 2,
+      "tokens_per_second": 4410.472592309733
+    },
+    {
+      "policy": "single:initial_student",
+      "second": "",
+      "batch": 64,
+      "repeats": 2,
+      "tokens_per_second": 16511.189048128563
+    },
+    {
+      "policy": "single:teacher",
+      "second": "",
+      "batch": 16,
+      "repeats": 2,
+      "tokens_per_second": 4181.44850792931
+    },
+    {
+      "policy": "single:teacher",
+      "second": "",
+      "batch": 64,
+      "repeats": 2,
+      "tokens_per_second": 16196.331154698306
+    }
+  ]
+}
