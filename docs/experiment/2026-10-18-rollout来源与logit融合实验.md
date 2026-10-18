@@ -430,7 +430,7 @@ batch 均为 64，使用平均响应长度作权重与 $N_b$ 等价。训练器�
 | ------------------ | --------------------------------------------------------------------------------------------------------------------------------------- |
 | 固定缓存           | SQLite 只读完整性、模型完整文件签名、tokenizer/模板、prompt ID/内容、响应 cap/EOS 与配对数据哈希；miss 拒绝；50 步全命中                |
 | 当前 student 更新  | 缓存不含 old_log_probs，当前 actor 每步重算；teacher requires_grad=False、eval/no_grad；验证前同步最终 student                          |
-| CPU 与维护         | 12 项原生 CPU 测试覆盖融合端点、共享 prefix、EOS、padding、缓存重置、teacher 冻结和版本；37 项维护测试涵盖指标、缓存、RPC 与平台控制    |
+| CPU 与维护         | 12 项原生 CPU 测试覆盖融合端点、共享 prefix、EOS、padding、缓存重置、teacher 冻结和版本；41 项维护测试涵盖指标、缓存、RPC 与平台控制    |
 | Fusion 数值        | 同 FlashAttention KV 内核 graph/eager logits 最大差为零；静态/动态 FP32 最大 logits 差 $4.96\times10^{-5}$、分布 TV $2.27\times10^{-6}$ |
 | Attention 独立核验 | 含左 padding、GQA、prefill/decode 的原始 Q/K/V 对 FP32 数学内核，相对 L2 误差 0.00159–0.00199，阈值 0.005                               |
 | 权重流与训练桥接   | GPU 版本 0→1→2 原地更新、改变 lm_head 后输出变化、恢复后还原、teacher 探针不变；完整两步训练和 96 条短验证通过                          |
@@ -597,6 +597,15 @@ STEPS=800 TOTAL_EPOCHS=16 OPD_FREEZE_SOURCE=1 \
 长时运行可以在每次验证完成后归档阶段结果。采集器的 `--snapshot` 模式要求 1 至指定步数的训练记录连续、指定步完整验证的原始响应和全部精确指标已写出；后续步数与仍在写入的后续验证文件不影响该快照。摘要标记 `collection_scope=through_step_snapshot`，不会据此宣称运行结束。每次使用新的输出目录，例如 `results/long-semi-progress/step-50`，拒绝覆盖已有快照。日志哈希对应采集时的前 `training_log_observed_bytes` 字节，即使日志继续追加也可以重算核验。已有真实在线组的 9,120 条响应已分别按快照和默认模式重新采集，两者的验证记录与训练 CSV 均与原归档完全一致，见[核验记录](results/2026-10-18-snapshot-collector-verification.json)。
 
 目标验证步完成后，阶段采集命令在下方普通命令上加 `--snapshot`，`--steps` 填已完成的验证步；默认模式仍要求最终验证成功标志。阶段结果不能通过默认的 finished-run 远端核验冒充完整运行，最终结束后仍重新采集并核对 W&B。
+
+远端核验器也提供显式 `--snapshot` 模式，只接受已声明的阶段快照。该模式按验证步从 W&B history 读取全部精确指标，而不是使用可能已被后续验证覆盖的 summary；同时逐步比对本地与远端 loss、grad_norm，后续记录保留在观察范围信息中。默认模式继续要求 finished 状态、全部步骤与最终 summary 一致。归档 history 若为普通训练行填入空验证字段，按 macro 字段是否有值识别验证行；已存在的验证行仍要求全部指标完整且有限。长时第 50 步的[远端阶段核验](results/long-semi-progress/step-50/wandb-snapshot-verification.json)已实际通过，验证时 run 仍在运行。四项回归覆盖 summary 已变化、未来记录、空字段、非 macro 指标篡改、训练缺步/非有限值及默认完成条件。
+
+```bash
+env -u WANDB_API_KEY NETRC="$PWD/../.secrets/netrc" \
+    WANDB_CONFIG_DIR="$PWD/../config/wandb" WANDB_BASE_URL=https://api.wandb.ai \
+    ../envs/opd-state/bin/python eval/verify_wandb_math.py \
+    --result docs/experiment/results/long-semi-progress/step-50 --snapshot
+```
 
 结果采集、远端核验和题目比较：
 
