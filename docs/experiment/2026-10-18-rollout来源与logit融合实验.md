@@ -176,6 +176,22 @@ $$
     --steps 2 --output docs/experiment/results/native-rollout/state-prefix-canary
 ```
 
+### 按来源与深度分层的训练诊断
+
+原生路径新增 `generation_state_metrics=true`，把紧凑的分段来源元数据随 DataProto 行传递；DP 平衡重排、切片和 TensorDict 转换后仍与响应对齐。评分后复用已经计算的当前 student 与 teacher 对数概率，按 action 来源、第一/第二段及绝对响应深度统计下表指标，不增加模型前向。最终验证不携带这项训练元数据，旧缓存路径继续使用原行为。
+
+| 新增日志                                   | 含义                                                                  |
+| ------------------------------------------ | --------------------------------------------------------------------- |
+| `native_state/*/tokens`                    | 所选分层中的有效训练位置数，包含 EOS 的 action                        |
+| `response_prefix_depth_mean`               | 选择该 action 之前已有的响应 token 数均值                             |
+| `sampled_log_ratio_mean`、`log_ratio_rms`  | 所选实际 prefix/action 上的 $\log p_\theta-\log q$ 均值与 RMS         |
+| `teacher_selected_action_probability_mean` | teacher 对实际 action 的概率均值，既不是 teacher 熵，也不是其最大概率 |
+| `student_logp_mean`、`teacher_logp_mean`   | 两模型对实际 action 的对数概率均值                                    |
+
+`action_teacher` 等来源标签描述下一 action 的策略，`segment_1/action_current_student` 对应 student 续写位置，其 state 保留前段的全部 token；fusion 使用独立标签。深度按 0–255、256–1023、1024–2047、2048 至响应上限分层。空分层只记录 token 数，不写 NaN 均值；padding 中的无效值不进入统计。这些 sampled-action 指标仍受 state、action 和长度共同影响，不能替代下面的共同 probe 或表示覆盖。
+
+[CPU 与训练环境验收](results/native-rollout/state-metrics-cpu.json)覆盖十八项运行检查和六十六项原生合约检查。额外 CPU 计量使用真实 B64 轨迹的 246,709 个有效位置、合成对数概率与分段标签，单线程五次均值 0.0569 s；它仅描述统计开销，不是实际 teacher 置信度或 GPU 训练速度。新的真实四卡训练验收尚未完成；已启动的 d59a7c3 正式矩阵没有这项新增诊断，不能追溯补出其逐来源对数概率。
+
 ### 建议优先记录的三个 state 指标
 
 我建议把状态供给与状态吸收分开测量，优先记录下列三个互补指标。它们尚未在当前运行上完成，不能与上面的 CPU 缓存结果混称为实测。

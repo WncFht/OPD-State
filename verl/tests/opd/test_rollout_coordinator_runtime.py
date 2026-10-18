@@ -196,6 +196,7 @@ class CoordinatorTests(unittest.TestCase):
         self.assertEqual(co.update_weights(0)["source/rollout_sync"], 0)
         out = co.generate_sequences(self.batch())
         self.assertEqual(out.batch["response_mask"].tolist(), [[1, 1, 0, 0]])
+        self.assertEqual(out.non_tensor_batch["native_segments"].tolist(), [(("teacher", 0, 0, 2),)])
         self.assertEqual(out.batch["rm_scores"].sum().item(), 1)
         self.assertIn("raw_prompt", reward.batch.non_tensor_batch)
         self.assertEqual(events[1][1][0], "teacher")
@@ -210,6 +211,7 @@ class CoordinatorTests(unittest.TestCase):
         with patch("ray.get"):
             co.begin_eval(2)
         ev = co.generate_sequences(self.batch(16, validate=True, step=2))
+        self.assertNotIn("native_segments", ev.non_tensor_batch)
         co.end_eval(2, resume_training=False)
         self.assertEqual(len(ev), 16)
         self.assertIn(("sync", 2), events)

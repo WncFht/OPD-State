@@ -181,6 +181,7 @@ class RolloutCoordinator:
             "dataset_rows_are_not_limited_by_training_steps": True,
             "memory_budget": config.trainer.native_generation_memory_budget,
             "generation_layout": self.rollout.get("generation_layout", "overlap"),
+            "generation_state_metrics": self.rollout.get("generation_state_metrics", True),
             "prompt_cap": int(self.rollout.prompt_length),
             "response_cap": int(self.rollout.response_length),
             "seed": int(self.rollout.seed),
@@ -339,6 +340,15 @@ class RolloutCoordinator:
             pad_token_id=self.tokenizer.pad_token_id,
             source="native_policy",
         )
+        if not validate and self.rollout.get("generation_state_metrics", True):
+            import numpy as np
+
+            from verl.trainer.ppo.native_state_metrics import trajectory_segments
+
+            provenance = np.empty(len(trajectories), dtype=object)
+            for index, row in enumerate(trajectory_segments(trajectories)):
+                provenance[index] = row
+            result.non_tensor_batch["native_segments"] = provenance
         # The same existing verifier scores every source, including teacher and
         # mixed trajectories. Do not let the packer's historical zero scores
         # masquerade as actual task accuracy.

@@ -213,6 +213,7 @@ class RolloutConfig(BaseConfig):
     generation_verify_frozen: bool = False
     generation_purpose: str = "evaluation"
     generation_layout: str = "overlap"
+    generation_state_metrics: bool = True
     preserve_source_weights: bool = False
 
     # Whether to enable full determinism for reproducibility.

@@ -1,0 +1,46 @@
+{
+  "scope": "CPU diagnostic overhead only; actual response lengths from a native B64 trace, synthetic log probabilities and switch labels. This is not real teacher confidence or GPU training performance.",
+  "recorded_at": "2026-10-18T12:20:25.119593+00:00",
+  "real_trace_sha256": "ce2500c5361139d397aa34c4fa5a981573713d0a5b3e500ebbe21ca2b73bd2fb",
+  "source_sha256": {
+    "verl/verl/trainer/ppo/native_state_metrics.py": "002af7843b749849fefe540a96e0811a54d99b1129607c3c554c841ddd1f4710",
+    "verl/verl/trainer/ppo/rollout_coordinator.py": "0377e611df476ce4c8abc4effbe4b62ddd3fe85dbfed7aa48de42cb6f54ffe9b",
+    "verl/verl/trainer/ppo/opd_trainer_mixin.py": "6c59d0e78040226bbe6dbfea71ceccaec379c7eb4a6e0c8a4aca835e9e27d718",
+    "verl/verl/workers/config/rollout.py": "87a188edf0e5df0b91444354b3803cd96ae5779db1d9d57a8cc545c9b2016516",
+    "verl/verl/trainer/config/rollout/rollout.yaml": "fb4a4db3f2abe9f9551f46ea6d47b4f26c752c9650f7a218488aefc2dbc1e58f",
+    "verl/tests/opd/test_native_state_metrics_runtime.py": "01b2f1b5f4c07870f10416749ac663e6c18920e09cdcfa4acac1d12b28f30617",
+    "verl/tests/opd/test_rollout_coordinator_runtime.py": "5e110afb8c19ac89b1c0d4936b12edaa30e8464cd0c89e6235bf75dffe74da18"
+  },
+  "runtime_environment_tests": 18,
+  "native_cpu_tests": 66,
+  "extra_model_forwards": 0,
+  "batch": 64,
+  "response_cap": 4096,
+  "valid_positions": 246709,
+  "torch_threads": 1,
+  "warmup_repeats": 1,
+  "timed_repeats": 5,
+  "seconds": [
+    0.05509524792432785, 0.05883137136697769, 0.058719344437122345,
+    0.056148797273635864, 0.05585291236639023
+  ],
+  "mean_seconds": 0.056929534673690795,
+  "metrics_count": 77,
+  "pending": [
+    "Real GPU trainer verification of source-stratified metrics",
+    "Formal quality matrix and full final evaluations"
+  ],
+  "command": "CUDA_VISIBLE_DEVICES='' PYTHONPATH=verl ../envs/opd-state/bin/python -m unittest discover -s verl/tests/opd -p 'test_*_runtime.py' -v",
+  "synthetic_workload": {
+    "generator_seed": 42,
+    "student_logp": "-torch.rand((64,4096), generator=generator)",
+    "teacher_logp": "-torch.rand((64,4096), generator=generator), following the student draw",
+    "switch_tokens": 2048,
+    "response_lengths_from": "runs/native-formal-suite-20261018/student_fresh/checkpoints/native-trajectories/step-1.jsonl"
+  },
+  "check_logs_sha256": {
+    "runs/native-rollout-implementation/state-stratified-runtime-cpu.log": "f68dde4223f4733183b6734e899e3b1e4f984a5e56c01444b0601b95b89c9d17",
+    "runs/native-rollout-implementation/state-stratified-native-cpu.log": "8802488b13324e7369324ee5abe9f9deb6fbd896ab3525e57ad9638aa48a4df9"
+  },
+  "real_gpu_trainer_verified": false
+}
