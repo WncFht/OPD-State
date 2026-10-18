@@ -829,7 +829,7 @@ $$
 
 后续原生响应还携带 worker 实际读取的 CUDA UUID、进程号和副本编号，协调器按 RPC 保存实际请求数与身份。`eval/verify_native_layout.py` 对照 `nvidia-smi` 的 GPU 0–3 UUID，核对来源配额、分卡、请求唯一性、物理副本稳定性，以及分层统计与共同 OPD reward 的归约一致性。[CPU 验收](results/native-rollout/physical-routing-cpu.json)包含六十八项原生检查、十八项训练环境检查和五项审计检查；真实 GPU 结果仍待产生，配置索引不能替代物理执行证据。
 
-`eval/run_native_followups.py` 安排六组 B8/cap64 的两步正确性验收：两种 batch 混合、两个 current/teacher 切换方向和两种 fusion；batch teacher 占比 1/8，覆盖 7/1 条请求与空副本。另按 overlap→split→split→overlap 顺序运行四组 B64/cap4096 的五步观测，排除首步，保持来源原预算与诊断设置相同，并关闭昂贵的完整冻结参数摘要。正确性阶段的摘要开销不混入布局速度比较。每组最终只做六题×16 的短验证，用来检查 student 恢复，不形成正式准确率结论；全部任务等现有正式矩阵结束后串行执行，任一训练或审计失败就停止后续任务。
+`eval/run_native_followups.py` 安排六组 B8/cap64 的两步正确性验收：两种 batch 混合、两个 current/teacher 切换方向和两种 fusion；batch teacher 占比 1/8，覆盖 7/1 条请求与空副本。另按 overlap→split→split→overlap 顺序运行四组 B64/cap4096 的五步观测，排除首步，保持来源原预算与诊断设置相同，并关闭昂贵的完整冻结参数摘要。正确性阶段的摘要开销不混入布局速度比较。每组最终只做六题×16 的短验证，用来检查 student 恢复，不形成正式准确率结论；全部任务等现有正式矩阵结束后串行执行，任一训练或审计失败就停止后续任务。短验证由独立 Parquet 子集提供，每基准确定性取两题；[真实数据与计划验收](results/native-rollout/validation-subset-cpu.json)保留原输入/输出哈希，入口逐次检查文件未变，并要求最终审计恰好九十六条响应。原始完整验证文件保持独立，CPU 子集检查不代表排队 GPU 已运行。
 
 独立分卡微基准的副本编号为来源内局部序号，通过 `engines[slot].gpus` 映射到物理卡；例如 teacher 的局部副本 0 可以在 GPU 2。新执行记录接入后已补齐这一映射，并逐 RPC 核对实际 UUID。基准支持冻结指定提交，Hydra 也从私有快照读取；新增调度参数、短/长响应分别预热与重复，以及约两秒一次的整卡显存采样。采集器检查 warmup、实际工作量、物理请求分配和显存文件哈希。[八项 CPU 检查与历史 28 条件回归](results/native-rollout/benchmark-controls-cpu.json)已通过，新 GPU 扫描尚未运行。
 

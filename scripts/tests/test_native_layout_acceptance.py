@@ -80,6 +80,8 @@ class NativeLayoutAcceptanceTests(unittest.TestCase):
             )
             state = json.loads((path / "plan/state.json").read_text())
             self.assertEqual(state["state"], "planned")
+            self.assertEqual(state["validation_questions"], 6)
+            self.assertEqual(state["validation_responses"], 96)
             self.assertEqual(len(state["cases"]), 10)
             correctness, observations = state["cases"][:6], state["cases"][6:]
             self.assertTrue(
@@ -95,6 +97,15 @@ class NativeLayoutAcceptanceTests(unittest.TestCase):
             self.assertTrue(
                 all("--full-eval" not in c["command"] for c in state["cases"])
             )
+            for case in state["cases"]:
+                command = case["command"]
+                values = [
+                    command[i + 1]
+                    for i, value in enumerate(command)
+                    if value == "--validation"
+                ]
+                self.assertEqual(len(values), 3)
+                self.assertTrue(all("validation-subset" in value for value in values))
 
     def test_actual_worker_shards_match_split_source_quotas_and_physical_devices(self):
         batch, expected = fixture()

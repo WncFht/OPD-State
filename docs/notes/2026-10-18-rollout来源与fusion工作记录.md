@@ -251,3 +251,5 @@ CUDA Graph 连续解码随后通过：λ=0.5、两条 prompt 各八步，实际�
 完整 KL 可选评分链路提交为 f1bcea0，所有 CPU、两进程 CPU FSDP、隔离 CI 和 hooks 通过。第二组 initial_student_fresh 也完成正式训练/评测：macro mean@16 为 64.16597%，与在线 student 的差为 −0.13056 个百分点；5,000 次分层配对题目 bootstrap 的 95% 区间为 [−1.69516, 1.33616] 个百分点，不能覆盖训练 seed 不确定性。两组原生生成吞吐分别为 14,978.74/14,977.73 token/s；训练 step 净差 161.73 s，权重发布差 121.30 s，约占 75%，其余评分/更新差异仍待归因。
 
 远端 W&B 核验 pl0yl6nt 与 0hbo3l5t 均 finished、五十条训练记录、仅 step50 验证。原通用 verifier 在缺少 legacy rollout_source 时将原生来源标成 student_online；现改为显式保存原生 policy/backend，并校验远端 policy 与已审计的本地 native manifest 哈希，相关匹配及篡改反例通过。它只修正核验元数据，训练源码仍固定 d59a7c3。第三组 teacher_fresh 已运行，现有调度进程保持原序列。
+
+正式前两组的远端 policy 绑定与质量/计时对照提交为 15765ce。检查排队后续任务时，命令实际传入了完整 570 题文件，与原定六题×16 的工程验收不符；新增确定性两题/基准的 Parquet 准备器和无 PyArrow 的哈希校验器，保留 prompt、答案、schema 及原文件。控制入口固定 n=16，保存准备计划与 manifest 哈希，每个 case 开始前复核文件，最终审计要求恰好九十六条响应。真实源文件的行数为 500/40/30，输出各两行；三项 Parquet/篡改检查与五项布局/计划检查通过。已启动的正式矩阵、训练来源与质量评测协议未修改，后续 GPU 任务仍待运行。

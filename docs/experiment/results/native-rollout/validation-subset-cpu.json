@@ -1,0 +1,59 @@
+{
+  "schema": "short-validation-subset-cpu-v1",
+  "scope": "engineering subset preparation and plan; no GPU execution",
+  "manifest": {
+    "schema": "math-validation-subset-v1",
+    "scope": "engineering_only_not_quality",
+    "per_benchmark": 2,
+    "questions": 6,
+    "pyarrow_version": "21.0.0",
+    "builder_sha256": "daef02c7925a1cec16c43a065235fba17c6346e5a3258f492cf857102c45a848",
+    "files": [
+      {
+        "benchmark": "MATH-500",
+        "input_path": "/mnt/tidalfs-bdsz01/dataset/llm_dataset/zkn_data/fht_data/MD-OPD/data/math/MATH-500/test.parquet",
+        "input_sha256": "49e1b2c7bddd84791f38287bcdd4a99639c599e699d5906c238c74d0b31ccf8c",
+        "input_rows": 500,
+        "selected_rows": [0, 1],
+        "output_file": "MATH-500.parquet",
+        "output_rows": 2,
+        "output_sha256": "6161ff70167f472728552d3f1df1793e07fe1b25dd14bf192639ff10a1a4a5e0"
+      },
+      {
+        "benchmark": "AMC23",
+        "input_path": "/mnt/tidalfs-bdsz01/dataset/llm_dataset/zkn_data/fht_data/MD-OPD/data/math/AMC23/test.parquet",
+        "input_sha256": "02389cd00016eb8330134f4fe4fb47bb6fadf0c57b19af48aafd2d115c798072",
+        "input_rows": 40,
+        "selected_rows": [0, 1],
+        "output_file": "AMC23.parquet",
+        "output_rows": 2,
+        "output_sha256": "b911272f709c2260af6ce3dc487b4183b9ea0b93108f9a7ab0d732954d438af6"
+      },
+      {
+        "benchmark": "AIME25",
+        "input_path": "/mnt/tidalfs-bdsz01/dataset/llm_dataset/zkn_data/fht_data/MD-OPD/data/math/AIME25/test.parquet",
+        "input_sha256": "3fcf0118e87348af9a1c996438aa5fb00e91c4df5a5a00fe29a0c909886075b6",
+        "input_rows": 30,
+        "selected_rows": [0, 1],
+        "output_file": "AIME25.parquet",
+        "output_rows": 2,
+        "output_sha256": "27806b47f785e164bdf10a7a0625dca42ff9a17b0889ec46ac2445c64da051e2"
+      }
+    ]
+  },
+  "manifest_sha256": "30fc8098b41069f2c9381def7efbadd904feae813a88a0e830e9efd92fb6e505",
+  "checks": {
+    "real_parquet_roundtrip_and_tamper_tests": 3,
+    "layout_and_plan_tests": 5
+  },
+  "expected_validation_responses": 96,
+  "formal_quality_protocol_changed": false,
+  "real_gpu_verified": false,
+  "source_sha256": {
+    "data/prep/build_validation_subset.py": "daef02c7925a1cec16c43a065235fba17c6346e5a3258f492cf857102c45a848",
+    "eval/native_validation_subset.py": "0eda1de1dc57b46154fe45021bf78267dfcb44a0c3eaaf4791b2924eafc640cc",
+    "eval/run_native_followups.py": "8d0e87d8d53a1d7b0bd2683bd7e21c132c9e659c36a784299d623325475c501f",
+    "verl/tests/opd/test_validation_subset_runtime.py": "3d333a7f3b3230b1a9eff28b0a3d1b7d1be94b263e62c4fbaa4056a1be1cc4e3",
+    "scripts/tests/test_native_layout_acceptance.py": "764a40dcaabab64581fc2a675ac90bacb2e458f1ae4d33fbc6ef4a055a2b12c4"
+  }
+}

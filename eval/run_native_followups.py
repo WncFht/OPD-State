@@ -11,6 +11,9 @@ import sys
 import time
 from pathlib import Path
 
+from native_validation_subset import BENCHMARKS
+from native_validation_subset import paths as subset_paths
+from native_validation_subset import verify as verify_subset
 from run_native_acceptance import gpu_rows
 
 ROOT = Path(__file__).resolve().parents[1]
@@ -56,7 +59,7 @@ def cases():
     return result
 
 
-def command(case, output, commit):
+def command(case, output, commit, validation):
     result = [
         sys.executable,
         str(ROOT / "eval/run_native_acceptance.py"),
@@ -80,8 +83,8 @@ def command(case, output, commit):
         "0.55",
         "--wandb",
     ]
-    for benchmark in ["MATH-500", "AMC23", "AIME25"]:
-        result += ["--validation", str(ROOT.parent / "MD-OPD/data/math" / benchmark / "test.parquet")]
+    for filename in validation:
+        result += ["--validation", str(filename)]
     return result + [
         "actor_rollout_ref.rollout.enforce_eager=False",
         "++actor_rollout_ref.rollout.cudagraph_capture_sizes=[1,2,4,8,16,32,64]",
@@ -89,6 +92,8 @@ def command(case, output, commit):
         f"actor_rollout_ref.rollout.generation_layout={case['layout']}",
         f"actor_rollout_ref.rollout.generation_verify_frozen={case['verify_frozen']}",
         "actor_rollout_ref.rollout.generation_state_metrics=True",
+        "actor_rollout_ref.rollout.val_kwargs.n=16",
+        "trainer.math_eval_samples=16",
     ]
 
 
@@ -114,6 +119,17 @@ def main():
         parser.error("Unknown follow-up case")
     directory = args.output.resolve()
     directory.mkdir(parents=True, exist_ok=False)
+    validation_directory = directory / "validation-subset"
+    preparation = [
+        str(Path(os.environ.get("OPD_TRAIN_PYTHON", ROOT.parent / "envs/opd-state/bin/python")).resolve()),
+        str(ROOT / "data/prep/build_validation_subset.py"),
+        "--output",
+        str(validation_directory),
+        "--per-benchmark",
+        "2",
+    ]
+    for benchmark in BENCHMARKS:
+        preparation += ["--input", str(ROOT.parent / "MD-OPD/data/math" / benchmark / "test.parquet")]
     state = {
         "state": "planned" if args.plan_only else "running",
         "source_commit": commit,
@@ -122,6 +138,14 @@ def main():
         "layout_order": "ABBA",
         "warmup_steps_excluded_from_observations": [1],
         "cases": [],
+        "validation_preparation": preparation,
+        "validation_questions": 6,
+        "validation_responses": 96,
+        "validation_samples_per_question": 16,
+        "driver_sha256": hashlib.sha256(Path(__file__).read_bytes()).hexdigest(),
+        "validation_verifier_sha256": hashlib.sha256(
+            (ROOT / "eval/native_validation_subset.py").read_bytes()
+        ).hexdigest(),
     }
 
     def save():
@@ -130,14 +154,30 @@ def main():
         temporary.replace(directory / "state.json")
 
     save()
+    if not args.plan_only:
+        state["state"] = "preparing_validation"
+        save()
+        try:
+            subprocess.run(preparation, cwd=ROOT, env={**os.environ, "CUDA_VISIBLE_DEVICES": ""}, check=True)
+            verify_subset(validation_directory / "manifest.json")
+        except Exception:
+            state["state"] = "preparation_failed"
+            save()
+            raise
+        state["validation_manifest_sha256"] = hashlib.sha256(
+            (validation_directory / "manifest.json").read_bytes()
+        ).hexdigest()
+        state["state"] = "running"
+        save()
     for case in selected:
         output = directory / case["name"]
-        cmd = command(case, output, commit)
+        cmd = command(case, output, commit, subset_paths(validation_directory))
         item = {**case, "command": cmd, "state": "planned"}
         state["cases"].append(item)
         save()
         if args.plan_only:
             continue
+        verify_subset(validation_directory / "manifest.json")
         if any(used > 128 for _, used, _ in gpu_rows()):
             state["state"] = "resource_busy"
             save()
@@ -185,6 +225,11 @@ def main():
         ]
         for audit in audits:
             code = subprocess.call(audit, cwd=ROOT)
+            if not code and audit == audits[0]:
+                acceptance = json.loads((result / "native-acceptance.json").read_text())
+                item["validation_responses"] = acceptance["evaluation_responses"]
+                if item["validation_responses"] != state["validation_responses"]:
+                    code = 1
             item.setdefault("audit_exit_codes", []).append(code)
             save()
             if code:

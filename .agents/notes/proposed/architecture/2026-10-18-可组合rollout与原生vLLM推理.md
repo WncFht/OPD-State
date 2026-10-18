@@ -622,7 +622,7 @@ batch 路由按来源聚合后，在其可用副本内做负载均衡；小分�
 
 `generation_layout=overlap` 将每个来源分配到最多请求数个副本，`split` 为同一阶段的来源分配互不重叠的物理副本；例如 current/teacher 为 7/1 条时使用 3+1 卡，32/32 条时使用 2+2 卡。当前实现只改变请求路由和按需激活，保持来源原 KV 预算与四卡 actor 权重发布次数；未用 current 副本可以休眠，下次使用前仍需完整参数发布。来源预算不会随分卡自动扩大，因此不能把推理基准中每个分卡引擎 0.40 的吞吐直接当成该训练布局的速度。每个 batch 保存阶段请求数和实际选择的副本索引，最终纯 student 验证始终使用验证副本。
 
-新增物理执行记录从 native worker 获取 CUDA UUID、进程和本地设备信息，由服务端附加副本编号；协调器核对实际应答编号后记录各 RPC 的请求身份和数量。后续验收对照 GPU 0–3 的 UUID，避免只用声明的映射证明分卡。正确性六组两步开启冻结摘要，速度四组五步按 overlap/split/split/overlap 观察并关闭摘要，二者使用独立结果目录。[CPU 审计证据](../../../../docs/experiment/results/native-rollout/physical-routing-cpu.json)已具备，真实新版本 GPU 验收和速度结论尚待完成。
+新增物理执行记录从 native worker 获取 CUDA UUID、进程和本地设备信息，由服务端附加副本编号；协调器核对实际应答编号后记录各 RPC 的请求身份和数量。后续验收对照 GPU 0–3 的 UUID，避免只用声明的映射证明分卡。正确性六组两步开启冻结摘要，速度四组五步按 overlap/split/split/overlap 观察并关闭摘要，二者使用独立结果目录。[CPU 审计证据](../../../../docs/experiment/results/native-rollout/physical-routing-cpu.json)已具备，真实新版本 GPU 验收和速度结论尚待完成。后续短验证显式绑定每基准两题的六题子集，保存源文件和 Parquet 输出哈希，并在每组前检查字节完整性；最终审计要求九十六条响应。原始 570×16 正式矩阵不使用该子集，已具备的[子集 CPU 证据](../../../../docs/experiment/results/native-rollout/validation-subset-cpu.json)不构成 GPU 验收。
 
 独立微基准保留来源内局部编号和显式物理 GPU 映射，已修复新执行记录接口接入后的 split 编号不匹配。十五条件扫描器覆盖 1/2/4 卡、并发序列数、batched-token 预算、chunked prefill、KV 预算与 graph；使用冻结源码/配置、实际 UUID 和整卡显存采样，按固定工作量与自然长度分别记录预热和重复。[CPU 与历史数据回归](../../../../docs/experiment/results/native-rollout/benchmark-controls-cpu.json)通过；实际 GPU 扫描及单引擎换权重成本仍待完成，不以参数可配置代替性能证据。
 
