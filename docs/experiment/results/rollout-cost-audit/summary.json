@@ -1,0 +1,143 @@
+{
+  "analyzer_sha256": "e273c70d7ed9bc94efec69984e3b2218c59c07a7007c381c4100ac398253feba",
+  "inputs_sha256": {
+    "/mnt/tidalfs-bdsz01/dataset/llm_dataset/zkn_data/fht_data/OPD-State/runs/rollout-sources/paired-schedule/manifest.json": "3041970fd114b5aaae5cb5d5cfc03c0db3d980ce920c0d2f8f57460856c80ec4",
+    "/mnt/tidalfs-bdsz01/dataset/llm_dataset/zkn_data/fht_data/OPD-State/runs/rollout-sources/paired-schedule/prompts.jsonl": "578b41e53de162b41ccada99164bc3e611740fbe0c70b7e321bf3ce2fbe8c854",
+    "/mnt/tidalfs-bdsz01/dataset/llm_dataset/zkn_data/fht_data/OPD-State/runs/rollout-sources/paired-schedule/ordered.parquet": "a98110172a296c791ceb10c27de9f335b905ffb46f98ab119383ddcb9886c760",
+    "/mnt/tidalfs-bdsz01/dataset/llm_dataset/zkn_data/fht_data/OPD-State/docs/experiment/results/2026-10-18-math-student-online-50steps-eval16-20261018-044021/summary.json": "50be0e3ac32a64ed601e72f4747f09f3583fb787d8f51353bd233c20156a3ce3",
+    "/mnt/tidalfs-bdsz01/dataset/llm_dataset/zkn_data/fht_data/OPD-State/docs/experiment/results/2026-10-18-math-student-online-50steps-eval16-20261018-044021/training-1-50.csv": "395d2cedc2c4cc89c34ff6c1aefd6b4900a2913b6e6ff08b103eda4eaab9fdf7",
+    "/mnt/tidalfs-bdsz01/dataset/llm_dataset/zkn_data/fht_data/OPD-State/runs/rollout-sources/math-student-online-50steps-eval16-20261018-044021/logs/math-student-online-50steps-eval16-20261018-044021.log": "f7a1fc4fcf5614b8222f61ce290e4d0e0060d58b7682bb5dafae5a326e3fb501",
+    "/mnt/tidalfs-bdsz01/dataset/llm_dataset/zkn_data/fht_data/OPD-State/runs/rollout-sources/math-student-online-50steps-eval16-20261018-044021/source/verl/verl/trainer/ppo/ray_trainer.py": "2e4fb5e86ab91b70719dae42c8702b12e36d6a64588d9111b9abe55098461614",
+    "/mnt/tidalfs-bdsz01/dataset/llm_dataset/zkn_data/fht_data/OPD-State/runs/rollout-sources/math-student-online-50steps-eval16-20261018-044021/source/verl/verl/experimental/agent_loop/agent_loop.py": "85f7b8068f6cfe9bb2e3cb6b874a9c0d13f000434155bbe72dfd2450596e22d1",
+    "/mnt/tidalfs-bdsz01/dataset/llm_dataset/zkn_data/fht_data/OPD-State/runs/rollout-sources/math-student-online-50steps-eval16-20261018-044021/source/verl/verl/workers/rollout/vllm_rollout/vllm_async_server.py": "1a888b6cb19472c607a8385435f47c076d0862e597e0a34ebdeee37221456792",
+    "/mnt/tidalfs-bdsz01/dataset/llm_dataset/zkn_data/fht_data/OPD-State/runs/rollout-sources/math-student-online-50steps-eval16-20261018-044021/source/verl/verl/workers/engine_workers.py": "d6af3e0f875b31fb9213e74c7f9cadaf2028ff7ff22da12cee38f1ae0e0bbc06",
+    "/mnt/tidalfs-bdsz01/dataset/llm_dataset/zkn_data/fht_data/OPD-State/docs/experiment/results/2026-10-18-math-semi-opd-50steps-eval16-20261018-025524/summary.json": "95a1bdf1e41e1996658b0d6c4a0bc749a230c9d1126d3d71b762a93c9d0cf8b9",
+    "/mnt/tidalfs-bdsz01/dataset/llm_dataset/zkn_data/fht_data/OPD-State/docs/experiment/results/2026-10-18-math-semi-opd-50steps-eval16-20261018-025524/training-1-50.csv": "78269269c3947c0b8cd3977988409c404d6cb8646ae1a8febb294950fa42de82",
+    "/mnt/tidalfs-bdsz01/dataset/llm_dataset/zkn_data/fht_data/OPD-State/runs/rollout-sources/math-semi-opd-50steps-eval16-20261018-025524/logs/math-semi-opd-50steps-eval16-20261018-025524.log": "cf5e53bc74ee8390a47d4af3b096ed1b1b546aa11e267b296cb94d0969b1acca",
+    "/mnt/tidalfs-bdsz01/dataset/llm_dataset/zkn_data/fht_data/OPD-State/runs/rollout-sources/math-semi-opd-50steps-eval16-20261018-025524/source/verl/verl/trainer/ppo/ray_trainer.py": "2e4fb5e86ab91b70719dae42c8702b12e36d6a64588d9111b9abe55098461614",
+    "/mnt/tidalfs-bdsz01/dataset/llm_dataset/zkn_data/fht_data/OPD-State/runs/rollout-sources/math-semi-opd-50steps-eval16-20261018-025524/source/verl/verl/experimental/agent_loop/agent_loop.py": "85f7b8068f6cfe9bb2e3cb6b874a9c0d13f000434155bbe72dfd2450596e22d1",
+    "/mnt/tidalfs-bdsz01/dataset/llm_dataset/zkn_data/fht_data/OPD-State/runs/rollout-sources/math-semi-opd-50steps-eval16-20261018-025524/source/verl/verl/workers/rollout/vllm_rollout/vllm_async_server.py": "1a888b6cb19472c607a8385435f47c076d0862e597e0a34ebdeee37221456792",
+    "/mnt/tidalfs-bdsz01/dataset/llm_dataset/zkn_data/fht_data/OPD-State/runs/rollout-sources/math-semi-opd-50steps-eval16-20261018-025524/source/verl/verl/workers/engine_workers.py": "d6af3e0f875b31fb9213e74c7f9cadaf2028ff7ff22da12cee38f1ae0e0bbc06",
+    "/mnt/tidalfs-bdsz01/dataset/llm_dataset/zkn_data/fht_data/OPD-State/runs/rollout-sources/student-cache/manifest.json": "b3853deffcb9340d5432585442e78179d6ec5b12d4a13ca71b1eb93ada1b0a40",
+    "/mnt/tidalfs-bdsz01/dataset/llm_dataset/zkn_data/fht_data/OPD-State/runs/rollout-sources/preparation-source-4eb96bb1ab62fc7bac735c463dd54bafd315a62a/data/prep/build_rollout_cache.py": "1db151d15131bb4ccf5cbedeff69bf4ec332fad2c86d1ab62b0a3ea9cd38dc1a",
+    "/mnt/tidalfs-bdsz01/dataset/llm_dataset/zkn_data/fht_data/OPD-State/recipe/prepare_math_cache.sh": "38ac5305b8fbd51a6fae384731735fcf345d95f5890bc5ae81490474e084f4b8",
+    "/mnt/tidalfs-bdsz01/dataset/llm_dataset/zkn_data/fht_data/OPD-State/runs/rollout-sources/student-cache/shard-0.jsonl": "cf3af1f06830e73d0f055f4176684f10c1d359f7327ade9d431c20ae46cda903",
+    "/mnt/tidalfs-bdsz01/dataset/llm_dataset/zkn_data/fht_data/OPD-State/runs/rollout-sources/student-cache/shard-1.jsonl": "86f263de1567552bf7dcbce466475f8f0e1e856031768f65d0d45b8c21e812c5",
+    "/mnt/tidalfs-bdsz01/dataset/llm_dataset/zkn_data/fht_data/OPD-State/runs/rollout-sources/student-cache/shard-2.jsonl": "2ecc15059e7e990e27c8206dbd82f127089f1ab6024f952b3e77f360d1e7119d",
+    "/mnt/tidalfs-bdsz01/dataset/llm_dataset/zkn_data/fht_data/OPD-State/runs/rollout-sources/student-cache/shard-3.jsonl": "903924609d18598ab22078e836d034ff8eff2215f0e2b49787fc798a51dd0044"
+  },
+  "prompt_audit": {
+    "records": 3200,
+    "unique_source_rows": 3200,
+    "unique_prompt_ids": 3200,
+    "unique_prompt_contents": 3175,
+    "duplicate_content_records": 25,
+    "duplicate_content_groups": 25,
+    "within_batch_content_duplicates": 0,
+    "sampler_repeats_source_rows": false,
+    "ppo_epochs": 1
+  },
+  "arms": {
+    "online": {
+      "responses": 3200,
+      "response_tokens": 12407645,
+      "training_seconds": 2348.6996868252754,
+      "validation_seconds": 5723.276012279093,
+      "generation_or_cache_read_seconds": 1787.1166415810585,
+      "weight_sync_seconds": 114.1689280346036,
+      "logged_weight_sync_calls": 50,
+      "rollout_settings": {
+        "calculate_log_probs": true,
+        "enforce_eager": true,
+        "gpu_memory_utilization": 0.55,
+        "max_model_len": 32768,
+        "max_num_batched_tokens": 32768,
+        "max_num_seqs": 64,
+        "free_cache_engine": true,
+        "load_format": "dummy"
+      },
+      "observed_engine_init_log_lines": 1
+    },
+    "semi": {
+      "responses": 3200,
+      "response_tokens": 12482086,
+      "training_seconds": 410.1682800874114,
+      "validation_seconds": 5708.151041984558,
+      "generation_or_cache_read_seconds": 3.45700041949749,
+      "weight_sync_seconds": 5.645937949419022,
+      "logged_weight_sync_calls": 1,
+      "rollout_settings": {
+        "calculate_log_probs": true,
+        "enforce_eager": true,
+        "gpu_memory_utilization": 0.55,
+        "max_model_len": 32768,
+        "max_num_batched_tokens": 32768,
+        "max_num_seqs": 64,
+        "free_cache_engine": true,
+        "load_format": "dummy"
+      },
+      "observed_engine_init_log_lines": 1
+    }
+  },
+  "offline_preparation": {
+    "seconds_including_startup_database_and_hashes": 537.4815091192722,
+    "engine_literal_settings_from_frozen_source": {
+      "dtype": "bfloat16",
+      "tensor_parallel_size": 1,
+      "max_num_batched_tokens": 8192,
+      "gpu_memory_utilization": 0.65,
+      "enforce_eager": true,
+      "enable_prefix_caching": true,
+      "worker_extension_cls": "verl.workers.rollout.vllm_rollout.utils.vLLMColocateWorkerExtension"
+    },
+    "shard_records": [800, 800, 800, 800],
+    "requests_per_gpu_batch": 64,
+    "waves_per_gpu": 13,
+    "max_response_length_each_wave_per_gpu": [
+      [
+        4096, 4096, 4096, 4096, 4096, 4096, 4096, 4096, 4096, 4096, 4096, 4096,
+        4096
+      ],
+      [
+        4096, 4096, 4096, 4096, 4096, 4096, 4096, 4096, 4096, 4096, 4096, 4096,
+        4096
+      ],
+      [
+        4096, 4096, 4096, 4096, 4096, 4096, 4096, 4096, 4096, 4096, 4096, 4096,
+        4096
+      ],
+      [
+        4096, 4096, 4096, 4096, 4096, 4096, 4096, 4096, 4096, 4096, 4096, 4096,
+        4096
+      ]
+    ],
+    "phase_output_tokens_per_second": 23223.284500434984,
+    "max_model_len": 5120,
+    "generation_logprobs": null,
+    "batch_size_provenance": "prepare_math_cache.sh passes --gpus 4 --batch-size 64; shard totals checked"
+  },
+  "online_generation": {
+    "requests_per_global_training_batch": 64,
+    "average_available_requests_per_gpu": 16,
+    "waves": 50,
+    "request_latency_max_sum_seconds": 1723.9388260692358,
+    "slowest_request_chain_sum_seconds": 1754.490140862763,
+    "generation_wall_minus_slowest_request_chain_seconds": 32.626500718295574,
+    "median_generation_wall_seconds": 34.86965875700116,
+    "median_max_request_latency_seconds": 34.222526893019676,
+    "phase_output_tokens_per_second": 6942.82886259902,
+    "scope": "Request latency includes routing, engine queue/prefill/decode/logprobs and response return; not GPU-kernel-only time"
+  },
+  "first_pass_difference": {
+    "total_seconds": 1401.0498976185918,
+    "generation_and_preparation_seconds": 1246.1781320422888,
+    "generation_and_preparation_fraction": 0.8894602070636146,
+    "weight_sync_seconds": 108.52299008518457,
+    "remaining_scoring_update_overhead_seconds": 46.34877549111843,
+    "preparation_plus_training_speed_ratio": 2.4784469047278193
+  },
+  "causal_scope": "Batching is a concrete configuration difference consistent with the wave counts. Its isolated effect versus logprobs, engine budget, routing and model weights has not been measured in a controlled GPU ablation. No rollout-count savings in this first 50-step pass.",
+  "outputs_sha256": {
+    "duplicate-prompt-pairs.csv": "f7789555132f718aeea13640980db8eb35ec4a83e185c6c76c0e21acff63f695"
+  }
+}
