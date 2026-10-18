@@ -1,0 +1,400 @@
+{
+  "exporter_sha256": "279d68127207774c6d5320d67fc3721ebd9d9c3adf31df8f7344953c18d8c438",
+  "wandb_version": "0.30.0",
+  "retrieved_at_utc": "2026-10-18T03:12:58.114846+00:00",
+  "requested_samples": 10000,
+  "scope": "W&B sampled system stream, GPU indices 0-3 only; phase boundaries approximate; not continuous peaks",
+  "runs": {
+    "Online student": {
+      "id": "g50xyfia",
+      "url": "https://wandb.ai/wncfht/OPD-State/runs/g50xyfia",
+      "system_events_returned": 1078,
+      "gpu_events_retained": 1078,
+      "first_gpu_timestamp": 1792269772.9189706,
+      "last_gpu_timestamp": 1792277843.1105347,
+      "phase_boundaries": {
+        "training_start_estimate": 1792269778.7878783,
+        "validation_start_estimate": 1792272128.3543127,
+        "validation_end_estimate": 1792277851.6303248
+      },
+      "local_training_csv_sha256": "395d2cedc2c4cc89c34ff6c1aefd6b4900a2913b6e6ff08b103eda4eaab9fdf7",
+      "sampled_gpu_statistics": {
+        "all": {
+          "0": {
+            "memory_samples": 539,
+            "max_used_GiB": 45.6744384765625,
+            "mean_gpu_utilization_percent": 49.037105751391465
+          },
+          "1": {
+            "memory_samples": 539,
+            "max_used_GiB": 45.7740478515625,
+            "mean_gpu_utilization_percent": 48.42300556586271
+          },
+          "2": {
+            "memory_samples": 539,
+            "max_used_GiB": 45.6431884765625,
+            "mean_gpu_utilization_percent": 48.204081632653065
+          },
+          "3": {
+            "memory_samples": 539,
+            "max_used_GiB": 45.6842041015625,
+            "mean_gpu_utilization_percent": 49.55287569573284
+          }
+        },
+        "initialization": {
+          "0": {
+            "memory_samples": 1,
+            "max_used_GiB": 2.3170166015625,
+            "mean_gpu_utilization_percent": 0.0
+          },
+          "1": {
+            "memory_samples": 1,
+            "max_used_GiB": 2.3170166015625,
+            "mean_gpu_utilization_percent": 0.0
+          },
+          "2": {
+            "memory_samples": 1,
+            "max_used_GiB": 2.3170166015625,
+            "mean_gpu_utilization_percent": 0.0
+          },
+          "3": {
+            "memory_samples": 1,
+            "max_used_GiB": 2.3170166015625,
+            "mean_gpu_utilization_percent": 0.0
+          }
+        },
+        "training": {
+          "0": {
+            "memory_samples": 157,
+            "max_used_GiB": 45.1627197265625,
+            "mean_gpu_utilization_percent": 42.27388535031847
+          },
+          "1": {
+            "memory_samples": 157,
+            "max_used_GiB": 45.1705322265625,
+            "mean_gpu_utilization_percent": 43.06369426751592
+          },
+          "2": {
+            "memory_samples": 157,
+            "max_used_GiB": 45.1412353515625,
+            "mean_gpu_utilization_percent": 42.70700636942675
+          },
+          "3": {
+            "memory_samples": 157,
+            "max_used_GiB": 45.1588134765625,
+            "mean_gpu_utilization_percent": 42.71337579617835
+          }
+        },
+        "validation": {
+          "0": {
+            "memory_samples": 381,
+            "max_used_GiB": 45.6744384765625,
+            "mean_gpu_utilization_percent": 51.95275590551181
+          },
+          "1": {
+            "memory_samples": 381,
+            "max_used_GiB": 45.7740478515625,
+            "mean_gpu_utilization_percent": 50.75853018372703
+          },
+          "2": {
+            "memory_samples": 381,
+            "max_used_GiB": 45.6431884765625,
+            "mean_gpu_utilization_percent": 50.59580052493438
+          },
+          "3": {
+            "memory_samples": 381,
+            "max_used_GiB": 45.6842041015625,
+            "mean_gpu_utilization_percent": 52.501312335958005
+          }
+        },
+        "after_validation": {}
+      },
+      "outputs_sha256": {
+        "g50xyfia/gpu-samples-1-900.csv": "fb017662f7e5f7c60277f020deb6e2ee173cbe2b859c1eb3fcefe32b57b256d5",
+        "g50xyfia/gpu-samples-901-1078.csv": "9a0ea7cfc5ec2047dce925b44ef6aa9501edca251546b39dcdedd9205d7c097c"
+      }
+    },
+    "Teacher rollout": {
+      "id": "va2nhhra",
+      "url": "https://wandb.ai/wncfht/OPD-State/runs/va2nhhra",
+      "system_events_returned": 864,
+      "gpu_events_retained": 432,
+      "first_gpu_timestamp": 1792255996.5430872,
+      "last_gpu_timestamp": 1792262459.8242726,
+      "phase_boundaries": {
+        "training_start_estimate": 1792255994.798663,
+        "validation_start_estimate": 1792256405.9861045,
+        "validation_end_estimate": 1792262474.3855205
+      },
+      "local_training_csv_sha256": "7f4255f5199810257831d033c91ef84b950c0b2c12f115e68921255d31646fdb",
+      "sampled_gpu_statistics": {
+        "all": {
+          "0": {
+            "memory_samples": 432,
+            "max_used_GiB": 62.32440185546875,
+            "mean_gpu_utilization_percent": 56.645833333333336
+          },
+          "1": {
+            "memory_samples": 432,
+            "max_used_GiB": 47.4420166015625,
+            "mean_gpu_utilization_percent": 57.55555555555556
+          },
+          "2": {
+            "memory_samples": 432,
+            "max_used_GiB": 47.4381103515625,
+            "mean_gpu_utilization_percent": 57.2337962962963
+          },
+          "3": {
+            "memory_samples": 432,
+            "max_used_GiB": 47.4400634765625,
+            "mean_gpu_utilization_percent": 56.87268518518518
+          }
+        },
+        "initialization": {},
+        "training": {
+          "0": {
+            "memory_samples": 28,
+            "max_used_GiB": 33.6041259765625,
+            "mean_gpu_utilization_percent": 66.71428571428571
+          },
+          "1": {
+            "memory_samples": 28,
+            "max_used_GiB": 33.9771728515625,
+            "mean_gpu_utilization_percent": 68.92857142857143
+          },
+          "2": {
+            "memory_samples": 28,
+            "max_used_GiB": 33.9400634765625,
+            "mean_gpu_utilization_percent": 64.78571428571429
+          },
+          "3": {
+            "memory_samples": 28,
+            "max_used_GiB": 34.0220947265625,
+            "mean_gpu_utilization_percent": 68.57142857142857
+          }
+        },
+        "validation": {
+          "0": {
+            "memory_samples": 404,
+            "max_used_GiB": 62.32440185546875,
+            "mean_gpu_utilization_percent": 55.948019801980195
+          },
+          "1": {
+            "memory_samples": 404,
+            "max_used_GiB": 47.4420166015625,
+            "mean_gpu_utilization_percent": 56.76732673267327
+          },
+          "2": {
+            "memory_samples": 404,
+            "max_used_GiB": 47.4381103515625,
+            "mean_gpu_utilization_percent": 56.710396039603964
+          },
+          "3": {
+            "memory_samples": 404,
+            "max_used_GiB": 47.4400634765625,
+            "mean_gpu_utilization_percent": 56.06188118811881
+          }
+        },
+        "after_validation": {}
+      },
+      "outputs_sha256": {
+        "va2nhhra/gpu-samples-1-432.csv": "1f7f78dc8931fe71ab55838bad0a3cdb1f66fef1c96545955fc02d6b1d2a49d6"
+      }
+    },
+    "Semi-OPD": {
+      "id": "scodl08e",
+      "url": "https://wandb.ai/wncfht/OPD-State/runs/scodl08e",
+      "system_events_returned": 817,
+      "gpu_events_retained": 408,
+      "first_gpu_timestamp": 1792263488.3927853,
+      "last_gpu_timestamp": 1792269592.8868785,
+      "phase_boundaries": {
+        "training_start_estimate": 1792263487.8727314,
+        "validation_start_estimate": 1792263899.4962826,
+        "validation_end_estimate": 1792269607.6473246
+      },
+      "local_training_csv_sha256": "78269269c3947c0b8cd3977988409c404d6cb8646ae1a8febb294950fa42de82",
+      "sampled_gpu_statistics": {
+        "all": {
+          "0": {
+            "memory_samples": 408,
+            "max_used_GiB": 47.4302978515625,
+            "mean_gpu_utilization_percent": 51.82843137254902
+          },
+          "1": {
+            "memory_samples": 408,
+            "max_used_GiB": 47.2896728515625,
+            "mean_gpu_utilization_percent": 53.82843137254902
+          },
+          "2": {
+            "memory_samples": 408,
+            "max_used_GiB": 47.2896728515625,
+            "mean_gpu_utilization_percent": 54.02450980392157
+          },
+          "3": {
+            "memory_samples": 408,
+            "max_used_GiB": 47.2896728515625,
+            "mean_gpu_utilization_percent": 54.72794117647059
+          }
+        },
+        "initialization": {},
+        "training": {
+          "0": {
+            "memory_samples": 28,
+            "max_used_GiB": 37.0357666015625,
+            "mean_gpu_utilization_percent": 64.75
+          },
+          "1": {
+            "memory_samples": 28,
+            "max_used_GiB": 37.1549072265625,
+            "mean_gpu_utilization_percent": 64.32142857142857
+          },
+          "2": {
+            "memory_samples": 28,
+            "max_used_GiB": 36.9283447265625,
+            "mean_gpu_utilization_percent": 66.39285714285714
+          },
+          "3": {
+            "memory_samples": 28,
+            "max_used_GiB": 36.6236572265625,
+            "mean_gpu_utilization_percent": 68.53571428571429
+          }
+        },
+        "validation": {
+          "0": {
+            "memory_samples": 380,
+            "max_used_GiB": 47.4302978515625,
+            "mean_gpu_utilization_percent": 50.876315789473686
+          },
+          "1": {
+            "memory_samples": 380,
+            "max_used_GiB": 47.2896728515625,
+            "mean_gpu_utilization_percent": 53.055263157894736
+          },
+          "2": {
+            "memory_samples": 380,
+            "max_used_GiB": 47.2896728515625,
+            "mean_gpu_utilization_percent": 53.113157894736844
+          },
+          "3": {
+            "memory_samples": 380,
+            "max_used_GiB": 47.2896728515625,
+            "mean_gpu_utilization_percent": 53.71052631578947
+          }
+        },
+        "after_validation": {}
+      },
+      "outputs_sha256": {
+        "scodl08e/gpu-samples-1-408.csv": "19b7cc79b4d9203f4f788dc936d7b2324202a6b99a41bd5293156660640976c6"
+      }
+    },
+    "Fusion 0.5": {
+      "id": "g5m60gys",
+      "url": "https://wandb.ai/wncfht/OPD-State/runs/g5m60gys",
+      "system_events_returned": 1190,
+      "gpu_events_retained": 595,
+      "first_gpu_timestamp": 1792278022.910613,
+      "last_gpu_timestamp": 1792286929.2981775,
+      "phase_boundaries": {
+        "training_start_estimate": 1792278030.479198,
+        "validation_start_estimate": 1792281030.2300365,
+        "validation_end_estimate": 1792286937.8736458
+      },
+      "local_training_csv_sha256": "77feb07fe4e5630cada047225cdca22c3a7e14e6ca5fd2e40a777e4a791be7ba",
+      "sampled_gpu_statistics": {
+        "all": {
+          "0": {
+            "memory_samples": 595,
+            "max_used_GiB": 58.2427978515625,
+            "mean_gpu_utilization_percent": 63.35966386554622
+          },
+          "1": {
+            "memory_samples": 595,
+            "max_used_GiB": 59.2955322265625,
+            "mean_gpu_utilization_percent": 62.21008403361345
+          },
+          "2": {
+            "memory_samples": 595,
+            "max_used_GiB": 58.6588134765625,
+            "mean_gpu_utilization_percent": 64.44705882352942
+          },
+          "3": {
+            "memory_samples": 595,
+            "max_used_GiB": 58.4849853515625,
+            "mean_gpu_utilization_percent": 63.299159663865545
+          }
+        },
+        "initialization": {
+          "0": {
+            "memory_samples": 1,
+            "max_used_GiB": 10.4752197265625,
+            "mean_gpu_utilization_percent": 28.0
+          },
+          "1": {
+            "memory_samples": 1,
+            "max_used_GiB": 10.4771728515625,
+            "mean_gpu_utilization_percent": 24.0
+          },
+          "2": {
+            "memory_samples": 1,
+            "max_used_GiB": 10.5181884765625,
+            "mean_gpu_utilization_percent": 39.0
+          },
+          "3": {
+            "memory_samples": 1,
+            "max_used_GiB": 10.5709228515625,
+            "mean_gpu_utilization_percent": 26.0
+          }
+        },
+        "training": {
+          "0": {
+            "memory_samples": 200,
+            "max_used_GiB": 58.2427978515625,
+            "mean_gpu_utilization_percent": 82.23
+          },
+          "1": {
+            "memory_samples": 200,
+            "max_used_GiB": 59.2955322265625,
+            "mean_gpu_utilization_percent": 84.415
+          },
+          "2": {
+            "memory_samples": 200,
+            "max_used_GiB": 58.6588134765625,
+            "mean_gpu_utilization_percent": 85.36
+          },
+          "3": {
+            "memory_samples": 200,
+            "max_used_GiB": 58.4849853515625,
+            "mean_gpu_utilization_percent": 83.275
+          }
+        },
+        "validation": {
+          "0": {
+            "memory_samples": 394,
+            "max_used_GiB": 57.5142822265625,
+            "mean_gpu_utilization_percent": 53.870558375634516
+          },
+          "1": {
+            "memory_samples": 394,
+            "max_used_GiB": 59.2115478515625,
+            "mean_gpu_utilization_percent": 51.035532994923855
+          },
+          "2": {
+            "memory_samples": 394,
+            "max_used_GiB": 58.0299072265625,
+            "mean_gpu_utilization_percent": 53.89593908629442
+          },
+          "3": {
+            "memory_samples": 394,
+            "max_used_GiB": 57.7330322265625,
+            "mean_gpu_utilization_percent": 53.253807106598984
+          }
+        },
+        "after_validation": {}
+      },
+      "outputs_sha256": {
+        "g5m60gys/gpu-samples-1-595.csv": "545df7d609a1abb99700f91f35ef1d80d2be6350c1d15f55f68d609f1a287f86"
+      }
+    }
+  }
+}

@@ -1,0 +1,23 @@
+{
+  "criterion": {
+    "minimum_steps": 300,
+    "validation_points": 4,
+    "macro_mean_range": 0.01,
+    "relative_rms_span": 0.05,
+    "relative_gradient_span": 0.1
+  },
+  "training_steps": 50,
+  "validation_points": 1,
+  "windows": [
+    {
+      "step": 50,
+      "macro_mean@16": 0.6480277777777778,
+      "token_weighted_log_ratio_rms": 0.4968954706091586,
+      "mean_grad_norm": 1.0973768055438995
+    }
+  ],
+  "status": "insufficient_observation",
+  "requested_max_steps": 800,
+  "stopped": false,
+  "budget_exhausted": false
+}

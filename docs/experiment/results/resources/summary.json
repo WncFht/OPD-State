@@ -1,0 +1,149 @@
+{
+  "profiler_sha256": "d14c4a077c973297370d7f3c4d8132492b5414942a8451b71df8eb411cf9fc4c",
+  "inputs_sha256": {
+    "/mnt/tidalfs-bdsz01/dataset/llm_dataset/zkn_data/fht_data/OPD-State/docs/experiment/results/2026-10-18-math-student-online-50steps-eval16-20261018-044021/training-1-50.csv": "395d2cedc2c4cc89c34ff6c1aefd6b4900a2913b6e6ff08b103eda4eaab9fdf7",
+    "/mnt/tidalfs-bdsz01/dataset/llm_dataset/zkn_data/fht_data/OPD-State/docs/experiment/results/2026-10-18-math-teacher-cache-50steps-eval16-20261018-005033/training-1-50.csv": "7f4255f5199810257831d033c91ef84b950c0b2c12f115e68921255d31646fdb",
+    "/mnt/tidalfs-bdsz01/dataset/llm_dataset/zkn_data/fht_data/OPD-State/docs/experiment/results/2026-10-18-math-teacher-cache-50steps-eval16-20261018-005033/cache-manifest.json": "ec79972b26191f47f9826293d9c475fe1cd8335e769375116c8e0466408faf34",
+    "/mnt/tidalfs-bdsz01/dataset/llm_dataset/zkn_data/fht_data/OPD-State/docs/experiment/results/2026-10-18-math-semi-opd-50steps-eval16-20261018-025524/training-1-50.csv": "78269269c3947c0b8cd3977988409c404d6cb8646ae1a8febb294950fa42de82",
+    "/mnt/tidalfs-bdsz01/dataset/llm_dataset/zkn_data/fht_data/OPD-State/docs/experiment/results/2026-10-18-math-semi-opd-50steps-eval16-20261018-025524/cache-manifest.json": "b3853deffcb9340d5432585442e78179d6ec5b12d4a13ca71b1eb93ada1b0a40",
+    "/mnt/tidalfs-bdsz01/dataset/llm_dataset/zkn_data/fht_data/OPD-State/docs/experiment/results/2026-10-18-math-fusion-lambda05-50steps-eval16-20261018-065746/training-1-50.csv": "77feb07fe4e5630cada047225cdca22c3a7e14e6ca5fd2e40a777e4a791be7ba",
+    "/mnt/tidalfs-bdsz01/dataset/llm_dataset/zkn_data/fht_data/models/DeepSeek-R1-Distill-Qwen-1.5B/config.json": "37bd455e9679d2959536270fed49d25cc7c290a64f6e52abb97c71345a9cee41",
+    "/mnt/tidalfs-bdsz01/dataset/llm_dataset/zkn_data/fht_data/models/JustRL-DeepSeek-1.5B/config.json": "f62729adb55c028ee1a59a27279b4c35510211aebf5f987e7080c2312ce71755"
+  },
+  "runs": {
+    "Online student": {
+      "steps": 50,
+      "cache_preparation_seconds": null,
+      "training_seconds": 2348.6996868252754,
+      "validation_seconds": 5723.276012279093,
+      "phases_seconds": {
+        "generate_or_read_cache": 1787.1166415810585,
+        "student_log_prob": 99.25590693950653,
+        "teacher_score": 99.77111191302538,
+        "advantage_excluding_teacher": 0.1861257255077362,
+        "actor_update": 247.80331853032112,
+        "weight_sync": 114.1689280346036,
+        "other_training_overhead": 0.39765410125255585
+      },
+      "actor_memory": {
+        "source": "Online student",
+        "actor_reported_max_allocated_GiB": 15.594857215881348,
+        "actor_reported_max_reserved_GiB": 20.90234375
+      },
+      "validation_fraction_of_training_plus_validation": 0.7090303818573342
+    },
+    "Teacher rollout": {
+      "steps": 50,
+      "cache_preparation_seconds": 545.4189964458346,
+      "training_seconds": 409.6142076700926,
+      "validation_seconds": 6068.3994159549475,
+      "phases_seconds": {
+        "generate_or_read_cache": 3.3223022297024727,
+        "student_log_prob": 85.50617454946041,
+        "teacher_score": 96.69901262968779,
+        "advantage_excluding_teacher": 0.03111695498228073,
+        "actor_update": 218.13203919678926,
+        "weight_sync": 5.5857574343681335,
+        "other_training_overhead": 0.3378046751022339
+      },
+      "actor_memory": {
+        "source": "Teacher rollout",
+        "actor_reported_max_allocated_GiB": 15.609472274780273,
+        "actor_reported_max_reserved_GiB": 37.1796875
+      },
+      "validation_fraction_of_training_plus_validation": 0.9367685479733715
+    },
+    "Semi-OPD": {
+      "steps": 50,
+      "cache_preparation_seconds": 537.4815091192722,
+      "training_seconds": 410.1682800874114,
+      "validation_seconds": 5708.151041984558,
+      "phases_seconds": {
+        "generate_or_read_cache": 3.45700041949749,
+        "student_log_prob": 81.92267806082964,
+        "teacher_score": 95.88589823246002,
+        "advantage_excluding_teacher": 0.0347362756729126,
+        "actor_update": 222.85712154954672,
+        "weight_sync": 5.645937949419022,
+        "other_training_overhead": 0.3649075999855995
+      },
+      "actor_memory": {
+        "source": "Semi-OPD",
+        "actor_reported_max_allocated_GiB": 15.620049476623535,
+        "actor_reported_max_reserved_GiB": 37.458984375
+      },
+      "validation_fraction_of_training_plus_validation": 0.9329606288106408
+    },
+    "Fusion 0.5": {
+      "steps": 50,
+      "cache_preparation_seconds": null,
+      "training_seconds": 2999.004644088447,
+      "validation_seconds": 5907.643609270453,
+      "phases_seconds": {
+        "generate_or_read_cache": 2450.5900716111064,
+        "student_log_prob": 102.30304007232189,
+        "teacher_score": 98.81299927830696,
+        "advantage_excluding_teacher": 0.027565374970436096,
+        "actor_update": 233.66199597716331,
+        "weight_sync": 113.25267004966736,
+        "other_training_overhead": 0.3563017249107361
+      },
+      "actor_memory": {
+        "source": "Fusion 0.5",
+        "actor_reported_max_allocated_GiB": 15.58956241607666,
+        "actor_reported_max_reserved_GiB": 20.8828125
+      },
+      "validation_fraction_of_training_plus_validation": 0.6632847106140681
+    }
+  },
+  "model_estimates": {
+    "DeepSeek-R1-Distill-Qwen-1.5B": {
+      "checkpoint_file_GiB": 3.310120311565697,
+      "BF16_KV_bytes_per_token": 28672,
+      "single_model_KV_16_sequences_5120_tokens_GiB": 2.1875,
+      "scope": "Config-derived KV storage estimate; excludes runtime workspaces, allocator and CUDA contexts"
+    },
+    "JustRL-DeepSeek-1.5B": {
+      "checkpoint_file_GiB": 3.3101204335689545,
+      "BF16_KV_bytes_per_token": 28672,
+      "single_model_KV_16_sequences_5120_tokens_GiB": 2.1875,
+      "scope": "Config-derived KV storage estimate; excludes runtime workspaces, allocator and CUDA contexts"
+    }
+  },
+  "memory_scope": "Maximum reported actor PyTorch allocator high-water mark, reduced by max across ranks; not whole-device/run peaks",
+  "timing_scope": "Logged training stage wall times; teacher is inside adv; setup/hash checks are not fully timed",
+  "whole_gpu_observation": {
+    "path": "runs/rollout-sources/resource-monitor-20261018-1110/gpu.csv",
+    "observed_bytes": 18178,
+    "prefix_sha256": "829e328bd24c91278da8d8e95511187ae7c06174bcbba2a23331fc25a6fe8848",
+    "start_utc": "2026-10-18T03:09:03.948580+00:00",
+    "end_utc": "2026-10-18T03:11:17.282940+00:00",
+    "gpus": {
+      "0": {
+        "samples": 61,
+        "max_memory_used_GiB": 47.4228515625,
+        "mean_gpu_utilization_percent": 77.24590163934427
+      },
+      "1": {
+        "samples": 61,
+        "max_memory_used_GiB": 47.4384765625,
+        "mean_gpu_utilization_percent": 75.21311475409836
+      },
+      "2": {
+        "samples": 61,
+        "max_memory_used_GiB": 47.5615234375,
+        "mean_gpu_utilization_percent": 74.81967213114754
+      },
+      "3": {
+        "samples": 61,
+        "max_memory_used_GiB": 47.5751953125,
+        "mean_gpu_utilization_percent": 76.85245901639344
+      }
+    },
+    "scope": "Sampled whole-device usage only during the recorded window; short peaks can be missed"
+  },
+  "outputs_sha256": {
+    "training-phases.csv": "a79714557c7b5a5b06339d86aecef7807c115aa808b852020c21df4e33bc32fc",
+    "actor-memory.csv": "96953e6b2de37223cb8a093141251094f62db481feb9e1b4c524defb16582e67"
+  }
+}

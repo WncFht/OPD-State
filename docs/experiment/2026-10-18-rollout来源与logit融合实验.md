@@ -4,7 +4,7 @@
 
 这是一组统一的 math 蒸馏实验：比较当前 student、固定 teacher、初始 student 缓存三种轨迹来源，再加入共享 prefix 的 logit fusion。四个设置均已完成 50 次 student 更新和最终三基准 eval16，日志、逐题输出与 W&B 指标核对一致。训练、缓存生成和结果处理脚本均随仓保存；正式运行只使用物理 GPU 0–3，不保存模型 checkpoint。
 
-在线 student、teacher 轨迹、Semi-OPD、fusion 的 macro mean@16（三个基准等权平均）分别为 **64.84%、62.52%、64.59%、64.16%**。目前没有证据表明 λ=0.5 fusion 稳定提高平均正确率。四组都只有一个验证预算点，不能据此判断收敛。长时 Semi-OPD 正在运行，同一缓存最多重复训练 800 步，每 50 步执行完整三基准 eval16；第 50 步评测仍在生成，尚无长时准确率曲线。
+在线 student、teacher 轨迹、Semi-OPD、fusion 的 macro mean@16（三个基准等权平均）分别为 **64.84%、62.52%、64.59%、64.16%**。目前没有证据表明 λ=0.5 fusion 稳定提高平均正确率。四组都只有一个验证预算点，不能据此判断收敛。长时 Semi-OPD 正在运行，同一缓存最多重复训练 800 步，每 50 步执行完整三基准 eval16；第 50 步完整验证已完成，macro mean@16 为 64.80%，已继续第二轮缓存训练；当前仍只有一个长时验证点。
 
 用户指定的两个独立评测 run 分别是 `math_teacher`（u87buult）与 `math_student`（6uorrk2k）。[^reference-teacher][^reference-student] API 已核对模型名称、finished 状态、val_only、三个基准、每题 16 个响应及采样和长度配置；它们提供 teacher 与初始 student 的准确率参考。远端原始响应、数据和权重哈希尚未核对，因此图中将其标为外部参考，不视为本地同一次训练的 step-0 测量。筛选后的配置和指标保存在[参考数据](results/reference-accuracy.json)。
 
@@ -133,7 +133,7 @@ $$
 
 不同 batch 含不同记录，因此 $\overline L_k$ 可以波动。当前 schedule 有 50 个 batch，长时组不 shuffle，重复同一顺序；重复消费同一批记录时应满足 $\overline L_{k+50}=\overline L_k$。整份初始 student 缓存的平均长度始终为 3,900.651875 token。
 
-已实际读取只读 SQLite 并校验数据库哈希：3,200 条初始 student 响应的长度从 417 到 4,096；50 个 batch 均值从 3,728.21875 到 4,028.828125。第 1 批均值 3,993.6875，第 50 批 3,959.734375；全部 50 步的日志均值都与对应缓存精确一致。独立长时组已记录的 1–49 步也逐步精确匹配同一缓存，尚未经过完整第二轮，跨轮周期性需等后续日志核验。波动来自 batch 内容，没有证据显示 Semi 训练时重新生成了响应。
+已实际读取只读 SQLite 并校验数据库哈希：3,200 条初始 student 响应的长度从 417 到 4,096；50 个 batch 均值从 3,728.21875 到 4,028.828125。第 1 批均值 3,993.6875，第 50 批 3,959.734375；全部 50 步的日志均值都与对应缓存精确一致。独立长时组截至诊断快照第 71 步，全部 1–71 步也逐步精确匹配同一缓存；其中 51–71 步重现了首轮 1–21 批的长度，已实际验证跨轮复用。波动来自 batch 内容，没有证据显示 Semi 训练时重新生成了响应。
 
 长度核验、每批缓存统计和长时观测保存在[缓存诊断](results/state-diagnostics/summary.json)与同目录 CSV。缓存中的实际 `finish_reason=length` 分别为初始 student 的 2,684/3,200（83.875%）、teacher 的 2,549/3,200（79.65625%）；它们说明当前 4K 预算下大部分轨迹没有自然结束，state 比较须控制深度和截断。
 
@@ -402,6 +402,8 @@ $$
 
 长时 Semi-OPD 运行名为 `math-semi-opd-long-800steps-eval16-20261018-092912`，W&B 为 uq1riryx。[^long-run] 其[启动配置证据](results/2026-10-18-semi-long-startup.json)确认完整 eval16、test_freq=50、16 个 epoch、最大 800 步、恒定学习率、无 warmup 和无 checkpoint。模型每 50 步重复同一缓存，适合比较共同状态上的残差窗口；完整验证每次约 95–101 分钟，远长于约七分钟的 50 步缓存更新阶段。
 
+第 50 步阶段结果已完成独立采集：MATH-500 mean@16 为 86.3875%、AMC23 为 80.3125%、AIME25 为 27.7083%，macro 为 64.8028%、micro 为 82.8728%。570 题、9,120 条响应及全部精确指标与训练日志一致，见[阶段摘要](results/long-semi-progress/step-50/summary.json)。该摘要明确为运行中的完整验证快照，不是长时训练已结束。第 50 步的[平台报告](results/long-semi-progress/step-50/plateau-at-step50.json)状态为 `insufficient_observation`；训练已继续，不能从一个验证点宣布平台。
+
 经验平台判据在长时结果产生前固定：至少 300 步，最后四个连续、间隔 50 步的验证点，macro mean@16 极差不超过 0.01；对应四个训练窗口的 token 加权 RMS 相对极差不超过 5%，平均 grad_norm 相对极差不超过 10%。相对极差为最大值减最小值后除以均值，分母下限 $10^{-12}$。
 
 第 $b$ 批有效 token 数 $N_b$、RMS $r_b$ 的窗口合并值为
@@ -438,14 +440,88 @@ batch 均为 64，使用平均响应长度作权重与 $N_b$ 等价。训练器�
 |     8 |                      219.06 |                                  872.09 |   3.98 |                    9.10 |
 |    16 |                      445.93 |                                1,663.44 |   3.73 |                   11.46 |
 
-| 来源         | 缓存预生成，秒 | 训练步骤合计，秒 | 最终验证，秒 |
-| ------------ | -------------: | ---------------: | -----------: |
-| 在线 student |         不适用 |          2,348.7 |      5,723.3 |
-| Teacher 轨迹 |          545.4 |            409.6 |      6,068.4 |
-| Semi-OPD     |          537.5 |            410.2 |      5,708.2 |
-| Fusion λ=0.5 |         不适用 |          2,999.0 |      5,907.6 |
+### 阶段耗时与显存
 
-各计时范围不含相同的启动开销，不能直接相加作为严格的端到端时间。Fusion 生成计时为 2,450.6 秒，训练总耗时仍高于在线单模型组；缓存组的成本比较须计入预生成。
+已有数据包括逐步训练阶段计时、actor 自报的 PyTorch 分配/保留显存高水位、W&B 系统事件里的整卡显存/利用率/功率采样，以及独立 Fusion GPU 基准的显存。下载、环境准备、部分初始化与模型哈希核验没有统一的独立计时；历史离线缓存生成也没有独立的整卡显存时间线。因此下面是已记录时段的分解，不是每个微阶段都已连续测量的端到端 profiler。
+
+| 来源         | 缓存预生成一次，分钟 | 50 步训练，分钟 | 最终完整验证，分钟 |
+| ------------ | -------------------: | --------------: | -----------------: |
+| 在线 student |               不适用 |           39.14 |              95.39 |
+| Teacher 轨迹 |                 9.09 |            6.83 |             101.14 |
+| Semi-OPD     |                 8.96 |            6.84 |              95.14 |
+| Fusion λ=0.5 |               不适用 |           49.98 |              98.46 |
+
+训练内部按 50 步累计秒数进一步分解。`opd_teacher` 位于 `adv` 计时内部，已从优势计算中扣除，避免重复相加。
+
+| 训练阶段                     | 在线 student | Teacher 轨迹 | Semi-OPD | Fusion λ=0.5 |
+| ---------------------------- | -----------: | -----------: | -------: | -----------: |
+| 生成或读取缓存               |     1,787.12 |         3.32 |     3.46 |     2,450.59 |
+| 当前 student log-probability |        99.26 |        85.51 |    81.92 |       102.30 |
+| 冻结 teacher 评分            |        99.77 |        96.70 |    95.89 |        98.81 |
+| 优势计算，扣除 teacher       |         0.19 |         0.03 |     0.03 |         0.03 |
+| Actor 更新                   |       247.80 |       218.13 |   222.86 |       233.66 |
+| 权重同步                     |       114.17 |         5.59 |     5.65 |       113.25 |
+| 其余训练开销                 |         0.40 |         0.34 |     0.36 |         0.36 |
+| 训练合计                     |     2,348.70 |       409.61 |   410.17 |     2,999.00 |
+
+生成/缓存读取、评分、更新与同步之和在未舍入值上与 `timing_s/step` 相同。验证位于该训练计时块之外，未混入训练合计；各列启动范围不完全相同，也不能把缓存预生成和这些计时直接相加当作严格端到端总时间。原始分阶段表及其输入/输出哈希见[资源汇总](results/resources/summary.json)与 `training-phases.csv`。
+
+显存单位均为 GiB。Actor 两列是各 rank 报告的 PyTorch allocator 历史高水位，再取最大值；它们不含独立 teacher/vLLM 进程的全部开销。整卡两列来自 W&B 已记录系统采样的最大值，训练/验证分界按训练日志时间戳和 testing 时长估计，不能定位到单次前向或反向。
+
+| 来源         | Actor 已分配峰值 | Actor 已保留峰值 | 整卡训练期最高采样 | 整卡验证期最高采样 |
+| ------------ | ---------------: | ---------------: | -----------------: | -----------------: |
+| 在线 student |            15.59 |            20.90 |              45.17 |              45.77 |
+| Teacher 轨迹 |            15.61 |            37.18 |              34.02 |              62.32 |
+| Semi-OPD     |            15.62 |            37.46 |              37.15 |              47.43 |
+| Fusion λ=0.5 |            15.59 |            20.88 |              59.30 |              59.21 |
+
+整卡数据按 W&B 索引 0–3 导出，不保留其他 GPU 的遥测。事件 API 返回的是采样数据，短时峰值可能未被捕获；W&B 启动前的初始化也不在该窗口内，不能把表中的数值当作真实峰值上界。已保留[整卡事件数据、估计阶段边界和逐卡统计](results/resources/wandb-gpu/summary.json)。当前长时验证另从 2026-10-18 11:09 起用独立 `nvidia-smi` 每两秒采样物理 GPU 0–3，记录整卡显存、GPU 利用率、功率及粗粒度日志阶段；监控随原队列 PID 结束而停止，不改变训练进程。
+
+当前两个模型的 BF16 checkpoint 文件各约 3.31 GiB。按本地 Qwen2 配置，单模型 KV 存储为
+
+$$
+2\times28\times2\times128\times2=28{,}672\ \mathrm{bytes/token},
+$$
+
+其中第一个 2 表示 K/V，28 为层数，第二个 2 为 KV head 数，128 为 head 维度，最后的 2 为 BF16 字节数。每 GPU 16 条、每条容量 5,120 token 时，单模型 KV 为 2.1875 GiB，双模型 Fusion 为 4.375 GiB；这只是 KV 张量估计，不包含 CUDA context、激活、logits、workspace、图缓冲和 allocator 预留。不能仅按 3.31 GiB 的权重文件大小估算生成引擎占用。
+
+actor 参数与 optimizer、teacher 参数已配置 CPU offload，生成后会 sleep vLLM，再执行训练。这使不同阶段可以复用显存。当前 vLLM `gpu_memory_utilization=0.55` 是整个推理实例的预算，不是仅模型权重；[^vllm-memory]新增两个同时活跃、各按相同比例配置的引擎，不能直接沿用原预算。单个 80GB GPU 的两个 55% 预算之和已超过容量，需时分唤醒、重设 KV 预算或复用一个引擎。
+
+资源脚本可重现历史统计并持续记录后续运行；监控命令须填现场存活 PID 和新输出路径，不能照抄历史 PID。运行记录中的 CSV 持续追加，汇总保存读取时的字节前缀哈希。
+
+```bash
+.venv/bin/python eval/profile_math_resources.py summarize
+# 以下 monitor 参数仅表示格式，PID 与运行目录必须现场核验后填写。
+.venv/bin/python eval/profile_math_resources.py monitor --pid 实际PID \
+    --run runs/rollout-sources/实际运行名 --output runs/资源记录新目录/gpu.csv
+# 已有鉴权下导出四个正式运行的系统采样；只保存 GPU 0–3 的选定指标。
+env -u WANDB_API_KEY NETRC="$PWD/../.secrets/netrc" WANDB_CONFIG_DIR="$PWD/../config/wandb" \
+    WANDB_BASE_URL=https://api.wandb.ai ../envs/opd-state/bin/python eval/export_math_gpu_history.py
+```
+
+## 固定 checkpoint 实时生成的重构取舍
+
+工程上支持按需从固定 checkpoint 生成是合理的，但要把“生成来源”与“轨迹复用”拆开。固定初始 student 或固定 teacher 的权重不会随训练更新；每次重新采样仍会产生新 prefix。保持来源分布固定与保持有限 state 集固定是两种不同设置。
+
+| 轨迹复用方式         | 何时生成                              | 相同 prompt 再出现时 | 与当前实验的关系                                   |
+| -------------------- | ------------------------------------- | -------------------- | -------------------------------------------------- |
+| 预生成、只读重放     | 训练前为选定 prompt 一次生成          | 读取相同响应         | 当前 teacher-cache / Semi-OPD                      |
+| 首次遇到时生成并缓存 | 训练过程中遇到该 prompt 的第一次      | 后续读取相同响应     | 推荐的按需缓存入口，减少一次性准备等待；尚未实现   |
+| 每次重新生成         | 每次消费 prompt 时用固定 q 或 p0 采样 | 产生新响应和 state   | 固定来源的 fresh 变体；不是论文的有限缓存 Semi-OPD |
+
+我建议默认保留当前只读缓存作为已审计实验条件，新增按需首次生成的缓存方式，并将每次重采样作为独立对照开关。已有密封缓存不自动补 miss；按需写入使用新模式和独立目录，记录模型/模板/采样身份、每 prompt seed 与实际 token。冻结来源还可以一次预取数个训练 batch，再让 vLLM sleep、执行这些更新，兼顾起步等待和生成批量效率。当前 student 与 fusion 的来源权重每步变化，不能不加标记地复用这种多步预取，否则会引入旧策略轨迹。
+
+每步从固定 q/p0 生成不保证更快。现有在线 student 的生成累计 29.79 分钟；一次性初始 student 缓存准备约 8.96 分钟，长时后续只需重复读取。两种生成方式的批量、启动和执行路径不同，这不是严格同条件吞吐对照，但足以说明多轮复用时的缓存成本不能忽略。实时 fresh 会在每轮重新支付生成成本。长时 Semi 每 50 步训练约七分钟、完整验证约 95 分钟，验证约占两者之和的 93.3%，当前首要时间开销也不是初始缓存准备。
+
+训练步数本来就可以与缓存大小分开。当前长时最大 800 步是在 3,200 条轨迹上重复 16 轮，并没有被缓存限制在 50 步；按需生成进一步解决的是遇到新 prompt 时如何扩展轨迹池，而不是训练能否超过一轮。fresh 与固定缓存的后期 state 覆盖不同，若比较它们，应先保持相同 prompt 清单、优化预算与评测，不能同时扩大 prompt 集后把结果全归因于实时生成。
+
+实现需要独立的 actor 初始化路径、生成 checkpoint 与轨迹复用策略。不能直接把共用的 `actor_rollout_ref.model.path` 改为 teacher，否则会改变可训练 student 的初始化。固定 q/p0 生成也必须屏蔽 actor 的初始及每步参数覆盖；当前全参数 HYBRID sleep level 2 会释放权重，恢复时默认依赖 actor 参数同步，新增 frozen source 必须有自己的权重恢复路径。[^vllm-sleep]固定 checkpoint 可只读盘一次保留 CPU 权重副本，之后按需恢复 GPU，不需要每步重新读磁盘。
+
+无论选择哪个生成 checkpoint，训练仍需每步重算当前 student 的 log-probability。固定来源的生成概率只作行为诊断，不能直接替代 PPO 的当前 student 锚点，也不自动增加当前缓存协议没有使用的重要性修正。
+
+当前两个模型同为相同结构和词表的 Qwen2 1.5B，可优先复用单个 vLLM 引擎，在验证前切换到当前 student，验证后恢复固定生成 checkpoint，并清理旧模型的 prefix/KV cache。若采用两个引擎，则应轮流唤醒，避免各自预留大块 KV 同时占卡。不同架构或词表的 teacher 不能照搬同引擎权重切换方案。source 身份、恢复后的参数、student-only 验证与实际整卡峰值都需要真实短训练核验，当前历史结果不算作这个新模式已通过的证据。
+
+这项重构仍是方案，尚未改变正在运行的固定缓存长时实验。它保留了“固定 states 上持续学习”的收敛对照；fresh 变体应另行记录，不能中途替换其数据后沿用原收敛解释。
 
 ## 复现与结果位置
 
@@ -541,3 +617,7 @@ Teacher 组训练源码固定于 `350a286be0d586f04e4cd0b0e89624a336b17a81`，�
 [^maa-aime]: Mathematical Association of America. MAA Invitational Competitions. MAA 2026. [AIME 介绍](https://maa.org/maa-invitational-competitions/).
 
 [^oneshot-state]: Fu 等。Rethinking On-Policy Distillation of Large Language Models II: One Training Example. arXiv 2609.04172, 2026. [论文](https://arxiv.org/abs/2609.04172). 状态定义和覆盖方法按工作区 Sections/4_Mechanism-Data.tex 与 Appendix.tex 核对。
+
+[^vllm-memory]: vLLM Team. Engine Arguments, v0.10.0. vLLM 文档，访问于 2026. [显存预算参数](https://docs.vllm.ai/en/v0.10.0/configuration/engine_args.html).
+
+[^vllm-sleep]: vLLM Team. GPU worker sleep/wake implementation, v0.10.0. GitHub，访问于 2026. [gpu_worker.py](https://github.com/vllm-project/vllm/blob/v0.10.0/vllm/v1/worker/gpu_worker.py).

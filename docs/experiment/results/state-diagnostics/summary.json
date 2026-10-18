@@ -40,8 +40,8 @@
     }
   },
   "semi_all_50_batch_means_match_cache": true,
-  "long_observed_steps": 49,
-  "long_completed_cycles": 0,
+  "long_observed_steps": 71,
+  "long_completed_cycles": 1,
   "long_all_observed_lengths_match_periodic_cache": true,
   "expected_period_steps": 50,
   "teacher_student_common_prefix_tokens": {
@@ -113,6 +113,6 @@
   },
   "outputs_sha256": {
     "cache-batch-diagnostics.csv": "27d045ab0c1263408e9217aa51ea316722238204e5d6dbba19298fa1261f43f6",
-    "long-length-observations.csv": "66126edc2e5d154139c298a8aa47fa860ab3492fc026e8e7f1277c7daa8ce831"
+    "long-length-observations.csv": "eee3a2394250668d287e214d2695dcd0fe5f56439ee71ec638ea2941ca7ede34"
   }
 }
