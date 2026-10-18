@@ -16,6 +16,7 @@ collection:
 generation_models: {}
 generation_role: current_student
 generation_fingerprint: null
+generation_sync_namespace: ""
 preserve_source_weights: false
 
 # Number of nodes for standalone rollout server, must be > 0 in one-step-off/fully async training.

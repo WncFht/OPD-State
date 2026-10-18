@@ -378,11 +378,10 @@ class RayPPOTrainer(OPDTrainerMixin):
 
         self.fixed_rollout_cache = open_training_cache(config, tokenizer)
         fusion = config.actor_rollout_ref.rollout.get("logit_fusion", {})
-        if config.actor_rollout_ref.rollout.get("policy") is not None:
-            raise NotImplementedError(
-                "Native policy worker contracts are available, but the trainer coordinator is not connected yet. "
-                "Keep rollout.policy=null for existing recipes; do not silently generate from the actor instead."
-            )
+        from verl.trainer.ppo.rollout_coordinator import prepare_native_config
+
+        self.native_policy_enabled = prepare_native_config(config, tokenizer, processor)
+        self.rollout_coordinator = None
         self.use_fusion_rollout = bool(fusion.get("enabled", False))
         if self.opd_topk_tail_enabled() and (self.fixed_rollout_cache is not None or self.use_fusion_rollout):
             raise ValueError("Unbiased top-k tail only supports fresh current-student rollouts")
@@ -520,6 +519,11 @@ class RayPPOTrainer(OPDTrainerMixin):
             total_training_steps = self.config.trainer.total_training_steps
 
         self.total_training_steps = total_training_steps
+        if self.native_policy_enabled:
+            from verl.trainer.ppo.rollout_coordinator import epochs_for_budget
+
+            with open_dict(self.config):
+                self.config.trainer.total_epochs = epochs_for_budget(total_training_steps, len(self.train_dataloader))
         print(f"Total training steps: {self.total_training_steps}")
 
         try:
@@ -689,6 +693,9 @@ class RayPPOTrainer(OPDTrainerMixin):
         if not getattr(self, "validation_enabled", True):
             return {} if not merged else None
 
+        if self.rollout_coordinator is not None:
+            self.rollout_coordinator.begin_eval(self.global_steps)
+
         data_source_lst = []
         reward_extra_infos_dict: dict[str, list] = defaultdict(list)
 
@@ -785,6 +792,10 @@ class RayPPOTrainer(OPDTrainerMixin):
 
             data_source_lst.append(test_batch.non_tensor_batch.get("data_source", ["unknown"] * reward_tensor.shape[0]))
 
+        if self.rollout_coordinator is not None:
+            self.rollout_coordinator.end_eval(
+                self.global_steps, resume_training=self.global_steps < self.total_training_steps
+            )
         self._maybe_log_val_generations(inputs=sample_inputs, outputs=sample_outputs, scores=sample_scores)
 
         # dump generations
@@ -1082,7 +1093,7 @@ class RayPPOTrainer(OPDTrainerMixin):
         # To stream teacher computation with actor rollout, we instead pass the full manager so that the
         # teacher loop workers can sleep/wake together with rollout workers
         reward_loop_worker_handles = self.reward_loop_manager.reward_loop_workers if enable_agent_reward_loop else None
-        self.async_rollout_manager = AgentLoopManager.create(
+        self.async_rollout_manager = None if self.native_policy_enabled else AgentLoopManager.create(
             config=self.config,
             llm_client=self.llm_server_manager.get_client(),
             teacher_client=self.teacher_model_manager.get_client() if self.use_teacher_policy else None,
@@ -1104,6 +1115,14 @@ class RayPPOTrainer(OPDTrainerMixin):
 
         # sleep all replicas to load checkpoint
         self.checkpoint_manager.sleep_replicas()
+        if self.native_policy_enabled:
+            from verl.trainer.ppo.rollout_coordinator import RolloutCoordinator
+
+            self.rollout_coordinator = RolloutCoordinator.create(
+                self.config, self.tokenizer, self.llm_server_manager, self.checkpoint_manager, self.reward_loop_manager
+            )
+            self.checkpoint_manager = self.rollout_coordinator
+            self.async_rollout_manager = self.rollout_coordinator
 
     def _save_checkpoint(self):
         from verl.utils.fs import local_mkdir_safe
@@ -1649,7 +1668,11 @@ class RayPPOTrainer(OPDTrainerMixin):
                     with marked_timer("gen", timing_raw, color="red"):
                         if curr_step_profile:
                             self.llm_server_manager.start_profile()
-                        if self.use_fusion_rollout:
+                        if self.rollout_coordinator is not None:
+                            combined_gen_output = self.rollout_coordinator.generate_sequences(combined_gen_batch)
+                            metrics.update(combined_gen_output.meta_info.pop("native_metrics"))
+                            self.checkpoint_manager.sleep_replicas()
+                        elif self.use_fusion_rollout:
                             prompt_ids = np.empty(len(combined_gen_batch), dtype=object)
                             for i, raw_prompt in enumerate(combined_gen_batch.non_tensor_batch["raw_prompt"]):
                                 prompt_ids[i] = self.tokenizer.apply_chat_template(
@@ -1888,8 +1911,10 @@ class RayPPOTrainer(OPDTrainerMixin):
                         # update weights from trainer to rollout
                         if self.fixed_rollout_cache is None or will_validate:
                             with marked_timer("update_weights", timing_raw, color="red"):
-                                self.checkpoint_manager.update_weights(self.global_steps)
-                            metrics["source/rollout_sync"] = 1.0
+                                sync_metrics = self.checkpoint_manager.update_weights(self.global_steps)
+                            metrics["source/rollout_sync"] = (
+                                sync_metrics["source/rollout_sync"] if self.rollout_coordinator is not None else 1.0
+                            )
                         else:
                             metrics["source/rollout_sync"] = 0.0
 

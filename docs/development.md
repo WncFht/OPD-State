@@ -86,3 +86,14 @@ CUDA_VISIBLE_DEVICES=0,1,2,3 N_GPUS_PER_NODE=4 \
 模型、数据与训练环境需要实际存在；四卡规模、显存预算和 batch 参数仍需实测。使用 `bash -o pipefail` 使训练失败通过上游 tee 管道传回调用方。`OPD_DRY_RUN=1` 仍导入训练依赖，并非无依赖检查；本仓 launcher 测试用替身 Python 核验参数与路径，不代表 Hydra 配置或 GPU 训练通过。
 
 GPU 验收至少记录初始模型身份、权重保存策略、数据哈希、随机种子、有效 token 数、采样配置、时间和峰值显存，先跑原算法小规模基线，再比较候选变体。GPU 限物理编号 0–3；覆盖率与准确率结论必须基于真实结果。三种轨迹来源和 λ=0.5 fusion 已完成四卡 50 步及完整三基准验证；这些单 seed、单预算结果不证明长时收敛。
+
+可选的原生策略入口是 `bash recipe/math_native.sh student_fresh`，默认仍为五十步、仅最终完整 eval16、不保存 checkpoint、W&B 项目 `OPD-State`。当前接入验收只覆盖 current-student 四卡两步；冻结来源、分段和 batch 配方是待验证入口，原生 fusion 尚显式拒绝执行。新路径要求单轮纯文本 Qwen2、每副本 TP=PP=DP=1、n=1 的 sampled-token OPD，固定来源与无偏 top-k tail 暂不兼容。历史缓存与 HF fusion 继续使用原配方。
+
+桥接回归使用训练环境执行，覆盖实际 Hydra 默认值和无 tensor 的生成输入：
+
+```bash
+CUDA_VISIBLE_DEVICES='' PYTHONPATH=verl ../envs/opd-state/bin/python \
+    -m unittest discover -s verl/tests/opd -p test_rollout_coordinator_runtime.py -v
+```
+
+`eval/run_native_acceptance.py` 保存完整源码快照、参数、退出状态与四卡遥测，`eval/collect_native_acceptance.py` 独立核对轨迹和最终指标。它们的短响应结果仅作训练链验收，运行实例和证据见[统一实验报告](experiment/2026-10-18-rollout来源与logit融合实验.md)。

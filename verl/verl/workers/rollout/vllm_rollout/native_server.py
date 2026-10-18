@@ -22,7 +22,13 @@ class NativePolicyServerMixin:
         path = str(Path(self.model_config.path).resolve())
         fingerprint = self.config.get("generation_fingerprint")
         summaries = await self.engine.collective_rpc(
-            "configure_native_source", kwargs={"role": role, "path": path, "fingerprint": fingerprint}
+            "configure_native_source",
+            kwargs={
+                "role": role,
+                "path": path,
+                "fingerprint": fingerprint,
+                "sync_namespace": self.config.get("generation_sync_namespace", ""),
+            },
         )
         if len(summaries) != 1 or summaries[0]["path"] != path or summaries[0]["role"] != role:
             raise RuntimeError("Native source initialization requires the matching TP=1 worker")

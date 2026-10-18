@@ -878,7 +878,10 @@ class vLLMHttpServer(NativePolicyServerMixin):
         self.global_steps = global_steps
 
     async def wait_for_requests_to_drain(self):
-        await self.engine.wait_for_requests_to_drain()
+        if getattr(self, "native_state", None) is not None:
+            await self.drain_native_requests()
+        else:
+            await self.engine.wait_for_requests_to_drain()
 
     async def abort_all_requests(self, reset_prefix_cache: bool = True) -> dict[str, Any]:
         """Abort all ongoing generation requests.

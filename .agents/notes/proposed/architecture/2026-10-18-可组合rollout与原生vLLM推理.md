@@ -20,7 +20,7 @@ Status: proposed
 
 可变选择包括单引擎换权重/双引擎驻留、副本布局、批量分组与流水化、CUDA Graph 和后续 speculative fusion。验证原型保持已归档训练的源码和实验条件，也不以独立生成检查冒充完整 trainer 集成通过；真实训练热更新和两步端到端验收仍是正式接入前的独立条件。
 
-正式 trainer 尚未接入新的生成模式，独立原型与实测证据见后文。审阅基线为 `d17d6c6`，范围是当前 math 的 FSDP、vLLM/HF fusion、权重同步、teacher 评分与验证执行链，涉及 32 个相关文件；另核对安装环境的 vLLM 0.10.0 V1 模型注册、采样、键值缓存（KV cache）与 worker 扩展接口。[代码核验清单](../../../../docs/experiment/results/2026-10-18-rollout-refactor-code-audit.json)保存范围、哈希与源码观察。方案优先使用 vLLM 原生执行；正式实验保留各自固定的源码快照。后续流程图描述目标算法和拟议接入方式，具体实现状态以“vLLM 后端能力与实现边界”和“独立原型”中的证据为准。
+正式 trainer 的可选原生路径已接入协调器，current-student 四卡两步训练与最终短验证通过；其余来源与组合仍需分别验收。初始审阅基线为 `d17d6c6`，范围是当前 math 的 FSDP、vLLM/HF fusion、权重同步、teacher 评分与验证执行链，涉及 32 个相关文件；另核对安装环境的 vLLM 0.10.0 V1 模型注册、采样、键值缓存（KV cache）与 worker 扩展接口。[代码核验清单](../../../../docs/experiment/results/2026-10-18-rollout-refactor-code-audit.json)保存范围、哈希与源码观察。方案优先使用 vLLM 原生执行；正式实验保留各自固定的源码快照。后续流程图描述目标算法和接入方式，具体实现状态以“实施进展”与对应验收证据为准。
 
 ### 实施进展
 
@@ -28,9 +28,13 @@ Status: proposed
 
 随后新增 [native_executor.py](../../../../verl/verl/workers/rollout/native_executor.py)、[lifecycle.py](../../../../verl/verl/workers/rollout/lifecycle.py)与原生服务端接口，生产 CPU 检查合计四十四项通过。执行层保持原 prompt 与完整响应，保留原始结束原因，核对来源/版本/λ；失败时要求原生 abort/drain。服务端将 actor 权重接收、完整 HF 名称集合、最终 bucket、实际写入序号、缓存失效与 CUDA barrier 纳入发布条件，同版本恢复也不能沿用上一次写入回执。固定来源在服务端和真实 inference worker 均拒绝 actor 流。
 
-真实 GPU 检查已覆盖冻结 $p_0$ 与 $q$：生产 worker 扩展拒绝 actor 写入，写入尝试前后及 sleep/wake 后输出一致，EOS=PAD 且原生 finish reason 为 length 时仍保留有效 EOS。每引擎 sleep 释放 8,090 MiB，两个自有进程退出后整卡占用回到基线；见[GPU 身份与恢复证据](../../../../docs/experiment/results/native-rollout/identity-gpu.json)。该证据仅覆盖 native worker 与生产 executor，不代表异步 server 或 FSDP/trainer 已验收；trainer 对非空 policy 暂时报未接入，防止忽略配置后仍从 actor 生成。下一阶段必须以真实协调器替换这一临时门控，并完成全部来源、分段、batch 与 native fusion 的训练验收。
+真实 GPU 检查已覆盖冻结 $p_0$ 与 $q$：生产 worker 扩展拒绝 actor 写入，写入尝试前后及 sleep/wake 后输出一致，EOS=PAD 且原生 finish reason 为 length 时仍保留有效 EOS。每引擎 sleep 释放 8,090 MiB，两个自有进程退出后整卡占用回到基线；见[GPU 身份与恢复证据](../../../../docs/experiment/results/native-rollout/identity-gpu.json)。该证据只覆盖 native worker 与生产 executor，不能代替异步 server 或 FSDP/trainer 验收；协调器与真实训练证据另列如下。
 
-实施前的原生 vLLM 基准已完成三十八个场景，其中三十六个为 B=2/8/16、cap=128 的三次重复，见[基准记录](../../../../docs/experiment/results/native-rollout/baseline-throughput.json)。启动时 GPU 0 已有 6,921 MiB 其他负载，按共享 GPU 微基准记录，不当作独占或四卡训练吞吐。后续仍须完成真实 actor 热同步、固定引用保护、分段与 batch 混合、原生 fusion、阶段耗时和整卡显存、两步训练与正式 math 对照。
+实施前的原生 vLLM 基准已完成三十八个场景，其中三十六个为 B=2/8/16、cap=128 的三次重复，见[基准记录](../../../../docs/experiment/results/native-rollout/baseline-throughput.json)。启动时 GPU 0 已有 6,921 MiB 其他负载，按共享 GPU 微基准记录，不当作独占或四卡训练吞吐。
+
+[rollout_coordinator.py](../../../../verl/verl/trainer/ppo/rollout_coordinator.py)与[native_pool.py](../../../../verl/verl/workers/rollout/native_pool.py)已接入 trainer 的可选原生路径：生成来源独立于 actor 初始化，复用同一 verifier，固定来源跳过训练权重同步，验证显式切回最新 student；数据遍历轮数由实际 dataloader 长度和更新预算计算。每次运行使用独立的权重传输命名空间，避免不同 Ray 集群重复 job ID。四十七项原生 CPU 检查与五项训练环境桥接检查通过，后者使用真正的 metadata-only DataProto 输入。
+
+[current-student 四卡接入证据](../../../../docs/experiment/results/native-rollout/trainer-current/native-acceptance.json)包含两步 FSDP 更新和六题各十六次最终验证。训练生成版本为 0/1，验证独占最终 student 版本 2；完整响应、阶段身份和配额由独立采集器复核，实际 verifier 指标与日志一致，没有保存 checkpoint。运行源码以 d187a4b 为基线的完整文件哈希快照标识，不能只用基线提交代替运行身份。其余单模型、分段、batch 混合、原生 fusion、graph/缓存/排空与正式 50 步完整 math 对照尚待验收，提案保持 proposed。
 
 ### 目标与算法含义
 
@@ -602,7 +606,7 @@ prompt 池由 `data.train_files`、清洗、去重与 sampler 决定，训练步
 
 ### 修改范围与实施顺序
 
-以下路径是建议的修改归属，尚未建立新模块。
+以下路径列出修改归属；已建立的策略、执行器、模型池与协调器继续接受端到端验收。
 
 | 位置                                                | 建议变化                                                                   |
 | --------------------------------------------------- | -------------------------------------------------------------------------- |

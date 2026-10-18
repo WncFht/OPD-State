@@ -202,6 +202,8 @@ async def generate(
 
         tasks = []
         try:
+            if groups and hasattr(backend, "prepare_phase"):
+                await backend.prepare_phase(tuple((stage, len(rows)) for stage, rows in groups.items()))
             if concurrent_groups:
                 tasks = [asyncio.create_task(run_group(stage, rows)) for stage, rows in groups.items()]
                 timings.extend(await asyncio.gather(*tasks))

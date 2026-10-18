@@ -1,0 +1,78 @@
+{
+  "scope": "Real four-GPU trainer acceptance; short caps do not establish math accuracy",
+  "training": [
+    {
+      "step": 1,
+      "responses": 8,
+      "response_tokens": 512,
+      "generation_identities": [
+        [
+          "current_student",
+          "/mnt/tidalfs-bdsz01/dataset/llm_dataset/zkn_data/fht_data/models/DeepSeek-R1-Distill-Qwen-1.5B",
+          0
+        ]
+      ],
+      "trace_sha256": "f95d01c7de21d9a23d37c09de7944cf7279c49b75c390e29c071b2ee92ec51df"
+    },
+    {
+      "step": 2,
+      "responses": 8,
+      "response_tokens": 512,
+      "generation_identities": [
+        [
+          "current_student",
+          "/mnt/tidalfs-bdsz01/dataset/llm_dataset/zkn_data/fht_data/models/DeepSeek-R1-Distill-Qwen-1.5B",
+          1
+        ]
+      ],
+      "trace_sha256": "2c606a3978fd6b5f5536a224a694ac07842976e41662354b3476e2cd12c0eb46"
+    }
+  ],
+  "evaluation_responses": 96,
+  "final_student_version": 2,
+  "evaluation_model_identities": [
+    [
+      "current_student",
+      "/mnt/tidalfs-bdsz01/dataset/llm_dataset/zkn_data/fht_data/models/DeepSeek-R1-Distill-Qwen-1.5B",
+      2
+    ]
+  ],
+  "whole_card_peak_mib": {
+    "0": 17375,
+    "1": 17157,
+    "2": 17157,
+    "3": 17157
+  },
+  "status": {
+    "state": "finished",
+    "exit_code": 0,
+    "elapsed_s": 182.40466618537903,
+    "gpu_after": [
+      [0, 1, 0],
+      [1, 1, 0],
+      [2, 1, 0],
+      [3, 1, 0]
+    ],
+    "source_manifest": "/mnt/tidalfs-bdsz01/dataset/llm_dataset/zkn_data/fht_data/OPD-State/runs/native-rollout-implementation/trainer-current-v5/source-manifest.json"
+  },
+  "native_manifest_sha256": "e4ad177ea2fdaae27b7669009264a889d32d13cabb0f19262bdd494b142eaf20",
+  "math_summary": {
+    "run_name": "trainer-current-v5",
+    "run_directory": "/mnt/tidalfs-bdsz01/dataset/llm_dataset/zkn_data/fht_data/OPD-State/runs/native-rollout-implementation/trainer-current-v5",
+    "source_commit": "d187a4b86719faa88fed586fa486e413a0a29e0a",
+    "source_manifest_sha256": "dc70d3cfaac6dbc70f04b7441cf88d4c86eb842d0eb5b7662aff6e1ba7184cd3",
+    "source_identity": "runtime_snapshot",
+    "training_steps": 2,
+    "samples_per_question": 16,
+    "full_benchmarks": false,
+    "checkpoints_saved": false,
+    "wandb_url": null,
+    "training_log_sha256": "133a445866602a5f020c639a86307142405ade7180767b7698f83089f3caeb2f",
+    "training_log_observed_bytes": 207843,
+    "collection_scope": "final_validation",
+    "final_validation_marker_verified": true,
+    "collector_source_sha256": "d55fdb5753b7557a445c8584830f41fdbb3ca450ae53fa888791f2cdf81899fb",
+    "validation_steps": [2]
+  },
+  "collector_source_sha256": "c156a6a02f85bf962f2920eb2e39af5727ce0dd9d24532f5b6ac978e28fb4bb6"
+}

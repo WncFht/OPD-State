@@ -1,0 +1,18 @@
+{
+  "run_name": "trainer-current-v5",
+  "run_directory": "/mnt/tidalfs-bdsz01/dataset/llm_dataset/zkn_data/fht_data/OPD-State/runs/native-rollout-implementation/trainer-current-v5",
+  "source_commit": "d187a4b86719faa88fed586fa486e413a0a29e0a",
+  "source_manifest_sha256": "dc70d3cfaac6dbc70f04b7441cf88d4c86eb842d0eb5b7662aff6e1ba7184cd3",
+  "source_identity": "runtime_snapshot",
+  "training_steps": 2,
+  "samples_per_question": 16,
+  "full_benchmarks": false,
+  "checkpoints_saved": false,
+  "wandb_url": null,
+  "training_log_sha256": "133a445866602a5f020c639a86307142405ade7180767b7698f83089f3caeb2f",
+  "training_log_observed_bytes": 207843,
+  "collection_scope": "final_validation",
+  "final_validation_marker_verified": true,
+  "collector_source_sha256": "d55fdb5753b7557a445c8584830f41fdbb3ca450ae53fa888791f2cdf81899fb",
+  "validation_steps": [2]
+}

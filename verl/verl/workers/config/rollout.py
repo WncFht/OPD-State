@@ -208,6 +208,7 @@ class RolloutConfig(BaseConfig):
     generation_models: dict = field(default_factory=dict)
     generation_role: str = "current_student"
     generation_fingerprint: Optional[str] = None
+    generation_sync_namespace: str = ""
     preserve_source_weights: bool = False
 
     # Whether to enable full determinism for reproducibility.

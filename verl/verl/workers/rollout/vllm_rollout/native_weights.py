@@ -3,7 +3,7 @@
 from pathlib import Path
 
 
-def configure_source(worker, role, path, fingerprint):
+def configure_source(worker, role, path, fingerprint, sync_namespace=""):
     from safetensors import safe_open
 
     from ..policy import ModelRef
@@ -27,6 +27,7 @@ def configure_source(worker, role, path, fingerprint):
     if not names:
         raise ValueError("Native source requires a local dense safetensors checkpoint")
     worker._native_generation_role = role
+    worker._native_sync_namespace = sync_namespace
     worker._native_generation_path = path
     worker._native_generation_fingerprint = fingerprint
     worker._native_expected_weight_names = names

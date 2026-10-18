@@ -193,3 +193,7 @@ GPU 身份检查首轮在初始 student 上全部功能断言通过，但 in-pro
 identity-gpu-v3 与最终 v4 均完整通过 p0/q 原生 worker 和生产 executor 检查：冻结来源拒绝真实 actor 写入 RPC，生成前后与 sleep/wake 后 greedy 响应一致，EOS=151643 与 PAD 同 ID 时 mask 仍为一，原生 finish_reason=length 保留。两个引擎各释放 8,090 MiB，进程退出后 GPU0 回到 4 MiB。v3 源码快照留在忽略目录，v4 基于当前写入序号实现重新验收；正式证据归 identity-gpu.json。此时仍未接通原生模型池、协调器、真实 FSDP 更新和 native paired fusion，未将 worker 检查当作 trainer 验收。
 
 临时 trainer 门控对 policy 非空报未接入，防止用户配置 teacher/initial 后实际仍从 actor 生成；下一阶段以真实 coordinator 替换。完整目标和所有待完成门控存于 runs/native-rollout-implementation/state.json，仍包括四卡两步恢复、完整 native fusion 数值/graph/缓存检查、公平吞吐与显存基准、独立数据清单及正式 50 步 math eval16。TCOD 与嵌套保持排除，没有缩小原实施目标。
+
+17:24 完成 trainer 原生协调器与模型池的首个真实四卡验收。当前 student 两步生成使用版本 0/1，最终六题各十六次只用版本 2；独立采集器重算九十六条 verifier 结果并逐项匹配日志，未保存 checkpoint。全程 182.40 秒，两个训练 step 为 22.31/5.71 秒，短验证 11.90 秒；整卡每两秒采样峰值约 17 GiB，进程结束四卡回到 1 MiB。已有四十七项原生 CPU 与五项训练环境桥接检查通过；metadata-only DataProto 的两次接入错误由真实运行和更新后的回归用例定位修复。一次已知错误的自有 canary 在更新前停止，仅清理其已核对的子进程。
+
+新增每次运行独立的 ZMQ 命名空间，区分 job ID 相同的独立 Ray 集群；生成按源/副本批量 RPC，固定来源与 actor 存储隔离，验证同步最新 student。运行源码为 d187a4b 基线加完整文件哈希快照，不能按基线提交冒称全部改动已入库。teacher/initial、分段、batch、graph、原生排空和正式质量矩阵仍未完成。原生双 Qwen2 模型已写出待验证实现，注意力全局层号与两套 KV 分离；其 GPU 数值检查正在独立进行，尚未接入 trainer。

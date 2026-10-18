@@ -683,6 +683,24 @@ $$
 
 按源码执行链梳理后的[统一 fresh rollout 架构方案](../../.agents/notes/proposed/architecture/2026-10-18-可组合rollout与原生vLLM推理.md)集中定义当前 student、初始 student、teacher、两种 fusion，以及双向分段切换与 batch 混合；所有设置继续只更新当前 student。新 pipeline 优先使用原生 vLLM：单模型、分段与 batch 混合复用原生生成，精确 fusion 优先验证双原生模型扩展，现有 HF 实现保留作数值参考。模型引用、组合规则、执行后端和复用策略分别配置；方案详细定义切换 token/比例、全局配额、EOS/mask、跨权重重新 prefill、模型驻留与吞吐基准。固定初始 student 的实时采样名为 `initial_student_fresh`，与历史 Semi-OPD replay 区分；这些新模式尚未实现为正式运行。
 
+## 原生 rollout 重构验收
+
+重构沿用同一实验报告，分阶段接入原生 vLLM。三种单模型、双向分段、简单 batch 混合与两种独立 fusion 的目标语义见对应 Agent Note；TCOD 与嵌套组合排除在实现范围外。当前四十七项原生 CPU 检查和五项训练环境桥接检查通过，完整训练证据先覆盖 `student_fresh`，不能推及尚未完成的组合。
+
+`trainer-current-v5` 使用物理 GPU 0–3，各卡 TP=1 的原生 vLLM 副本，actor 与评分 teacher 均采用 FSDP/CPU offload。它消费原始 DAPO 数据集，不把题目池截成训练步数乘 batch；两次更新各使用八题，prompt 上限 512，训练响应上限 64，验证上限 128，T=1/top-p=1/top-k=-1，推理预算每卡 0.15，eager 与 prefix caching 开启。最终仅验证三基准各两题、每题十六次，共九十六条响应；短长度使得准确率不具备质量比较意义。调试只写 console，正式 50 步仍要求 W&B 项目 `OPD-State`、完整 570 题和最终 eval16。
+
+| 项目                     | 实测或验收结果                                                                    |
+| ------------------------ | --------------------------------------------------------------------------------- |
+| actor 更新与生成版本     | 两步成功，生成版本依次为 0、1，最终验证仅使用 student 版本 2                      |
+| 训练有效响应 token       | 每步 512；两步 loss 为 0.036162、0.062390，grad norm 为 2.203238、7.066389        |
+| 训练 step wall time      | 22.31 s、5.71 s；首次 verifier 与训练内核初始化单列观察，样本数不足以估计稳定吞吐 |
+| 最终短验证               | 11.90 s；96 条响应，独立重算 mean/pass@k 与 trainer 日志逐项一致                  |
+| 启动至进程结束           | 182.40 s，包含数据准备、引擎和 worker 初始化、训练、验证及退出                    |
+| 整卡采样峰值 GPU 0/1/2/3 | 17,375 / 17,157 / 17,157 / 17,157 MiB；每两秒采样，不能代替连续峰值               |
+| checkpoint 与退出资源    | 未保存 checkpoint；四卡占用均回到 1 MiB                                           |
+
+结果保存在[current 接入证据](results/native-rollout/trainer-current/native-acceptance.json)与[逐步指标](results/native-rollout/trainer-current/training-1-2.csv)。采集器核对完整运行源码哈希、全局路由、阶段预算、固定身份、actor 版本和最终 student 验证；原始 token、生成分组与整卡遥测留在忽略的 run 目录。推理预算不是整卡作业上限，FSDP 更新时的内存也计入整卡采样；这里尚无其他策略的同条件速度比较。
+
 ## 复现与结果位置
 
 从仓库根目录执行。正式模型、数据和独立环境位于工作区相邻目录。已有缓存或 schedule 时生成器拒绝覆盖；独立复核应换输出目录。`OPD_SOURCE_COMMIT` 可固定历史提交；正式生产源码使用每个 run 的私有快照，后续开发不会改变已运行任务。
@@ -755,7 +773,7 @@ Teacher 组训练源码固定于 `350a286be0d586f04e4cd0b0e89624a336b17a81`，�
 
 ## 历史调试与后续范围
 
-可组合原生 rollout 的首个阶段完成生产策略与模型身份契约，十三项 CPU 检查和 Hydra 配置往返通过；新 trainer 路径尚未接通。已有三十八场景的[实施前原生基准](results/native-rollout/baseline-throughput.json)保留实际输入、源码哈希、引擎冷启动和三十六个性能子测；GPU 0 启动占用 6,921 MiB，属于共享负载测试。后续生成、更新、验证和资源结果继续并入本文，不另建实验正文；实施状态归对应 Agent Note。
+可组合原生 rollout 已完成生产策略、模型身份、执行与协调器接入，current-student 四卡两步通过；其他变体仍需分别验证。已有三十八场景的[实施前原生基准](results/native-rollout/baseline-throughput.json)保留实际输入、源码哈希、引擎冷启动和三十六个性能子测；GPU 0 启动占用 6,921 MiB，属于共享负载测试。后续生成、更新、验证和资源结果继续并入本文，不另建实验正文；实施状态归对应 Agent Note。
 
 生产执行器与生命周期接口继续推进，CPU 检查增至四十四项。两个固定来源的[真实 worker GPU 检查](results/native-rollout/identity-gpu.json)通过：$p_0/q$ 均拒绝 actor 参数写入，拒绝前后及 sleep/wake 后响应恢复，EOS/PAD 有效 mask 保留；每引擎 sleep 释放 8,090 MiB，自有进程退出后整卡回到基线。测试使用原生 vLLM 默认 EngineCore 多进程布局、两个 prompt、greedy 32 token 与强制 EOS，不能作为数学准确率或真实 FSDP 接入结果。两次早期失败与修复条件保留在证据中，后续仍需四卡训练和 native fusion 验收。
 

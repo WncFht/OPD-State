@@ -89,7 +89,20 @@ def collect(run, output, *, steps, interval, require_full=True, snapshot=False):
         raise ValueError("Run has no final validation success marker")
     if list(run.glob("checkpoints/**/global_step_*")):
         raise ValueError("Run unexpectedly contains saved checkpoints")
-    revision = (run / "source/COMMIT").read_text().strip()
+    source_manifest = run / "source-manifest.json"
+    provenance = {}
+    if source_manifest.is_file():
+        manifest = json.loads(source_manifest.read_text())
+        if not isinstance(manifest.get("files"), dict) or not manifest["files"]:
+            raise ValueError("Runtime source manifest must contain nonempty file hashes")
+        for relative, expected in manifest["files"].items():
+            path = Path(relative)
+            if path.is_absolute() or ".." in path.parts or sha256(run / "source" / path) != expected:
+                raise ValueError(f"Runtime source snapshot does not match its manifest: {relative}")
+        revision = manifest["base_commit"]
+        provenance = {"source_manifest_sha256": sha256(source_manifest), "source_identity": "runtime_snapshot"}
+    else:
+        revision = (run / "source/COMMIT").read_text().strip()
     required = set(range(interval, steps + 1, interval)) | {steps}
     paths = {int(path.stem): path for path in (run / "validation").glob("*.jsonl")}
     if snapshot:
@@ -144,6 +157,7 @@ def collect(run, output, *, steps, interval, require_full=True, snapshot=False):
         "run_name": run.name,
         "run_directory": str(run),
         "source_commit": revision,
+        **provenance,
         "training_steps": steps,
         "samples_per_question": 16,
         "full_benchmarks": require_full,

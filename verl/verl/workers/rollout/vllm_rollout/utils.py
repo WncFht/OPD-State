@@ -241,10 +241,10 @@ class vLLMColocateWorkerExtension:
             expected_version=expected_version,
         )
 
-    def configure_native_source(self, role, path, fingerprint=None):
+    def configure_native_source(self, role, path, fingerprint=None, sync_namespace=""):
         from verl.workers.rollout.vllm_rollout.native_weights import configure_source
 
-        return configure_source(self, role, path, fingerprint)
+        return configure_source(self, role, path, fingerprint, sync_namespace)
 
     def native_source_status(self):
         return {
@@ -256,6 +256,28 @@ class vLLMColocateWorkerExtension:
     def native_request_barrier(self):
         torch.cuda.synchronize()
         return {"native_device_idle": True}
+
+    def native_model_layout(self):
+        """Report actual native KV regions for paired-model acceptance."""
+        context = self.model_runner.vllm_config.compilation_config.static_forward_context
+        regions = []
+        for name, layer in context.items():
+            for tensor in getattr(layer, "kv_cache", ()):
+                if tensor.numel():
+                    regions.append(
+                        {
+                            "layer": name,
+                            "pointer": tensor.data_ptr(),
+                            "bytes": tensor.numel() * tensor.element_size(),
+                        }
+                    )
+        parameters = list(self.model_runner.model.parameters())
+        return {
+            "model_class": type(self.model_runner.model).__name__,
+            "kv_regions": regions,
+            "parameter_tensors": len(parameters),
+            "parameter_bytes": sum(p.numel() * p.element_size() for p in parameters),
+        }
 
     def update_weights_from_ipc(
         self,
@@ -482,7 +504,11 @@ class vLLMColocateWorkerExtension:
         local_rank = _resolve_vllm_weight_sync_local_rank(self.local_rank, parallel_config)
         trainer_rank_base = os.environ.get("VERL_ZMQ_BASE_TRAINER_RANK")
         trainer_rank = int(trainer_rank_base) + local_rank if trainer_rank_base is not None else local_rank
-        return f"ipc:///tmp/rl-colocate-zmq-{job_id}-replica-{replica_rank}-rank-{trainer_rank}.sock"
+        from verl.workers.rollout.sync_endpoint import weight_sync_endpoint
+
+        return weight_sync_endpoint(
+            job_id, replica_rank, trainer_rank, getattr(self, "_native_sync_namespace", "")
+        )
 
 
 class SuppressSignalInThread:

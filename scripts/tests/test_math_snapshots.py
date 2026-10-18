@@ -48,6 +48,47 @@ def fixture(base):
 
 
 class SnapshotTests(unittest.TestCase):
+    def test_runtime_snapshot_is_hashed_instead_of_claiming_only_its_base_commit(self):
+        with tempfile.TemporaryDirectory() as temporary:
+            base = Path(temporary)
+            run, log = fixture(base)
+            with log.open("a") as stream:
+                stream.write("Final validation metrics:\n")
+            source = run / "source/runtime.py"
+            source.write_text("runtime = 1\n")
+            manifest = {
+                "base_commit": "base-revision",
+                "files": {
+                    "runtime.py": hashlib.sha256(source.read_bytes()).hexdigest()
+                },
+            }
+            (run / "source-manifest.json").write_text(json.dumps(manifest))
+            result = COLLECTOR["collect"](
+                run, base / "final", steps=2, interval=2, require_full=False
+            )
+            self.assertEqual(result["source_identity"], "runtime_snapshot")
+            self.assertEqual(result["source_commit"], "base-revision")
+            source.write_text("runtime = 2\n")
+            with self.assertRaisesRegex(ValueError, "snapshot does not match"):
+                COLLECTOR["collect"](
+                    run, base / "changed", steps=2, interval=2, require_full=False
+                )
+
+    def test_runtime_snapshot_rejects_empty_or_escaping_manifests(self):
+        with tempfile.TemporaryDirectory() as temporary:
+            base = Path(temporary)
+            run, log = fixture(base)
+            with log.open("a") as stream:
+                stream.write("Final validation metrics:\n")
+            for files in [{}, {"../outside.py": "ignored"}]:
+                (run / "source-manifest.json").write_text(
+                    json.dumps({"base_commit": "base", "files": files})
+                )
+                with self.assertRaises(ValueError):
+                    COLLECTOR["collect"](
+                        run, base / "refused", steps=2, interval=2, require_full=False
+                    )
+
     def test_live_snapshot_ignores_later_rows_and_partial_validation(self):
         with tempfile.TemporaryDirectory() as temporary:
             base = Path(temporary)
