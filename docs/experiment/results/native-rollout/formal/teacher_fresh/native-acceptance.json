@@ -1,0 +1,705 @@
+{
+  "scope": "Real 4-GPU trainer acceptance; short caps do not establish math accuracy",
+  "trainer_gpu_count": 4,
+  "resource_note": null,
+  "frozen_parameter_digests": {},
+  "training": [
+    {
+      "step": 1,
+      "responses": 64,
+      "response_tokens": 249764,
+      "generation_identities": [
+        [
+          "teacher",
+          "/mnt/tidalfs-bdsz01/dataset/llm_dataset/zkn_data/fht_data/models/JustRL-DeepSeek-1.5B",
+          "2736b59eeb53f416088992a3d7ecb3376274c74e685c358214360072395631f0"
+        ]
+      ],
+      "trace_sha256": "a991b32353b9a982a83630308b579ca6328be728134c3f9b388e75d4f85720ee"
+    },
+    {
+      "step": 2,
+      "responses": 64,
+      "response_tokens": 250750,
+      "generation_identities": [
+        [
+          "teacher",
+          "/mnt/tidalfs-bdsz01/dataset/llm_dataset/zkn_data/fht_data/models/JustRL-DeepSeek-1.5B",
+          "2736b59eeb53f416088992a3d7ecb3376274c74e685c358214360072395631f0"
+        ]
+      ],
+      "trace_sha256": "2306fc2568160e794d5fd58966b0e9d26e764a8bda55e92324bc78e6ab8c3027"
+    },
+    {
+      "step": 3,
+      "responses": 64,
+      "response_tokens": 251222,
+      "generation_identities": [
+        [
+          "teacher",
+          "/mnt/tidalfs-bdsz01/dataset/llm_dataset/zkn_data/fht_data/models/JustRL-DeepSeek-1.5B",
+          "2736b59eeb53f416088992a3d7ecb3376274c74e685c358214360072395631f0"
+        ]
+      ],
+      "trace_sha256": "40562b5f57970afcc7427d55960622e0498a87b65b755c6ccda8ea3e6de8468e"
+    },
+    {
+      "step": 4,
+      "responses": 64,
+      "response_tokens": 246262,
+      "generation_identities": [
+        [
+          "teacher",
+          "/mnt/tidalfs-bdsz01/dataset/llm_dataset/zkn_data/fht_data/models/JustRL-DeepSeek-1.5B",
+          "2736b59eeb53f416088992a3d7ecb3376274c74e685c358214360072395631f0"
+        ]
+      ],
+      "trace_sha256": "f3e4d7ad2128f8584c62b65abb7422c71983956e6abe2602fcd375cacbfbb524"
+    },
+    {
+      "step": 5,
+      "responses": 64,
+      "response_tokens": 243401,
+      "generation_identities": [
+        [
+          "teacher",
+          "/mnt/tidalfs-bdsz01/dataset/llm_dataset/zkn_data/fht_data/models/JustRL-DeepSeek-1.5B",
+          "2736b59eeb53f416088992a3d7ecb3376274c74e685c358214360072395631f0"
+        ]
+      ],
+      "trace_sha256": "c22424ba909c04f0b58465edec01790403fc1c22c1fb8208b01b3a1f67acfb5b"
+    },
+    {
+      "step": 6,
+      "responses": 64,
+      "response_tokens": 251963,
+      "generation_identities": [
+        [
+          "teacher",
+          "/mnt/tidalfs-bdsz01/dataset/llm_dataset/zkn_data/fht_data/models/JustRL-DeepSeek-1.5B",
+          "2736b59eeb53f416088992a3d7ecb3376274c74e685c358214360072395631f0"
+        ]
+      ],
+      "trace_sha256": "4e9f6b33bf4ad462498c4bd547e5ed4bbecc6c3f4d71238fb4f4ac2fbabaf097"
+    },
+    {
+      "step": 7,
+      "responses": 64,
+      "response_tokens": 246269,
+      "generation_identities": [
+        [
+          "teacher",
+          "/mnt/tidalfs-bdsz01/dataset/llm_dataset/zkn_data/fht_data/models/JustRL-DeepSeek-1.5B",
+          "2736b59eeb53f416088992a3d7ecb3376274c74e685c358214360072395631f0"
+        ]
+      ],
+      "trace_sha256": "91e4caa1450d06f8c56f1ca7e318a86f7d0cf8205edb0399915ad634a30cbe52"
+    },
+    {
+      "step": 8,
+      "responses": 64,
+      "response_tokens": 243017,
+      "generation_identities": [
+        [
+          "teacher",
+          "/mnt/tidalfs-bdsz01/dataset/llm_dataset/zkn_data/fht_data/models/JustRL-DeepSeek-1.5B",
+          "2736b59eeb53f416088992a3d7ecb3376274c74e685c358214360072395631f0"
+        ]
+      ],
+      "trace_sha256": "ef7c07990f370a865f8daf4d9f6d12a6d12d4929e30c03bd8dbafca256f2a49c"
+    },
+    {
+      "step": 9,
+      "responses": 64,
+      "response_tokens": 238895,
+      "generation_identities": [
+        [
+          "teacher",
+          "/mnt/tidalfs-bdsz01/dataset/llm_dataset/zkn_data/fht_data/models/JustRL-DeepSeek-1.5B",
+          "2736b59eeb53f416088992a3d7ecb3376274c74e685c358214360072395631f0"
+        ]
+      ],
+      "trace_sha256": "4c436a4c0244e1277e1c17753a603514834e9da3d42540f9d5b4883ed2b749a5"
+    },
+    {
+      "step": 10,
+      "responses": 64,
+      "response_tokens": 250933,
+      "generation_identities": [
+        [
+          "teacher",
+          "/mnt/tidalfs-bdsz01/dataset/llm_dataset/zkn_data/fht_data/models/JustRL-DeepSeek-1.5B",
+          "2736b59eeb53f416088992a3d7ecb3376274c74e685c358214360072395631f0"
+        ]
+      ],
+      "trace_sha256": "1cb9702dd45f45dc31350123c2127831f258c8266a486841edd0094800f845aa"
+    },
+    {
+      "step": 11,
+      "responses": 64,
+      "response_tokens": 247003,
+      "generation_identities": [
+        [
+          "teacher",
+          "/mnt/tidalfs-bdsz01/dataset/llm_dataset/zkn_data/fht_data/models/JustRL-DeepSeek-1.5B",
+          "2736b59eeb53f416088992a3d7ecb3376274c74e685c358214360072395631f0"
+        ]
+      ],
+      "trace_sha256": "e7a4cb38ff30c848176c50eadaffffbb13e677932ccdec218bc3bc3631dd4c35"
+    },
+    {
+      "step": 12,
+      "responses": 64,
+      "response_tokens": 251716,
+      "generation_identities": [
+        [
+          "teacher",
+          "/mnt/tidalfs-bdsz01/dataset/llm_dataset/zkn_data/fht_data/models/JustRL-DeepSeek-1.5B",
+          "2736b59eeb53f416088992a3d7ecb3376274c74e685c358214360072395631f0"
+        ]
+      ],
+      "trace_sha256": "1a69106e9ddcd945fb9c29af3beecf0b5b5e5ece901032dc1228b52ad2edb5ce"
+    },
+    {
+      "step": 13,
+      "responses": 64,
+      "response_tokens": 245763,
+      "generation_identities": [
+        [
+          "teacher",
+          "/mnt/tidalfs-bdsz01/dataset/llm_dataset/zkn_data/fht_data/models/JustRL-DeepSeek-1.5B",
+          "2736b59eeb53f416088992a3d7ecb3376274c74e685c358214360072395631f0"
+        ]
+      ],
+      "trace_sha256": "b98270a753eecf1e6a3a0b3cd7d7d9f1c0cfc950598a6927a68dbbd1c90431fc"
+    },
+    {
+      "step": 14,
+      "responses": 64,
+      "response_tokens": 249905,
+      "generation_identities": [
+        [
+          "teacher",
+          "/mnt/tidalfs-bdsz01/dataset/llm_dataset/zkn_data/fht_data/models/JustRL-DeepSeek-1.5B",
+          "2736b59eeb53f416088992a3d7ecb3376274c74e685c358214360072395631f0"
+        ]
+      ],
+      "trace_sha256": "053193c1ddbd4388cb1099229abd43ad759427cfa36eafd8804f01e54e0907b5"
+    },
+    {
+      "step": 15,
+      "responses": 64,
+      "response_tokens": 242552,
+      "generation_identities": [
+        [
+          "teacher",
+          "/mnt/tidalfs-bdsz01/dataset/llm_dataset/zkn_data/fht_data/models/JustRL-DeepSeek-1.5B",
+          "2736b59eeb53f416088992a3d7ecb3376274c74e685c358214360072395631f0"
+        ]
+      ],
+      "trace_sha256": "a4b20011e52242da2d6bcc957273da8df4555369f8836e99127bee1f714fd937"
+    },
+    {
+      "step": 16,
+      "responses": 64,
+      "response_tokens": 253591,
+      "generation_identities": [
+        [
+          "teacher",
+          "/mnt/tidalfs-bdsz01/dataset/llm_dataset/zkn_data/fht_data/models/JustRL-DeepSeek-1.5B",
+          "2736b59eeb53f416088992a3d7ecb3376274c74e685c358214360072395631f0"
+        ]
+      ],
+      "trace_sha256": "14fccff531f4c40d8ef5fe1a465b792b67cf56cbabed4bbc192d973201cd5abd"
+    },
+    {
+      "step": 17,
+      "responses": 64,
+      "response_tokens": 252843,
+      "generation_identities": [
+        [
+          "teacher",
+          "/mnt/tidalfs-bdsz01/dataset/llm_dataset/zkn_data/fht_data/models/JustRL-DeepSeek-1.5B",
+          "2736b59eeb53f416088992a3d7ecb3376274c74e685c358214360072395631f0"
+        ]
+      ],
+      "trace_sha256": "0da26751e4650688e48694d1720165849c1762fd9a1e049ad4aea7f32b5620e1"
+    },
+    {
+      "step": 18,
+      "responses": 64,
+      "response_tokens": 254879,
+      "generation_identities": [
+        [
+          "teacher",
+          "/mnt/tidalfs-bdsz01/dataset/llm_dataset/zkn_data/fht_data/models/JustRL-DeepSeek-1.5B",
+          "2736b59eeb53f416088992a3d7ecb3376274c74e685c358214360072395631f0"
+        ]
+      ],
+      "trace_sha256": "5534b47d088ae08a12f99e7dd08dd5eff030ab6380385f8a3a29046a4bb5c02f"
+    },
+    {
+      "step": 19,
+      "responses": 64,
+      "response_tokens": 252313,
+      "generation_identities": [
+        [
+          "teacher",
+          "/mnt/tidalfs-bdsz01/dataset/llm_dataset/zkn_data/fht_data/models/JustRL-DeepSeek-1.5B",
+          "2736b59eeb53f416088992a3d7ecb3376274c74e685c358214360072395631f0"
+        ]
+      ],
+      "trace_sha256": "bbed1eb37469e5331444b12c97cbb30e2be42c0c7a15c6e5cca8ebf0ddf5bbdf"
+    },
+    {
+      "step": 20,
+      "responses": 64,
+      "response_tokens": 250676,
+      "generation_identities": [
+        [
+          "teacher",
+          "/mnt/tidalfs-bdsz01/dataset/llm_dataset/zkn_data/fht_data/models/JustRL-DeepSeek-1.5B",
+          "2736b59eeb53f416088992a3d7ecb3376274c74e685c358214360072395631f0"
+        ]
+      ],
+      "trace_sha256": "b52b61075bccc8d9ce51cbaaf7e1b93562a5ff3c446480b35f60406ee47f1e91"
+    },
+    {
+      "step": 21,
+      "responses": 64,
+      "response_tokens": 253144,
+      "generation_identities": [
+        [
+          "teacher",
+          "/mnt/tidalfs-bdsz01/dataset/llm_dataset/zkn_data/fht_data/models/JustRL-DeepSeek-1.5B",
+          "2736b59eeb53f416088992a3d7ecb3376274c74e685c358214360072395631f0"
+        ]
+      ],
+      "trace_sha256": "1469d6b0af149b94149483bca6524b842cdd90e476653c78038bb4042dbd5c46"
+    },
+    {
+      "step": 22,
+      "responses": 64,
+      "response_tokens": 244853,
+      "generation_identities": [
+        [
+          "teacher",
+          "/mnt/tidalfs-bdsz01/dataset/llm_dataset/zkn_data/fht_data/models/JustRL-DeepSeek-1.5B",
+          "2736b59eeb53f416088992a3d7ecb3376274c74e685c358214360072395631f0"
+        ]
+      ],
+      "trace_sha256": "5b7fc54c93dc15b061ad2f69a05b3328340fbc91e2cce22657f6baefc1296869"
+    },
+    {
+      "step": 23,
+      "responses": 64,
+      "response_tokens": 250266,
+      "generation_identities": [
+        [
+          "teacher",
+          "/mnt/tidalfs-bdsz01/dataset/llm_dataset/zkn_data/fht_data/models/JustRL-DeepSeek-1.5B",
+          "2736b59eeb53f416088992a3d7ecb3376274c74e685c358214360072395631f0"
+        ]
+      ],
+      "trace_sha256": "f1ece157f4874a9456bd9b9859e6887f457f47ac6ba3db10f3e6b74a1cf7c82a"
+    },
+    {
+      "step": 24,
+      "responses": 64,
+      "response_tokens": 256109,
+      "generation_identities": [
+        [
+          "teacher",
+          "/mnt/tidalfs-bdsz01/dataset/llm_dataset/zkn_data/fht_data/models/JustRL-DeepSeek-1.5B",
+          "2736b59eeb53f416088992a3d7ecb3376274c74e685c358214360072395631f0"
+        ]
+      ],
+      "trace_sha256": "58f5e04cda557bfa16d1a78ac4b49dad9d8eb77a24ce77718708474e4f5d4482"
+    },
+    {
+      "step": 25,
+      "responses": 64,
+      "response_tokens": 254294,
+      "generation_identities": [
+        [
+          "teacher",
+          "/mnt/tidalfs-bdsz01/dataset/llm_dataset/zkn_data/fht_data/models/JustRL-DeepSeek-1.5B",
+          "2736b59eeb53f416088992a3d7ecb3376274c74e685c358214360072395631f0"
+        ]
+      ],
+      "trace_sha256": "56497faf748e2e27768603b3c9214d686864051fa9f140c631e153199be7c5f0"
+    },
+    {
+      "step": 26,
+      "responses": 64,
+      "response_tokens": 245784,
+      "generation_identities": [
+        [
+          "teacher",
+          "/mnt/tidalfs-bdsz01/dataset/llm_dataset/zkn_data/fht_data/models/JustRL-DeepSeek-1.5B",
+          "2736b59eeb53f416088992a3d7ecb3376274c74e685c358214360072395631f0"
+        ]
+      ],
+      "trace_sha256": "0b4866af27c815ff4b74e7f71984f1f19a1776a32115e8d36574d7f84a4969f5"
+    },
+    {
+      "step": 27,
+      "responses": 64,
+      "response_tokens": 251612,
+      "generation_identities": [
+        [
+          "teacher",
+          "/mnt/tidalfs-bdsz01/dataset/llm_dataset/zkn_data/fht_data/models/JustRL-DeepSeek-1.5B",
+          "2736b59eeb53f416088992a3d7ecb3376274c74e685c358214360072395631f0"
+        ]
+      ],
+      "trace_sha256": "d3d1542757c59aba0a95fa114e158bcb01737fe571fb6e9efbde6db1ee5fe56e"
+    },
+    {
+      "step": 28,
+      "responses": 64,
+      "response_tokens": 249925,
+      "generation_identities": [
+        [
+          "teacher",
+          "/mnt/tidalfs-bdsz01/dataset/llm_dataset/zkn_data/fht_data/models/JustRL-DeepSeek-1.5B",
+          "2736b59eeb53f416088992a3d7ecb3376274c74e685c358214360072395631f0"
+        ]
+      ],
+      "trace_sha256": "41b8ddf083e51435490502935e2ccb5ae53619280fff7f46e6ec387ecca6fdcc"
+    },
+    {
+      "step": 29,
+      "responses": 64,
+      "response_tokens": 249715,
+      "generation_identities": [
+        [
+          "teacher",
+          "/mnt/tidalfs-bdsz01/dataset/llm_dataset/zkn_data/fht_data/models/JustRL-DeepSeek-1.5B",
+          "2736b59eeb53f416088992a3d7ecb3376274c74e685c358214360072395631f0"
+        ]
+      ],
+      "trace_sha256": "7c8e7a2f7283a7de4b926ad09419ca8df86384f712ceff78b970f22732f1c2d2"
+    },
+    {
+      "step": 30,
+      "responses": 64,
+      "response_tokens": 247213,
+      "generation_identities": [
+        [
+          "teacher",
+          "/mnt/tidalfs-bdsz01/dataset/llm_dataset/zkn_data/fht_data/models/JustRL-DeepSeek-1.5B",
+          "2736b59eeb53f416088992a3d7ecb3376274c74e685c358214360072395631f0"
+        ]
+      ],
+      "trace_sha256": "29a7c833d2c3d5425126ff46fdaba09101262004b5f91cda27ce855c9af4145f"
+    },
+    {
+      "step": 31,
+      "responses": 64,
+      "response_tokens": 254911,
+      "generation_identities": [
+        [
+          "teacher",
+          "/mnt/tidalfs-bdsz01/dataset/llm_dataset/zkn_data/fht_data/models/JustRL-DeepSeek-1.5B",
+          "2736b59eeb53f416088992a3d7ecb3376274c74e685c358214360072395631f0"
+        ]
+      ],
+      "trace_sha256": "1dc3323996c985abc1ebc7dbd2865d3667c4b765e508ad7062e35848042fa584"
+    },
+    {
+      "step": 32,
+      "responses": 64,
+      "response_tokens": 249127,
+      "generation_identities": [
+        [
+          "teacher",
+          "/mnt/tidalfs-bdsz01/dataset/llm_dataset/zkn_data/fht_data/models/JustRL-DeepSeek-1.5B",
+          "2736b59eeb53f416088992a3d7ecb3376274c74e685c358214360072395631f0"
+        ]
+      ],
+      "trace_sha256": "415a37df99b8ebe20ae6e01d1e50ef774bba972fc0d2824d65a1f7e1b042a475"
+    },
+    {
+      "step": 33,
+      "responses": 64,
+      "response_tokens": 254643,
+      "generation_identities": [
+        [
+          "teacher",
+          "/mnt/tidalfs-bdsz01/dataset/llm_dataset/zkn_data/fht_data/models/JustRL-DeepSeek-1.5B",
+          "2736b59eeb53f416088992a3d7ecb3376274c74e685c358214360072395631f0"
+        ]
+      ],
+      "trace_sha256": "d348928c6b1acf29fbb1f01afa7125d529884535ab10089475ced37cbe64a55d"
+    },
+    {
+      "step": 34,
+      "responses": 64,
+      "response_tokens": 250196,
+      "generation_identities": [
+        [
+          "teacher",
+          "/mnt/tidalfs-bdsz01/dataset/llm_dataset/zkn_data/fht_data/models/JustRL-DeepSeek-1.5B",
+          "2736b59eeb53f416088992a3d7ecb3376274c74e685c358214360072395631f0"
+        ]
+      ],
+      "trace_sha256": "2305696c7b27928015e4ca0600e2fd278aea26409ee31193a4b8e79ec8d22062"
+    },
+    {
+      "step": 35,
+      "responses": 64,
+      "response_tokens": 248519,
+      "generation_identities": [
+        [
+          "teacher",
+          "/mnt/tidalfs-bdsz01/dataset/llm_dataset/zkn_data/fht_data/models/JustRL-DeepSeek-1.5B",
+          "2736b59eeb53f416088992a3d7ecb3376274c74e685c358214360072395631f0"
+        ]
+      ],
+      "trace_sha256": "995097168183c1ec696f435cfae89c0e45e2fd1ed280587dda0f79768cbf0ea8"
+    },
+    {
+      "step": 36,
+      "responses": 64,
+      "response_tokens": 257127,
+      "generation_identities": [
+        [
+          "teacher",
+          "/mnt/tidalfs-bdsz01/dataset/llm_dataset/zkn_data/fht_data/models/JustRL-DeepSeek-1.5B",
+          "2736b59eeb53f416088992a3d7ecb3376274c74e685c358214360072395631f0"
+        ]
+      ],
+      "trace_sha256": "e4ed4e73b6fda648376cad999b0af95777e7d31e536294cf82923038c839c86e"
+    },
+    {
+      "step": 37,
+      "responses": 64,
+      "response_tokens": 244796,
+      "generation_identities": [
+        [
+          "teacher",
+          "/mnt/tidalfs-bdsz01/dataset/llm_dataset/zkn_data/fht_data/models/JustRL-DeepSeek-1.5B",
+          "2736b59eeb53f416088992a3d7ecb3376274c74e685c358214360072395631f0"
+        ]
+      ],
+      "trace_sha256": "0a91b4f6edca67a2e35816753ff1dd80e35e3c5d19aa4baf2091d38f6b7a675b"
+    },
+    {
+      "step": 38,
+      "responses": 64,
+      "response_tokens": 254409,
+      "generation_identities": [
+        [
+          "teacher",
+          "/mnt/tidalfs-bdsz01/dataset/llm_dataset/zkn_data/fht_data/models/JustRL-DeepSeek-1.5B",
+          "2736b59eeb53f416088992a3d7ecb3376274c74e685c358214360072395631f0"
+        ]
+      ],
+      "trace_sha256": "e6ee279b898468221471dcd68d4f818d69f61486cef61f574c14b1a51f2a24f5"
+    },
+    {
+      "step": 39,
+      "responses": 64,
+      "response_tokens": 244594,
+      "generation_identities": [
+        [
+          "teacher",
+          "/mnt/tidalfs-bdsz01/dataset/llm_dataset/zkn_data/fht_data/models/JustRL-DeepSeek-1.5B",
+          "2736b59eeb53f416088992a3d7ecb3376274c74e685c358214360072395631f0"
+        ]
+      ],
+      "trace_sha256": "baad9807a15af49b644f1142e354edc36664731d695243f3874af89cfa8b4647"
+    },
+    {
+      "step": 40,
+      "responses": 64,
+      "response_tokens": 253390,
+      "generation_identities": [
+        [
+          "teacher",
+          "/mnt/tidalfs-bdsz01/dataset/llm_dataset/zkn_data/fht_data/models/JustRL-DeepSeek-1.5B",
+          "2736b59eeb53f416088992a3d7ecb3376274c74e685c358214360072395631f0"
+        ]
+      ],
+      "trace_sha256": "6bc9f37e908e5d568e33814989ebd36927ec0ea9055c722869baab33e44db5a7"
+    },
+    {
+      "step": 41,
+      "responses": 64,
+      "response_tokens": 248441,
+      "generation_identities": [
+        [
+          "teacher",
+          "/mnt/tidalfs-bdsz01/dataset/llm_dataset/zkn_data/fht_data/models/JustRL-DeepSeek-1.5B",
+          "2736b59eeb53f416088992a3d7ecb3376274c74e685c358214360072395631f0"
+        ]
+      ],
+      "trace_sha256": "bb44cd9d67df5417eccaac7f508354507da2c1b1fd93f5fc0f59025dab3b6729"
+    },
+    {
+      "step": 42,
+      "responses": 64,
+      "response_tokens": 252975,
+      "generation_identities": [
+        [
+          "teacher",
+          "/mnt/tidalfs-bdsz01/dataset/llm_dataset/zkn_data/fht_data/models/JustRL-DeepSeek-1.5B",
+          "2736b59eeb53f416088992a3d7ecb3376274c74e685c358214360072395631f0"
+        ]
+      ],
+      "trace_sha256": "a71d6bb12bb9f9767d0130d5e728fc8ba1c69af6068cee2a412acba3621f99af"
+    },
+    {
+      "step": 43,
+      "responses": 64,
+      "response_tokens": 248699,
+      "generation_identities": [
+        [
+          "teacher",
+          "/mnt/tidalfs-bdsz01/dataset/llm_dataset/zkn_data/fht_data/models/JustRL-DeepSeek-1.5B",
+          "2736b59eeb53f416088992a3d7ecb3376274c74e685c358214360072395631f0"
+        ]
+      ],
+      "trace_sha256": "499341d388aa5895637dc923146fc65799e47ffe4231423debe20274cd043cdf"
+    },
+    {
+      "step": 44,
+      "responses": 64,
+      "response_tokens": 248822,
+      "generation_identities": [
+        [
+          "teacher",
+          "/mnt/tidalfs-bdsz01/dataset/llm_dataset/zkn_data/fht_data/models/JustRL-DeepSeek-1.5B",
+          "2736b59eeb53f416088992a3d7ecb3376274c74e685c358214360072395631f0"
+        ]
+      ],
+      "trace_sha256": "f77086edd169e4f97e57229236f2a30e637c66ed4d7a5e50158b342ee441886e"
+    },
+    {
+      "step": 45,
+      "responses": 64,
+      "response_tokens": 252320,
+      "generation_identities": [
+        [
+          "teacher",
+          "/mnt/tidalfs-bdsz01/dataset/llm_dataset/zkn_data/fht_data/models/JustRL-DeepSeek-1.5B",
+          "2736b59eeb53f416088992a3d7ecb3376274c74e685c358214360072395631f0"
+        ]
+      ],
+      "trace_sha256": "673c93d8413f711a11831c7a5d214fa7c4c85ab58ce334c6fc3e9b25c238d27b"
+    },
+    {
+      "step": 46,
+      "responses": 64,
+      "response_tokens": 252225,
+      "generation_identities": [
+        [
+          "teacher",
+          "/mnt/tidalfs-bdsz01/dataset/llm_dataset/zkn_data/fht_data/models/JustRL-DeepSeek-1.5B",
+          "2736b59eeb53f416088992a3d7ecb3376274c74e685c358214360072395631f0"
+        ]
+      ],
+      "trace_sha256": "a78c670eed21fc53046b9e13eecfaad384bc7632177372752c7d60466df3724b"
+    },
+    {
+      "step": 47,
+      "responses": 64,
+      "response_tokens": 248518,
+      "generation_identities": [
+        [
+          "teacher",
+          "/mnt/tidalfs-bdsz01/dataset/llm_dataset/zkn_data/fht_data/models/JustRL-DeepSeek-1.5B",
+          "2736b59eeb53f416088992a3d7ecb3376274c74e685c358214360072395631f0"
+        ]
+      ],
+      "trace_sha256": "e4bf27b4c5a5b5f3ee7484e3d43bf7eb249ee0933a63f8ce5a52bb8c84ed7e0a"
+    },
+    {
+      "step": 48,
+      "responses": 64,
+      "response_tokens": 239042,
+      "generation_identities": [
+        [
+          "teacher",
+          "/mnt/tidalfs-bdsz01/dataset/llm_dataset/zkn_data/fht_data/models/JustRL-DeepSeek-1.5B",
+          "2736b59eeb53f416088992a3d7ecb3376274c74e685c358214360072395631f0"
+        ]
+      ],
+      "trace_sha256": "b905b18e10c618056a14764095e37dadc26989c32745d216623c22fd17314c2a"
+    },
+    {
+      "step": 49,
+      "responses": 64,
+      "response_tokens": 250474,
+      "generation_identities": [
+        [
+          "teacher",
+          "/mnt/tidalfs-bdsz01/dataset/llm_dataset/zkn_data/fht_data/models/JustRL-DeepSeek-1.5B",
+          "2736b59eeb53f416088992a3d7ecb3376274c74e685c358214360072395631f0"
+        ]
+      ],
+      "trace_sha256": "7bd1834f865b765cacd28038d41b06a2f6dffa0b6be4cde87cc303a65840b1cc"
+    },
+    {
+      "step": 50,
+      "responses": 64,
+      "response_tokens": 243633,
+      "generation_identities": [
+        [
+          "teacher",
+          "/mnt/tidalfs-bdsz01/dataset/llm_dataset/zkn_data/fht_data/models/JustRL-DeepSeek-1.5B",
+          "2736b59eeb53f416088992a3d7ecb3376274c74e685c358214360072395631f0"
+        ]
+      ],
+      "trace_sha256": "16b8cb1f0fcaa77484762bddcd3567e9222a6374afa5c6cd8db6d33fd066a3eb"
+    }
+  ],
+  "evaluation_responses": 9120,
+  "final_student_version": 50,
+  "evaluation_model_identities": [
+    [
+      "current_student",
+      "/mnt/tidalfs-bdsz01/dataset/llm_dataset/zkn_data/fht_data/models/DeepSeek-R1-Distill-Qwen-1.5B",
+      50
+    ]
+  ],
+  "whole_card_peak_mib": {
+    "0": 54917,
+    "1": 54943,
+    "2": 55043,
+    "3": 54071
+  },
+  "status": {
+    "state": "finished",
+    "exit_code": 0,
+    "elapsed_s": 5683.435228347778,
+    "gpu_after": [
+      [0, 4512, 0],
+      [1, 315, 0],
+      [2, 131, 0],
+      [3, 283, 0]
+    ],
+    "source_manifest": "/mnt/tidalfs-bdsz01/dataset/llm_dataset/zkn_data/fht_data/OPD-State/runs/native-formal-suite-20261018/teacher_fresh/source-manifest.json"
+  },
+  "native_manifest_sha256": "62dc0b810e7c6bfdcca7f48ba549f328bf984243159870e7030a8a8c0f18ad84",
+  "math_summary": {
+    "run_name": "teacher_fresh",
+    "run_directory": "/mnt/tidalfs-bdsz01/dataset/llm_dataset/zkn_data/fht_data/OPD-State/runs/native-formal-suite-20261018/teacher_fresh",
+    "source_commit": "d59a7c3463244ef7533ca4acf73855e988043848",
+    "source_manifest_sha256": "dda265c9626c89ea19018c50b535a9c789d5701be6e400381c19bd5db7fde9fc",
+    "source_identity": "runtime_snapshot",
+    "training_steps": 50,
+    "samples_per_question": 16,
+    "full_benchmarks": true,
+    "checkpoints_saved": false,
+    "wandb_url": "https://wandb.ai/wncfht/OPD-State/runs/4skr6m3x",
+    "training_log_sha256": "f30a7f1c2433f707ed02b4d95538973f9e87990bbd8b8b8fa02f4f3590146919",
+    "training_log_observed_bytes": 402906,
+    "collection_scope": "final_validation",
+    "final_validation_marker_verified": true,
+    "collector_source_sha256": "d55fdb5753b7557a445c8584830f41fdbb3ca450ae53fa888791f2cdf81899fb",
+    "validation_steps": [50]
+  },
+  "collector_source_sha256": "3280385139f4dcb918863be06cdc23f96ad6cc59e1882568d0817a995c73f5cf"
+}

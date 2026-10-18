@@ -263,3 +263,7 @@ CUDA Graph 连续解码随后通过：λ=0.5、两条 prompt 各八步，实际�
 独立 KL artifact/题目 bootstrap 提交为 a6de439。f1bcea0 四卡短 canary 随后成功完成：两次更新、九十六条最终 student2 响应，12,288 个有效位置，原生/独立审计均通过；W&B 12858j44 finished、两条训练 history、仅 step2 验证，110 个 KL 指标与精确最终行相同。评分 wall time 为 5.955 s，worker 内 student forward 约 2.27–2.30 s、teacher forward 约 2.47 s、head/KL 约 0.68–0.72 s；这些分项不把嵌套 callback 重复相加。原运行 status 的 started 字段曾被最终状态覆盖，已保留现场读取的 running-status 时间原点用于短验收阶段采样对齐，并修正未来入口保留 started/finished。
 
 评分阶段 GPU 0/1/2/3 的两秒采样峰值为 8,283/8,263/8,283/8,283 MiB；整轮冷启动/训练/验证峰值为 50,865/50,715/50,715/50,715 MiB，不能混用或当成精确 allocator 峰值。验收完成后全部自有 canary 进程退出，GPU 回到基线，控制器恢复原调度器，当前 student_teacher_fusion 正常运行。原 teacher_fresh 也已生成完整正式结果，待远端核验与后续归档。固定 bank 及长响应/完整数据评分尚未通过，不以短验收代替。
+
+独立四卡短 KL 验收提交为 4ae85dd。后续 0f2c1d8 为 standalone bank 保存 Ray/CUDA 资源归属，完整 CI 通过；bank/long 控制器 1850026 确认存活，只暂停调度器 1317263，current/teacher fusion 1814417 按原设置继续，结束后串行生成 90×2 bank 并运行带 bank 的 31,744-token 上限验证，再独立审计、释放 GPU 并恢复原矩阵。观察超时不终止健康任务，源代码固定提交不随工作树变化。
+
+第三组 teacher_fresh 的 W&B 4skr6m3x finished、五十条训练记录及唯一 step50 验证均通过。Macro mean@16 为 63.80486%，相对 current 为 −0.49167 个百分点，5,000 次题目 bootstrap 区间 [−1.99722,0.90424] 个百分点。训练 step 22.02 min、原生生成 834.31 s，整轮最终验证 68.82 min，四卡峰值最高 55,043 MiB；三来源单 seed 质量结果不构成收敛或优劣结论。

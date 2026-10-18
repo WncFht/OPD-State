@@ -43,6 +43,24 @@
       "final_validation_marker_verified": true,
       "collector_source_sha256": "d55fdb5753b7557a445c8584830f41fdbb3ca450ae53fa888791f2cdf81899fb",
       "validation_steps": [50]
+    },
+    "teacher_fresh": {
+      "run_name": "teacher_fresh",
+      "run_directory": "/mnt/tidalfs-bdsz01/dataset/llm_dataset/zkn_data/fht_data/OPD-State/runs/native-formal-suite-20261018/teacher_fresh",
+      "source_commit": "d59a7c3463244ef7533ca4acf73855e988043848",
+      "source_manifest_sha256": "dda265c9626c89ea19018c50b535a9c789d5701be6e400381c19bd5db7fde9fc",
+      "source_identity": "runtime_snapshot",
+      "training_steps": 50,
+      "samples_per_question": 16,
+      "full_benchmarks": true,
+      "checkpoints_saved": false,
+      "wandb_url": "https://wandb.ai/wncfht/OPD-State/runs/4skr6m3x",
+      "training_log_sha256": "f30a7f1c2433f707ed02b4d95538973f9e87990bbd8b8b8fa02f4f3590146919",
+      "training_log_observed_bytes": 402906,
+      "collection_scope": "final_validation",
+      "final_validation_marker_verified": true,
+      "collector_source_sha256": "d55fdb5753b7557a445c8584830f41fdbb3ca450ae53fa888791f2cdf81899fb",
+      "validation_steps": [50]
     }
   },
   "plateau_assessments": {
@@ -60,6 +78,19 @@
       "status": "insufficient_observation"
     },
     "initial_student_fresh": {
+      "criterion": {
+        "minimum_steps": 300,
+        "validation_points": 4,
+        "macro_mean_range": 0.01,
+        "relative_rms_span": 0.05,
+        "relative_gradient_span": 0.1
+      },
+      "training_steps": 50,
+      "validation_points": 1,
+      "windows": [],
+      "status": "insufficient_observation"
+    },
+    "teacher_fresh": {
       "criterion": {
         "minimum_steps": 300,
         "validation_points": 4,
