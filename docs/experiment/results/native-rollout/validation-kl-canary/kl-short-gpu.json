@@ -1,0 +1,14 @@
+{
+  "schema": "validation-kl-short-gpu-v1",
+  "scope": "96 short final responses; not full quality or long-context acceptance",
+  "source_commit": "f1bcea05a82515530837cece74fe94daced02906",
+  "responses": 96,
+  "effective_positions": 12288,
+  "worker_count": 4,
+  "full_vocab": 151665,
+  "aggregate_checks": true,
+  "kl_report_sha256": "7faa0180e5df651c1cec44657c85674ca985210a0940686c8ccbc2183918a6bf",
+  "controller_source_sha256": "5b69e821524dc5448ed3cd048203d85895a8c8cc7c4dee53d34f851586bb7ac4",
+  "wandb_remote_audit": "verified_same_final_history_row",
+  "independent_audit": "bound_to_accuracy"
+}

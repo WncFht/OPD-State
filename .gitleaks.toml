@@ -32,3 +32,11 @@ condition = "AND"
 regexTarget = "line"
 paths = ['''^docs/experiment/results/native-rollout/prefix-bank-cpu\.json$''']
 regexes = ['''^\s*"tokenizer_signature"\s*:\s*"[a-f0-9]{64}"\s*,?\s*$''']
+
+# These are verified checksums of the raw KL response-token evidence.
+[[allowlists]]
+description = "Raw response SHA-256 in the audited short KL GPU results"
+condition = "AND"
+regexTarget = "line"
+paths = ['''^docs/experiment/results/native-rollout/validation-kl-canary/(kl-independent-audit|kl-summary)\.json$''']
+regexes = ['''^\s*"tokens_sha256"\s*:\s*"[a-f0-9]{64}"\s*,?\s*$''']

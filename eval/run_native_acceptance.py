@@ -120,6 +120,8 @@ def main():
                 pass
     status = {
         "state": "finished" if code == 0 else "failed",
+        "started": started,
+        "finished": time.time(),
         "exit_code": code,
         "elapsed_s": time.time() - started,
         "gpu_after": gpu_rows(),

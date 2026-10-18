@@ -1,0 +1,18 @@
+{
+  "run_name": "native-validation-kl-canary-20261018-v1",
+  "run_directory": "/mnt/tidalfs-bdsz01/dataset/llm_dataset/zkn_data/fht_data/OPD-State/runs/native-validation-kl-canary-20261018-v1",
+  "source_commit": "f1bcea05a82515530837cece74fe94daced02906",
+  "source_manifest_sha256": "1f34b9b9aef593caeefe02552ff9f6275587cca5b860930e6397015e6ebc00d7",
+  "source_identity": "runtime_snapshot",
+  "training_steps": 2,
+  "samples_per_question": 16,
+  "full_benchmarks": false,
+  "checkpoints_saved": false,
+  "wandb_url": "https://wandb.ai/wncfht/OPD-State/runs/12858j44",
+  "training_log_sha256": "eded858b59f9e4e85508cf58aaaa15c0248ee0ffe5c64312ee740548bfe70780",
+  "training_log_observed_bytes": 282796,
+  "collection_scope": "final_validation",
+  "final_validation_marker_verified": true,
+  "collector_source_sha256": "d55fdb5753b7557a445c8584830f41fdbb3ca450ae53fa888791f2cdf81899fb",
+  "validation_steps": [2]
+}

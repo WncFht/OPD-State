@@ -15,7 +15,7 @@ from pathlib import Path
 from urllib.parse import urlparse
 
 
-def verify(directory, api, *, snapshot=False):
+def verify(directory, api, *, snapshot=False, engineering=False, kl_report=None):
     directory = Path(directory)
     local = json.loads((directory / "summary.json").read_text())
     is_snapshot = local.get("collection_scope") == "through_step_snapshot"
@@ -71,8 +71,13 @@ def verify(directory, api, *, snapshot=False):
     evidence_paths.append(training_csv)
     if trainer["source_commit"] != local["source_commit"] or trainer["save_freq"] != -1:
         raise ValueError("W&B source revision or no-checkpoint setting disagrees with the experiment")
-    if rollout["val_kwargs"]["n"] != 16 or trainer["math_eval_samples"] != 16 or not trainer["math_eval_require_full"]:
+    if rollout["val_kwargs"]["n"] != 16 or trainer["math_eval_samples"] != 16:
         raise ValueError("W&B run does not use the full three-benchmark eval16 protocol")
+    if engineering:
+        if trainer["math_eval_require_full"] or local.get("full_benchmarks") or native_policy is None:
+            raise ValueError("Engineering verification requires an explicitly partial native evaluation")
+    elif not trainer["math_eval_require_full"]:
+        raise ValueError("Partial evaluation requires explicit engineering verification")
     # Archived W&B history can return every step with nulls for keys that were
     # not logged there. Live history may instead omit those rows entirely.
     observed_validations = [
@@ -137,6 +142,35 @@ def verify(directory, api, *, snapshot=False):
         ):
             raise ValueError(f"W&B summary disagrees with independently recomputed metric: {key}")
         remote[key] = actual
+    kl_verification = None
+    if kl_report is not None:
+        kl_report = Path(kl_report)
+        kl = json.loads(kl_report.read_text())
+        settings = trainer.get("validation_kl", {})
+        if (
+            not settings.get("enabled")
+            or kl["student_version"] != local["training_steps"]
+            or kl["position_chunk_size"] != settings.get("position_chunk_size")
+            or kl["vocab_chunk_size"] != settings.get("vocab_chunk_size")
+        ):
+            raise ValueError("W&B KL configuration or final student version differs from local scoring")
+        coverage_key = "validation_kl/on_validation_states/micro/responses"
+        history = [
+            row
+            for row in run.scan_history(keys=["training/global_step", *kl["metrics"]], page_size=100)
+            if row.get(coverage_key) is not None and int(row["training/global_step"]) == kl["student_version"]
+        ]
+        if len(history) != 1 or any(
+            not math.isfinite(float(history[0].get(key, float("nan")))) or abs(float(history[0][key]) - value) > 1e-8
+            for key, value in kl["metrics"].items()
+        ):
+            raise ValueError("W&B KL metrics disagree with the exact final validation history row")
+        evidence_paths.append(kl_report)
+        kl_verification = {
+            "student_version": kl["student_version"],
+            "metrics": kl["metrics"],
+            "report_sha256": hashlib.sha256(kl_report.read_bytes()).hexdigest(),
+        }
     report = {
         "id": run.id,
         "state": run.state,
@@ -155,6 +189,8 @@ def verify(directory, api, *, snapshot=False):
         "validation_metrics_by_step": metrics_by_step,
         "local_evidence_sha256": {p.name: hashlib.sha256(p.read_bytes()).hexdigest() for p in evidence_paths},
         "native_policy_verification": native_binding,
+        "quality_scope": "engineering_only" if engineering else "full_three_benchmark_eval16",
+        "kl_verification": kl_verification,
         "settings": {
             "student_model": run.config["actor_rollout_ref"]["model"]["path"],
             "teacher_model": run.config["distillation"]["fsdp_teacher"]["model_path"],
@@ -182,10 +218,22 @@ def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--result", required=True)
     parser.add_argument(
+        "--engineering", action="store_true", help="Verify an explicitly partial native engineering run"
+    )
+    parser.add_argument(
+        "--kl-report", type=Path, help="Also verify KL metrics at the exact final validation history row"
+    )
+    parser.add_argument(
         "--snapshot", action="store_true", help="Verify completed history without requiring a finished run"
     )
     args = parser.parse_args()
-    report = verify(args.result, wandb.Api(timeout=30), snapshot=args.snapshot)
+    report = verify(
+        args.result,
+        wandb.Api(timeout=30),
+        snapshot=args.snapshot,
+        engineering=args.engineering,
+        kl_report=args.kl_report,
+    )
     path = Path(args.result) / ("wandb-snapshot-verification.json" if args.snapshot else "wandb-verification.json")
     path.write_text(json.dumps(report, indent=2) + "\n")
     print(json.dumps({key: report[key] for key in ("id", "state", "history_training_rows", "validation_steps")}))

@@ -938,6 +938,8 @@ KL 主方案复用全部 570×16 验证响应，对全部有效位置计算完�
 
 新增[KL 结果独立审计与聚类统计](results/native-rollout/validation-kl-audit-cpu.json)：按原始准确率响应的 benchmark/UID/sample 和有效长度逐条绑定 KL，重新归约题目等权、token 加权、累计量与深度统计，并用 benchmark 分层的题目 bootstrap 生成区间。同题十六条响应共同重采样；区间条件于已训练模型和固定 bank，不覆盖训练 seed、bank 构造和位置抽样变化。八项正反例及 CLI 检查通过，当前属于合成记录证据，不替代真实 checkpoint 数值复算。
 
+[四卡 KL 短验收](results/native-rollout/validation-kl-canary/kl-short-gpu.json)已使用 f1bcea0 完成两次 student 更新，最终九十六条响应各 128 个有效 token，共 12,288 个位置；[独立覆盖审计](results/native-rollout/validation-kl-canary/kl-independent-audit.json)绑定原准确率响应，归约一致，[W&B 核验](results/native-rollout/validation-kl-canary/wandb-verification.json)确认同一最终 history 行的 110 项 KL 指标。宏平均 student→teacher 条件 KL 为 0.059322 nat/token，累计量为 7.59325 nat/response。评分 wall time 为 5.955 s，四 worker 各约 5.46–5.47 s；[阶段资源记录](results/native-rollout/validation-kl-canary/kl-resource-profile.json)有十二条整卡采样，评分区间采样峰值为 8,283/8,263/8,283/8,283 MiB，单 worker head 快照 466,747,392 byte。该峰值是两秒采样观察，不是 allocator/kernel 峰值；此验收只覆盖短响应，不能外推完整 570×16 或 31,744 token 上限的耗时/显存。资源释放后，原十五组矩阵已恢复执行 current/teacher fusion。
+
 ## 历史调试与后续范围
 
 可组合原生 rollout 已完成生产策略、模型身份、执行与协调器接入，current-student 四卡两步通过；其他变体仍需分别验证。已有三十八场景的[实施前原生基准](results/native-rollout/baseline-throughput.json)保留实际输入、源码哈希、引擎冷启动和三十六个性能子测；GPU 0 启动占用 6,921 MiB，属于共享负载测试。后续生成、更新、验证和资源结果继续并入本文，不另建实验正文；实施状态归对应 Agent Note。

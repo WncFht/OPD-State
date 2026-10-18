@@ -79,6 +79,55 @@ def fixture(directory, *, snapshot=True):
 
 
 class WandbSnapshotTests(unittest.TestCase):
+    def test_partial_native_verification_is_explicit_and_checks_exact_kl_history(self):
+        with tempfile.TemporaryDirectory() as temporary:
+            directory = Path(temporary)
+            run, api, _ = self.native_fixture(directory)
+            run.config["trainer"]["math_eval_require_full"] = False
+            run.config["trainer"]["validation_kl"] = {
+                "enabled": True,
+                "position_chunk_size": 32,
+                "vocab_chunk_size": 8192,
+            }
+            summary_path = directory / "summary.json"
+            local = json.loads(summary_path.read_text())
+            local["full_benchmarks"] = False
+            summary_path.write_text(json.dumps(local))
+            with self.assertRaisesRegex(ValueError, "engineering"):
+                VERIFY(directory, api, snapshot=True)
+            original_scan = run.scan_history
+            kl_metrics = {
+                "validation_kl/on_validation_states/micro/responses": 96,
+                "validation_kl/on_validation_states/micro/student_teacher_kl/question_mean": 0.1,
+            }
+
+            def scan(*, keys, page_size):
+                values = list(original_scan(keys=keys, page_size=page_size))
+                for row in values:
+                    if row["training/global_step"] == 2:
+                        row.update({k: v for k, v in kl_metrics.items() if k in keys})
+                return iter(values)
+
+            run.scan_history = scan
+            kl = directory / "kl.json"
+            data = {
+                "student_version": 2,
+                "position_chunk_size": 32,
+                "vocab_chunk_size": 8192,
+                "metrics": kl_metrics,
+            }
+            kl.write_text(json.dumps(data))
+            report = VERIFY(
+                directory, api, snapshot=True, engineering=True, kl_report=kl
+            )
+            self.assertEqual(report["quality_scope"], "engineering_only")
+            self.assertEqual(report["kl_verification"]["metrics"], kl_metrics)
+            bad = json.loads(kl.read_text())
+            bad["metrics"][next(iter(kl_metrics))] = 95
+            kl.write_text(json.dumps(bad))
+            with self.assertRaisesRegex(ValueError, "KL metrics"):
+                VERIFY(directory, api, snapshot=True, engineering=True, kl_report=kl)
+
     def native_fixture(self, directory):
         run, api, rows, metrics = fixture(directory)
         policy = {"kind": "single", "model": "initial_student"}

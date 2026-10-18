@@ -661,7 +661,7 @@ prompt 池由 `data.train_files`、清洗、去重与 sampler 决定，训练步
 
 ### 验证 KL 与 rollout 诊断提案
 
-开发源码已用 `trainer.validation_kl.enabled=True` 接入完整条件 KL 的可选验证 hook，默认关闭以保留原实验协议。它复用整轮准确率响应，在原生引擎休眠后使用同卡的最终 student 和冻结 teacher 评分，保存逐响应累计量、均值、分层统计及原始 token。开发版长度/EOS/解析/多样性指标和 KL 链路已通过真实 Torch/DataProto、实际 trainer 方法与小型 Qwen2 的 CPU 检查；两进程 CPU FSDP 还验证优化器更新后读取新 student、teacher 参数不变。真实四卡 checkpoint、长响应显存/速度与完整 bank 仍待验收，CPU 证据不能替代它们。冻结的 d59a7c3 矩阵不含新增指标，已结束且未保存最终权重的运行不能仅凭响应文本补算最终 KL。
+开发源码已用 `trainer.validation_kl.enabled=True` 接入完整条件 KL 的可选验证 hook，默认关闭以保留原实验协议。它复用整轮准确率响应，在原生引擎休眠后使用同卡的最终 student 和冻结 teacher 评分，保存逐响应累计量、均值、分层统计及原始 token。开发版长度/EOS/解析/多样性指标和 KL 链路已通过真实 Torch/DataProto、实际 trainer 方法与小型 Qwen2 的 CPU 检查；两进程 CPU FSDP 还验证优化器更新后读取新 student、teacher 参数不变。真实四卡短响应 checkpoint 已通过下文验收，长响应显存/速度与完整 bank 仍待验证。冻结的 d59a7c3 矩阵不含新增指标，已结束且未保存最终权重的运行不能仅凭响应文本补算最终 KL。
 
 #### 散度方向、状态来源与归约
 
@@ -723,6 +723,8 @@ $$
 实际日志同时提供 `…/token_weighted`、`…/question_mean` 和 `…/cumulative_on_states`；macro 是各 benchmark 对应统计的等权平均。准确率 JSONL 保留在验证目录顶层，KL 报告与原始 token 放到 `validation/kl/`，避免原采集器把诊断文件名误读为 step。保存评分起止时间戳、引擎休眠时间及 worker 内 actor 恢复/释放、student forward、teacher forward、head/KL 耗时；teacher forward 扣除内部 head/KL 区间，避免重复相加。这些是带通信与管理成本的调用耗时，不等于纯 GPU kernel 时间。
 
 `eval/audit_validation_kl.py` 独立校验原始 token 哈希、响应身份、全位置/深度覆盖、固定 bank、四 worker 记录与归约数值，可绑定原准确率 JSONL；主验证缺失响应或多算 padding 都会拒绝。统计按 benchmark 分层，对题目成组 bootstrap，同题样本共用抽样索引，分别计算题目均值、累计量和 token 总量比值。区间条件于已训练模型及固定 bank，不能充当训练 seed 或 bank/位置构造的不确定性。[八项 CPU 与 CLI 检查](../../../../docs/experiment/results/native-rollout/validation-kl-audit-cpu.json)已通过；它审计证据与聚合，不声称重新执行了神经网络。
+
+真实[四卡 KL canary](../../../../docs/experiment/results/native-rollout/validation-kl-canary/kl-short-gpu.json)固定 f1bcea0：两次更新后对最终 student2 的九十六条原生验证响应逐有效位置评分，共 12,288 个位置。独立 artifact 审计与 W&B 最终行 110 项指标核对通过，生成和准确率采集保持原路径；评分 wall time 5.955 s，四 worker 调用各约 5.47 s，阶段整卡采样约 8.1 GiB，之后 GPU 释放并恢复原矩阵。该证据不覆盖长上下文、完整 570×16 或固定 bank；相关门槛继续保留。调用时间含通信、参数恢复与框架开销，不能解释成纯 head kernel 吞吐。
 
 ### 修改范围与实施顺序
 

@@ -259,3 +259,7 @@ CUDA Graph 连续解码随后通过：λ=0.5、两条 prompt 各八步，实际�
 固定前缀 bank 新增真实输入准备、生产原生 RPC 生成入口及组装器。完整 MATH-500/AMC23/AIME25 各选三十题，按身份哈希加 seed42 排序；模型指纹、共同 tokenizer 和原始 token 固定。实际预处理在 token 合法性检查内反复调用 fast tokenizer 的 **len**，py-spy 定位到该热点；终止这个独立 CPU 准备进程并缓存词表大小后，同一九十题在约 15 秒内完成。词表查询次数回归检查、原生 admission 初始化和双来源/原始 prefix/EOS/评分器兼容共六项检查通过。bank 输入与 CPU 合成轨迹不是实际 GPU 生成证据，真实输出和完整 bank KL 仍待完成。
 
 固定 bank 的输入准备、原生生成入口、严格组装及文档日期/引用维护提交为 fd24278。随后新增独立 KL artifact 审计器，流式读取原始 token，避免完整长响应文件在 RAM 中额外复制。审计绑定原准确率 JSONL 与同一 bank，复核哈希/身份/版本/有效位置/深度/worker 记录并独立归约；按 benchmark 分层的题目 bootstrap 保持同题十六个样本相关性，题目均值、token 比值和累计量分别处理。八项检查及 CLI 通过，包含非 macro 指标篡改、缺样本、错误长度/深度、缺 worker 和替换 bank；合成例的 MATH 题目均值区间为 [1,3]，不会误把三十二条响应视为三十二道独立题。GPU canary 已由控制器启动，仍在冷启动阶段，尚未计为通过。
+
+独立 KL artifact/题目 bootstrap 提交为 a6de439。f1bcea0 四卡短 canary 随后成功完成：两次更新、九十六条最终 student2 响应，12,288 个有效位置，原生/独立审计均通过；W&B 12858j44 finished、两条训练 history、仅 step2 验证，110 个 KL 指标与精确最终行相同。评分 wall time 为 5.955 s，worker 内 student forward 约 2.27–2.30 s、teacher forward 约 2.47 s、head/KL 约 0.68–0.72 s；这些分项不把嵌套 callback 重复相加。原运行 status 的 started 字段曾被最终状态覆盖，已保留现场读取的 running-status 时间原点用于短验收阶段采样对齐，并修正未来入口保留 started/finished。
+
+评分阶段 GPU 0/1/2/3 的两秒采样峰值为 8,283/8,263/8,283/8,283 MiB；整轮冷启动/训练/验证峰值为 50,865/50,715/50,715/50,715 MiB，不能混用或当成精确 allocator 峰值。验收完成后全部自有 canary 进程退出，GPU 回到基线，控制器恢复原调度器，当前 student_teacher_fusion 正常运行。原 teacher_fresh 也已生成完整正式结果，待远端核验与后续归档。固定 bank 及长响应/完整数据评分尚未通过，不以短验收代替。
