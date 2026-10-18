@@ -61,6 +61,17 @@
       "allow_failure": false
     },
     {
+      "id": "convergence-research",
+      "command": [
+        "python3",
+        "docs/research/occupancy/experiments/convergence_cases.py"
+      ],
+      "modes": ["test", "ci"],
+      "needs": [],
+      "timeout": 120,
+      "allow_failure": false
+    },
+    {
       "id": "research-document",
       "command": [
         "node",

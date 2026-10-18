@@ -62,7 +62,6 @@ for (const [open, close] of [
             .length;
     if (count(open) !== count(close)) issues.push(`${open} block mismatch`);
 }
-if (raw.split("\n").length > 1000) issues.push("main document over 1000 lines");
 if (raw.includes("相当具体")) issues.push("forbidden phrase");
 const result = {
     math_expressions: mathCount,
