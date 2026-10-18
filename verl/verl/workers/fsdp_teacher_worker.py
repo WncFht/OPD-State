@@ -32,6 +32,7 @@ Only the vLLM + FSDP path is supported; no sglang or megatron code is involved.
 
 import logging
 import os
+import time
 from typing import Optional
 
 import numpy as np
@@ -280,6 +281,62 @@ class TeacherWorker(Worker):
                 dict(self.teacher_config.ability_to_teacher),
                 self.teacher_config.strict_routing,
             )
+
+    @register(dispatch_mode=Dispatch.DP_COMPUTE_PROTO)
+    def compute_validation_kl(self, data: DataProto) -> DataProto:
+        """Score all requested prefixes against the live colocated student."""
+        from verl.workers.validation_kl import score_causal_records
+
+        peers = [self.get_fused_worker_by_name(name) for name in ("actor_rollout", "actor_rollout_ref")]
+        peers = [peer for peer in peers if peer is not None]
+        if len(peers) != 1 or len(self.teacher_modules) != 1:
+            raise ValueError("Validation KL requires exactly one colocated actor and one frozen teacher")
+        if any(
+            parameter.requires_grad for module in self.teacher_modules.values() for parameter in module.parameters()
+        ):
+            raise ValueError("Validation KL requires the teacher parameters to be frozen")
+        engine = peers[0].actor.engine
+        if engine.engine_config.strategy not in {"fsdp", "fsdp2"}:
+            raise ValueError("Validation KL requires the colocated FSDP actor engine")
+        if (
+            engine.engine_config.ulysses_sequence_parallel_size != 1
+            or self.teacher_config.ulysses_sequence_parallel_size != 1
+        ):
+            raise ValueError("Validation KL requires sequence parallel size one")
+        if engine.model_config.use_fused_kernels:
+            raise ValueError("Validation KL head capture requires unfused model forwards")
+        records = data.non_tensor_batch["validation_kl_records"].tolist()
+        tick = time.perf_counter()
+        with engine.eval_mode():
+            device = next(engine.module.parameters()).device
+            if getattr(engine, "_uses_fsdp2_cpu_offload_policy", False):
+                device = torch.device(get_device_name())
+            if device.type == "cuda":
+                torch.cuda.synchronize(device)
+            prepared = time.perf_counter()
+            rows, timings = score_causal_records(
+                engine.module,
+                next(iter(self.teacher_modules.values())),
+                records,
+                vocab_size=int(data.meta_info["vocab_size"]),
+                device=device,
+                position_chunk_size=int(data.meta_info["position_chunk_size"]),
+                vocab_chunk_size=int(data.meta_info["vocab_chunk_size"]),
+                dtype=PrecisionType.to_dtype(self.teacher_config.dtype),
+            )
+            release_started = time.perf_counter()
+        if device.type == "cuda":
+            torch.cuda.synchronize(device)
+        timings["actor_prepare_seconds"] = prepared - tick
+        timings["actor_release_seconds"] = time.perf_counter() - release_started
+        statistics = np.empty(len(rows), dtype=object)
+        for index, row in enumerate(rows):
+            statistics[index] = row
+        return DataProto.from_dict(
+            tensors={"validation_row_id": data.batch["validation_row_id"].cpu()},
+            non_tensors={"validation_kl_stats": statistics},
+            meta_info={"metrics": timings, "student_version": int(data.meta_info["student_version"])},
+        )
 
     @torch.no_grad()
     def _forward_micro_batch(

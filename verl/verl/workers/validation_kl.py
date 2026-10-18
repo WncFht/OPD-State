@@ -1,0 +1,229 @@
+"""Read-only causal-model scoring with bounded output-head memory.
+
+Generation remains in vLLM. This module uses the existing FSDP models for
+teacher-forced evaluation and returns scalar statistics, never vocabulary RPCs.
+"""
+
+from __future__ import annotations
+
+import hashlib
+import json
+import math
+import time
+from contextlib import contextmanager
+
+import torch
+import torch.nn.functional as F
+
+from verl.trainer.ppo.validation_kl import full_vocab_divergences
+
+STATISTICS = ("student_teacher_kl", "teacher_student_kl", "student_entropy", "teacher_entropy")
+STATE_SOURCES = {"on_validation_states", "on_initial_states", "on_teacher_states"}
+
+
+def record_fingerprint(record):
+    fields = ("state_source", "source", "uid", "sample", "prompt_ids", "response_ids", "positions", "weights")
+    payload = {key: record.get(key) for key in fields}
+    return hashlib.sha256(json.dumps(payload, sort_keys=True, separators=(",", ":")).encode()).hexdigest()
+
+
+def validate_record(record, vocab_size):
+    prompt, response = record["prompt_ids"], record["response_ids"]
+    if not prompt or not response or any(type(i) is not int or not 0 <= i < vocab_size for i in (*prompt, *response)):
+        raise ValueError("KL scoring needs nonempty raw prompt/response IDs within the effective vocabulary")
+    if record["state_source"] not in STATE_SOURCES:
+        raise ValueError("Unknown validation KL state source")
+    length = len(response)
+    positions = record.get("positions", list(range(length)))
+    weights = record.get("weights", [1.0] * len(positions))
+    if not positions or any(type(i) is not int or not 0 <= i < length for i in positions):
+        raise ValueError("KL scoring positions must index valid response actions")
+    if sorted(set(positions)) != positions:
+        raise ValueError("KL scoring positions must be sorted and unique")
+    if len(weights) != len(positions) or any(not math.isfinite(float(w)) or w <= 0 for w in weights):
+        raise ValueError("KL scoring weights must be finite, positive and match positions")
+    if not math.isclose(math.fsum(weights), length, rel_tol=0, abs_tol=1e-8):
+        raise ValueError("KL scoring position weights must cover the response length")
+    if record["state_source"] == "on_validation_states" and (
+        positions != list(range(length)) or any(w != 1 for w in weights)
+    ):
+        raise ValueError("Main validation KL must score every effective response action")
+    return positions, weights
+
+
+def _output_head(module):
+    head = module.get_output_embeddings()
+    # A size-based wrapping policy can wrap the head itself. Install the hook
+    # inside that wrapper, after FSDP has gathered its parameter views.
+    while hasattr(head, "_fsdp_wrapped_module"):
+        head = head._fsdp_wrapped_module
+    if not isinstance(head, torch.nn.Linear):
+        raise ValueError("Validation KL requires an ordinary linear output head")
+    return head
+
+
+@contextmanager
+def _head_capture(module, callback):
+    head = _output_head(module)
+    calls = []
+
+    def before_head(layer, inputs):
+        if len(inputs) != 1 or inputs[0].ndim != 3 or inputs[0].shape[0] != 1:
+            raise ValueError("Validation KL scores one unpadded response per model forward")
+        calls.append(1)
+        callback(layer, inputs[0][0].detach())
+        # The backbone has already run. A zero-length head input suppresses the
+        # ordinary [full sequence, vocabulary] projection without replacing any
+        # parameters or model-forward implementation.
+        return (inputs[0][:, :0, :],)
+
+    handle = head.register_forward_pre_hook(before_head)
+    try:
+        yield calls
+    finally:
+        handle.remove()
+
+
+def score_causal_records(
+    student,
+    teacher,
+    records,
+    *,
+    vocab_size,
+    device,
+    position_chunk_size=128,
+    vocab_chunk_size=8192,
+    dtype=torch.bfloat16,
+):
+    """Score identical raw prefixes, including EOS actions, without backward.
+
+    The student head is snapshotted once while its FSDP parameters are gathered.
+    Per response we retain its selected hidden states until the teacher head is
+    reached, then project both heads in bounded position blocks. The FSDP model
+    is still called normally, so all ranks must process equal record counts.
+    """
+    if type(vocab_size) is not int or vocab_size < 1 or not records:
+        raise ValueError("Validation KL requires a positive vocabulary and nonempty local records")
+    if any(type(size) is not int or size < 1 for size in (position_chunk_size, vocab_chunk_size)):
+        raise ValueError("Validation KL block sizes must be positive integers")
+    for module in (student, teacher):
+        if module.config.model_type != "qwen2":
+            raise ValueError("Validation KL head capture currently supports the native Qwen2 pair")
+    specifications = [validate_record(record, vocab_size) for record in records]
+    device = torch.device(device)
+    flags = [(module, module.training) for root in (student, teacher) for module in root.modules()]
+    output, snapshot = [], {}
+    started = time.perf_counter()
+    timings = {"student_forward_seconds": 0.0, "teacher_forward_seconds": 0.0, "head_kl_seconds": 0.0}
+
+    def sync():
+        if device.type == "cuda":
+            torch.cuda.synchronize(device)
+
+    try:
+        student.eval()
+        teacher.eval()
+        with torch.no_grad(), torch.autocast(device_type=device.type, dtype=dtype, enabled=device.type == "cuda"):
+            for record, (positions, weights) in zip(records, specifications, strict=True):
+                prompt = record["prompt_ids"]
+                # Action t is predicted from prompt[-1] for t=0, or y[t-1].
+                # No token after the last requested prefix is needed.
+                tokens = prompt + record["response_ids"][: positions[-1]]
+                input_ids = torch.tensor([tokens], dtype=torch.long, device=device)
+                head_positions = torch.tensor(positions, dtype=torch.long, device=device) + len(prompt) - 1
+                kwargs = {
+                    "input_ids": input_ids,
+                    "attention_mask": torch.ones_like(input_ids),
+                    "position_ids": torch.arange(len(tokens), device=device).unsqueeze(0),
+                    "use_cache": False,
+                    "logits_to_keep": head_positions,
+                }
+                captured = {}
+                position_count = len(positions)
+
+                def capture_student(head, hidden, count=position_count, capture=captured):
+                    if hidden.shape[0] != count or head.weight.shape[0] < vocab_size:
+                        raise ValueError("Student output head does not match selected response positions/vocabulary")
+                    if not snapshot:
+                        projection_dtype = dtype if device.type == "cuda" else head.weight.dtype
+                        snapshot["weight"] = head.weight.detach().to(dtype=projection_dtype, copy=True)
+                        snapshot["bias"] = (
+                            None if head.bias is None else head.bias.detach().to(dtype=projection_dtype, copy=True)
+                        )
+                    capture["student_hidden"] = hidden
+
+                parts = {name: [] for name in STATISTICS}
+
+                def score_teacher(head, hidden, count=position_count, capture=captured, results=parts):
+                    if hidden.shape[0] != count or head.weight.shape[0] < vocab_size:
+                        raise ValueError("Teacher output head does not match selected response positions/vocabulary")
+                    sync()
+                    tick = time.perf_counter()
+                    # A master FP32 head must not be re-cast for every position
+                    # block by autocast's non-trainable-weight path.
+                    projection_dtype = dtype if device.type == "cuda" else head.weight.dtype
+                    teacher_weight = head.weight.to(dtype=projection_dtype)
+                    teacher_bias = None if head.bias is None else head.bias.to(dtype=projection_dtype)
+                    for begin in range(0, count, position_chunk_size):
+                        end = min(begin + position_chunk_size, count)
+                        p = F.linear(capture["student_hidden"][begin:end], snapshot["weight"], snapshot["bias"])
+                        q = F.linear(hidden[begin:end], teacher_weight, teacher_bias)
+                        values = full_vocab_divergences(p, q, vocab_size=vocab_size, chunk_size=vocab_chunk_size)
+                        for name in STATISTICS:
+                            results[name].append(values[name])
+                    sync()
+                    timings["head_kl_seconds"] += time.perf_counter() - tick
+
+                sync()
+                tick = time.perf_counter()
+                with _head_capture(student, capture_student) as calls:
+                    student_output = student(**kwargs)
+                    if len(calls) != 1 or student_output.logits.numel():
+                        raise RuntimeError("Student capture did not suppress the full-sequence vocabulary projection")
+                sync()
+                timings["student_forward_seconds"] += time.perf_counter() - tick
+                tick = time.perf_counter()
+                kl_before = timings["head_kl_seconds"]
+                with _head_capture(teacher, score_teacher) as calls:
+                    teacher_output = teacher(**kwargs)
+                    if len(calls) != 1 or teacher_output.logits.numel():
+                        raise RuntimeError("Teacher capture did not suppress the full-sequence vocabulary projection")
+                sync()
+                # Teacher forward contains the head callback; subtract that
+                # measured interval instead of double-counting it.
+                timings["teacher_forward_seconds"] += (
+                    time.perf_counter() - tick - (timings["head_kl_seconds"] - kl_before)
+                )
+                values = {name: torch.cat(chunks).double().cpu() for name, chunks in parts.items()}
+                weight_tensor = torch.tensor(weights, dtype=torch.float64)
+                sums = {name: float((value * weight_tensor).sum()) for name, value in values.items()}
+                row = {key: record[key] for key in ("state_source", "source", "uid", "sample")}
+                row.update(
+                    {
+                        "record_sha256": record_fingerprint(record),
+                        "response_length": len(record["response_ids"]),
+                        "evaluated_positions": len(positions),
+                        "sums": sums,
+                        "depths": {},
+                    }
+                )
+                if record["state_source"] == "on_validation_states":
+                    for name, lower, upper in (
+                        ("0_255", 0, 256),
+                        ("256_1023", 256, 1024),
+                        ("1024_2047", 1024, 2048),
+                        ("2048_plus", 2048, len(positions)),
+                    ):
+                        upper = min(upper, len(positions))
+                        if lower < upper:
+                            row["depths"][name] = {
+                                "tokens": upper - lower,
+                                "sums": {name: float(value[lower:upper].sum()) for name, value in values.items()},
+                            }
+                output.append(row)
+    finally:
+        for module, training in flags:
+            module.training = training
+    timings["seconds"] = time.perf_counter() - started
+    timings["head_snapshot_bytes"] = sum(v.numel() * v.element_size() for v in snapshot.values() if v is not None)
+    return output, timings

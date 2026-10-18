@@ -1018,6 +1018,10 @@ def create_colocated_worker_cls(class_dict: dict[str, RayClassWithInitArgs]):
                     self.worker_dict[key] = user_defined_cls(
                         *init_args_dict[key].get("args", ()), **init_args_dict[key].get("kwargs", {})
                     )
+            # Match the fused-worker API: colocated roles can share live model
+            # objects for read-only scoring without exporting vocabulary tensors.
+            for worker in self.worker_dict.values():
+                setattr(worker, Worker.fused_worker_attr_name, self.worker_dict)
 
     # now monkey-patch the methods from inner class to WorkerDict
     for key, user_defined_cls in cls_dict.items():

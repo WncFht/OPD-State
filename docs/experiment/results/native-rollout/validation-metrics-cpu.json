@@ -86,5 +86,6 @@
     "verl/tests/opd/test_native_validation_on_cpu.py": "f1a0f47da44cf6848ec6a634a845dc4a2ccb6137fd00f9577fe17d8b3229d142",
     "verl/tests/opd/test_validation_metrics_runtime.py": "b3c37a9f1a3ad72055cf05dba663d27929b483617b287b2f32cd7239699817d6",
     "verl/tests/opd/test_rollout_coordinator_runtime.py": "dbda1660e8b19b11a9b85a03a6b70980958305d24e0cc12bb1271fe541ec7458"
-  }
+  },
+  "source_commit": "a0eb8d39e8cd301b3e49d38ff9030e56d8c13288"
 }

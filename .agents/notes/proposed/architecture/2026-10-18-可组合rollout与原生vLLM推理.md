@@ -661,7 +661,7 @@ prompt 池由 `data.train_files`、清洗、去重与 sampler 决定，训练步
 
 ### 验证 KL 与 rollout 诊断提案
 
-完整条件 KL 尚未接入 valid。开发源码已在 `_validate` 接入全量有效长度、EOS/截断、正确/错误长度、答案解析、多样性与重复 4-gram 汇总，保留逐响应原始终止原因；CPU 检查覆盖真实 DataProto 重排、DP unpadding 与实际验证/合并方法，四卡运行尚待验收。训练侧 sampled log-ratio/RMS 不等于完整条件 KL。新增诊断进入后续源码和实验协议，已冻结的 d59a7c3 矩阵保持原条件；没有保留最终权重的已结束运行，不能仅凭响应文本补算最终 student 的 KL。
+开发源码已用 `trainer.validation_kl.enabled=True` 接入完整条件 KL 的可选验证 hook，默认关闭以保留原实验协议。它复用整轮准确率响应，在原生引擎休眠后使用同卡的最终 student 和冻结 teacher 评分，保存逐响应累计量、均值、分层统计及原始 token。开发版长度/EOS/解析/多样性指标和 KL 链路已通过真实 Torch/DataProto、实际 trainer 方法与小型 Qwen2 的 CPU 检查；两进程 CPU FSDP 还验证优化器更新后读取新 student、teacher 参数不变。真实四卡 checkpoint、长响应显存/速度与完整 bank 仍待验收，CPU 证据不能替代它们。冻结的 d59a7c3 矩阵不含新增指标，已结束且未保存最终权重的运行不能仅凭响应文本补算最终 KL。
 
 #### 散度方向、状态来源与归约
 
@@ -674,7 +674,7 @@ $$
 
 主指标采用 student→teacher 的反向 KL $k_{p\Vert q}$，teacher→student 的正向 KL $k_{q\Vert p}$ 作补充。前者衡量 student 概率质量落在 teacher 低概率动作上的程度，后者补充 teacher 高概率动作的覆盖；两者均不直接代表答案正确率。日志名称显式写 `student_teacher` 或 `teacher_student`，不单独用方向易混淆的 `kl`。GKD 将轨迹来源与条件分布散度作为独立选择；本文沿用该区分，不把 teacher 前缀上的 student→teacher KL 称为 teacher 轨迹分布的 sequence KL。[^gkd-valid-kl]
 
-对一条长度为 $L_i$ 的响应，保留累计量 $S_i=\sum_{t=1}^{L_i}k_{p\Vert q}(s_{i,t})$ 和长度归一化量 $A_i=S_i/L_i$。`token_kl` 报告 token 加权的 $\sum_i S_i/\sum_i L_i$，另报先按响应平均、再按题目平均的 $A_i$；`sequence_conditional_kl_sum_on_val_states` 报告验证轨迹的累计量均值。累计量的单位是 nat/sequence，归一化量的单位是 nat/token；长度归一化后的量不再命名为 sequence KL。三个 benchmark 分别报告，macro 是三个 benchmark 均值的等权平均；总量直接汇总的 micro 单列，避免 MATH-500 的题数决定总体结果。
+对一条长度为 $L_i$ 的响应，保留累计量 $S_i=\sum_{t=1}^{L_i}k_{p\Vert q}(s_{i,t})$ 和长度归一化量 $A_i=S_i/L_i$。`token_kl` 报告 token 加权的 $\sum_i S_i/\sum_i L_i$，另报先按响应平均、再按题目平均的 $A_i$；`validation_kl/on_validation_states/<benchmark>/student_teacher_kl/cumulative_on_states` 报告验证轨迹的累计量均值。累计量的单位是 nat/sequence，归一化量的单位是 nat/token；长度归一化后的量不再命名为 sequence KL。三个 benchmark 分别报告，macro 是三个 benchmark 均值的等权平均；总量直接汇总的 micro 单列，避免 MATH-500 的题数决定总体结果。
 
 严格的 sequence KL 需要明确轨迹采样分布与停止规则。令 $P_H,Q_H$ 分别是 $p,q$ 在遇到 EOS 或共同上限 $H$ 时停止的响应分布，$L(y)\le H$；EOS 是有效动作，上限处不额外添加虚构 EOS。共同词表上的 teacher 概率为正时，自回归分解和条件期望给出
 
@@ -707,16 +707,18 @@ $$
 | 全部准确率响应 | EOS 比例、非 EOS 的 cap 截断比例、空响应和 abort/error 数量                               | 原始 finish/stop reason 与实际 token 联合判断；EOS 恰在 cap 时仍按 EOS |
 | 全部准确率响应 | 正确/错误/截断响应的长度分布、每题答案多样性、重复 4-gram 比例                            | 重复率定义为重复出现次数除以有效 4-gram 总数，长度不足四时单列         |
 | KL 探针        | student→teacher 与 teacher→student 条件 KL、student/teacher entropy、按前缀深度分层的 KL  | 全词表归一化；固定 bank 与当前 student 轨迹分别记录                    |
-| 全部准确率响应 | `sequence_conditional_kl_sum_on_val_states`、token 加权 KL、题目等权 KL、题目聚类置信区间 | 全有效位置；原验证采样设置；保存有效长度与截断比例                     |
+| 全部准确率响应 | `…/student_teacher_kl/cumulative_on_states`、token 加权 KL、题目等权 KL、题目聚类置信区间 | 全有效位置；原验证采样设置；保存有效长度与截断比例                     |
 | 资源           | 准确率生成、KL 生成、student 评分、teacher 评分、归约/写盘的独立耗时与峰值显存            | KL 新增成本单列；端到端 token/s 与响应/s 不混入评分耗时                |
 
 #### 接入、开销与验收
 
 实现复用 `rollout_coordinator.py` 的原始 token 和身份记录，在 `_validate` 保留后续评分所需的 IDs、有效 mask、题目/样本 ID、长度和结束原因，避免 decode 后重新 tokenize。准确率响应与固定 bank 均由原生 vLLM 生成；生成结束后统一排空并休眠验证引擎，再调用无梯度的 student/teacher 评分 worker，在相同 prefix 上比较两套分布。评分不是 HF 自回归生成回退；诊断不更新权重、不要求保存 checkpoint，发生在最终 student 仍存活时。
 
-完整条件 KL 需要扩展评分接口；当前 `old_log_probs`/`teacher_log_probs` 只有已选动作，直接相减无法恢复完整词表 KL。主验证对全部有效位置应用输出 head，按位置或词表分块，在 FP32 中完成 logsumexp 与散度归约，只返回标量和分层统计，不跨 RPC 传全部词表 logits。固定 bank 可只在选中位置应用 head，但计算前缀隐藏状态仍需要相应的 backbone 前向，八个位置不代表只处理八个输入 token。复用 teacher-forcing、去 padding 和微批机制，所有 FSDP rank 保持匹配的 collective 次数，空 rank 显式补齐协议。
+新增 teacher worker 的 `compute_validation_kl` 读取同卡 actor 的实时 FSDP 模型，旧 `old_log_probs`/`teacher_log_probs` 仍只服务采样动作评分。评分器通过临时输出 head hook 保留隐藏状态，跳过常规整段词表投影，再分位置计算两套 head；student head 只复制一次，teacher head 在参数已收集的 forward 内读取。FP32 主权重在需要时先转换一次，避免每个位置块反复转换。完整词表归一化和散度归约使用 FP32，只返回标量与分层统计。位置子采样仅服务固定 bank；主验证要求覆盖每个有效动作，输入 token 哈希、版本或位置数不匹配会拒绝输出结果。
 
 验收先覆盖 $p=q$ 时 KL 为零、已知小词表的双向 KL、有限长度序列枚举与链式分解、位置抽样权重、EOS=PAD、EOS 恰在 cap、padding/无效值排除，以及不同 batch 重排后的题目身份。随后四卡短训练验证最终 student 版本、teacher 冻结、所有 rank 完成评分、结果有限及原准确率流程可复现；实测额外耗时、显存与位置抽样误差后确定预算，再进入新的完整协议。只把 top-k 内概率重新归一化会改变被测分布，不能替代这里的完整条件 KL。
+
+实际日志同时提供 `…/token_weighted`、`…/question_mean` 和 `…/cumulative_on_states`；macro 是各 benchmark 对应统计的等权平均。准确率 JSONL 保留在验证目录顶层，KL 报告与原始 token 放到 `validation/kl/`，避免原采集器把诊断文件名误读为 step。保存评分起止时间戳、引擎休眠时间及 worker 内 actor 恢复/释放、student forward、teacher forward、head/KL 耗时；teacher forward 扣除内部 head/KL 区间，避免重复相加。这些是带通信与管理成本的调用耗时，不等于纯 GPU kernel 时间。
 
 ### 修改范围与实施顺序
 

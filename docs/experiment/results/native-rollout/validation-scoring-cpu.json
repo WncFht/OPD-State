@@ -1,0 +1,102 @@
+{
+  "schema": "validation-metrics-cpu-v2",
+  "base_commit": "a0eb8d39e8cd301b3e49d38ff9030e56d8c13288",
+  "source_kind": "worktree",
+  "verified_at": "2026-10-18T14:55:35.712068+00:00",
+  "checks": [
+    {
+      "command": [
+        "/mnt/tidalfs-bdsz01/dataset/llm_dataset/zkn_data/fht_data/OPD-State/.venv/bin/python",
+        "-m",
+        "unittest",
+        "discover",
+        "-s",
+        "verl/tests/opd",
+        "-p",
+        "test_native_*_on_cpu.py",
+        "-v"
+      ],
+      "exit_code": 0,
+      "tests": 77,
+      "seconds": 0.8216432556509972,
+      "log_sha256": "97d64b7aec3fa753d43ce01199de809792eb148416419c11c687566ca1eb6796"
+    },
+    {
+      "command": [
+        "/mnt/tidalfs-bdsz01/dataset/llm_dataset/zkn_data/fht_data/OPD-State/../envs/opd-state/bin/python",
+        "-m",
+        "unittest",
+        "discover",
+        "-s",
+        "verl/tests/opd",
+        "-p",
+        "test_*_runtime.py",
+        "-v"
+      ],
+      "exit_code": 0,
+      "tests": 42,
+      "seconds": 14.90710886567831,
+      "log_sha256": "2b558939055158e416e0a608fe14c42ab641f30611251cf0d1a6ba09bb367800"
+    }
+  ],
+  "full_vocabulary_numeric_stress": {
+    "states": 4,
+    "output_width": 151936,
+    "effective_vocab": 151665,
+    "dtype": "BF16 inputs / FP32 reduction / FP64 reference",
+    "nan_head_padding_ignored": true,
+    "results": [
+      {
+        "chunk_size": 1024,
+        "max_absolute_errors": {
+          "student_teacher_kl": 1.8031159558784537e-6,
+          "teacher_student_kl": 1.845906787756313e-6,
+          "student_entropy": 6.710170881163435e-6,
+          "teacher_entropy": 8.3426682007115e-6
+        }
+      },
+      {
+        "chunk_size": 8192,
+        "max_absolute_errors": {
+          "student_teacher_kl": 1.1849881788039696e-6,
+          "teacher_student_kl": 9.555115166870465e-7,
+          "student_entropy": 5.695280501427646e-6,
+          "teacher_entropy": 4.878489008319775e-6
+        }
+      },
+      {
+        "chunk_size": 151665,
+        "max_absolute_errors": {
+          "student_teacher_kl": 1.7435113111030631e-6,
+          "teacher_student_kl": 1.5714207095562926e-6,
+          "student_entropy": 6.710170881163435e-6,
+          "teacher_entropy": 5.645795017272803e-6
+        }
+      }
+    ]
+  },
+  "gpu_generation_or_scoring_verified": false,
+  "kl_valid_hook_connected": true,
+  "validation_rollout_hook_connected": true,
+  "frozen_formal_matrix_changed": false,
+  "source_sha256": {
+    "eval/probe_validation_metrics_cpu.py": "b9420ee4b76690f10627962bef29544137714ab68183b662d5fbe1612fc48d6e",
+    "verl/verl/trainer/ppo/validation_kl.py": "e660e1bfaa50d46cf2a2e916ce3caadf38c048a50f7dbcf75b453384e48b6968",
+    "verl/verl/trainer/ppo/validation_rollout.py": "0bab63aa4ebdcaf5cf823bad264a50e96dc2a82a436b43e281e57a0e712ffb55",
+    "verl/verl/trainer/ppo/ray_trainer.py": "931e2d438e5771867fc37472b4731ac71117b2c29a7d68aedcc385e6179e9dd7",
+    "verl/verl/trainer/ppo/rollout_coordinator.py": "3c3c3e1a6c956d1a2d7fef796c79acd8df6fab58cbdedefc7cb43cc8bb5ef094",
+    "verl/tests/opd/test_native_validation_on_cpu.py": "f1a0f47da44cf6848ec6a634a845dc4a2ccb6137fd00f9577fe17d8b3229d142",
+    "verl/tests/opd/test_validation_metrics_runtime.py": "b3c37a9f1a3ad72055cf05dba663d27929b483617b287b2f32cd7239699817d6",
+    "verl/tests/opd/test_rollout_coordinator_runtime.py": "dbda1660e8b19b11a9b85a03a6b70980958305d24e0cc12bb1271fe541ec7458",
+    "verl/verl/trainer/ppo/validation_kl_runner.py": "c7dfe732fef60690c3e2bd7e75177582fe125319a1a385cb3acf11cde8ba4033",
+    "verl/verl/workers/validation_kl.py": "cd04972a549662c042a27cd03c351916c5a0aaf55ff23c5d4e83ced1e3d1ed3b",
+    "verl/verl/workers/fsdp_teacher_worker.py": "b429d3c03c09a610977a5ba054eb65ff6448cde9dbd6ab38c4e7a785f0899964",
+    "verl/verl/single_controller/ray/base.py": "b5bd55e32ffd4d42a06eea519331fd15d388e6042f708aa8efb3c2abd8bae175",
+    "verl/verl/trainer/config/ppo_trainer.yaml": "8efd6d6583b91f0f65571bbf4c22c08b53dbc37af898f91cb12c8710ae9835ac",
+    "verl/tests/opd/test_validation_scoring_runtime.py": "63d88b38cd076015c2153ecdafc8dd45c17a102a8a4a3157f2c18584cfbb9230",
+    "verl/tests/opd/test_validation_runner_runtime.py": "3ce7bb571b9aea6e066c689ed926eacfcecba8833a1a201902567004f983cd9d",
+    "eval/probe_validation_fsdp_cpu.py": "6b848219ef7644ce23d6b1d01ead6dd354ade4aa1437f974d45f8a56d133a14a",
+    "scripts/tests/test_math_snapshots.py": "4bdb11ba35cd1534c7a2f107902bea4c402dfc411ae77dd27b194639d1492a02",
+    "eval/collect_math_experiment.py": "d55fdb5753b7557a445c8584830f41fdbb3ca450ae53fa888791f2cdf81899fb"
+  }
+}

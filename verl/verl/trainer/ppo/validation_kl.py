@@ -102,11 +102,13 @@ def full_vocab_divergences(student_logits, teacher_logits, *, vocab_size=None, c
                 yield student_logits[:, begin:end].float(), teacher_logits[:, begin:end].float()
 
         normalizer_parts = [[], []]
+        finite = torch.ones((), dtype=torch.bool, device=student_logits.device)
         for p, q in chunks():
-            if not torch.isfinite(p).all() or not torch.isfinite(q).all():
-                raise ValueError("KL logits must be finite on the effective vocabulary")
+            finite.logical_and_(torch.isfinite(p).all()).logical_and_(torch.isfinite(q).all())
             for index, value in enumerate((p, q)):
                 normalizer_parts[index].append(torch.logsumexp(value, dim=-1))
+        if not finite:
+            raise ValueError("KL logits must be finite on the effective vocabulary")
         # Reduce the small block summaries together. Sequential logaddexp/add_
         # accumulated visible FP32 error with the 151,665-token vocabulary.
         normalizers = [torch.logsumexp(torch.stack(parts), dim=0) for parts in normalizer_parts]
@@ -119,6 +121,6 @@ def full_vocab_divergences(student_logits, teacher_logits, *, vocab_size=None, c
             parts["student_entropy"].append(-(probp * logp).sum(-1))
             parts["teacher_entropy"].append(-(probq * logq).sum(-1))
         result = {key: torch.stack(values).sum(0) for key, values in parts.items()}
-        if not all(torch.isfinite(value).all() for value in result.values()):
+        if not torch.stack([torch.isfinite(value).all() for value in result.values()]).all():
             raise ValueError("KL reduction produced non-finite statistics")
         return result

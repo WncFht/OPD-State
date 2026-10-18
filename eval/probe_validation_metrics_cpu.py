@@ -23,6 +23,16 @@ SOURCES = [
     "verl/tests/opd/test_native_validation_on_cpu.py",
     "verl/tests/opd/test_validation_metrics_runtime.py",
     "verl/tests/opd/test_rollout_coordinator_runtime.py",
+    "verl/verl/trainer/ppo/validation_kl_runner.py",
+    "verl/verl/workers/validation_kl.py",
+    "verl/verl/workers/fsdp_teacher_worker.py",
+    "verl/verl/single_controller/ray/base.py",
+    "verl/verl/trainer/config/ppo_trainer.yaml",
+    "verl/tests/opd/test_validation_scoring_runtime.py",
+    "verl/tests/opd/test_validation_runner_runtime.py",
+    "eval/probe_validation_fsdp_cpu.py",
+    "scripts/tests/test_math_snapshots.py",
+    "eval/collect_math_experiment.py",
 ]
 
 
@@ -94,7 +104,9 @@ def main():
             raise RuntimeError(f"Full-vocabulary FP32 error exceeds the 1e-5 absolute bound: {errors}")
         stress.append({"chunk_size": chunk, "max_absolute_errors": errors})
     receipt = {
-        "schema": "validation-metrics-cpu-v1",
+        "schema": "validation-metrics-cpu-v2",
+        "base_commit": subprocess.check_output(["git", "rev-parse", "HEAD"], cwd=ROOT, text=True).strip(),
+        "source_kind": "worktree",
         "verified_at": datetime.datetime.now(datetime.timezone.utc).isoformat(),
         "checks": checks,
         "full_vocabulary_numeric_stress": {
@@ -106,7 +118,7 @@ def main():
             "results": stress,
         },
         "gpu_generation_or_scoring_verified": False,
-        "kl_valid_hook_connected": False,
+        "kl_valid_hook_connected": True,
         "validation_rollout_hook_connected": True,
         "frozen_formal_matrix_changed": False,
         "source_sha256": {name: hashlib.sha256((ROOT / name).read_bytes()).hexdigest() for name in SOURCES},

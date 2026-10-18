@@ -243,3 +243,7 @@ CUDA Graph 连续解码随后通过：λ=0.5、两条 prompt 各八步，实际�
 开发源码增加验证长度、终止、解析、多样性和重复统计，DataProto 中保存原始结束原因与 final-student 版本。新增数值函数以 FP32 计算双向完整条件 KL 和 entropy，CPU 小序列枚举核对 sequence KL 的链式分解；三种词表分块与独立 FP64 参考比较。最初逐块串行 logaddexp/累加导致 entropy 误差约 3.5e-5，超过预定 1e-5；改为统一归约块摘要后最大误差降至约 8.35e-6，没有放宽阈值。位置抽样用穷举区间内位置的方式核验加权估计无偏。
 
 七十七项原生 CPU 与二十六项训练环境运行检查通过；实际 `_validate` 和合并方法覆盖不等大 batch、DP padding、响应重排和 EOS=PAD，原准确率返回值与字段仍保留。新检查脚本及证据归统一实验目录，KL 评分 worker 和全量验证 KL hook 尚未接通，GPU 验收未通过前不把数值构造当成真实模型诊断。现有正式第二组、后续布局与扫描 watcher 继续使用原冻结源码。
+
+验证指标核心提交为 a0eb8d3。随后接通可选的完整 KL 评分 worker 和 `_validate` hook，整轮保留有效原始 token，推理池休眠后读取同卡当前 actor 与冻结 teacher，不再额外生成 student 响应。原 colocated worker factory 补齐已有 fused-peer API；评分复用正常 FSDP forward，通过临时 head hook 避免整段词表张量，再按位置计算两个 head，主权重需要转换时每个快照/响应只做一次。保存输入哈希、student 版本、模型绑定的固定 bank、逐响应/分层统计及调用计时。
+
+七十七项原生 CPU 与四十二项训练环境运行检查通过，新增小型 Qwen2 直接前向对照、DP 补齐、原采集器兼容性和异常恢复。两进程 Gloo/FSDP 实验在各 rank 不同长度下完成评分、真实 SGD 更新及再次评分，teacher 本地参数逐项保持，student 结果随更新改变；这不是真实 checkpoint 或 GPU 证明。原准确率采集器将顶层 JSONL stem 解析为 step，故新增诊断归 validation/kl，已用真实 producer/collector 组合回归。GPU 与完整 bank 生成仍待完成，全部正式实验继续使用原冻结源码。

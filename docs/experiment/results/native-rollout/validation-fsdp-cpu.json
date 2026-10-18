@@ -1,0 +1,77 @@
+{
+  "schema": "validation-fsdp-cpu-v1",
+  "world_size": 2,
+  "backend": "gloo",
+  "device": "cpu",
+  "actual_qwen_checkpoints": false,
+  "real_gpu_verified": false,
+  "ranks": [
+    {
+      "rank": 0,
+      "response_tokens": 4,
+      "max_absolute_errors": {
+        "student_teacher_kl": 1.094800176210109e-7,
+        "teacher_student_kl": 1.0430416025677958e-7,
+        "student_entropy": 3.637628687158667e-8,
+        "teacher_entropy": 2.9076666407945595e-7
+      },
+      "student_optimizer_update_observed": true,
+      "teacher_unchanged": true,
+      "timings": {
+        "student_forward_seconds": 0.01384357362985611,
+        "teacher_forward_seconds": 0.011209048330783844,
+        "head_kl_seconds": 0.0013455301523208618,
+        "seconds": 0.027034588158130646,
+        "head_snapshot_bytes": 1216
+      },
+      "initial_sums": {
+        "student_teacher_kl": 0.01366516388952732,
+        "teacher_student_kl": 0.013710704632103443,
+        "student_entropy": 11.76825761795044,
+        "teacher_entropy": 11.764728307723999
+      },
+      "updated_sums": {
+        "student_teacher_kl": 0.041426049545407295,
+        "teacher_student_kl": 0.03970870655030012,
+        "student_entropy": 11.741644382476807,
+        "teacher_entropy": 11.764728307723999
+      }
+    },
+    {
+      "rank": 1,
+      "response_tokens": 12,
+      "max_absolute_errors": {
+        "student_teacher_kl": 4.589963632020688e-7,
+        "teacher_student_kl": 4.716839351603941e-7,
+        "student_entropy": 1.962618867423771e-7,
+        "teacher_entropy": 1.0506657019959675e-6
+      },
+      "student_optimizer_update_observed": true,
+      "teacher_unchanged": true,
+      "timings": {
+        "student_forward_seconds": 0.011811822652816772,
+        "teacher_forward_seconds": 0.00788598507642746,
+        "head_kl_seconds": 0.002251952886581421,
+        "seconds": 0.0227581188082695,
+        "head_snapshot_bytes": 1216
+      },
+      "initial_sums": {
+        "student_teacher_kl": 0.03915476519614458,
+        "teacher_student_kl": 0.03918297216296196,
+        "student_entropy": 35.3080518245697,
+        "teacher_entropy": 35.29162669181824
+      },
+      "updated_sums": {
+        "student_teacher_kl": 0.14092102646827698,
+        "teacher_student_kl": 0.13417391199618578,
+        "student_entropy": 35.21123433113098,
+        "teacher_entropy": 35.29162669181824
+      }
+    }
+  ],
+  "source_sha256": {
+    "eval/probe_validation_fsdp_cpu.py": "6b848219ef7644ce23d6b1d01ead6dd354ade4aa1437f974d45f8a56d133a14a",
+    "verl/verl/workers/validation_kl.py": "cd04972a549662c042a27cd03c351916c5a0aaf55ff23c5d4e83ced1e3d1ed3b",
+    "verl/verl/trainer/ppo/validation_kl.py": "e660e1bfaa50d46cf2a2e916ce3caadf38c048a50f7dbcf75b453384e48b6968"
+  }
+}

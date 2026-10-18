@@ -381,6 +381,14 @@ class RayPPOTrainer(OPDTrainerMixin):
         from verl.trainer.ppo.rollout_coordinator import prepare_native_config
 
         self.native_policy_enabled = prepare_native_config(config, tokenizer, processor)
+        from verl.trainer.ppo.validation_kl_runner import load_fixed_bank, validate_settings
+
+        validate_settings(config, native_enabled=self.native_policy_enabled)
+        self._validation_kl_bank = ([], None)
+        if config.trainer.get("validation_kl", {}).get("enabled", False):
+            self._validation_kl_bank = load_fixed_bank(
+                config.trainer.validation_kl.get("fixed_prefix_bank"), config, tokenizer
+            )
         self.rollout_coordinator = None
         self.use_fusion_rollout = bool(fusion.get("enabled", False))
         if self.opd_topk_tail_enabled() and (self.fixed_rollout_cache is not None or self.use_fusion_rollout):
@@ -707,6 +715,8 @@ class RayPPOTrainer(OPDTrainerMixin):
         sample_turns = []
         sample_uids = []
         rollout_rows = []
+        kl_enabled = self.config.trainer.get("validation_kl", {}).get("enabled", False)
+        kl_records = []
 
         for test_data in self.val_dataloader:
             test_batch = DataProto.from_single_dict(test_data)
@@ -782,6 +792,10 @@ class RayPPOTrainer(OPDTrainerMixin):
                 from verl.trainer.ppo.validation_rollout import rows_from_batch
 
                 rollout_rows.extend(rows_from_batch(test_batch, reward_extra_info, self.tokenizer.eos_token_id))
+                if kl_enabled:
+                    from verl.trainer.ppo.validation_kl_runner import collect_records
+
+                    kl_records.extend(collect_records(test_batch, student_version=self.global_steps))
 
             reward_extra_infos_dict["reward"].extend(scores)
             for key, values in reward_extra_info.items():
@@ -798,6 +812,11 @@ class RayPPOTrainer(OPDTrainerMixin):
 
             data_source_lst.append(test_batch.non_tensor_batch.get("data_source", ["unknown"] * reward_tensor.shape[0]))
 
+        kl_rows, kl_metrics = [], {}
+        if kl_enabled:
+            from verl.trainer.ppo.validation_kl_runner import run_validation_kl
+
+            kl_rows, kl_metrics = run_validation_kl(self, kl_records)
         if self.rollout_coordinator is not None:
             self.rollout_coordinator.end_eval(
                 self.global_steps, resume_training=self.global_steps < self.total_training_steps
@@ -834,9 +853,12 @@ class RayPPOTrainer(OPDTrainerMixin):
                 "sample_turns": sample_turns,
                 "reward_extra_infos_dict": reward_extra_infos_dict,
                 "rollout_rows": rollout_rows,
+                "kl_rows": kl_rows,
+                "kl_metrics": kl_metrics,
             }
         data_sources = np.concatenate(data_source_lst, axis=0)
         metrics = self._val_metrics_update(data_sources, sample_uids, reward_extra_infos_dict, sample_turns)
+        metrics.update(kl_metrics)
         if rollout_rows:
             from verl.trainer.ppo.validation_rollout import summarize_rollouts
 
@@ -919,6 +941,15 @@ class RayPPOTrainer(OPDTrainerMixin):
             from verl.trainer.ppo.validation_rollout import summarize_rollouts
 
             metrics.update(summarize_rollouts(rollout_rows))
+        kl_rows = result_a.get("kl_rows", []) + result_b.get("kl_rows", [])
+        if kl_rows:
+            from verl.trainer.ppo.validation_kl_runner import summarize_kl
+
+            metrics.update(summarize_kl(kl_rows))
+            performance = {key for result in (result_a, result_b) for key in result.get("kl_metrics", {})
+                           if key.startswith("validation_kl/performance/") and key.endswith("_seconds")}
+            for key in performance:
+                metrics[key] = sum(result.get("kl_metrics", {}).get(key, 0) for result in (result_a, result_b))
         return metrics
 
     def init_workers(self):

@@ -163,6 +163,14 @@ trainer:
   # Directory for logging validation data; no dump if null
   validation_data_dir: null
 
+  # Full-vocabulary forward-only diagnostics on every effective validation token.
+  # Enable explicitly in a new protocol; frozen experiments retain their config.
+  validation_kl:
+    enabled: false
+    position_chunk_size: 128
+    vocab_chunk_size: 8192
+    fixed_prefix_bank: null
+
   # Number of nodes used in the training
   nnodes: 1
 
