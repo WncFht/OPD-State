@@ -27,6 +27,8 @@
 
 PPO 主循环在 `verl/verl/trainer/ppo/ray_trainer.py`，OPD 的教师注册和逐 token 信号处理在 `opd_trainer_mixin.py`，教师打分在 `verl/verl/workers/fsdp_teacher_worker.py`，优势与策略损失在 `verl/verl/trainer/ppo/core_algos.py`。实验直接修改这些源码和对应 recipe，使用普通 Git 提交记录。
 
+`recipe/math_alignment.sh` 提供 JustRL-1.5B 与 R1-Distill-1.5B 双向对齐配方。`opd_topk_tail.py` 在 student head 上精确求和，用带行为概率修正的 sampled tail 补回完整条件 KL 梯度；teacher worker 返回相同候选的概率和补集质量，`workers/utils/losses.py` 对冻结 score 系数求导。该路径仅支持 fresh student、单 batch 单更新和共同有效词表；条件梯度无偏不等于完整序列目标梯度无偏。`eval/measure_student_kl.py` 独立生成 student 轨迹并计算完整词表 KL，数学语义、指标及运行边界见[研究正文第 10–13 节](research/occupancy/2026-10-17-OPD访问测度与收敛机制研究.md)。
+
 固定 teacher 与初始 student 轨迹由 `data/prep/build_rollout_cache.py` 生成，`fixed_rollout.py` 验证并读取缓存；当前 student 和冻结 teacher 仍在训练时重新评分。`recipe/math_cached.sh` 选择缓存来源，所有设置均只更新 student。长时固定缓存训练由 `plateau.py` 合并每 50 步的验证与训练残差，记录经验平台判断。
 
 共享 prefix 的 logit fusion 已在 `verl/verl/workers/rollout/fusion/` 实现，通过 vLLM worker 扩展接收当前 actor 参数并生成融合轨迹，`recipe/math_fusion.sh` 提供训练入口。验证始终使用独立 student；完整两步调试与 λ=0.5 的正式 50 步实验均已完成。缓存身份、权重版本、后端限制、测试和结果见[统一实验协议](experiment/2026-10-18-rollout来源与logit融合实验.md)。正式训练链路尚未接入轨迹内 teacher/student 切换及 batch 混合；相关假设与判分归[研究正文](research/occupancy/2026-10-17-OPD访问测度与收敛机制研究.md)。

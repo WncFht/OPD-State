@@ -137,11 +137,16 @@ class OPDTrainerMixin:
             return train_top_k
         return int(teacher.get("metric_top_k", 0) or 0)
 
+    def opd_topk_tail_enabled(self) -> bool:
+        return bool(getattr(self, "use_opd_teacher", False) and
+                    self.config.distillation.fsdp_teacher.get("unbiased_topk_tail", False))
+
     def opd_top_k_is_reward(self) -> bool:
         """True when top-K should replace the reward, not merely be measured."""
         if not getattr(self, "use_opd_teacher", False):
             return False
-        return int(self.config.distillation.fsdp_teacher.get("log_prob_top_k", 0) or 0) > 0
+        return (not self.opd_topk_tail_enabled() and
+                int(self.config.distillation.fsdp_teacher.get("log_prob_top_k", 0) or 0) > 0)
 
     def validate_opd_top_k_config(self) -> None:
         """Reject top-K reward setups whose candidate set would drift under training.
@@ -154,6 +159,28 @@ class OPDTrainerMixin:
         log-probs of two different candidate sets, which is silently wrong rather
         than loudly broken, so it is refused up front.
         """
+        if self.opd_topk_tail_enabled():
+            teacher = self.config.distillation.fsdp_teacher
+            actor = self.config.actor_rollout_ref.actor
+            rollout = self.config.actor_rollout_ref.rollout
+            if (int(actor.ppo_epochs) != 1 or int(actor.ppo_mini_batch_size) != int(self.config.data.train_batch_size)
+                    or self.config.algorithm.adv_estimator != "token_reward_direct"):
+                raise ValueError("Unbiased top-k tail requires one complete fresh-batch update and direct reward")
+            if (actor.policy_loss.loss_mode != "opd_topk_tail" or actor.use_kl_loss
+                    or float(actor.entropy_coeff) != 0 or actor.loss_agg_mode != "token-mean"):
+                raise ValueError("Unbiased top-k tail requires its own score loss, token-mean, no extra KL/entropy")
+            if (float(rollout.temperature) != 1 or float(rollout.get("top_p", 1)) != 1
+                    or int(rollout.get("top_k", -1)) not in (-1, 0)
+                    or float(rollout.get("repetition_penalty", 1)) != 1):
+                raise ValueError("Unbiased top-k tail requires untruncated student sampling at temperature 1")
+            if int(teacher.effective_vocab_size) != len(self.tokenizer):
+                raise ValueError("effective_vocab_size must equal the shared tokenizer size")
+            if (self.config.actor_rollout_ref.model.use_fused_kernels
+                    or int(actor.get("ulysses_sequence_parallel_size", 1)) != 1):
+                raise ValueError("Unbiased top-k tail currently requires unfused FSDP with sequence parallel size 1")
+            if self.config.algorithm.get("rollout_correction") is not None:
+                raise ValueError("Unbiased top-k tail requires rollout_correction=null")
+            return
         if not self.opd_top_k_is_reward():
             return
         actor = self.config.actor_rollout_ref.actor
@@ -210,6 +237,21 @@ class OPDTrainerMixin:
             float((batch.batch["teacher_log_probs"] * response_mask).sum().item()) / n_tokens
         )
 
+        if self.opd_topk_tail_enabled():
+            from verl.trainer.ppo.opd_topk_tail import coefficients_and_metrics, summarize_kl
+            head, tail, stats = coefficients_and_metrics(
+                batch.batch["student_top_k_log_probs"],
+                teacher_output.batch["teacher_top_k_log_probs"].to(response_mask.device),
+                batch.batch["old_log_probs"], batch.batch["teacher_log_probs"],
+                batch.batch["student_tail_log_mass"],
+                teacher_output.batch["teacher_tail_log_mass"].to(response_mask.device),
+                batch.batch["student_top_k_ids"], batch.batch["responses"], response_mask,
+                behavior_action=batch.batch["rollout_log_probs"])
+            batch.batch["opd_head_coefficient"] = head
+            batch.batch["opd_tail_coefficient"] = tail
+            metrics.update(summarize_kl(stats, response_mask))
+            metrics["opd_alignment/head_k"] = int(self.opd_student_top_k())
+
         teachers = teacher_output.non_tensor_batch.get("mopd_teacher")
         if teachers is not None:
             counts = dict(sorted(Counter(str(t) for t in teachers).items()))
@@ -225,7 +267,7 @@ class OPDTrainerMixin:
         overlap = _mean_metric(worker_metrics.get("top_k_overlap_ratio"))
         if overlap is not None:
             metrics["opd/top_k_overlap_ratio"] = float(overlap)
-            metrics["opd/top_k_mode"] = 1.0 if self.opd_top_k_is_reward() else 0.0
+            metrics["opd/top_k_mode"] = 2.0 if self.opd_topk_tail_enabled() else float(self.opd_top_k_is_reward())
         for key in ("top_k_student_mass", "top_k_teacher_mass", "top_k_reward_mean"):
             value = _mean_metric(worker_metrics.get(key))
             if value is not None:

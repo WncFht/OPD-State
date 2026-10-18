@@ -1,0 +1,330 @@
+{
+  "kind": "implementation_validation_only",
+  "date": "2026-10-18",
+  "not_evidence_for": [
+    "LLM convergence",
+    "benchmark accuracy",
+    "causal variance mechanism"
+  ],
+  "new_native_tests": {
+    "count": 8,
+    "passed": true,
+    "log_sha256": "2ebb357e0fd5a4f6b2acea29c85f0964df899425954333d27fa7db8732393219"
+  },
+  "all_native_tests": {
+    "count": 38,
+    "passed": true,
+    "log_sha256": "5f3f0dffce73d42e46581c00ec805d0e9e5de4f0e2ffe259ade26275a4dd7b68"
+  },
+  "training_canaries": [
+    {
+      "direction": "JustRL teacher -> R1-Distill student",
+      "physical_gpus": [
+        0,
+        1,
+        2,
+        3
+      ],
+      "head_k": 16,
+      "steps": 1,
+      "responses_per_batch": 8,
+      "response_cap": 64,
+      "evaluation_enabled": false,
+      "hf_export_at_step": null,
+      "log_path": "runs/alignment-tail/canary-forward-final/stdout.log",
+      "log_sha256": "1da00ae902d90a498e68261a5577a781751ba1595762093a7119851c8f311c42",
+      "base_commit": "b6edee43e310aadb904cabc1076ff3af689f1692",
+      "observations": [
+        {
+          "step": 1,
+          "metrics": {
+            "opd_alignment/kl_head_token_mean": 0.05357970970007922,
+            "opd_alignment/kl_grouped_token_mean": 0.05392327398357936,
+            "opd_alignment/kl_unbiased_token_mean": 0.05386229459026851,
+            "opd_alignment/tail_residual_token_mean": -6.097942605265416e-05,
+            "opd_alignment/student_tail_mass_token_mean": 0.0015999699735917534,
+            "opd_alignment/teacher_tail_mass_token_mean": 0.0016447240641054403,
+            "opd_alignment/sample_in_tail_token_mean": 0.00390625,
+            "opd_alignment/action_importance_ratio_token_mean": 0.9989870170829818,
+            "opd_alignment/behavior_logratio_token_mean": 0.03722054117383905,
+            "opd_alignment/kl_unbiased_sequence_mean": 3.447186853777185,
+            "opd_alignment/kl_unbiased_sequence_se": 0.7526021321040083,
+            "opd_alignment/behavior_kl_sequence_mean": 2.382114635125699,
+            "opd_alignment/mean_response_tokens": 64.0,
+            "opd_alignment/sequences": 8.0,
+            "opd_alignment/valid_tokens": 512.0,
+            "opd_alignment/head_k": 16.0,
+            "actor/score_surrogate": -0.06714070960879326,
+            "actor/grad_norm": 1.7353538274765015,
+            "perf/max_memory_allocated_gb": 9.20710039138794,
+            "tail_hits": 2
+          }
+        }
+      ]
+    },
+    {
+      "direction": "R1-Distill teacher -> JustRL student",
+      "physical_gpus": [
+        0,
+        1,
+        2,
+        3
+      ],
+      "head_k": 2,
+      "steps": 2,
+      "responses_per_batch": 8,
+      "response_cap": 64,
+      "evaluation_enabled": false,
+      "hf_export_at_step": 2,
+      "log_path": "runs/alignment-tail/canary-reverse/stdout.log",
+      "log_sha256": "43086eff119d833491e73533ef42bf2cf88537a78318e734278a8cb3b3a131a9",
+      "base_commit": "b6edee43e310aadb904cabc1076ff3af689f1692",
+      "observations": [
+        {
+          "step": 1,
+          "metrics": {
+            "opd_alignment/kl_head_token_mean": 0.04546510262145298,
+            "opd_alignment/kl_grouped_token_mean": 0.0435777787033984,
+            "opd_alignment/kl_unbiased_token_mean": 0.050513421269930296,
+            "opd_alignment/tail_residual_token_mean": 0.00693564267930924,
+            "opd_alignment/student_tail_mass_token_mean": 0.03415452436130595,
+            "opd_alignment/teacher_tail_mass_token_mean": 0.0439294511791387,
+            "opd_alignment/sample_in_tail_token_mean": 0.029296875,
+            "opd_alignment/action_importance_ratio_token_mean": 1.0007633980130777,
+            "opd_alignment/behavior_logratio_token_mean": 0.022325412633633787,
+            "opd_alignment/kl_unbiased_sequence_mean": 3.2328589612755394,
+            "opd_alignment/kl_unbiased_sequence_se": 0.46846861085849734,
+            "opd_alignment/behavior_kl_sequence_mean": 1.4288264085525624,
+            "opd_alignment/mean_response_tokens": 64.0,
+            "opd_alignment/sequences": 8.0,
+            "opd_alignment/valid_tokens": 512.0,
+            "opd_alignment/head_k": 2.0,
+            "actor/score_surrogate": -0.02830860367976129,
+            "actor/grad_norm": 2.5181162357330322,
+            "perf/max_memory_allocated_gb": 9.20710039138794,
+            "tail_hits": 15
+          }
+        },
+        {
+          "step": 2,
+          "metrics": {
+            "opd_alignment/kl_head_token_mean": 0.06459490393143885,
+            "opd_alignment/kl_grouped_token_mean": 0.061676970332202624,
+            "opd_alignment/kl_unbiased_token_mean": 0.07501903147226782,
+            "opd_alignment/tail_residual_token_mean": 0.013342060685772594,
+            "opd_alignment/student_tail_mass_token_mean": 0.052671973343697887,
+            "opd_alignment/teacher_tail_mass_token_mean": 0.06850608061945482,
+            "opd_alignment/sample_in_tail_token_mean": 0.076171875,
+            "opd_alignment/action_importance_ratio_token_mean": 0.9997505862265825,
+            "opd_alignment/behavior_logratio_token_mean": 0.05464483204519603,
+            "opd_alignment/kl_unbiased_sequence_mean": 4.801218014225141,
+            "opd_alignment/kl_unbiased_sequence_se": 1.0444137503855018,
+            "opd_alignment/behavior_kl_sequence_mean": 3.497269250892546,
+            "opd_alignment/mean_response_tokens": 64.0,
+            "opd_alignment/sequences": 8.0,
+            "opd_alignment/valid_tokens": 512.0,
+            "opd_alignment/head_k": 2.0,
+            "actor/score_surrogate": -0.07253564661368728,
+            "actor/grad_norm": 5.248936176300049,
+            "perf/max_memory_allocated_gb": 10.160244464874268,
+            "tail_hits": 39
+          }
+        }
+      ]
+    }
+  ],
+  "full_vocabulary_calibrations": [
+    {
+      "name": "forward-final",
+      "log_path": "runs/alignment-tail/calibration-forward-final.json",
+      "result_sha256": "9b97aa93585da664baed4ff8e646112723b21aa0c015a1bed82bdec1130155d0",
+      "student": "/mnt/tidalfs-bdsz01/dataset/llm_dataset/zkn_data/fht_data/models/DeepSeek-R1-Distill-Qwen-1.5B",
+      "teacher": "/mnt/tidalfs-bdsz01/dataset/llm_dataset/zkn_data/fht_data/models/JustRL-DeepSeek-1.5B",
+      "prompt_file_sha256": "49e1b2c7bddd84791f38287bcdd4a99639c599e699d5906c238c74d0b31ccf8c",
+      "producer_sha256": "21d0c1639e74de98ddbb884639f348c5d6a3db3d9a8f5ebb750f6f22b20d51da",
+      "sampling": {
+        "temperature": 1.0,
+        "top_p": 1.0,
+        "max_new_tokens": 64,
+        "seed": 42
+      },
+      "student_probability_source": "actual Transformers generate output_scores",
+      "effective_vocab_size": 151665,
+      "top_k": 2,
+      "prompts": 2,
+      "trajectories": 2,
+      "summary": {
+        "reverse_full_sequence_mean": 2.1630132964546473,
+        "forward_on_student_states_sequence_mean": 2.1436831058110317,
+        "grouped_sequence_mean": 1.802936220738708,
+        "unbiased_sequence_mean": 1.839621563639163,
+        "sampled_logratio_sequence_mean": 1.9516049370487423,
+        "reverse_full_token_mean": 0.033797082757103865,
+        "forward_on_student_states_token_mean": 0.03349504852829737,
+        "grouped_token_mean": 0.028170878449042314,
+        "unbiased_token_mean": 0.028744086931861923,
+        "sampled_logratio_token_mean": 0.030493827141386598,
+        "mean_response_tokens": 64.0
+      },
+      "records": [
+        {
+          "prompt_id": "e6f8b3ef6cc79a57a53d597b1777c4f06496cf16dfdce990e11baa47c5c2617b",
+          "sample": 0,
+          "response_tokens": 64,
+          "stopped_on_eos": false,
+          "reverse_full": 2.8556973628337454,
+          "forward_on_student_states": 2.9379354319177287,
+          "grouped": 2.4764474153003704,
+          "unbiased": 2.4764474153003704,
+          "sampled_logratio": -0.28677252272049714
+        },
+        {
+          "prompt_id": "7cf323ff3b585f2403a74b0930ec8196e86caf31db2bc89c8c72e8e8b17f83e1",
+          "sample": 0,
+          "response_tokens": 64,
+          "stopped_on_eos": false,
+          "reverse_full": 1.4703292300755493,
+          "forward_on_student_states": 1.3494307797043348,
+          "grouped": 1.1294250261770458,
+          "unbiased": 1.2027957119779558,
+          "sampled_logratio": 4.189982396817982
+        }
+      ]
+    },
+    {
+      "name": "reverse-final",
+      "log_path": "runs/alignment-tail/calibration-reverse-final.json",
+      "result_sha256": "ac2fbf35f43d85349bd3ff51c741299f71954d149ffc4ea026982ff1bd2bf93b",
+      "student": "/mnt/tidalfs-bdsz01/dataset/llm_dataset/zkn_data/fht_data/models/JustRL-DeepSeek-1.5B",
+      "teacher": "/mnt/tidalfs-bdsz01/dataset/llm_dataset/zkn_data/fht_data/models/DeepSeek-R1-Distill-Qwen-1.5B",
+      "prompt_file_sha256": "49e1b2c7bddd84791f38287bcdd4a99639c599e699d5906c238c74d0b31ccf8c",
+      "producer_sha256": "21d0c1639e74de98ddbb884639f348c5d6a3db3d9a8f5ebb750f6f22b20d51da",
+      "sampling": {
+        "temperature": 1.0,
+        "top_p": 1.0,
+        "max_new_tokens": 64,
+        "seed": 42
+      },
+      "student_probability_source": "actual Transformers generate output_scores",
+      "effective_vocab_size": 151665,
+      "top_k": 2,
+      "prompts": 2,
+      "trajectories": 2,
+      "summary": {
+        "reverse_full_sequence_mean": 2.4409530296465736,
+        "forward_on_student_states_sequence_mean": 2.41666034897762,
+        "grouped_sequence_mean": 2.1245016984232468,
+        "unbiased_sequence_mean": 2.1084077346660894,
+        "sampled_logratio_sequence_mean": 0.07931322682382458,
+        "reverse_full_token_mean": 0.03813989108822771,
+        "forward_on_student_states_token_mean": 0.03776031795277531,
+        "grouped_token_mean": 0.03319533903786323,
+        "unbiased_token_mean": 0.03294387085415765,
+        "sampled_logratio_token_mean": 0.001239269169122259,
+        "mean_response_tokens": 64.0
+      },
+      "records": [
+        {
+          "prompt_id": "e6f8b3ef6cc79a57a53d597b1777c4f06496cf16dfdce990e11baa47c5c2617b",
+          "sample": 0,
+          "response_tokens": 64,
+          "stopped_on_eos": false,
+          "reverse_full": 2.956965002506246,
+          "forward_on_student_states": 2.924252457784344,
+          "grouped": 2.5840321225107097,
+          "unbiased": 2.5840321225107097,
+          "sampled_logratio": 0.602265107996196
+        },
+        {
+          "prompt_id": "7cf323ff3b585f2403a74b0930ec8196e86caf31db2bc89c8c72e8e8b17f83e1",
+          "sample": 0,
+          "response_tokens": 64,
+          "stopped_on_eos": false,
+          "reverse_full": 1.924941056786901,
+          "forward_on_student_states": 1.909068240170896,
+          "grouped": 1.6649712743357838,
+          "unbiased": 1.6327833468214692,
+          "sampled_logratio": -0.4436386543485469
+        }
+      ]
+    },
+    {
+      "name": "saved-reverse",
+      "log_path": "runs/alignment-tail/calibration-saved-reverse.json",
+      "result_sha256": "a89c9a8cfabcc98670d50e7e111dfa0f0643607d615855f96ed01bd6840aa69f",
+      "student": "/mnt/tidalfs-bdsz01/dataset/llm_dataset/zkn_data/fht_data/OPD-State/runs/alignment-tail/canary-reverse/checkpoints/alignment-tail-canary-reverse/global_step_2/actor/huggingface",
+      "teacher": "/mnt/tidalfs-bdsz01/dataset/llm_dataset/zkn_data/fht_data/models/DeepSeek-R1-Distill-Qwen-1.5B",
+      "prompt_file_sha256": "49e1b2c7bddd84791f38287bcdd4a99639c599e699d5906c238c74d0b31ccf8c",
+      "producer_sha256": "21d0c1639e74de98ddbb884639f348c5d6a3db3d9a8f5ebb750f6f22b20d51da",
+      "sampling": {
+        "temperature": 1.0,
+        "top_p": 1.0,
+        "max_new_tokens": 64,
+        "seed": 42
+      },
+      "student_probability_source": "actual Transformers generate output_scores",
+      "effective_vocab_size": 151665,
+      "top_k": 2,
+      "prompts": 2,
+      "trajectories": 2,
+      "summary": {
+        "reverse_full_sequence_mean": 2.1259781219859346,
+        "forward_on_student_states_sequence_mean": 2.072346225514713,
+        "grouped_sequence_mean": 1.8775249880025888,
+        "unbiased_sequence_mean": 1.8138748567770029,
+        "sampled_logratio_sequence_mean": 1.0925328112854906,
+        "reverse_full_token_mean": 0.03321840815603023,
+        "forward_on_student_states_token_mean": 0.03238040977366739,
+        "grouped_token_mean": 0.02933632793754045,
+        "unbiased_token_mean": 0.02834179463714067,
+        "sampled_logratio_token_mean": 0.01707082517633579,
+        "mean_response_tokens": 64.0
+      },
+      "records": [
+        {
+          "prompt_id": "e6f8b3ef6cc79a57a53d597b1777c4f06496cf16dfdce990e11baa47c5c2617b",
+          "sample": 0,
+          "response_tokens": 64,
+          "stopped_on_eos": false,
+          "reverse_full": 2.980552908803525,
+          "forward_on_student_states": 2.984538899095886,
+          "grouped": 2.5903711853506293,
+          "unbiased": 2.5903711853506293,
+          "sampled_logratio": 0.37236190155336857
+        },
+        {
+          "prompt_id": "7cf323ff3b585f2403a74b0930ec8196e86caf31db2bc89c8c72e8e8b17f83e1",
+          "sample": 0,
+          "response_tokens": 64,
+          "stopped_on_eos": false,
+          "reverse_full": 1.271403335168344,
+          "forward_on_student_states": 1.16015355193354,
+          "grouped": 1.1646787906545484,
+          "unbiased": 1.0373785282033765,
+          "sampled_logratio": 1.8127037210176127
+        }
+      ]
+    }
+  ],
+  "forward_canary_source_sha256": {
+    "recipe/math_alignment.sh": "cc6638435ca0516808802dbdc80dc423a4ba3c2c0469db610fd618e1e753c3a1",
+    "recipe/math_baseline.sh": "ff1983237e250b3ef32356dbfcdd51e8e074417f267adc0b3ee4862dd2ef3d6c",
+    "verl/verl/trainer/ppo/opd_topk_tail.py": "99bc0a70a7eeb2efbd2062cc065d266f0c0169b9dab9b2b51ae35949c446111f",
+    "verl/verl/trainer/ppo/opd_trainer_mixin.py": "da9ee934b0360e7315a9ef3f01345f37ff03ab40c20649e6181175a464ed510d",
+    "verl/verl/trainer/ppo/ray_trainer.py": "3f5756559d098d2e1f25f21f66b726e1be86597e95a2dcb290677af974ab24cc",
+    "verl/verl/workers/config/fsdp_teacher.py": "f3a6b9113c9c72cbc9703adbddc259ac796592545d2a85d712d7bd44bacc5a33",
+    "verl/verl/workers/engine/fsdp/transformer_impl.py": "04f072c072832a203138c266a6bd288d50ff37c4771cc50ec85988fc2849e52b",
+    "verl/verl/workers/fsdp_teacher_worker.py": "e0d7917ab525aeedb8efb53b75e3d85e98bc8a2c35d98ab39271e7eab2ad72fb",
+    "verl/verl/workers/utils/losses.py": "81576fa791774744c6f197a090a46b6a323f30738377ec0e7ce9d0de53044781",
+    "verl/verl/trainer/config/distillation/distillation.yaml": "01b3e027baa94268b71c62126c037f01fd77f0a326833d294d4cfb8a7a7fd6db"
+  },
+  "source_changes_after_forward_canary": [
+    "recipe/math_alignment.sh"
+  ],
+  "post_canary_recipe_change": "Raised total_epochs to STEPS so the declared step budget can cross a DAPO epoch; the one-step canary still has total_epochs=1.",
+  "training_data": {
+    "path": "../MD-OPD/data/math/DAPO/train.parquet",
+    "sha256": "c69f0fb5cb09b642b77dc3e78615e1ba113388ca3fd5aa8c451c782ff1508719",
+    "seed": 42
+  }
+}

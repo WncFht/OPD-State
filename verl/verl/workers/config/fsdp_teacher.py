@@ -152,6 +152,8 @@ class FsdpTeacherConfig(BaseConfig):
     reward_weight_mode: str = "student_p"
     kl_estimator: str = "k1"
     metric_top_k: int = 0
+    unbiased_topk_tail: bool = False
+    effective_vocab_size: int = 0
     attn_implementation: str = "flash_attention_2"
 
     def __post_init__(self):
@@ -180,6 +182,14 @@ class FsdpTeacherConfig(BaseConfig):
                 self.log_prob_top_k,
                 self.metric_top_k,
             )
+
+        if self.unbiased_topk_tail:
+            if self.log_prob_top_k < 1 or self.effective_vocab_size < self.log_prob_top_k:
+                raise ValueError("Unbiased top-k tail requires 1 <= K <= effective_vocab_size")
+            if self.top_k_strategy != "only_stu" or self.teacher_temperature != 1.0:
+                raise ValueError("Unbiased top-k tail requires student support and temperature 1")
+            if self.kl_estimator != "k1" or self.reward_weight_mode != "student_p":
+                raise ValueError("Unbiased top-k tail requires raw log-ratio and full student probabilities")
 
         names = self.teacher_names()
         if not names and not self.model_path:

@@ -1336,6 +1336,22 @@ class FSDPEngineWithLMHead(FSDPEngine):
         distillation_only = tu.get_non_tensor_data(data=micro_batch, key="distillation_only", default=False)
         opd_student_top_k = tu.get_non_tensor_data(data=micro_batch, key="opd_student_top_k", default=0)
 
+        opd_tail = tu.get_non_tensor_data(data=micro_batch, key="opd_topk_tail", default=False)
+        opd_frozen = tu.get_non_tensor_data(data=micro_batch, key="opd_frozen_head", default=False)
+        frozen_ids = None
+        if opd_tail:
+            from verl.trainer.ppo.opd_topk_tail import packed_response_heads, selected_and_tail
+            vocab_size = tu.get_non_tensor_data(data=micro_batch, key="opd_effective_vocab_size", default=0)
+            if use_fused_kernels or self.engine_config.ulysses_sequence_parallel_size != 1 or self.pad_to_length:
+                raise ValueError("Unbiased top-k tail requires unfused SP=1 without static padding")
+            if opd_frozen:
+                frozen_ids = packed_response_heads(micro_batch)
+
+        def emit_head(logits):
+            if opd_tail:
+                return selected_and_tail(logits, opd_student_top_k, frozen_ids, include_tail=not opd_frozen)
+            return self._emit_opd_student_top_k(logits, opd_student_top_k)
+
         if calculate_sum_pi_squared and use_fused_kernels:
             raise NotImplementedError(
                 "calculate_sum_pi_squared=True is not supported with use_fused_kernels=True: "
@@ -1384,6 +1400,10 @@ class FSDPEngineWithLMHead(FSDPEngine):
                     logits_rmpad = logits_rmpad.full_tensor()
                 logits_rmpad = logits_rmpad / temperature_rmpad.clamp(min=1e-8).unsqueeze(-1).to(logits_rmpad.dtype)
 
+                if opd_tail:
+                    if not 0 < vocab_size <= logits_rmpad.shape[-1]:
+                        raise ValueError("Student effective vocabulary exceeds output head")
+                    logits_rmpad = logits_rmpad[..., :vocab_size]
                 log_probs = None
 
                 if calculate_sum_pi_squared:
@@ -1416,12 +1436,12 @@ class FSDPEngineWithLMHead(FSDPEngine):
                         model_output[k] = torch.nested.nested_tensor_from_jagged(v, cu_seqlens)
 
                 if opd_student_top_k > 0:
-                    opd_top_k_rmpad = self._emit_opd_student_top_k(logits_rmpad, opd_student_top_k)
+                    opd_top_k_rmpad = emit_head(logits_rmpad)
 
                 if not distillation_only:
                     # if use_sp: ((total_nnz / sp) + pad) ; if not use_sp: (batch, seqlen)
                     inplace_backward = True
-                    if calculate_entropy:
+                    if calculate_entropy or opd_tail:
                         inplace_backward = False
                     log_probs = logprobs_from_logits(
                         logits=logits_rmpad,
@@ -1488,6 +1508,10 @@ class FSDPEngineWithLMHead(FSDPEngine):
                 if isinstance(logits, DTensor):
                     logits = logits.full_tensor()
                 logits = logits / temperature.clamp(min=1e-8).to(logits.dtype)
+                if opd_tail:
+                    if not 0 < vocab_size <= logits.shape[-1]:
+                        raise ValueError("Student effective vocabulary exceeds output head")
+                    logits = logits[..., :vocab_size]
 
                 if calculate_entropy:
                     if not self.engine_config.entropy_checkpointing:
@@ -1521,12 +1545,14 @@ class FSDPEngineWithLMHead(FSDPEngine):
                             model_output[k] = torch.nested.nested_tensor_from_jagged(v, cu_seqlens)
 
                     if opd_student_top_k > 0:
-                        for k, v in self._emit_opd_student_top_k(logits_rmpad, opd_student_top_k).items():
+                        for k, v in emit_head(logits_rmpad).items():
                             model_output[k] = torch.nested.nested_tensor_from_jagged(v, cu_seqlens)
 
                     log_probs = None
                     if not distillation_only:
-                        log_probs = logprobs_from_logits(logits=logits_rmpad, labels=input_ids_rmpad_rolled)
+                        log_probs = logprobs_from_logits(
+                            logits=logits_rmpad, labels=input_ids_rmpad_rolled, inplace_backward=not opd_tail
+                        )
 
                     # (bsz, j1), for each sample, length of each sample: [real_prompt_length + real_response_length]
                     if not distillation_only:

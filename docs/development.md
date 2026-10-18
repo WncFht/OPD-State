@@ -31,6 +31,15 @@ Python 使用 Ruff；Markdown、JSON、YAML、CJS 使用 Prettier；Markdownlint
 
 源码检查按当前 Git 文件清单编译 Python、检查 Shell 语法。它允许正常修改、增删和重构训练代码；来源清单只记录最初导入版本，不作为日常开发的完整性门控。新增行为仍需运行对应上游测试和训练基线。
 
+无偏 head-tail 路径的产品测试需要训练环境中的 Torch 与 TensorDict，根维护环境不包含这些依赖。从仓库根目录执行：
+
+```bash
+CUDA_VISIBLE_DEVICES='' PYTHONPATH=verl ../envs/opd-state/bin/python \
+    -m unittest discover -s verl/tests/opd -p test_topk_tail_on_cpu.py -v
+```
+
+测试核验条件梯度与数值估计、行为概率修正、有效词表、冻结候选、padding/EOS 位置和全局 token 归约；它们不作为真实 LLM 收敛证据。训练验收还需四卡短更新。双向配方、完整词表校准命令与正式长时实验的区别见[研究正文](research/occupancy/2026-10-17-OPD访问测度与收敛机制研究.md)。该配方导出的 HF 快照用于评分，不含优化器状态，不能用于完整中断恢复。
+
 ## 上游对照
 
 Git remote `upstream` 指向 Thinking-Space/One-Shot-OPD，当前对照版本是导入时的 `6b6b178`。代码直接在当前仓库修改和提交；查看训练实现相对上游的差异：

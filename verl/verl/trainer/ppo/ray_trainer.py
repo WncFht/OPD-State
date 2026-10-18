@@ -379,6 +379,8 @@ class RayPPOTrainer(OPDTrainerMixin):
         self.fixed_rollout_cache = open_training_cache(config, tokenizer)
         fusion = config.actor_rollout_ref.rollout.get("logit_fusion", {})
         self.use_fusion_rollout = bool(fusion.get("enabled", False))
+        if self.opd_topk_tail_enabled() and (self.fixed_rollout_cache is not None or self.use_fusion_rollout):
+            raise ValueError("Unbiased top-k tail only supports fresh current-student rollouts")
         if self.use_fusion_rollout:
             from pathlib import Path
 
@@ -1399,6 +1401,9 @@ class RayPPOTrainer(OPDTrainerMixin):
         opd_top_k = self.opd_student_top_k()
         if opd_top_k > 0:
             tu.assign_non_tensor(batch_td, opd_student_top_k=opd_top_k)
+        if self.opd_topk_tail_enabled():
+            tu.assign_non_tensor(batch_td, opd_topk_tail=True,
+                                 opd_effective_vocab_size=int(self.config.distillation.fsdp_teacher.effective_vocab_size))
         output = self.actor_rollout_wg.compute_log_prob(batch_td)
         # gather output
         entropy = tu.get(output, "entropy")
@@ -1426,6 +1431,9 @@ class RayPPOTrainer(OPDTrainerMixin):
             top_k_log_probs = no_padding_2_padding(tu.get(output, "student_top_k_log_probs"), batch_td)
             result["student_top_k_ids"] = top_k_ids.long()
             result["student_top_k_log_probs"] = top_k_log_probs.float()
+            if self.opd_topk_tail_enabled():
+                result["student_tail_log_mass"] = no_padding_2_padding(
+                    tu.get(output, "student_tail_log_mass"), batch_td).float()
         old_log_prob = tu.get_tensordict(result)
         old_log_prob = DataProto.from_tensordict(old_log_prob)
         return old_log_prob, old_log_prob_mfu
@@ -1475,8 +1483,11 @@ class RayPPOTrainer(OPDTrainerMixin):
         # OPD: in top-K reward mode the advantage has a trailing candidate axis, so
         # the training forward has to emit the student's candidate log-probs too --
         # ppo_loss takes the policy gradient over them (see opd_top_k_is_reward()).
-        if self.opd_top_k_is_reward():
+        if self.opd_top_k_is_reward() or self.opd_topk_tail_enabled():
             tu.assign_non_tensor(batch_td, opd_student_top_k=self.opd_student_top_k())
+        if self.opd_topk_tail_enabled():
+            tu.assign_non_tensor(batch_td, opd_topk_tail=True, opd_frozen_head=True,
+                                 opd_effective_vocab_size=int(self.config.distillation.fsdp_teacher.effective_vocab_size))
         actor_output = self.actor_rollout_wg.update_actor(batch_td)
         actor_output = tu.get(actor_output, "metrics")
         actor_output = rename_dict(actor_output, "actor/")

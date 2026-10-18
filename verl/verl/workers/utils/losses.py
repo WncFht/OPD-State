@@ -61,6 +61,16 @@ def ppo_loss(config: ActorConfig, model_output, data: TensorDict, dp_group=None)
     if entropy is not None:
         entropy = no_padding_2_padding(entropy, data)
 
+    if tu.get_non_tensor_data(data=data, key="opd_topk_tail", default=False):
+        from verl.trainer.ppo.opd_topk_tail import score_loss
+        head = no_padding_2_padding(model_output["student_top_k_log_probs"], data)
+        mask = data["response_mask"].bool()
+        per_prefix = score_loss(head, log_prob, data["opd_head_coefficient"], data["opd_tail_coefficient"], mask)
+        loss = agg_loss(per_prefix, mask, config.loss_agg_mode,
+                        dp_size=data["dp_size"], batch_num_tokens=data["batch_num_tokens"],
+                        global_batch_size=data["global_batch_size"], loss_scale_factor=config.loss_scale_factor)
+        return loss, {"actor/score_surrogate": Metric(value=loss.detach(), aggregation=AggregationType.SUM)}
+
     # OPD top-K reward mode: the teacher reward, and hence the advantage, carries a
     # trailing candidate axis of size K. The policy gradient must then be taken over
     # the student's log-probs on those same K candidates instead of on the single

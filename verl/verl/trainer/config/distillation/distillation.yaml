@@ -184,6 +184,10 @@ fsdp_teacher:
   # switching a real run to log_prob_top_k. Ignored when log_prob_top_k > 0.
   metric_top_k: 0
 
+  # Exact head probabilities plus an unbiased sampled tail; one fresh update.
+  unbiased_topk_tail: false
+  effective_vocab_size: 0
+
   # HuggingFace attention backend. flash_attention_2 needs a matching
   # flash-attn wheel; sdpa is the fallback when that wheel cannot be built.
   attn_implementation: flash_attention_2

@@ -306,6 +306,11 @@ class TeacherWorker(Worker):
             )
             # Predict token t from position t-1, so the response slice is shifted left by one.
             logits = output.logits[:, -response_length - 1 : -1, :]
+            if self.teacher_config.unbiased_topk_tail:
+                size = self.teacher_config.effective_vocab_size
+                if not 0 < size <= logits.shape[-1]:
+                    raise ValueError("Teacher effective vocabulary exceeds output head")
+                logits = logits[..., :size]
             logits.div_(self.teacher_config.teacher_temperature)
 
             responses = micro_batch["responses"]
@@ -325,6 +330,10 @@ class TeacherWorker(Worker):
                 result["student_in_teacher"] = flat["student_in_teacher"].view(bsz, seqlen, -1)
                 result["teacher_in_student"] = flat["teacher_in_student"].view(bsz, seqlen, -1)
                 result["teacher_own_top_k_log_probs"] = flat["teacher_log_probs"].view(bsz, seqlen, -1)
+                if self.teacher_config.unbiased_topk_tail:
+                    from verl.trainer.ppo.opd_topk_tail import selected_and_tail
+                    tail = selected_and_tail(logits, top_k, student_top_k_ids)["student_tail_log_mass"]
+                    result["teacher_tail_log_mass"] = tail
         return result
 
     @register(dispatch_mode=Dispatch.DP_COMPUTE_PROTO)
@@ -401,6 +410,7 @@ class TeacherWorker(Worker):
                 teacher_log_probs[chunk] = out["teacher_log_probs"].to(teacher_log_probs.dtype)
                 for key in (
                     "teacher_top_k_log_probs",
+                    "teacher_tail_log_mass",
                     "student_in_teacher",
                     "teacher_in_student",
                 ):
@@ -459,6 +469,8 @@ class TeacherWorker(Worker):
             tensors["student_in_teacher"] = student_in_teacher
             tensors["teacher_in_student"] = teacher_in_student
             tensors["teacher_top_k_log_probs"] = teacher_lp
+            if self.teacher_config.unbiased_topk_tail:
+                tensors["teacher_tail_log_mass"] = top_k_parts["teacher_tail_log_mass"]
             if top_k_is_reward:
                 # Only now does top-K actually drive training; in metric-only
                 # mode rm_scores stays the plain (B, T) reverse KL above.
