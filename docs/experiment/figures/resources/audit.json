@@ -1,0 +1,199 @@
+{
+  "plotter_sha256": "0a2c91548cf56433dd4ec1f43c9c4945c1a1ad57f8023a23217f39b6e43d2e78",
+  "inputs_sha256": {
+    "/mnt/tidalfs-bdsz01/dataset/llm_dataset/zkn_data/fht_data/OPD-State/docs/experiment/results/resources/device-capacity.json": "54b33ff284b72d5946fb888a23ad79ab70fadab7eadbef1f624f36a624c977c4",
+    "/mnt/tidalfs-bdsz01/dataset/llm_dataset/zkn_data/fht_data/OPD-State/docs/experiment/results/resources/summary.json": "4cf2a05bc849e39ef194ebc9074c5ac92a26a4d43ad199bee0ca6d7896a6ac60",
+    "/mnt/tidalfs-bdsz01/dataset/llm_dataset/zkn_data/fht_data/OPD-State/docs/experiment/results/resources/wandb-gpu/summary.json": "e0bf0a4bf23c4d9e5a2ea9f127d566b108d67260e60254e2d2c5058776b04b55",
+    "/mnt/tidalfs-bdsz01/dataset/llm_dataset/zkn_data/fht_data/OPD-State/docs/experiment/results/2026-10-18-math-student-online-50steps-eval16-20261018-044021/summary.json": "50be0e3ac32a64ed601e72f4747f09f3583fb787d8f51353bd233c20156a3ce3",
+    "/mnt/tidalfs-bdsz01/dataset/llm_dataset/zkn_data/fht_data/OPD-State/docs/experiment/results/2026-10-18-math-student-online-50steps-eval16-20261018-044021/training-1-50.csv": "395d2cedc2c4cc89c34ff6c1aefd6b4900a2913b6e6ff08b103eda4eaab9fdf7",
+    "/mnt/tidalfs-bdsz01/dataset/llm_dataset/zkn_data/fht_data/OPD-State/runs/rollout-sources/math-student-online-50steps-eval16-20261018-044021/logs/math-student-online-50steps-eval16-20261018-044021.log": "f7a1fc4fcf5614b8222f61ce290e4d0e0060d58b7682bb5dafae5a326e3fb501",
+    "/mnt/tidalfs-bdsz01/dataset/llm_dataset/zkn_data/fht_data/OPD-State/docs/experiment/results/resources/wandb-gpu/g50xyfia/gpu-samples-1-900.csv": "fb017662f7e5f7c60277f020deb6e2ee173cbe2b859c1eb3fcefe32b57b256d5",
+    "/mnt/tidalfs-bdsz01/dataset/llm_dataset/zkn_data/fht_data/OPD-State/docs/experiment/results/resources/wandb-gpu/g50xyfia/gpu-samples-901-1078.csv": "9a0ea7cfc5ec2047dce925b44ef6aa9501edca251546b39dcdedd9205d7c097c",
+    "/mnt/tidalfs-bdsz01/dataset/llm_dataset/zkn_data/fht_data/OPD-State/docs/experiment/results/2026-10-18-math-teacher-cache-50steps-eval16-20261018-005033/summary.json": "b7d28a2b3a9f8d1de80cfca302be59ca4c047ea1c6d602784fe1faff5ef5be85",
+    "/mnt/tidalfs-bdsz01/dataset/llm_dataset/zkn_data/fht_data/OPD-State/docs/experiment/results/2026-10-18-math-teacher-cache-50steps-eval16-20261018-005033/training-1-50.csv": "7f4255f5199810257831d033c91ef84b950c0b2c12f115e68921255d31646fdb",
+    "/mnt/tidalfs-bdsz01/dataset/llm_dataset/zkn_data/fht_data/OPD-State/runs/rollout-sources/math-teacher-cache-50steps-eval16-20261018-005033/logs/math-teacher-cache-50steps-eval16-20261018-005033.log": "c231052eb004c954701be8fa3242f62dd48d4124d5fe3c1be393fe13f7dc50a7",
+    "/mnt/tidalfs-bdsz01/dataset/llm_dataset/zkn_data/fht_data/OPD-State/docs/experiment/results/resources/wandb-gpu/va2nhhra/gpu-samples-1-432.csv": "1f7f78dc8931fe71ab55838bad0a3cdb1f66fef1c96545955fc02d6b1d2a49d6",
+    "/mnt/tidalfs-bdsz01/dataset/llm_dataset/zkn_data/fht_data/OPD-State/docs/experiment/results/2026-10-18-math-teacher-cache-50steps-eval16-20261018-005033/cache-manifest.json": "ec79972b26191f47f9826293d9c475fe1cd8335e769375116c8e0466408faf34",
+    "/mnt/tidalfs-bdsz01/dataset/llm_dataset/zkn_data/fht_data/OPD-State/docs/experiment/results/2026-10-18-math-semi-opd-50steps-eval16-20261018-025524/summary.json": "95a1bdf1e41e1996658b0d6c4a0bc749a230c9d1126d3d71b762a93c9d0cf8b9",
+    "/mnt/tidalfs-bdsz01/dataset/llm_dataset/zkn_data/fht_data/OPD-State/docs/experiment/results/2026-10-18-math-semi-opd-50steps-eval16-20261018-025524/training-1-50.csv": "78269269c3947c0b8cd3977988409c404d6cb8646ae1a8febb294950fa42de82",
+    "/mnt/tidalfs-bdsz01/dataset/llm_dataset/zkn_data/fht_data/OPD-State/runs/rollout-sources/math-semi-opd-50steps-eval16-20261018-025524/logs/math-semi-opd-50steps-eval16-20261018-025524.log": "cf5e53bc74ee8390a47d4af3b096ed1b1b546aa11e267b296cb94d0969b1acca",
+    "/mnt/tidalfs-bdsz01/dataset/llm_dataset/zkn_data/fht_data/OPD-State/docs/experiment/results/resources/wandb-gpu/scodl08e/gpu-samples-1-408.csv": "19b7cc79b4d9203f4f788dc936d7b2324202a6b99a41bd5293156660640976c6",
+    "/mnt/tidalfs-bdsz01/dataset/llm_dataset/zkn_data/fht_data/OPD-State/docs/experiment/results/2026-10-18-math-semi-opd-50steps-eval16-20261018-025524/cache-manifest.json": "b3853deffcb9340d5432585442e78179d6ec5b12d4a13ca71b1eb93ada1b0a40",
+    "/mnt/tidalfs-bdsz01/dataset/llm_dataset/zkn_data/fht_data/OPD-State/docs/experiment/results/2026-10-18-math-fusion-lambda05-50steps-eval16-20261018-065746/summary.json": "7071b8e6d969cd2337739c2bc876afe90afe2d718991c7b1b14a2b02d63b8b1d",
+    "/mnt/tidalfs-bdsz01/dataset/llm_dataset/zkn_data/fht_data/OPD-State/docs/experiment/results/2026-10-18-math-fusion-lambda05-50steps-eval16-20261018-065746/training-1-50.csv": "77feb07fe4e5630cada047225cdca22c3a7e14e6ca5fd2e40a777e4a791be7ba",
+    "/mnt/tidalfs-bdsz01/dataset/llm_dataset/zkn_data/fht_data/OPD-State/runs/rollout-sources/math-fusion-lambda05-50steps-eval16-20261018-065746/logs/math-fusion-lambda05-50steps-eval16-20261018-065746.log": "8987079e8cfdffaff7ddb4bcc0023f017d9b07b5e7ca6dc267cd7a6f867e081f",
+    "/mnt/tidalfs-bdsz01/dataset/llm_dataset/zkn_data/fht_data/OPD-State/docs/experiment/results/resources/wandb-gpu/g5m60gys/gpu-samples-1-595.csv": "545df7d609a1abb99700f91f35ef1d80d2be6350c1d15f55f68d609f1a287f86"
+  },
+  "helper_sources_sha256": {
+    "/mnt/tidalfs-bdsz01/dataset/llm_dataset/zkn_data/fht_data/OPD-State/eval/plot_math_experiment.py": "709b0bb98aa17110b875e78f3e04f559f6c3db01de373c43e08749b579f439f3",
+    "/mnt/tidalfs-bdsz01/dataset/llm_dataset/zkn_data/fht_data/OPD-State/eval/analyze_math_rollout_costs.py": "e273c70d7ed9bc94efec69984e3b2218c59c07a7007c381c4100ac398253feba"
+  },
+  "style_sha256": "a9670b726e4890688bad9bec5cf5f39dcc6a1604ceebff8043c26cee95726581",
+  "matplotlib_version": "3.10.7",
+  "device_capacity_GiB": 79.6474609375,
+  "runtime_settings": {
+    "Online student": {
+      "source_commit": "4eb96bb1ab62fc7bac735c463dd54bafd315a62a",
+      "global_batch_size": 64,
+      "ppo_epochs": 1,
+      "actor_param_offload": true,
+      "actor_optimizer_offload": true,
+      "teacher_param_offload": true,
+      "teacher_micro_batch_per_gpu": 1,
+      "actor_token_budget_per_gpu": 8192,
+      "rollout": {
+        "n": 1,
+        "prompt_length": 1024,
+        "response_length": 4096,
+        "val_kwargs": {
+          "_target_": "verl.workers.config.SamplingConfig",
+          "do_sample": true,
+          "max_tokens": 31744,
+          "n": 16,
+          "temperature": 0.7,
+          "top_k": -1,
+          "top_p": 0.9
+        },
+        "max_num_seqs": 64,
+        "max_model_len": 32768,
+        "max_num_batched_tokens": 32768,
+        "gpu_memory_utilization": 0.55,
+        "enforce_eager": true,
+        "calculate_log_probs": true,
+        "free_cache_engine": true,
+        "tensor_model_parallel_size": 1,
+        "data_parallel_size": 1,
+        "pipeline_model_parallel_size": 1
+      },
+      "fusion": null
+    },
+    "Teacher rollout": {
+      "source_commit": "350a286be0d586f04e4cd0b0e89624a336b17a81",
+      "global_batch_size": 64,
+      "ppo_epochs": 1,
+      "actor_param_offload": true,
+      "actor_optimizer_offload": true,
+      "teacher_param_offload": true,
+      "teacher_micro_batch_per_gpu": 1,
+      "actor_token_budget_per_gpu": 8192,
+      "rollout": {
+        "n": 1,
+        "prompt_length": 1024,
+        "response_length": 4096,
+        "val_kwargs": {
+          "_target_": "verl.workers.config.SamplingConfig",
+          "do_sample": true,
+          "max_tokens": 31744,
+          "n": 16,
+          "temperature": 0.7,
+          "top_k": -1,
+          "top_p": 0.9
+        },
+        "max_num_seqs": 64,
+        "max_model_len": 32768,
+        "max_num_batched_tokens": 32768,
+        "gpu_memory_utilization": 0.55,
+        "enforce_eager": true,
+        "calculate_log_probs": true,
+        "free_cache_engine": true,
+        "tensor_model_parallel_size": 1,
+        "data_parallel_size": 1,
+        "pipeline_model_parallel_size": 1
+      },
+      "fusion": null
+    },
+    "Semi-OPD": {
+      "source_commit": "4eb96bb1ab62fc7bac735c463dd54bafd315a62a",
+      "global_batch_size": 64,
+      "ppo_epochs": 1,
+      "actor_param_offload": true,
+      "actor_optimizer_offload": true,
+      "teacher_param_offload": true,
+      "teacher_micro_batch_per_gpu": 1,
+      "actor_token_budget_per_gpu": 8192,
+      "rollout": {
+        "n": 1,
+        "prompt_length": 1024,
+        "response_length": 4096,
+        "val_kwargs": {
+          "_target_": "verl.workers.config.SamplingConfig",
+          "do_sample": true,
+          "max_tokens": 31744,
+          "n": 16,
+          "temperature": 0.7,
+          "top_k": -1,
+          "top_p": 0.9
+        },
+        "max_num_seqs": 64,
+        "max_model_len": 32768,
+        "max_num_batched_tokens": 32768,
+        "gpu_memory_utilization": 0.55,
+        "enforce_eager": true,
+        "calculate_log_probs": true,
+        "free_cache_engine": true,
+        "tensor_model_parallel_size": 1,
+        "data_parallel_size": 1,
+        "pipeline_model_parallel_size": 1
+      },
+      "fusion": null
+    },
+    "Fusion 0.5": {
+      "source_commit": "4eb96bb1ab62fc7bac735c463dd54bafd315a62a",
+      "global_batch_size": 64,
+      "ppo_epochs": 1,
+      "actor_param_offload": true,
+      "actor_optimizer_offload": true,
+      "teacher_param_offload": true,
+      "teacher_micro_batch_per_gpu": 1,
+      "actor_token_budget_per_gpu": 8192,
+      "rollout": {
+        "n": 1,
+        "prompt_length": 1024,
+        "response_length": 4096,
+        "val_kwargs": {
+          "_target_": "verl.workers.config.SamplingConfig",
+          "do_sample": true,
+          "max_tokens": 31744,
+          "n": 16,
+          "temperature": 0.7,
+          "top_k": -1,
+          "top_p": 0.9
+        },
+        "max_num_seqs": 64,
+        "max_model_len": 32768,
+        "max_num_batched_tokens": 32768,
+        "gpu_memory_utilization": 0.55,
+        "enforce_eager": true,
+        "calculate_log_probs": true,
+        "free_cache_engine": true,
+        "tensor_model_parallel_size": 1,
+        "data_parallel_size": 1,
+        "pipeline_model_parallel_size": 1
+      },
+      "fusion": {
+        "_target_": "verl.workers.config.LogitFusionConfig",
+        "backend": "cuda_graph_flash",
+        "completion_check_interval": 16,
+        "enabled": true,
+        "teacher_model_path": "/mnt/tidalfs-bdsz01/dataset/llm_dataset/zkn_data/fht_data/OPD-State/../models/JustRL-DeepSeek-1.5B",
+        "teacher_weight": 0.5
+      }
+    }
+  },
+  "scope": "Observed GPU samples and logged phase times; excludes unrecorded initialization and offline generation memory",
+  "audit": {
+    "resource-comparison": [],
+    "gpu-usage-timeline": []
+  },
+  "outputs_sha256": {
+    "comparison.csv": "b73e61c54e0c045a4e74241d5d5bc888b55df4fb4c356d04215653b5ad5a4221",
+    "gpu-phase-statistics.csv": "871be9936bb2bd6aafad4b2f6b4eea82c407e8ecd91f4377ad8881fcda22aa2a",
+    "gpu-usage-timeline.pdf": "f5e31f22bd197da68f7100552957b339ad8b738b70a687f58f9dd7072ea94ce4",
+    "gpu-usage-timeline.png": "8c5672c4d38c2c7a79acb3426e919ff7870c172fd58eda42b32b1eefb8c654ac",
+    "resource-comparison.pdf": "79afd7c7e2eaf9538b19b329f2a0c1f7344c842dd76312fc6c9ef7bd73eb07f1",
+    "resource-comparison.png": "aa38361378132b99ab6ac326931390a9d22310f22b98df28a1d179f89afc2bdf",
+    "timeline-1-900.csv": "f27ec51b3408c887fca0774bd190ae848878ee4ed3ae60c224382a8fb2f108c4",
+    "timeline-1801-1972.csv": "0a7a2157f08cffbfe9c5fa56a392c557136cf628e69bfda0b4993cc9e60d4224",
+    "timeline-901-1800.csv": "2dcebf50b2808ce45684b38da21e431e2aaca86bc5a8a5ee37b6da20c0c8eb9a"
+  }
+}

@@ -1,0 +1,33 @@
+{
+  "captured_at_utc": "2026-10-18T04:01:34.633955+00:00",
+  "command": [
+    "nvidia-smi",
+    "--query-gpu=index,name,memory.total",
+    "--format=csv,noheader,nounits",
+    "-i",
+    "0,1,2,3"
+  ],
+  "gpus": [
+    {
+      "index": 0,
+      "name": "NVIDIA H800",
+      "memory_total_MiB": 81559.0
+    },
+    {
+      "index": 1,
+      "name": "NVIDIA H800",
+      "memory_total_MiB": 81559.0
+    },
+    {
+      "index": 2,
+      "name": "NVIDIA H800",
+      "memory_total_MiB": 81559.0
+    },
+    {
+      "index": 3,
+      "name": "NVIDIA H800",
+      "memory_total_MiB": 81559.0
+    }
+  ],
+  "scope": "Current physical GPU capacity; historical usage comes from archived W&B samples"
+}
