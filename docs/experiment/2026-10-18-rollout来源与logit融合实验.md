@@ -742,6 +742,16 @@ $$
 
 ## 复现与结果位置
 
+### 真实排空与权重缓存检查
+
+[真实服务端检查](results/native-rollout/runtime/receipt.json)覆盖 eager 与 CUDA Graph。current 通过生产 CUDA IPC 接收 p0→teacher→p0 的完整权重流，prefix cache 原先命中 128/80 个 token，切换后两条请求均为零命中；完整词表 logits 与独立 teacher 引擎逐值相同，恢复 p0 后 logits 逐值恢复。APC 命中改变 BF16 的计算形状，复用前后最大 logits 差为 0.15625、TV 为 $1.293\times10^{-5}$，满足既定跨内核界限。
+
+长请求分别在实际解码到 6/12 个 token 后被终止。排空后 active 和 frontend request 数均为零，后续生成与原输出相同，并成功发布下一版参数。首轮真实检查暴露了 vLLM 0.10 的 abort 只删除 frontend state、未唤醒等待输出协程的问题；服务端现在登记、取消并等待实际生成任务，再等待 native barrier 与缓存重置。失败或超时保留 drain-pending，禁止重新开放、修改权重或休眠；CPU 回归覆盖不唤醒的队列与超时 RPC。后续检查保存完整运行源码快照，早期 GPU 结果与后加的超时保护分开标注。
+
+### 四卡 graph 训练检查
+
+[重复题目四卡训练](results/native-rollout/trainer-current-fusion-graph/native-acceptance.json)以同一道真实 DAPO 题的十六行副本运行两步 current fusion，开启 CUDA Graph、APC、冻结参数和地址检查。两步 current 版本为 0/1，teacher 摘要和参数地址不变，最终九十六条响应仅来自纯 student 版本 2；visit 计数按内容累积。该结果支持真实训练热更新的接入，仍不代替完整 50 步和长上下文质量评测。
+
 从仓库根目录执行。正式模型、数据和独立环境位于工作区相邻目录。已有缓存或 schedule 时生成器拒绝覆盖；独立复核应换输出目录。`OPD_SOURCE_COMMIT` 可固定历史提交；正式生产源码使用每个 run 的私有快照，后续开发不会改变已运行任务。
 
 ```bash

@@ -213,3 +213,9 @@ initial-student 四卡两步已完成并独立核对最终九十六条响应，�
 连续解码数值检查覆盖 λ=0/0.5/1、两条 prompt 各八步、完整有效词表及 sleep/wake。current 单模型跨 HF/native 的最大 logits 差为 0.125、TV 为 0.027081，其余两项误差为零，均满足预先采用的 BF16 界限；原生自身恢复前后逐值一致。CUDA Graph 检查只使用已空闲的 GPU 0，等待真实捕获计数和输出验证，不以配置开关当作通过。
 
 CUDA Graph 连续解码随后通过：λ=0.5、两条 prompt 各八步，实际捕获 114 个图，十六个位置的完整 logits 与 HF 参考相同，固定参数和地址跨 sleep/wake 不变。新增重复同一道真实 DAPO 题十六行的专用 fixture，正在执行四卡两步 graph 训练：覆盖相同 prefix 的跨 actor 更新缓存失效，要求 q 完整摘要不变，参数地址不得改变。训练源码冻结在私有快照中，未重启其他作业。
+
+四卡重复题目 graph 训练完整通过并独立采集，最终九十六条 student 响应、current0/1→纯 student2、teacher 全摘要和参数地址检查均通过。实现阶段提交为 7d8e261，完整隔离 CI 与提交 hooks 通过，保留并行研究文档提交。
+
+真实 eager native 检查先暴露 APC 的计算形状导致非逐值 logits 差异，保存全词表数据后按既定 BF16 界限核对：最大差 0.15625、TV 1.293e-5，命中 128/80。随后实际 abort 触发输出协程不唤醒、排空超时，按 vLLM0.10 代码和真实现象修复生成 task 的登记/取消/等待；eager v3 与 graph v1 均在 decode 后成功终止，active/frontend 均清空，p0→q→p0 的完整 IPC、APC 失效和恢复 logits 通过。补充超时覆盖整个 abort/barrier/reset、drain-pending禁止复用及GPU变更前空闲检查，当前57项CPU检查通过。早期GPU检查未冻结源码，附件明确区分采集时源码哈希与后续源码快照。
+
+性能基准采用生产 RPC/executor，固定长度工作负载只在测时屏蔽 EOS，真实 math 样本另保留 EOS。首轮并行冷启动撞到 vLLM TCPStore 临时端口，确认失败并清理后改成串行初始化，稳态请求仍并行。正式 50 步/570 题×16 的完整配置及 17235 题 manifest CPU 预检通过，尚未将预检当作正式训练。

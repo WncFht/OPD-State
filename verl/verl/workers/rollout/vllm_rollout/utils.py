@@ -108,7 +108,8 @@ def monkey_patch_compute_logits(model, vocab_size: int, banned_token_ids: Option
     vocabulary yet are still illegal to generate: the vision placeholders, which are meaningless
     unless a real image or video sits behind them. See `get_vision_placeholder_token_ids`.
     """
-    original_compute_logits = model.compute_logits
+    original_compute_logits = getattr(model, "_verl_original_compute_logits", model.compute_logits)
+    model._verl_original_compute_logits = original_compute_logits
 
     def compute_logits(
         self,

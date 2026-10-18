@@ -798,6 +798,10 @@ class vLLMHttpServer(NativePolicyServerMixin):
     async def wake_up(self, tags: list[str] | None = None):
         if self.node_rank != 0:
             return
+        state = getattr(self, "native_state", None)
+        if state is not None:
+            state.require_idle()
+            state.close_admission()
 
         if self.rollout_mode == RolloutMode.HYBRID:
             # engine.wake_up() broadcasts via the DP coordinator to ALL EngineCore
@@ -823,6 +827,10 @@ class vLLMHttpServer(NativePolicyServerMixin):
     async def sleep(self):
         if self.node_rank != 0 or not self.config.free_cache_engine:
             return
+        state = getattr(self, "native_state", None)
+        if state is not None:
+            state.require_idle()
+            state.close_admission()
 
         if self.rollout_mode == RolloutMode.HYBRID:
             await self._sleep_hybrid()

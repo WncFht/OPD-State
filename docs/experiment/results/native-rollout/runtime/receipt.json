@@ -1,0 +1,14 @@
+{
+  "scope": "Real native server, CUDA IPC, complete-vocabulary APC weight switch and active decode abort/drain; not training accuracy",
+  "sources": {
+    "eval/probe_native_runtime.py": "764e10fe39332e43f0b1306e7d1162d19c112b4a06d2cd92ba0a4cf0942d2c0e",
+    "verl/verl/workers/rollout/vllm_rollout/native_server.py": "d8df607e32a544910bbde451bb2b4c03a289e073c6bc8a45eced1c9b88d86aaa",
+    "verl/verl/workers/rollout/lifecycle.py": "b4af0d1b1f6314322cdfcdaa53ee269f945520b09f82ca44ac706eb405987edf"
+  },
+  "before_fix": "vLLM0.10 abort removed frontend state without waking the waiting generator; real drain timed out",
+  "cache_kernel_bound": {
+    "max_abs_logit_error": 0.5,
+    "max_tv": 0.05
+  },
+  "source_hash_scope": "Current files at collection; first positive GPU checks preceded the later deadline/latch additions. Subsequent probes freeze a complete runtime source manifest."
+}

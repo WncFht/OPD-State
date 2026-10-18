@@ -16,6 +16,7 @@ from ..lifecycle import GenerationState
 class NativePolicyServerMixin:
     async def initialize_native_source(self):
         self.native_state = None
+        self._native_generating_tasks = {}
         if self.config.get("policy") is None:
             return
         role = self.config.get("generation_role", "current_student")
@@ -59,6 +60,7 @@ class NativePolicyServerMixin:
         state = getattr(self, "native_state", None)
         if state is not None:
             state.admit(request_id, state.identity)
+            self._native_generating_tasks[request_id] = asyncio.current_task()
         try:
             output = await self._generate_one(
                 prompt_ids=prompt_ids,
@@ -77,12 +79,14 @@ class NativePolicyServerMixin:
         except BaseException:
             if state is not None:
                 state.close_admission()
+                state.drain_pending = True
                 # AsyncLLM.abort returns after the abort message is submitted.
                 # The pool additionally waits for the generating coroutines.
                 await asyncio.shield(self.engine.abort(request_id))
             raise
         finally:
             if state is not None:
+                self._native_generating_tasks.pop(request_id)
                 state.complete(request_id)
 
     async def generate_native_batch(
@@ -190,6 +194,7 @@ class NativePolicyServerMixin:
             "awake": state.awake,
             "valid": state.valid,
             "pending_version": state.pending_version,
+            "drain_pending": state.drain_pending,
             "source_role": state.role,
             "source_path": state.path,
             "sync_namespace": self.config.get("generation_sync_namespace", ""),
@@ -204,9 +209,28 @@ class NativePolicyServerMixin:
         if state is None:
             raise RuntimeError("Native policy was not enabled")
         state.close_admission()
-        if abort:
-            await asyncio.gather(*(self.engine.abort(request_id) for request_id in tuple(state.active)))
+        state.drain_pending = True
         deadline = time.monotonic() + timeout
+
+        async def bounded(awaitable):
+            try:
+                return await asyncio.wait_for(awaitable, timeout=max(0, deadline - time.monotonic()))
+            except asyncio.TimeoutError as error:
+                raise TimeoutError("Native drain operation did not acknowledge before its deadline") from error
+
+        if abort:
+            active = tuple(state.active)
+            tasks = [self._native_generating_tasks[rid] for rid in active if rid in self._native_generating_tasks]
+            await bounded(asyncio.gather(*(self.engine.abort(request_id) for request_id in active)))
+            # V1 0.10 abort removes frontend states without waking the per-request
+            # output queue. Cancel and join the actual iterators as well; a Ray
+            # future alone does not acknowledge native completion.
+            for task in tasks:
+                task.cancel()
+            if tasks:
+                _, pending = await asyncio.wait(tasks, timeout=max(0, deadline - time.monotonic()))
+                if pending:
+                    raise TimeoutError("Native iterator cancellation did not drain; engine must not be reused")
         while state.active:
             if time.monotonic() >= deadline:
                 raise TimeoutError("Native generating coroutines did not drain; engine must not be reused")
@@ -215,14 +239,15 @@ class NativePolicyServerMixin:
             if time.monotonic() >= deadline:
                 raise TimeoutError("Native output processor did not drain")
             await asyncio.sleep(0.01)
-        barriers = await self.engine.collective_rpc("native_request_barrier")
+        barriers = await bounded(self.engine.collective_rpc("native_request_barrier"))
         if not barriers or not all(b.get("native_device_idle") is True for b in barriers):
             raise RuntimeError("Native device barrier did not acknowledge completion")
         # Resetting the actual scheduler cache is also a native idle check. V1
         # may return None on success; explicit False is the failure value.
-        reset_result = await self._reset_prefix_cache()
+        reset_result = await bounded(self._reset_prefix_cache())
         if reset_result is False:
             raise RuntimeError("Native prefix cache reset rejected the drained state")
+        state.drain_pending = False
         return True
 
     async def reopen_native_generation(self):

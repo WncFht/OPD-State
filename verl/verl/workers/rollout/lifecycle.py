@@ -16,6 +16,7 @@ class GenerationState:
         self.version = None
         self.pending_version = None
         self.active = set()
+        self.drain_pending = False
         self.awake = True
         self.valid = role != "current_student"
         self.accepting = True
@@ -45,8 +46,8 @@ class GenerationState:
         self.active.remove(request_id)
 
     def require_idle(self):
-        if self.active:
-            raise RuntimeError("Native requests are still active; weight/cache mutation is unsafe")
+        if self.active or self.drain_pending:
+            raise RuntimeError("Native requests are active or drain is unacknowledged; weight/cache mutation is unsafe")
 
     def begin_update(self, version):
         self.require_idle()

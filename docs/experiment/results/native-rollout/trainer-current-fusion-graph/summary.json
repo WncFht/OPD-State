@@ -1,0 +1,18 @@
+{
+  "run_name": "trainer-current-fusion-graph-four-v1",
+  "run_directory": "/mnt/tidalfs-bdsz01/dataset/llm_dataset/zkn_data/fht_data/OPD-State/runs/native-rollout-implementation/trainer-current-fusion-graph-four-v1",
+  "source_commit": "248f9fcdb6fd3ddb0cbf16e49869f22ea9d3ecdf",
+  "source_manifest_sha256": "74a00ebccc7533f641ef533a800da41628d95a07e5d08cdd61c7466370166ea5",
+  "source_identity": "runtime_snapshot",
+  "training_steps": 2,
+  "samples_per_question": 16,
+  "full_benchmarks": false,
+  "checkpoints_saved": false,
+  "wandb_url": null,
+  "training_log_sha256": "c8e42e77cfc6fef493c6d0634f35bff499694d3c9aac82c1836d4c27f6cb9320",
+  "training_log_observed_bytes": 220996,
+  "collection_scope": "final_validation",
+  "final_validation_marker_verified": true,
+  "collector_source_sha256": "d55fdb5753b7557a445c8584830f41fdbb3ca450ae53fa888791f2cdf81899fb",
+  "validation_steps": [2]
+}

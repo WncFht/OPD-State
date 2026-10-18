@@ -111,6 +111,57 @@ class Server(M.NativePolicyServerMixin):
 
 
 class NativeServerTests(unittest.IsolatedAsyncioTestCase):
+    async def test_failed_native_barrier_keeps_idle_engine_closed_to_reuse(self):
+        s = await self.fixture()
+        original = s.engine.collective_rpc
+
+        async def stalled_barrier(method, **kwargs):
+            if method == "native_request_barrier":
+                await asyncio.Event().wait()
+            return await original(method, **kwargs)
+
+        s.engine.collective_rpc = stalled_barrier
+        with self.assertRaises(TimeoutError):
+            await s.drain_native_requests(timeout=0.001)
+        self.assertTrue(s.native_state.drain_pending)
+        self.assertFalse(s.native_state.active)
+        with self.assertRaises(RuntimeError):
+            await s.reopen_native_generation()
+        s.engine.collective_rpc = original
+        self.assertTrue(await s.drain_native_requests())
+        await s.reopen_native_generation()
+
+    async def test_abort_deadline_includes_a_stalled_native_abort_rpc(self):
+        s = await self.fixture()
+
+        async def stalled(request_id):
+            await asyncio.Event().wait()
+
+        s.engine.abort = stalled
+        s.native_state.admit("stalled", s.native_state.identity)
+        with self.assertRaises(TimeoutError):
+            await s.drain_native_requests(abort=True, timeout=0.001)
+        self.assertFalse(s.native_state.accepting)
+        self.assertTrue(s.native_state.active)
+        self.assertNotIn(("native_request_barrier",), s.engine.calls)
+
+    async def test_abort_joins_iterators_when_engine_does_not_wake_the_output_queue(self):
+        s = await self.fixture()
+        s.block = True
+
+        async def silent_abort(request_id):
+            s.engine.calls.append(("abort", request_id))
+
+        s.engine.abort = silent_abort
+        task = asyncio.create_task(s.generate([1], {}, "silent"))
+        await asyncio.sleep(0)
+        self.assertTrue(s.native_state.active)
+        self.assertTrue(await s.drain_native_requests(abort=True))
+        self.assertTrue(task.cancelled())
+        self.assertFalse(s.native_state.active)
+        self.assertFalse(s._native_generating_tasks)
+        self.assertFalse(s.engine.output_processor.request_states)
+
     async def test_graph_receiver_refuses_changed_parameter_addresses_after_an_update(self):
         s = Server("current_student")
         s.config["enforce_eager"] = False
