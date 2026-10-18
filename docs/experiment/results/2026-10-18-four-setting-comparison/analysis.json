@@ -1,0 +1,118 @@
+{
+  "analysis_source_sha256": "c5aececcd62df3ee7f4fb397b9f661d20acf9055fb2f6ba174dc8db2368a0041",
+  "plateau_source_sha256": "51de1d5276834ff76270084250da00ddec20cebc2c008af13522c1a416bd198d",
+  "numpy_version": "1.26.4",
+  "step": 50,
+  "reference": "student-online",
+  "bootstrap_replicates": 5000,
+  "bootstrap_seed": 42,
+  "interval_semantics": "paired question bootstrap, stratified by benchmark; not training-seed uncertainty",
+  "run_provenance": {
+    "student-online": {
+      "run_name": "math-student-online-50steps-eval16-20261018-044021",
+      "run_directory": "/mnt/tidalfs-bdsz01/dataset/llm_dataset/zkn_data/fht_data/OPD-State/runs/rollout-sources/math-student-online-50steps-eval16-20261018-044021",
+      "source_commit": "4eb96bb1ab62fc7bac735c463dd54bafd315a62a",
+      "training_steps": 50,
+      "samples_per_question": 16,
+      "full_benchmarks": true,
+      "checkpoints_saved": false,
+      "wandb_url": "https://wandb.ai/wncfht/OPD-State/runs/g50xyfia",
+      "training_log_sha256": "f7a1fc4fcf5614b8222f61ce290e4d0e0060d58b7682bb5dafae5a326e3fb501",
+      "collector_source_sha256": "c32c48bcd71e1af93c97cb6869df80aafbe24792259bae3462df9eb16028a2b0",
+      "validation_steps": [50]
+    },
+    "teacher": {
+      "run_name": "math-teacher-cache-50steps-eval16-20261018-005033",
+      "run_directory": "/mnt/tidalfs-bdsz01/dataset/llm_dataset/zkn_data/fht_data/OPD-State/runs/rollout-sources/math-teacher-cache-50steps-eval16-20261018-005033",
+      "source_commit": "350a286be0d586f04e4cd0b0e89624a336b17a81",
+      "training_steps": 50,
+      "samples_per_question": 16,
+      "full_benchmarks": true,
+      "checkpoints_saved": false,
+      "wandb_url": "https://wandb.ai/wncfht/OPD-State/runs/va2nhhra",
+      "training_log_sha256": "c231052eb004c954701be8fa3242f62dd48d4124d5fe3c1be393fe13f7dc50a7",
+      "collector_source_sha256": "c32c48bcd71e1af93c97cb6869df80aafbe24792259bae3462df9eb16028a2b0",
+      "validation_steps": [50]
+    },
+    "semi-opd": {
+      "run_name": "math-semi-opd-50steps-eval16-20261018-025524",
+      "run_directory": "/mnt/tidalfs-bdsz01/dataset/llm_dataset/zkn_data/fht_data/OPD-State/runs/rollout-sources/math-semi-opd-50steps-eval16-20261018-025524",
+      "source_commit": "4eb96bb1ab62fc7bac735c463dd54bafd315a62a",
+      "training_steps": 50,
+      "samples_per_question": 16,
+      "full_benchmarks": true,
+      "checkpoints_saved": false,
+      "wandb_url": "https://wandb.ai/wncfht/OPD-State/runs/scodl08e",
+      "training_log_sha256": "cf5e53bc74ee8390a47d4af3b096ed1b1b546aa11e267b296cb94d0969b1acca",
+      "collector_source_sha256": "c32c48bcd71e1af93c97cb6869df80aafbe24792259bae3462df9eb16028a2b0",
+      "validation_steps": [50]
+    },
+    "fusion-lambda05": {
+      "run_name": "math-fusion-lambda05-50steps-eval16-20261018-065746",
+      "run_directory": "/mnt/tidalfs-bdsz01/dataset/llm_dataset/zkn_data/fht_data/OPD-State/runs/rollout-sources/math-fusion-lambda05-50steps-eval16-20261018-065746",
+      "source_commit": "4eb96bb1ab62fc7bac735c463dd54bafd315a62a",
+      "training_steps": 50,
+      "samples_per_question": 16,
+      "full_benchmarks": true,
+      "checkpoints_saved": false,
+      "wandb_url": "https://wandb.ai/wncfht/OPD-State/runs/g5m60gys",
+      "training_log_sha256": "8987079e8cfdffaff7ddb4bcc0023f017d9b07b5e7ca6dc267cd7a6f867e081f",
+      "collector_source_sha256": "c32c48bcd71e1af93c97cb6869df80aafbe24792259bae3462df9eb16028a2b0",
+      "validation_steps": [50]
+    }
+  },
+  "plateau_assessments": {
+    "student-online": {
+      "criterion": {
+        "minimum_steps": 300,
+        "validation_points": 4,
+        "macro_mean_range": 0.01,
+        "relative_rms_span": 0.05,
+        "relative_gradient_span": 0.1
+      },
+      "training_steps": 50,
+      "validation_points": 1,
+      "windows": [],
+      "status": "insufficient_observation"
+    },
+    "teacher": {
+      "criterion": {
+        "minimum_steps": 300,
+        "validation_points": 4,
+        "macro_mean_range": 0.01,
+        "relative_rms_span": 0.05,
+        "relative_gradient_span": 0.1
+      },
+      "training_steps": 50,
+      "validation_points": 1,
+      "windows": [],
+      "status": "insufficient_observation"
+    },
+    "semi-opd": {
+      "criterion": {
+        "minimum_steps": 300,
+        "validation_points": 4,
+        "macro_mean_range": 0.01,
+        "relative_rms_span": 0.05,
+        "relative_gradient_span": 0.1
+      },
+      "training_steps": 50,
+      "validation_points": 1,
+      "windows": [],
+      "status": "insufficient_observation"
+    },
+    "fusion-lambda05": {
+      "criterion": {
+        "minimum_steps": 300,
+        "validation_points": 4,
+        "macro_mean_range": 0.01,
+        "relative_rms_span": 0.05,
+        "relative_gradient_span": 0.1
+      },
+      "training_steps": 50,
+      "validation_points": 1,
+      "windows": [],
+      "status": "insufficient_observation"
+    }
+  }
+}

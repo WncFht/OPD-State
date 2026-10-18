@@ -1,0 +1,16 @@
+{
+  "steps": 50,
+  "student_versions": [
+    0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20,
+    21, 22, 23, 24, 25, 26, 27, 28, 29, 30, 31, 32, 33, 34, 35, 36, 37, 38, 39,
+    40, 41, 42, 43, 44, 45, 46, 47, 48, 49
+  ],
+  "teacher_weight": 0.5,
+  "all_versions_match_step_minus_one": true,
+  "all_losses_gradients_behavior_logprobs_finite": true,
+  "total_valid_response_tokens": 12436547,
+  "worker_count": 4,
+  "per_worker_token_metric_matches_packed_mask": true,
+  "generation_seconds": 2450.5900716111064,
+  "source_commit": "4eb96bb1ab62fc7bac735c463dd54bafd315a62a"
+}
