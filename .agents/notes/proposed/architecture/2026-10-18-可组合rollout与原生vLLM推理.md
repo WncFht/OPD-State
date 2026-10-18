@@ -585,6 +585,8 @@ correctness 模式完成 71 个场景，包含功能、恢复、长序列与 36 
 
 两项开关相关源码与 v0.15.1 标签逐字节核对后确认，batch invariance 在 `model_executor/layers/batch_invariant.py` 导入时读取并缓存开关，不由 `vllm.envs` 中的同名属性证明是否启用；各实验须在导入前设置，并使用独立进程。源码对非 FLASH_ATTN 的受支持后端仅声明 decode 不变性，跨 prefill/decode 的控制应明确选择 FLASH_ATTN，再分别测 batch/顺序变化与同模型分段。[^vllm015-invariance-source] 插件的实际 `load_weights` 方法另经单参数 CPU 模块与空 checkpoint 迭代器对照：给定权重流未被读取、零参数写入，仍声称载入全部参数名；该证据不涉及原生 GPU 更新，但已足以拒绝将这个入口直接接到当前 actor 权重流。双 checkpoint logits、独立 KV、graph、冻结 teacher 与 actor 热更新仍须另行验收。
 
+版本推理探针的 MVP 固定真实训练 prompt 中相同的十六个原始 token prefix、greedy、共同有效词表、单卡与显存预算，比较 batch 1/4/16、逆序、相同形状重放，以及同模型两段请求；APC 关闭，以免缓存命中混入重新 prefill 的控制。批次不变性的成功条件为所测 batch/顺序改变后相同 prompt 的输出一致；同模型两段与一次到底另作观察，不以开关名称保证结果。还保存两个固定 state 的完整词表 logits，在独立审计中重算不同形状的 max error、TV 与 KL。Worker 的实际物理身份、后端、KV 区域及 kernel override 状态须记录；声明启用但 worker 未初始化、KV 共享、原始 prefix/身份被改写或静默退回 HF 均否决。插件仅测试固定 p0/q，完整 logits 须对照同栈独立单模型的组合参考；即使推理通过，未适配的 actor 权重入口仍不得用于训练。所有 GPU 探针等待既有串行窗口，不修改主训练环境。
+
 默认多进程调度的短序列请求墙钟均值如下，每格为 3 次重复，单位为秒。模型始终驻留，测试过程中没有切换权重；“串行/并发”指两个来源分组的执行方式。
 
 | 全局响应 batch | 单 student | 50% batch 混合串行 | 50% batch 混合同卡并发 | teacher→student，k=64 |
@@ -707,6 +709,16 @@ $$
 #### 探针规模与 rollout 指标
 
 主评测复用完整 570 题×16 条最终 student 响应及其 31,744 token 上限，在全部有效 response 位置计算双向完整词表 KL 与 entropy。按响应、位置和词表分块执行无梯度前向与归约，保留每条响应的累计量、归一化量和实际有效长度；完整 token 分布无需整体驻留或保存。置信区间按题目聚类重采样，不能把同题十六条响应或多个 token 当成独立题目。不反向传播减少显存占用，但 student/teacher backbone 与输出 head 的前向计算仍有成本，实测归约、前向与数据移动耗时后调整块大小。
+
+主指标固定使用 full-vocab，当前配对的共同有效词表为 151,665 项。只取 top-k 并在其中重新归一化，测量的是截断后的条件分布；student 与 teacher 各取不同集合还会人为引入支持集差异。普通输出 head 通常已经投影出完整词表 logits，随后 top-k 主要减少保留与传输的数据量，不能据此声称省去完整 head 的计算。无梯度评分仍需控制临时 logits；例如两个模型各保留 128 个位置的 BF16 logits，合计约 74.1 MiB，另外还有 hidden states、模型权重、前向临时量和 FP32 归约缓冲。该数字是张量大小，不是整段评分的峰值显存。
+
+若 full-vocab 的实测成本需要近似对照，可取两个模型 top-k 的并集 $S$，保留完整 softmax 的原始概率，再将剩余词表合并为一个 tail 类别。令 $P_T=\sum_{a\notin S}p_a$、$Q_T=\sum_{a\notin S}q_a$，合并后的 $K_S=\sum_{a\in S}p_a\log(p_a/q_a)+P_T\log(P_T/Q_T)$ 满足
+
+$$
+D_{\mathrm{KL}}(p\Vert q)=K_S+P_T D_{\mathrm{KL}}(p(\cdot\mid T)\Vert q(\cdot\mid T))\ge K_S.
+$$
+
+等式由 tail 内写成 $p_a=P_Tp(a\mid T)$、$q_a=Q_Tq(a\mid T)$ 后展开对数得到；空 tail 的附加项取零。因此合并 tail 的量是完整 KL 的下界，但只记录两侧 tail mass 小并不能保证缺失项小；还需与同一批 prefix 的 full-vocab 对照。这条近似路线不替换主实验指标，当前评分器继续使用完整词表。
 
 固定前缀对照的起始预算为每个 benchmark 固定抽取 30 题，共 90 题；AIME25 使用全部 30 题，其余按固定 ID 抽取。由 $p_0$ 和 $q$ 各生成每题一条、上限 4,096 的响应，每条初版选至多八个固定位置，合计至多 1,440 个共同状态。第一个动作必选，将其余 $L_i-1$ 个位置划为最多七个非空连续区间，每区间均匀抽一个位置；短响应直接选取全部位置。若区间 $h$ 有 $n_h$ 个位置、抽中位置为 $T_h$，固定来源轨迹上的累计估计为 $\widehat S_i=k(s_{i,1})+\sum_h n_h k(s_{i,T_h})$；对区间采样取期望即恢复 $S_i$，归一化时除以实际有效长度。该位置抽样仅服务固定前缀 bank，不缩减主验证的评分范围。
 

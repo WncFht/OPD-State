@@ -295,3 +295,7 @@ Fusion 的 12,439,895 个有效训练 token 使用 1,414.86 s 原生生成，约
 Fusion 归档与四组图提交为 74e5288。随后补齐同模型控制缺口：默认编译器会将相同 first/second 合并，新 `keep_request_boundary=true` 仅为同模型内部边界保留两次调用，端点继续合并。current/initial/teacher 的三个 recipe 入口只改变生成执行；学习与最终验证仍为当前 student。CPU executor 与真实 Torch/Hydra coordinator 检查覆盖连续 token prefix、相同版本、EOS 边界、单份模型预算、来源响应去重，以及实际分段数与模型切换数分离。
 
 八十七项原生 CPU、五十二项运行环境检查通过，其中 coordinator 十二项；控制协议四项、W&B 八项检查通过。实际 `OPD_DRY_RUN=1` 组合出的 current 控制包含内部边界和 APC=false。新增队列驱动先六组两步验收，再做 APC 开/关各自的单次/两次请求五十步完整 eval16，并算完整词表 KL/固定 bank；它不会改已冻结十五组。W&B 的 APC 期望值只在显式请求时核验并记录，既有报告格式与已归档图件保持原输入关系。GPU 对照尚未执行，两个阶段的独立 seed 也不支持将所有 token 差异直接归因于浮点 kernel。
+
+新增十六条件的固定模型 vLLM 栈探针，分别测 eager/graph、0.10/独立 0.15、batch-invariance 开关及插件 λ=0/0.5/1。每条件固定十六个 prompt，B1/4/16、倒序、两次 replay；同模型两次请求单独保存原始 prefix，不将它与 batch 变化混为同一性质。实际 worker 的物理身份、KV 区域、kernel 初始化与 graph 回执，以及两个固定 state 的完整词表 logits 均落盘。独立审计从原始输出重算逐题差异、KL/TV 与同栈单模型 fusion 参考；队列运行绑定提交字节，构造记录的七项测试通过，真实 GPU 结果仍待串行窗口。
+
+验证 KL 的方案补充了 full-vocab 的理由、分块临时量与 top-k 近似的边界。合并 tail 的粗化 KL 是完整 KL 的下界；tail mass 小本身不保证误差小。主验证保留全部 9,120 条响应和全部有效位置，固定 bank 仍为九十题、两个冻结来源、每条至多八个位置。历史无最终权重的运行无法仅靠响应文本补算最终模型的 KL。

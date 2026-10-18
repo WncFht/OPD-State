@@ -1,0 +1,55 @@
+{
+  "schema": "native-vllm-version-probe-cpu-v1",
+  "scope": "CPU protocol/independent numerical artifact checks and runnable frozen-code plans; no native GPU measurement",
+  "base_commit": "da428fb79bebc2303f9c5aa46585c6b16d17dfac",
+  "source_sha256": {
+    "eval/probe_batch_invariance.py": "1aff66e3d5285503949984d765ed059e8df9fc94404c22daf347b7c66797b603",
+    "eval/audit_batch_invariance.py": "437cb1290a47195629299cb2b59885ba7c9821bb83afdb20e3cd7e096ee4fc32",
+    "eval/run_vllm_version_controls.py": "4a7c5122465b169fa7f4f26c536824e8f3c9cab3e505b7cc2942e2176ff9028d",
+    "scripts/tests/test_batch_invariance_probe.py": "43dcb7b5ee8288697fe1d840ebaf83eefc3ac5b0c9a9a59f943084b5df0b093f"
+  },
+  "tests": {
+    "methods": 7,
+    "re_signed_negative_controls": 7,
+    "known_distribution_check": "uniform vs 3:1; TV=0.25 and KL=0.5*log(4/3)",
+    "fusion_algebra_fixture": "independent p0/q FP32 logit combination; altered tokens/checkpoints rejected",
+    "committed_source_guard": "Committed helper snapshots match bytes; altered driver is rejected before publishing a snapshot"
+  },
+  "gpu_plan": {
+    "conditions": 16,
+    "execution_modes": ["eager", "CUDA Graph"],
+    "stacks": [
+      "vLLM 0.10.0+cu126 / Torch 2.7.1+cu126",
+      "vLLM 0.15.1 / Torch 2.9.1+cu129"
+    ],
+    "roles": ["p0", "teacher"],
+    "plugin_fusion_weights": [0, 0.5, 1],
+    "prompt_count": 16,
+    "response_cap": 256,
+    "same_model_boundary": 128,
+    "batches": [1, 4, 16],
+    "order_controls": ["original", "reversed"],
+    "replays": 2,
+    "fixed_full_vocab_states": 2,
+    "inference_gpu": 0,
+    "allowed_physical_gpus": [0, 1, 2, 3],
+    "all_four_must_be_idle": true,
+    "apc": false,
+    "attention_backend": "FLASH_ATTN",
+    "full_vocab_logit_tolerance": 0.5,
+    "full_vocab_tv_tolerance": 0.05
+  },
+  "evidence_rules": [
+    "Queued execution binds the driver to a source commit and freezes probe/auditor/device helper bytes from that commit",
+    "Record actual worker physical identity, KV allocation, graph capture and initialized kernel mode",
+    "Persist inputs, responses, stage continuation prefixes, full-vocabulary arrays and hashes",
+    "Independently recompute token matches, shape divergence metrics and same-stack fusion algebra",
+    "Batch-invariance failure is retained as an explicit failed property, not accepted as passing",
+    "No HF generation or actor-update compatibility claim"
+  ],
+  "pending": [
+    "Real GPU/driver/JIT execution in the isolated 0.15 stack",
+    "Actual batch/order and same-model-split observations",
+    "Different-checkpoint dual-plugin KV/logit/graph measurements"
+  ]
+}
