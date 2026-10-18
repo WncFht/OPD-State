@@ -1,0 +1,41 @@
+{
+  "scope": "CPU benchmark controls, source-local split binding and collector regression only; new GPU parameter scan has not run",
+  "recorded_at": "2026-10-18T12:59:32.719071+00:00",
+  "source_sha256": {
+    "eval/benchmark_native_policies.py": "5341277558ce6303913275b58fd3ed8ea1b5b8caddfc25d0eee6be7f8c042f2c",
+    "eval/native_source_snapshot.py": "a0d26d398ae46b4052e5df2a1b36f9be9038d51d72c19118910d13b4e403e3cb",
+    "eval/summarize_native_benchmarks.py": "c29c1011c90b84233a1a96edb1af200f096b4920bd3b553e6f85185863d1087a",
+    "eval/run_native_scheduler_sweep.py": "c2bafc0dfe96fbcdff9f30c594680cc9960980063e4b83dd03efd831122e983d",
+    "scripts/tests/test_native_benchmark_controls.py": "0cec9ec17687f87ff1131a7b5d702972e6ecbd7c64ecc2774df7d7c33d0083f5",
+    "scripts/tests/test_native_benchmark_analysis.py": "b5421b5d2ce3828409ed9107a9a773e9b2cf09b0048d58d7d7440165fb41a8da"
+  },
+  "cpu_tests": 8,
+  "test_log_sha256": "84ec277774a2de6aa436c82b5caf56d188876a0a7640d9a3bd8011e8d0a42449",
+  "legacy_audit": {
+    "conditions": 28,
+    "engine_records": 19,
+    "receipt_sha256": "db5c7af753624542b785b143c5e51ace4a29bbdf7bb5115ea561cb979aebfabb"
+  },
+  "planned_sweep_conditions": 15,
+  "policies": ["initial_student", "batch_mix", "switch_p0_q"],
+  "fixed_length": {
+    "batch": 64,
+    "cap": 128,
+    "warmup_repeats": 1,
+    "timed_repeats": 3,
+    "eos_masked": true
+  },
+  "natural_length": {
+    "batch": 64,
+    "cap": 4096,
+    "warmup_repeats": 1,
+    "timed_repeats": 3,
+    "eos_masked": false,
+    "sample_index": "max(repeat, 0)"
+  },
+  "pending": [
+    "Real GPU verification of benchmark source-local rank adaptation",
+    "All 15 scheduler/replica/budget conditions",
+    "Resident engines versus staged weight switching comparison"
+  ]
+}

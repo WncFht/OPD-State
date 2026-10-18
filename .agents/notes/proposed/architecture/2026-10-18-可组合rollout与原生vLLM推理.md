@@ -622,6 +622,8 @@ batch 路由按来源聚合后，在其可用副本内做负载均衡；小分�
 
 新增物理执行记录从 native worker 获取 CUDA UUID、进程和本地设备信息，由服务端附加副本编号；协调器核对实际应答编号后记录各 RPC 的请求身份和数量。后续验收对照 GPU 0–3 的 UUID，避免只用声明的映射证明分卡。正确性六组两步开启冻结摘要，速度四组五步按 overlap/split/split/overlap 观察并关闭摘要，二者使用独立结果目录。[CPU 审计证据](../../../../docs/experiment/results/native-rollout/physical-routing-cpu.json)已具备，真实新版本 GPU 验收和速度结论尚待完成。
 
+独立微基准保留来源内局部编号和显式物理 GPU 映射，已修复新执行记录接口接入后的 split 编号不匹配。十五条件扫描器覆盖 1/2/4 卡、并发序列数、batched-token 预算、chunked prefill、KV 预算与 graph；使用冻结源码/配置、实际 UUID 和整卡显存采样，按固定工作量与自然长度分别记录预热和重复。[CPU 与历史数据回归](../../../../docs/experiment/results/native-rollout/benchmark-controls-cpu.json)通过；实际 GPU 扫描及单引擎换权重成本仍待完成，不以参数可配置代替性能证据。
+
 优化在不改变算法的前提下进行：
 
 1. 先对齐真实输入、全局 batch、每卡活跃请求、response cap、采样与日志分数需求。训练上下文按 1,024+4,096 配置，不因最终验证需 32,768 就让所有训练组件按验证容量预留。若分离训练与验证引擎，额外驻留和启动成本一起核算。

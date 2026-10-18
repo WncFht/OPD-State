@@ -1,5 +1,6 @@
 """Reject incomplete or inconsistent native benchmark work before reporting speed."""
 
+import hashlib
 import importlib.util
 import json
 import tempfile
@@ -44,6 +45,71 @@ def fixture(directory):
 
 
 class NativeBenchmarkAnalysisTests(unittest.TestCase):
+    def test_scheduler_metadata_and_physical_receipts_are_preserved_and_checked(self):
+        with tempfile.TemporaryDirectory() as temporary:
+            path = Path(temporary)
+            rows = fixture(path)
+            summary = json.loads((path / "summary.json").read_text())
+            summary["arguments"]["budget"] = 0.4
+            summary["scheduler"] = {
+                "max_num_seqs": 32,
+                "max_num_batched_tokens": 2048,
+                "chunked_prefill": True,
+            }
+            summary["physical_receipts_required"] = True
+            summary["physical_gpu_uuids"] = {"2": "GPU-card-2"}
+            summary["engines"] = {
+                "initial_student": {
+                    "gpus": [2],
+                    "budget_per_engine": 0.4,
+                    "layouts": [{"parameter_bytes": 4, "kv_regions": []}],
+                }
+            }
+            telemetry = path / "gpu.csv"
+            telemetry.write_text("unix_s,gpu,used_mib,utilization_pct\n0,2,1024,50\n")
+            summary["gpu_telemetry"] = {
+                "sha256": hashlib.sha256(telemetry.read_bytes()).hexdigest(),
+                "sampled_peak_mib": {"2": 1024},
+                "errors": [],
+            }
+            for row in rows:
+                row["groups"][0].update(phase=0, slot="initial_student", requests=4)
+                row["physical_execution"] = [
+                    {
+                        "slot": "initial_student",
+                        "phase": 0,
+                        "replica_rank": 0,
+                        "device_uuid": "card-2",
+                        "requests": 4,
+                        "request_ids": [str(i) for i in range(4)],
+                    }
+                ]
+            (path / "summary.json").write_text(json.dumps(summary))
+            (path / "observations.jsonl").write_text(
+                "".join(json.dumps(row) + "\n" for row in rows)
+            )
+            timings, _, receipt = MODULE.collect(path)
+            self.assertEqual(timings[0]["max_num_seqs"], 32)
+            self.assertEqual(timings[0]["max_num_batched_tokens"], 2048)
+            self.assertTrue(timings[0]["chunked_prefill"])
+            self.assertEqual(receipt["whole_card_sampled_peak_mib"], {"2": 1024})
+            telemetry.write_text("changed")
+            with self.assertRaisesRegex(ValueError, "GPU telemetry"):
+                MODULE.collect(path)
+
+    def test_missing_warmup_is_rejected(self):
+        with tempfile.TemporaryDirectory() as temporary:
+            path = Path(temporary)
+            rows = fixture(path)[1:]
+            summary = json.loads((path / "summary.json").read_text())
+            summary["observations"] = 2
+            (path / "summary.json").write_text(json.dumps(summary))
+            (path / "observations.jsonl").write_text(
+                "".join(json.dumps(row) + "\n" for row in rows)
+            )
+            with self.assertRaisesRegex(ValueError, "warmups"):
+                MODULE.collect(path)
+
     def test_warmup_is_excluded_and_work_is_reconciled(self):
         with tempfile.TemporaryDirectory() as temporary:
             path = Path(temporary)

@@ -30,7 +30,7 @@ def collect(run):
     observations = [json.loads(line) for line in (run / "observations.jsonl").read_text().splitlines()]
     if len(observations) != summary["observations"]:
         raise ValueError("Benchmark observation count does not match its completion summary")
-    groups = {}
+    groups, warmups = {}, {}
     for row in observations:
         if not all(
             math.isfinite(row[k]) and row[k] > 0 for k in ["seconds", "tokens_per_second", "responses_per_second"]
@@ -42,14 +42,42 @@ def collect(run):
             raise ValueError("Native group token counts do not cover the full responses")
         if abs(row["tokens_per_second"] - row["tokens"] / row["seconds"]) > 1e-7:
             raise ValueError("Throughput does not match the recorded work/time")
-        if row["repeat"] < 0:
-            continue
+        if abs(row["responses_per_second"] - row["batch"] / row["seconds"]) > 1e-7:
+            raise ValueError("Response throughput does not match the recorded batch/time")
+        executions = row.get("physical_execution")
+        if summary.get("physical_receipts_required") and not executions:
+            raise ValueError("Benchmark completion summary requires actual worker execution receipts")
+        if executions:
+            routed, request_ids = {}, set()
+            for execution in executions:
+                slot, phase, rank = execution["slot"], execution["phase"], execution["replica_rank"]
+                physical_gpus = summary["engines"][slot]["gpus"]
+                if type(rank) is not int or not 0 <= rank < len(physical_gpus):
+                    raise ValueError("Physical benchmark receipt has an invalid source-local replica rank")
+                expected_uuid = summary["physical_gpu_uuids"][str(physical_gpus[rank])].lower().removeprefix("gpu-")
+                if execution["device_uuid"].lower().removeprefix("gpu-") != expected_uuid:
+                    raise ValueError("Physical benchmark receipt used a different GPU")
+                ids = execution["request_ids"]
+                if len(ids) != execution["requests"] or len(set(ids)) != len(ids) or request_ids.intersection(ids):
+                    raise ValueError("Physical benchmark receipts duplicate or miscount native requests")
+                request_ids.update(ids)
+                routed[(phase, slot)] = routed.get((phase, slot), 0) + len(ids)
+            expected_routes = {(g["phase"], g["slot"]): g["requests"] for g in row["groups"]}
+            if routed != expected_routes:
+                raise ValueError("Physical benchmark receipts do not cover every generation group")
         key = policy_name(row["policy"]), row["batch"], row["cap"], row["natural_eos"]
+        if row["repeat"] < 0:
+            warmups[key] = warmups.get(key, 0) + 1
+            continue
         groups.setdefault(key, []).append(row)
     arguments = summary["arguments"]
+    scheduler = summary.get("scheduler", {})
     result = []
     for (policy, batch, cap, natural), rows in sorted(groups.items()):
-        expected = 1 if natural else arguments["repeats"]
+        expected = arguments.get("natural_repeats", 1) if natural else arguments["repeats"]
+        expected_warmup = int(not natural or arguments.get("natural_warmup", False))
+        if warmups.get((policy, batch, cap, natural), 0) != expected_warmup:
+            raise ValueError("Missing or duplicate native benchmark warmups")
         if len(rows) != expected or {r["repeat"] for r in rows} != set(range(expected)):
             raise ValueError("Missing or duplicate native benchmark repeats")
         result.append(
@@ -57,6 +85,10 @@ def collect(run):
                 "layout": arguments["layout"],
                 "replicas": arguments["replicas"],
                 "graph": arguments["graph"],
+                "budget": arguments.get("budget"),
+                "max_num_seqs": scheduler.get("max_num_seqs"),
+                "max_num_batched_tokens": scheduler.get("max_num_batched_tokens"),
+                "chunked_prefill": scheduler.get("chunked_prefill"),
                 "policy": policy,
                 "batch": batch,
                 "cap": cap,
@@ -93,6 +125,14 @@ def collect(run):
         "observations": len(observations),
         "cold_seconds": summary["cold_seconds"],
     }
+    telemetry = summary.get("gpu_telemetry")
+    if telemetry is not None:
+        observed = hashlib.sha256((run / "gpu.csv").read_bytes()).hexdigest()
+        if observed != telemetry["sha256"]:
+            raise ValueError("GPU telemetry content differs from its recorded summary hash")
+        receipt["gpu_telemetry_sha256"] = observed
+        receipt["whole_card_sampled_peak_mib"] = telemetry["sampled_peak_mib"]
+        receipt["telemetry_errors"] = telemetry["errors"]
     return result, memory, receipt
 
 

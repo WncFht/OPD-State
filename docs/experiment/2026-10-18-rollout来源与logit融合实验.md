@@ -802,6 +802,21 @@ $$
 
 `eval/run_native_followups.py` 安排六组 B8/cap64 的两步正确性验收：两种 batch 混合、两个 current/teacher 切换方向和两种 fusion；batch teacher 占比 1/8，覆盖 7/1 条请求与空副本。另按 overlap→split→split→overlap 顺序运行四组 B64/cap4096 的五步观测，排除首步，保持来源原预算与诊断设置相同，并关闭昂贵的完整冻结参数摘要。正确性阶段的摘要开销不混入布局速度比较。每组最终只做六题×16 的短验证，用来检查 student 恢复，不形成正式准确率结论；全部任务等现有正式矩阵结束后串行执行，任一训练或审计失败就停止后续任务。
 
+独立分卡微基准的副本编号为来源内局部序号，通过 `engines[slot].gpus` 映射到物理卡；例如 teacher 的局部副本 0 可以在 GPU 2。新执行记录接入后已补齐这一映射，并逐 RPC 核对实际 UUID。基准支持冻结指定提交，Hydra 也从私有快照读取；新增调度参数、短/长响应分别预热与重复，以及约两秒一次的整卡显存采样。采集器检查 warmup、实际工作量、物理请求分配和显存文件哈希。[八项 CPU 检查与历史 28 条件回归](results/native-rollout/benchmark-controls-cpu.json)已通过，新 GPU 扫描尚未运行。
+
+`eval/run_native_scheduler_sweep.py` 定义十五个独立条件，统一 B64，比较 initial student、50/50 batch 混合和 initial→teacher 分段。每项固定长度为 cap128、一次预热和三次计量，另用自然 EOS 的 cap4096、一次预热和三次采样；采样序号写入记录。下表以四卡 overlap、预算 0.40、64 个最大并发请求、8,192 batched tokens、开启 chunked prefill 和 CUDA Graph 为共同基准，每行仅改变对应设置。
+
+| 扫描项           | 比较设置                             |
+| ---------------- | ------------------------------------ |
+| GPU 与布局       | overlap 的 1/2/4 卡，split 的 2/4 卡 |
+| 最大并发请求数   | 4/8/16/32/64，每个引擎分别生效       |
+| 调度 token 预算  | 512/2,048/8,192                      |
+| Chunked prefill  | 开启；关闭时 token 预算保持 8,192    |
+| 每卡联合显存预算 | 0.30/0.40/0.55                       |
+| CUDA Graph       | 开启与 eager                         |
+
+它们是原生推理成本观测，不含 FSDP 更新；split 的单来源阶段仅使用分配给该来源的卡。显存最大值是采样峰值，不能代替连续峰值或把 inactive GPU 的占用归给当前来源。源/调度参数、实际 token、分段重算的 prefill token、GPU UUID 和显存时间序列共同保留，仍须实际运行后才能形成调参结论。双引擎驻留与单引擎换权重的对照保持独立，尚未由这项扫描完成。
+
 ### 真实排空与权重缓存检查
 
 [真实服务端检查](results/native-rollout/runtime/receipt.json)覆盖 eager 与 CUDA Graph。current 通过生产 CUDA IPC 接收 p0→teacher→p0 的完整权重流，prefix cache 原先命中 128/80 个 token，切换后两条请求均为零命中；完整词表 logits 与独立 teacher 引擎逐值相同，恢复 p0 后 logits 逐值恢复。APC 命中改变 BF16 的计算形状，复用前后最大 logits 差为 0.15625、TV 为 $1.293\times10^{-5}$，满足既定跨内核界限。

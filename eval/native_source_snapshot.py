@@ -6,11 +6,24 @@ import shutil
 import subprocess
 
 
-def freeze(root, output, driver):
+def freeze(root, output, driver, commit=None):
+    root, output = root.resolve(), output.resolve()
     source = output / "source"
-    shutil.copytree(root / "verl", source / "verl", ignore=shutil.ignore_patterns("__pycache__", "*.pyc"))
+    resolved = subprocess.check_output(
+        ["git", "rev-parse", "--verify", (commit or "HEAD") + "^{commit}"], cwd=root, text=True
+    ).strip()
+    if commit:
+        source.mkdir()
+        archive = subprocess.Popen(["git", "archive", resolved, "verl"], cwd=root, stdout=subprocess.PIPE)
+        unpacked = subprocess.run(["tar", "-xf", "-", "-C", str(source)], stdin=archive.stdout)
+        archive.stdout.close()
+        if archive.wait() or unpacked.returncode:
+            raise RuntimeError("Could not freeze the selected native source commit")
+    else:
+        shutil.copytree(root / "verl", source / "verl", ignore=shutil.ignore_patterns("__pycache__", "*.pyc"))
     manifest = {
-        "base_commit": subprocess.check_output(["git", "rev-parse", "HEAD"], cwd=root, text=True).strip(),
+        "base_commit": resolved,
+        "source_kind": "git_archive" if commit else "worktree_copy",
         "driver_sha256": hashlib.sha256(driver.read_bytes()).hexdigest(),
         "files": {
             str(p.relative_to(source)): hashlib.sha256(p.read_bytes()).hexdigest()

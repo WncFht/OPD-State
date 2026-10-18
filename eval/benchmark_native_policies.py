@@ -4,14 +4,52 @@ from __future__ import annotations
 
 import argparse
 import asyncio
+import csv
+import hashlib
 import json
 import os
+import subprocess
 import sys
+import threading
 import time
 import uuid
 from pathlib import Path
 
+from run_native_acceptance import gpu_rows
+from verify_native_layout import normalize_uuid
+
 ROOT = Path(__file__).resolve().parents[1]
+
+
+def validate_options(args):
+    if args.layout == "split" and args.replicas == 1:
+        raise ValueError("split layout needs at least two GPUs")
+    if not args.batches or min(args.batches) < 1 or args.repeats < 1 or not 0 < args.cap <= 4096:
+        raise ValueError("Positive batch/repeat counts and a response cap within 4096 are required")
+    if not 0 <= args.natural_cap <= 4096 or not 0 < args.budget < 1:
+        raise ValueError("Invalid natural response cap or joint GPU memory budget")
+    if args.natural_repeats < 1:
+        raise ValueError("Natural-length observations need at least one timed repeat")
+    if args.max_num_seqs is None:
+        args.max_num_seqs = max(args.batches)
+    if args.max_num_seqs < 1 or args.max_num_batched_tokens < 1:
+        raise ValueError("Native scheduler capacities must be positive")
+    if not args.chunked_prefill and args.max_num_batched_tokens < 5120:
+        raise ValueError("Without chunked prefill the token budget must cover the 5120-token context")
+
+
+def check_execution(executions, engines, gpu_uuids):
+    if not executions:
+        raise ValueError("Benchmark source lacks physical native execution receipts")
+    for record in executions:
+        gpus = engines[record["slot"]]["gpus"]
+        rank = record["replica_rank"]
+        if (
+            type(rank) is not int
+            or not 0 <= rank < len(gpus)
+            or normalize_uuid(record["device_uuid"]) != normalize_uuid(gpu_uuids[gpus[rank]])
+        ):
+            raise ValueError("Benchmark local replica rank does not match its assigned physical GPU")
 
 
 def main():
@@ -25,13 +63,33 @@ def main():
     parser.add_argument("--cap", type=int, default=128)
     parser.add_argument("--repeats", type=int, default=3)
     parser.add_argument("--natural-cap", type=int, default=4096)
+    parser.add_argument("--natural-repeats", type=int, default=1)
+    parser.add_argument("--natural-warmup", action="store_true")
+    parser.add_argument("--max-num-seqs", type=int)
+    parser.add_argument("--max-num-batched-tokens", type=int, default=8192)
+    parser.add_argument("--chunked-prefill", action=argparse.BooleanOptionalAction, default=True)
+    parser.add_argument("--source-commit")
+    parser.add_argument(
+        "--policies",
+        nargs="+",
+        choices=["initial_student", "teacher", "switch_p0_q", "switch_q_p0", "batch_mix", "fusion"],
+    )
     args = parser.parse_args()
-    if args.layout == "split" and args.replicas == 1:
-        parser.error("split layout needs at least two GPUs")
+    args.output = args.output.resolve()
+    try:
+        validate_options(args)
+    except ValueError as error:
+        parser.error(str(error))
+    if args.layout == "split" and args.policies is not None and "fusion" in args.policies:
+        parser.error("Paired fusion uses the overlap model layout")
+    if any(used > 128 for gpu, used, _ in gpu_rows() if gpu < args.replicas):
+        raise RuntimeError("Requested benchmark GPUs are occupied; wait for the existing job")
     args.output.mkdir(parents=True, exist_ok=False)
     from native_source_snapshot import freeze
 
-    source = freeze(ROOT, args.output, Path(__file__))
+    source = freeze(ROOT, args.output, Path(__file__), commit=args.source_commit)
+    if "execution_audit" not in (source / "verl/workers/rollout/native_pool.py").read_text():
+        raise ValueError("Benchmark requires a source with physical execution receipts")
     sys.path.insert(0, str(source))
     os.environ["PYTHONPATH"] = str(source) + os.pathsep + os.environ.get("PYTHONPATH", "")
     os.environ.update(
@@ -63,13 +121,11 @@ def main():
     }
     tok = hf_tokenizer(paths["initial_student"])
     refs = {r: ModelRef(r, p, fingerprint=model_signature(p)) for r, p in paths.items()}
-    records = [
-        json.loads(x)
-        for x in (ROOT / "runs/native-rollout-implementation/fresh-math-data-v2/prompts.jsonl")
-        .read_text()
-        .splitlines()[: max(args.batches)]
-    ]
-    with initialize_config_dir(config_dir=str(ROOT / "verl/verl/trainer/config"), version_base=None):
+    prompt_bytes = (ROOT / "runs/native-rollout-implementation/fresh-math-data-v2/prompts.jsonl").read_bytes()
+    records = [json.loads(line) for line in prompt_bytes.splitlines()[: max(args.batches)]]
+    if len(records) < max(args.batches):
+        raise ValueError("Benchmark prompt pool is smaller than the requested global batch")
+    with initialize_config_dir(config_dir=str(source / "verl/trainer/config"), version_base=None):
         cfg = compose(config_name="ppo_trainer")
     with open_dict(cfg):
         cfg.actor_rollout_ref.model.path = paths["initial_student"]
@@ -80,19 +136,46 @@ def main():
         rcfg.max_model_len = 5120
         rcfg.prompt_length = 1024
         rcfg.response_length = 4096
-        rcfg.max_num_batched_tokens = 8192
-        rcfg.max_num_seqs = max(args.batches)
+        rcfg.max_num_batched_tokens = args.max_num_batched_tokens
+        rcfg.max_num_seqs = args.max_num_seqs
+        rcfg.enable_chunked_prefill = args.chunked_prefill
         rcfg.load_format = "auto"
         rcfg.enforce_eager = not args.graph
         rcfg.generation_purpose = "training"
         rcfg.generation_sync_namespace = uuid.uuid4().hex
-        rcfg.cudagraph_capture_sizes = [1, 2, 4, 8, 16, 32, 64]
+        rcfg.cudagraph_capture_sizes = sorted(
+            {n for n in [1, 2, 4, 8, 16, 32, 64, args.max_num_seqs] if n <= args.max_num_seqs}
+        )
         rcfg.engine_kwargs.vllm = {"compilation_config": {"custom_ops": ["all"]}}
         cfg.trainer.n_gpus_per_node = 4
     ray.init(num_cpus=16, num_gpus=4, object_store_memory=2 << 30, include_dashboard=False)
     servers = []
     specs = {}
     cold = {}
+    gpu_uuids = {
+        int(row.split(",")[0]): row.split(",")[1].strip()
+        for row in subprocess.check_output(
+            ["nvidia-smi", "--id=0,1,2,3", "--query-gpu=index,uuid", "--format=csv,noheader"], text=True
+        ).splitlines()
+    }
+    stop_sampling = threading.Event()
+    sampling_errors = []
+
+    def sample_memory():
+        with (args.output / "gpu.csv").open("w", newline="") as stream:
+            writer = csv.writer(stream, lineterminator="\n")
+            writer.writerow(["unix_s", "gpu", "used_mib", "utilization_pct"])
+            while not stop_sampling.is_set():
+                try:
+                    now = time.time()
+                    writer.writerows([now, *row] for row in gpu_rows())
+                    stream.flush()
+                except Exception as error:
+                    sampling_errors.append({"unix_s": time.time(), "error": str(error)})
+                stop_sampling.wait(2)
+
+    sampler = threading.Thread(target=sample_memory, daemon=True)
+    sampler.start()
 
     class Pool:
         handles = {}
@@ -140,7 +223,7 @@ def main():
                 model_config=m,
                 rollout_mode=RolloutMode.COLOCATED,
                 workers=[],
-                replica_rank=gpu,
+                replica_rank=len(handles),
                 node_rank=0,
                 gpus_per_node=1,
                 nnodes=1,
@@ -172,11 +255,12 @@ def main():
                     for h in hs
                 ]
             )
-        requests = [Request(r["prompt_id"], tuple(r["prompt_ids"])) for r in records[:batch]]
+        requests = [Request(r["prompt_id"], tuple(r["prompt_ids"]), sample=max(rep, 0)) for r in records[:batch]]
         plan = compile_policy(policy, cap=cap, batch_size=batch, seed=42, batch_id=rep + 1)
         backend = NativeRayBackend(
             pool, {"temperature": 1 if natural else 0, "top_p": 1, "top_k": -1, "logprobs": False}
         )
+        started_at = time.time()
         output, timing = asyncio.run(
             generate(
                 requests,
@@ -191,21 +275,32 @@ def main():
             )
         )
         count = sum(len(o.token_ids) for o in output)
+        check_execution(backend.execution_audit, specs, gpu_uuids)
         row = {
             "policy": policy,
             "batch": batch,
             "cap": cap,
             "repeat": rep,
+            "sample_index": max(rep, 0),
             "natural_eos": natural,
             "tokens": count,
             "seconds": timing["seconds"],
             "tokens_per_second": count / timing["seconds"],
             "responses_per_second": batch / timing["seconds"],
             "groups": timing["groups"],
+            "started_at": started_at,
+            "finished_at": time.time(),
+            "source_local_placement": backend.placement_audit,
+            "physical_execution": backend.execution_audit,
         }
         rows.append(row)
         (args.output / "observations.jsonl").open("a").write(json.dumps(row) + "\n")
-        print(json.dumps({k: v for k, v in row.items() if k != "groups"}), flush=True)
+        print(
+            json.dumps(
+                {k: v for k, v in row.items() if k not in {"groups", "source_local_placement", "physical_execution"}}
+            ),
+            flush=True,
+        )
 
     try:
         all_gpus = list(range(args.replicas))
@@ -227,14 +322,18 @@ def main():
                 "components": [{"policy": {"kind": "single", "model": r}, "weight": 0.5} for r in paths],
             }
         ]
-        for policy in policies:
+        names = ["initial_student", "teacher", "switch_p0_q", "switch_q_p0", "batch_mix"]
+        for name, policy in zip(names, policies, strict=True):
+            if args.policies is not None and name not in args.policies:
+                continue
             for batch in args.batches:
                 for rep in range(-1, args.repeats):
                     run(policy, batch, args.cap, rep, False)
             if args.natural_cap:
-                run(policy, max(args.batches), args.natural_cap, 0, True)
+                for rep in range(-1 if args.natural_warmup else 0, args.natural_repeats):
+                    run(policy, max(args.batches), args.natural_cap, rep, True)
         asyncio.run(pool.sleep_all())
-        if args.layout == "overlap":
+        if args.layout == "overlap" and (args.policies is None or "fusion" in args.policies):
             fusion = {
                 "teacher_path": paths["teacher"],
                 "teacher_fingerprint": refs["teacher"].fingerprint,
@@ -246,7 +345,8 @@ def main():
                 for rep in range(-1, args.repeats):
                     run(policy, batch, args.cap, rep, False)
             if args.natural_cap:
-                run(policy, max(args.batches), args.natural_cap, 0, True)
+                for rep in range(-1 if args.natural_warmup else 0, args.natural_repeats):
+                    run(policy, max(args.batches), args.natural_cap, rep, True)
         summary = {
             "scope": "Inference-only native RPCs/executor; fixed-length runs mask EOS, natural runs retain EOS",
             "arguments": vars(args) | {"output": str(args.output)},
@@ -254,12 +354,34 @@ def main():
             "cold_seconds": cold,
             "model_refs": {r: ref.identity for r, ref in refs.items()},
             "observations": len(rows),
+            "scheduler": {
+                "max_num_seqs": args.max_num_seqs,
+                "max_num_batched_tokens": args.max_num_batched_tokens,
+                "chunked_prefill": args.chunked_prefill,
+            },
+            "physical_gpu_uuids": gpu_uuids,
+            "physical_receipts_required": True,
+            "prompt_manifest_sha256": hashlib.sha256(prompt_bytes).hexdigest(),
         }
-        (args.output / "summary.json").write_text(json.dumps(summary, indent=2) + "\n")
     finally:
         for h in servers:
             ray.kill(h, no_restart=True)
         ray.shutdown()
+        stop_sampling.set()
+        sampler.join(timeout=10)
+        if sampler.is_alive():
+            raise RuntimeError("Native benchmark GPU telemetry did not finish")
+    with (args.output / "gpu.csv").open() as stream:
+        telemetry = list(csv.DictReader(stream))
+    summary["gpu_telemetry"] = {
+        "interval_seconds": 2,
+        "errors": sampling_errors,
+        "sha256": hashlib.sha256((args.output / "gpu.csv").read_bytes()).hexdigest(),
+        "sampled_peak_mib": {
+            str(gpu): max(int(row["used_mib"]) for row in telemetry if int(row["gpu"]) == gpu) for gpu in range(4)
+        },
+    }
+    (args.output / "summary.json").write_text(json.dumps(summary, indent=2) + "\n")
 
 
 if __name__ == "__main__":
