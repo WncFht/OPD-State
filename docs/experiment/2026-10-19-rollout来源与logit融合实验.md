@@ -786,7 +786,11 @@ $$
 
 正式矩阵已固定 d59a7c3 源码和 17,235 题清单启动，使用 `overlap` 布局，首组为 `student_fresh`。工作区后续布局修改不会进入该矩阵；待所有 run 结束、逐题结果与 W&B 核对后再形成质量结论。[同清单两步长响应验收](results/native-rollout/trainer-manifest-long/native-acceptance.json)此前以 B64、4K 响应和 CUDA Graph 完成，两步各生成 246,709/246,491 token，最终仅验证六题×16，整卡采样峰值为 50,897/50,679/49,751/50,679 MiB；该短验证不提供正式准确率结论。
 
-前三组正式运行均完成五十次更新、完整 570 题×16 最终评测和独立重评分，没有保存 checkpoint；分别见[当前来源](results/native-rollout/formal/student_fresh/native-acceptance.json)、[固定初始来源](results/native-rollout/formal/initial_student_fresh/native-acceptance.json)与[teacher 来源](results/native-rollout/formal/teacher_fresh/native-acceptance.json)验收。三组都训练并验证最终 student50，差别只在训练生成来源，各消费 3,200 道不同题；W&B 核验均确认 finished、五十条有限 loss/grad 记录及唯一 step50 验证，并绑定远端原生 policy 与本地生成 manifest。表中每个来源单元格按 Mean@16 / Pass@16 列出；完整指标和逐题数据保留在各目录。
+前三组正式运行均完成五十次更新、完整 570 题×16 最终评测和独立重评分，没有保存 checkpoint；分别见[当前来源](results/native-rollout/formal/student_fresh/native-acceptance.json)、[固定初始来源](results/native-rollout/formal/initial_student_fresh/native-acceptance.json)与[teacher 来源](results/native-rollout/formal/teacher_fresh/native-acceptance.json)验收。三组都训练并验证最终 student50，差别只在训练生成来源，各消费 3,200 道不同题；W&B 核验均确认 finished、五十条有限 loss/grad 记录及唯一 step50 验证，并绑定远端原生 policy 与本地生成 manifest。下图 Current/Initial/Teacher 分别表示三种实时生成来源，Initial 每步重新 rollout，没有复用缓存；灰色虚线与点线是外部初始 student/teacher 参考。准确率与 [pass@k](figures/native-formal/single-sources/pass-at-k.png) 按基准独立缩放，训练曲线保留原始五十步，sampled log-ratio RMS 不代表完整条件 KL。[资源图](figures/native-formal/single-sources/resources.png)单列训练、最终验证计时和整轮整卡采样峰值；[绘图审计](figures/native-formal/single-sources/audit.json)绑定输入、程序与图件哈希，准确率由逐题成功数独立重算。表中每个来源单元格按 Mean@16 / Pass@16 列出；完整指标和逐题数据保留在各目录。
+
+![三种实时来源训练最终 student 的完整准确率及外部模型参考](figures/native-formal/single-sources/accuracy.png)
+
+![三种实时来源的训练 log-ratio RMS、reward、梯度、长度、熵与每步时间](figures/native-formal/single-sources/training.png)
 
 | 基准     |       题数 | 当前来源 Mean / Pass@16 | 初始来源 Mean / Pass@16 | Teacher 来源 Mean / Pass@16 |
 | -------- | ---------: | ----------------------: | ----------------------: | --------------------------: |
