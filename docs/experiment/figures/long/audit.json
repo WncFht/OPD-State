@@ -1,0 +1,47 @@
+{
+  "plotter_sha256": "63c18e82017fc4ba3c5e9da57ac1357bffd0670052d8f59bba7326af956e179f",
+  "collector_sha256": "fa450fe4d75a8731f5142138f860f89dd49bc0d3c23df96416584ab2dde6a213",
+  "style_sha256": "a9670b726e4890688bad9bec5cf5f39dcc6a1604ceebff8043c26cee95726581",
+  "matplotlib_version": "3.10.7",
+  "source_commit": "4eb96bb1ab62fc7bac735c463dd54bafd315a62a",
+  "logged_through_step": 99,
+  "log_path": "runs/rollout-sources/math-semi-opd-long-800steps-eval16-20261018-092912/logs/math-semi-opd-long-800steps-eval16-20261018-092912.log",
+  "observed_log_bytes": 471435,
+  "observed_log_prefix_sha256": "c0ebf8d47f0e6122a6795e4a84a144df4d3a635df117aea6272ed1f9b7cdb121",
+  "inputs_sha256": {
+    "docs/experiment/results/long-semi-progress/step-50/summary.json": "1a87135097255084b2b65e0dc719c6cfc2fe0ea1edd6c25741a0867ba0c0854d",
+    "docs/experiment/results/long-semi-progress/step-50/validation-step50.json": "f750cedd65d44974cf0aa9313cc9c14b333d3b1a37f4ab1d297873974cdacedb",
+    "docs/experiment/results/long-semi-progress/step-50/questions-step50.csv": "9e583939d0771ad3e332e37c2623e9069266c74e9d6005c8a2d5ddd1091049b3",
+    "/mnt/tidalfs-bdsz01/dataset/llm_dataset/zkn_data/fht_data/OPD-State/docs/experiment/results/reference-accuracy.json": "be9a1e7a45994edd356ecab4bad630f85ed29ec38ae4271a6e50dec23c40252f"
+  },
+  "completed_validation_steps": [50],
+  "all_cached_lengths_repeat_exactly": true,
+  "paired_prefix_batch_statistics": [
+    {
+      "cache_pass": 1,
+      "matched_batches": 49,
+      "token_weighted_rms": 0.49845617182716445,
+      "mean_grad_norm": 1.103347477864246
+    },
+    {
+      "cache_pass": 2,
+      "matched_batches": 49,
+      "token_weighted_rms": 0.3100107387653156,
+      "mean_grad_norm": 0.49712140888583906
+    }
+  ],
+  "paired_rms_decreases_vs_first_pass": [
+    {
+      "cache_pass": 2,
+      "matched_batches": 49,
+      "lower_rms_batches": 49
+    }
+  ],
+  "audit": [],
+  "outputs_sha256": {
+    "accuracy-plotted.csv": "1e081414bb288fc94f409734b770b711244a5f7e6da54bd8ed080d92be064404",
+    "long-training-progress.pdf": "a8ad71480481d0ac0a664ffd6147a4a04fc1f239f4caf95b0d3cd9516b60f1ef",
+    "long-training-progress.png": "d5238852ad7b5f5ca6bb4d15390f87d01ca1884256a20e2a2e4e45841e425630",
+    "training-plotted.csv": "991d9cbdf0b5efb40984938ed9e1a0dbca73a22a0f653d38fe062dd0ca9ffa03"
+  }
+}

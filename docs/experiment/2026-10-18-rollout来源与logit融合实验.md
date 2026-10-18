@@ -288,6 +288,8 @@ flowchart TB
 
 论文在训练开始前，用初始 student 为全部训练 prompt 各采样一次响应，再把 teacher 在这些响应上的 log-probability 预计算下来；后续更新只重算当前 student 概率。其附录明确为去重后的 14,116 个 prompt、每题一条响应，训练时按与在线 OPD 相同的 prompt 顺序读取。[^semi] 这属于一次性离线准备，不是在训练中维护一个初始 student 持续生成新响应。
 
+原文 §2.2 的公式 (2) 定义固定数据集 $\mathcal D_0=\{(x_i,y_i)\}_{i=1}^{N}$，其中 $y_i\sim p_0(\cdot\mid x_i)$；公式 (3) 在这份数据集上取样更新 student。附录 A 写明每步 128 个 prompt，每题一条响应，约 110 步覆盖一轮。因此“初始 student”限定响应的生成权重，“一次生成”限定每条响应的复用；训练 prompt 池覆盖全部 14,116 题，不由第一个训练 batch 或预设训练步数截断。[^semi]
+
 当前本地实现的来源规则相同，但缓存范围和 teacher 打分实现不同。数据准备先对本地 DAPO 做 prompt 长度过滤，得到 17,909 条记录；按原在线 baseline 的 sampler 和 seed 42 选取前 50 个 batch，共 3,200 条消费记录。它们不是 parquet 文件的前 3,200 行，也没有覆盖全部过滤后的训练 prompt。两个缓存组和两个在线来源组都消费这份相同的 prompt 顺序。
 
 Semi 的准备阶段加载未更新的初始 student，对这 3,200 条记录各生成一次响应，遇到 EOS 或 4,096 token 上限停止。缓存按 prompt ID 保存 prompt token、完整 response token 和结束原因。每条响应对应的 state 池是该 prompt 与响应的所有有效前缀；不是只取最开始的一段 token，也不是缓存某个模型的 hidden state。
@@ -295,6 +297,8 @@ Semi 的准备阶段加载未更新的初始 student，对这 3,200 条记录各
 训练随后从同一初始 student 权重重新开始。每步读取 64 个 prompt ID 对应的固定响应，在同一批 prefix/action 上重新计算当前 student 和冻结 teacher 的 log-probability，再只更新 student。当前版本仅缓存 token，teacher 分数每步重算；论文预缓存 teacher 分数的效率优化尚未实现。训练期间不调用初始 student 生成，不因当前 student 改变而替换缓存，cache miss 直接失败。
 
 首轮 50 步读完全部 3,200 条记录；长时组再从同一固定顺序的第一批开始。因此同一记录的 state 不变、同一 batch 的长度应每 50 步复现，但 student 在这些固定 state 上的概率和梯度会随更新变化。当前实现的数据选择、生成和读取位置分别是 `data/prep/build_rollout_cache.py` 的 `schedule`/`cache`、`recipe/math_cached.sh` 与 `verl/verl/trainer/ppo/fixed_rollout.py`。
+
+当前长时组验证的是 3,200 条有限轨迹上的持续拟合；它不能替代全量训练 prompt 的 Semi-OPD 实验。若比较更长预算，在线组也必须使用同一 prompt 池和顺序，避免同时改变轨迹来源与题目覆盖。全量缓存的大小应由明确的数据清洗与 prompt 清单决定，再独立设置训练步数；不能把最初配对 50 步的缓存大小当作论文要求。
 
 ### 更新公式与来源差异
 
@@ -404,6 +408,10 @@ $$
 
 第 50 步阶段结果已完成独立采集：MATH-500 mean@16 为 86.3875%、AMC23 为 80.3125%、AIME25 为 27.7083%，macro 为 64.8028%、micro 为 82.8728%。570 题、9,120 条响应及全部精确指标与训练日志一致，见[阶段摘要](results/long-semi-progress/step-50/summary.json)。该摘要明确为运行中的完整验证快照，不是长时训练已结束。第 50 步的[平台报告](results/long-semi-progress/step-50/plateau-at-step50.json)状态为 `insufficient_observation`；训练已继续，不能从一个验证点宣布平台。
 
+![长时 Semi-OPD 的固定缓存训练与完整验证](figures/long/long-training-progress.png)
+
+图中训练观测固定截到第 99 步，准确率只画已经完整采集的第 50 步。比较第 1–49 步与第 51–99 步的相同 49 个 batch：响应长度逐批精确相同，49/49 批的 log-ratio RMS 均下降，token 加权 RMS 从 0.49846 降到 0.31001，平均裁剪前 grad_norm 从 1.10335 降到 0.49712。这支持 student 继续拟合固定轨迹上的监督，尚不足以判断泛化准确率平台或全词表 KL；[绘图审计](figures/long/audit.json)记录日志字节前缀、数据与程序哈希及配对统计。
+
 经验平台判据在长时结果产生前固定：至少 300 步，最后四个连续、间隔 50 步的验证点，macro mean@16 极差不超过 0.01；对应四个训练窗口的 token 加权 RMS 相对极差不超过 5%，平均 grad_norm 相对极差不超过 10%。相对极差为最大值减最小值后除以均值，分母下限 $10^{-12}$。
 
 第 $b$ 批有效 token 数 $N_b$、RMS $r_b$ 的窗口合并值为
@@ -464,6 +472,8 @@ batch 均为 64，使用平均响应长度作权重与 $N_b$ 等价。训练器�
 | 其余训练开销                 |         0.40 |         0.34 |     0.36 |         0.36 |
 | 训练合计                     |     2,348.70 |       409.61 |   410.17 |     2,999.00 |
 
+在线 student 的 50 步训练循环比 Semi 慢约 5.73 倍，主要差异来自 1,787.12 秒的自回归生成，对比 3.46 秒的缓存读取；逐步生成还需要同步当前 actor 权重。生成必须依次决定后续 token，已有响应的 student/teacher 评分则可对给定序列做并行前向。Semi 的离线准备仍消耗 537.48 秒：把这项一次性成本计入后，首轮“准备加 50 步训练”为 15.79 分钟，在线为 39.14 分钟，相差约 2.48 倍。这些计时不含验证与未独立计时的初始化，不能把 5.73 倍称为端到端加速。论文还预计算 teacher 分数；当前实现每 50 步仍花约 95.89 秒重新评分，尚未采用该优化。[^semi]
+
 生成/缓存读取、评分、更新与同步之和在未舍入值上与 `timing_s/step` 相同。验证位于该训练计时块之外，未混入训练合计；各列启动范围不完全相同，也不能把缓存预生成和这些计时直接相加当作严格端到端总时间。原始分阶段表及其输入/输出哈希见[资源汇总](results/resources/summary.json)与 `training-phases.csv`。
 
 显存单位均为 GiB。Actor 两列是各 rank 报告的 PyTorch allocator 历史高水位，再取最大值；它们不含独立 teacher/vLLM 进程的全部开销。整卡两列来自 W&B 已记录系统采样的最大值，训练/验证分界按训练日志时间戳和 testing 时长估计，不能定位到单次前向或反向。
@@ -502,6 +512,8 @@ env -u WANDB_API_KEY NETRC="$PWD/../.secrets/netrc" WANDB_CONFIG_DIR="$PWD/../co
 ## 固定 checkpoint 实时生成的重构取舍
 
 工程上支持按需从固定 checkpoint 生成是合理的，但要把“生成来源”与“轨迹复用”拆开。固定初始 student 或固定 teacher 的权重不会随训练更新；每次重新采样仍会产生新 prefix。保持来源分布固定与保持有限 state 集固定是两种不同设置。
+
+“从 p0/q 重新采样”中的斜线表示二选一：$p_0$ 是初始 student，$q$ 是冻结 teacher，不表示概率比值。对当前 prompt $x$，重新执行 $y^{\mathrm{new}}\sim p_0(\cdot\mid x)$ 或 $y^{\mathrm{new}}\sim q(\cdot\mid x)$，响应由相同权重、更新后的随机数状态生成，可能与上次不同。训练对象仍是当前 student $p_\theta$。新响应使有限轨迹池发生变化；论文 Semi-OPD 则直接复用已保存的 $y_i$。
 
 | 轨迹复用方式         | 何时生成                              | 相同 prompt 再出现时 | 与当前实验的关系                                   |
 | -------------------- | ------------------------------------- | -------------------- | -------------------------------------------------- |
@@ -592,7 +604,7 @@ Teacher 组训练源码固定于 `350a286be0d586f04e4cd0b0e89624a336b17a81`，�
 
 ### 参考文献
 
-[^semi]: Zhao 等。When Do We Need On-Policy Distillation? arXiv 2610.11291, 2026. [论文](https://arxiv.org/abs/2610.11291). 设置按工作区论文源码 sections/02_method.tex、05_why.tex、06_more.tex、09_appendix.tex 核对。
+[^semi]: Zhao 等。When Do We Need On-Policy Distillation? Distilling on Offline Student Rollouts Is Often Better. arXiv 2610.11291v1, 2026. [英文原文](https://arxiv.org/html/2610.11291v1). 固定数据定义核对 §2.2 公式 (2)–(3)，全量 prompt 与 batch 核对附录 A，预生成与预评分成本核对附录 C；另与工作区对应翻译源码核对。
 
 [^reference-teacher]: wncfht. One-Shot-OPD math_teacher u87buult. W&B 2026. [用户指定 teacher 评测](https://forge.coreweave.com/wandb/wncfht/One-Shot-OPD/runs/u87buult).
 
