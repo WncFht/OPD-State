@@ -1,0 +1,91 @@
+{
+  "scope": "Real 4-GPU trainer acceptance; short caps do not establish math accuracy",
+  "trainer_gpu_count": 4,
+  "resource_note": null,
+  "frozen_parameter_digests": {},
+  "training": [
+    {
+      "step": 1,
+      "responses": 8,
+      "response_tokens": 512,
+      "generation_identities": [
+        [
+          "initial_student",
+          "/mnt/tidalfs-bdsz01/dataset/llm_dataset/zkn_data/fht_data/models/DeepSeek-R1-Distill-Qwen-1.5B",
+          "2fc42a962d3f6f5281e99686ab9a5ae32c8cb9529c8e3fd07709c5c056613f48"
+        ],
+        [
+          "teacher",
+          "/mnt/tidalfs-bdsz01/dataset/llm_dataset/zkn_data/fht_data/models/JustRL-DeepSeek-1.5B",
+          "2736b59eeb53f416088992a3d7ecb3376274c74e685c358214360072395631f0"
+        ]
+      ],
+      "trace_sha256": "c5c7bfd299621b8fa3aa543fce48af1b4b74ea402a32723516e063f1af012a39"
+    },
+    {
+      "step": 2,
+      "responses": 8,
+      "response_tokens": 512,
+      "generation_identities": [
+        [
+          "initial_student",
+          "/mnt/tidalfs-bdsz01/dataset/llm_dataset/zkn_data/fht_data/models/DeepSeek-R1-Distill-Qwen-1.5B",
+          "2fc42a962d3f6f5281e99686ab9a5ae32c8cb9529c8e3fd07709c5c056613f48"
+        ],
+        [
+          "teacher",
+          "/mnt/tidalfs-bdsz01/dataset/llm_dataset/zkn_data/fht_data/models/JustRL-DeepSeek-1.5B",
+          "2736b59eeb53f416088992a3d7ecb3376274c74e685c358214360072395631f0"
+        ]
+      ],
+      "trace_sha256": "c80b79021db2d341783e5be605928ca70404f621a8455083cf5142aabfcb5b5c"
+    }
+  ],
+  "evaluation_responses": 96,
+  "final_student_version": 2,
+  "evaluation_model_identities": [
+    [
+      "current_student",
+      "/mnt/tidalfs-bdsz01/dataset/llm_dataset/zkn_data/fht_data/models/DeepSeek-R1-Distill-Qwen-1.5B",
+      2
+    ]
+  ],
+  "whole_card_peak_mib": {
+    "0": 20942,
+    "1": 20942,
+    "2": 20934,
+    "3": 20976
+  },
+  "status": {
+    "state": "finished",
+    "exit_code": 0,
+    "elapsed_s": 292.0194683074951,
+    "gpu_after": [
+      [0, 3120, 0],
+      [1, 315, 0],
+      [2, 131, 0],
+      [3, 286, 0]
+    ],
+    "source_manifest": "/mnt/tidalfs-bdsz01/dataset/llm_dataset/zkn_data/fht_data/OPD-State/runs/native-rollout-implementation/trainer-batch-initial-v2/source-manifest.json"
+  },
+  "native_manifest_sha256": "cc486652d3acb521f07bd2e62713ea2ee855e68b2187cb92aa98d13493ebbd74",
+  "math_summary": {
+    "run_name": "trainer-batch-initial-v2",
+    "run_directory": "/mnt/tidalfs-bdsz01/dataset/llm_dataset/zkn_data/fht_data/OPD-State/runs/native-rollout-implementation/trainer-batch-initial-v2",
+    "source_commit": "4994d2b4186ca9dab7adf06560824386c2a56e98",
+    "source_manifest_sha256": "5db89eda61ecbc7b66d9245eabc1a32973d411bfefcce6076e2c6a223d09bb92",
+    "source_identity": "runtime_snapshot",
+    "training_steps": 2,
+    "samples_per_question": 16,
+    "full_benchmarks": false,
+    "checkpoints_saved": false,
+    "wandb_url": null,
+    "training_log_sha256": "c0d339b80578876320e0b988d88a79b89f0ff49b8dc0dafae7d88679670ef101",
+    "training_log_observed_bytes": 230411,
+    "collection_scope": "final_validation",
+    "final_validation_marker_verified": true,
+    "collector_source_sha256": "d55fdb5753b7557a445c8584830f41fdbb3ca450ae53fa888791f2cdf81899fb",
+    "validation_steps": [2]
+  },
+  "collector_source_sha256": "48f150431e53eb6e0335b1b310fab8067ddf7c8725f374976d008de9f4b8ecaf"
+}

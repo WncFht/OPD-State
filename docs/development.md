@@ -87,7 +87,7 @@ CUDA_VISIBLE_DEVICES=0,1,2,3 N_GPUS_PER_NODE=4 \
 
 GPU 验收至少记录初始模型身份、权重保存策略、数据哈希、随机种子、有效 token 数、采样配置、时间和峰值显存，先跑原算法小规模基线，再比较候选变体。GPU 限物理编号 0–3；覆盖率与准确率结论必须基于真实结果。三种轨迹来源和 λ=0.5 fusion 已完成四卡 50 步及完整三基准验证；这些单 seed、单预算结果不证明长时收敛。
 
-可选的原生策略入口是 `bash recipe/math_native.sh student_fresh`，默认仍为五十步、仅最终完整 eval16、不保存 checkpoint、W&B 项目 `OPD-State`。三种单模型来源均完成四卡两步验收；分段和 batch 配方是待验证入口，原生 fusion 的 trainer 接入尚显式拒绝执行。新路径要求单轮纯文本 Qwen2、每副本 TP=PP=DP=1、n=1 的 sampled-token OPD，固定来源与无偏 top-k tail 暂不兼容。历史缓存与 HF fusion 继续使用原配方。
+可选的原生策略入口是 `bash recipe/math_native.sh student_fresh`，默认仍为五十步、仅最终完整 eval16、不保存 checkpoint、W&B 项目 `OPD-State`。三种单模型、四种分段方向、两种 batch 混合与两种 native fusion 均已有四卡两步证据；具体源码快照、后续统一引擎布局与正式质量结果见统一实验报告。训练与纯 student 验证使用独立引擎，`NATIVE_DATA_MANIFEST` 可绑定完整去重题库，准备命令见[data README](../data/README.md)。新路径要求单轮纯文本 Qwen2、每副本 TP=PP=DP=1、n=1 的 sampled-token OPD，暂不支持无偏 top-k tail；历史 `policy=null`、缓存与 HF fusion 继续使用原配方。
 
 桥接回归使用训练环境执行，覆盖实际 Hydra 默认值和无 tensor 的生成输入：
 

@@ -1,0 +1,9 @@
+{
+  "scope": "Native CUDA graph capture and eight-token full-vocabulary numerical checks; no actor hot-update claim",
+  "raw_directory": "/mnt/tidalfs-bdsz01/dataset/llm_dataset/zkn_data/fht_data/OPD-State/runs/native-rollout-implementation/fusion-decode-graph-v1",
+  "arrays_sha256": "fde1fde7c30d4126d6bab4db42f1749956d54a132e0cf4ce885b73c43ab8cd2a",
+  "positions": 16,
+  "graphs_captured": 114,
+  "max_logit_error": 0.0,
+  "max_tv": 0.0
+}

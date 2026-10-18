@@ -86,7 +86,7 @@ def main():
         "WANDB_RUN_GROUP": "math-native-rollout-sources",
         "OPD_SOURCE_COMMIT": commit,
     }
-    for name in ["SWITCH_TOKENS", "TEACHER_FRACTION"]:
+    for name in ["SWITCH_TOKENS", "TEACHER_FRACTION", "TEACHER_WEIGHT", "TRAIN_FILES", "NATIVE_DATA_MANIFEST"]:
         if name in os.environ:
             settings[name] = os.environ[name]
     command = [

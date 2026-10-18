@@ -23,7 +23,7 @@ def load_policy(path):
     return module
 
 
-def audit(run, output, steps, *, require_full=False):
+def audit(run, output, steps, *, require_full=False, resource_note=None):
     run, output = Path(run).resolve(), Path(output).resolve()
     status = json.loads((run / "status.json").read_text())
     if status.get("exit_code") != 0 or status["state"] != "finished":
@@ -33,7 +33,18 @@ def audit(run, output, steps, *, require_full=False):
         raise ValueError("Expected one native trajectory manifest")
     directory = locations[0].parent
     manifest = json.loads(locations[0].read_text())
-    env = json.loads((run / "command.json").read_text())["environment"]
+    command = json.loads((run / "command.json").read_text())
+    env = command["environment"]
+
+    def override(name, default):
+        return next(
+            (arg.split("=", 1)[1] for arg in reversed(command["command"]) if arg.startswith(name + "=")), default
+        )
+
+    gpu_count = int(manifest.get("trainer_gpu_count", override("trainer.n_gpus_per_node", "4")))
+    verify_frozen = manifest.get(
+        "verify_frozen_parameters", override("actor_rollout_ref.rollout.generation_verify_frozen", "False") == "True"
+    )
     cap = int(manifest.get("response_cap", env["MAX_RESP_LENGTH"]))
     seed = int(manifest.get("seed", 42))
     policy = load_policy(run / "source/verl/verl/workers/rollout/policy.py")
@@ -86,6 +97,26 @@ def audit(run, output, steps, *, require_full=False):
         )
     batches = [json.loads(line) for line in (directory / "batches.jsonl").read_text().splitlines()]
     evaluations = [b for b in batches if b["validate"]]
+    frozen = {}
+    for batch in batches:
+        for verification in batch.get("frozen_verifications", []):
+            for role, digest in verification["frozen_digests"].items():
+                frozen.setdefault(role, set()).add(digest)
+    if any(len(values) != 1 for values in frozen.values()):
+        raise ValueError("Frozen parameter digests disagree between updates or replicas")
+    if verify_frozen:
+        expected_frozen = set().union(
+            *(
+                policy.compile_policy(
+                    manifest["policy"], cap=cap, batch_size=r["responses"], seed=seed, batch_id=r["step"]
+                ).models
+                for r in reports
+            )
+        ) - {"current_student"}
+        if set(frozen) != expected_frozen or any(
+            not b.get("frozen_verifications") for b in batches if not b["validate"] and expected_frozen
+        ):
+            raise ValueError("The requested complete frozen-parameter verification is missing")
     if not evaluations or any(b["step"] != steps for b in evaluations):
         raise ValueError("Native acceptance requires final-only evaluation")
     if any(any(i[0] != "current_student" or i[2] != steps for i in b["identities"]) for b in evaluations):
@@ -95,7 +126,10 @@ def audit(run, output, steps, *, require_full=False):
         telemetry = list(csv.DictReader(stream))
     peaks = {str(i): max(int(r["used_mib"]) for r in telemetry if int(r["gpu"]) == i) for i in range(4)}
     result = {
-        "scope": "Real four-GPU trainer acceptance; short caps do not establish math accuracy",
+        "scope": f"Real {gpu_count}-GPU trainer acceptance; short caps do not establish math accuracy",
+        "trainer_gpu_count": gpu_count,
+        "resource_note": resource_note,
+        "frozen_parameter_digests": {role: next(iter(values)) for role, values in frozen.items()},
         "training": reports,
         "evaluation_responses": sum(b["metrics"]["source/response_count"] for b in evaluations),
         "final_student_version": steps,
@@ -116,8 +150,9 @@ def main():
     parser.add_argument("--output", type=Path, required=True)
     parser.add_argument("--steps", type=int, default=2)
     parser.add_argument("--full", action="store_true")
+    parser.add_argument("--resource-note", help="Describe known concurrent GPU load without attributing it to this run")
     args = parser.parse_args()
-    result = audit(args.run, args.output, args.steps, require_full=args.full)
+    result = audit(args.run, args.output, args.steps, require_full=args.full, resource_note=args.resource_note)
     print(
         json.dumps(
             {

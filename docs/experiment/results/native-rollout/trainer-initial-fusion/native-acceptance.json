@@ -1,0 +1,94 @@
+{
+  "scope": "Real 4-GPU trainer acceptance; short caps do not establish math accuracy",
+  "trainer_gpu_count": 4,
+  "resource_note": null,
+  "frozen_parameter_digests": {
+    "teacher": "d2b8590c5fbe30c911a23ba4dec1dda4ee1a9154ea78a85cf565b62ee888d7e9",
+    "initial_student": "207eb42c211107fe0abf4af27c9329f846bc4770e5a040cb2693babb158472f1"
+  },
+  "training": [
+    {
+      "step": 1,
+      "responses": 8,
+      "response_tokens": 512,
+      "generation_identities": [
+        [
+          "initial_student",
+          "/mnt/tidalfs-bdsz01/dataset/llm_dataset/zkn_data/fht_data/models/DeepSeek-R1-Distill-Qwen-1.5B",
+          "2fc42a962d3f6f5281e99686ab9a5ae32c8cb9529c8e3fd07709c5c056613f48"
+        ],
+        [
+          "teacher",
+          "/mnt/tidalfs-bdsz01/dataset/llm_dataset/zkn_data/fht_data/models/JustRL-DeepSeek-1.5B",
+          "2736b59eeb53f416088992a3d7ecb3376274c74e685c358214360072395631f0"
+        ]
+      ],
+      "trace_sha256": "721f94c860fa34a6a77b98203482e5b85e40f9c26fcdf91058d361687503fec8"
+    },
+    {
+      "step": 2,
+      "responses": 8,
+      "response_tokens": 512,
+      "generation_identities": [
+        [
+          "initial_student",
+          "/mnt/tidalfs-bdsz01/dataset/llm_dataset/zkn_data/fht_data/models/DeepSeek-R1-Distill-Qwen-1.5B",
+          "2fc42a962d3f6f5281e99686ab9a5ae32c8cb9529c8e3fd07709c5c056613f48"
+        ],
+        [
+          "teacher",
+          "/mnt/tidalfs-bdsz01/dataset/llm_dataset/zkn_data/fht_data/models/JustRL-DeepSeek-1.5B",
+          "2736b59eeb53f416088992a3d7ecb3376274c74e685c358214360072395631f0"
+        ]
+      ],
+      "trace_sha256": "bc1a34ee42733983b342e35c3da8e9008a627fdacda55a25f94b21f2b4b3ad75"
+    }
+  ],
+  "evaluation_responses": 96,
+  "final_student_version": 2,
+  "evaluation_model_identities": [
+    [
+      "current_student",
+      "/mnt/tidalfs-bdsz01/dataset/llm_dataset/zkn_data/fht_data/models/DeepSeek-R1-Distill-Qwen-1.5B",
+      2
+    ]
+  ],
+  "whole_card_peak_mib": {
+    "0": 20407,
+    "1": 20403,
+    "2": 20399,
+    "3": 20399
+  },
+  "status": {
+    "state": "finished",
+    "exit_code": 0,
+    "elapsed_s": 283.39649295806885,
+    "gpu_after": [
+      [0, 1, 0],
+      [1, 1, 0],
+      [2, 1, 0],
+      [3, 1, 0]
+    ],
+    "source_manifest": "/mnt/tidalfs-bdsz01/dataset/llm_dataset/zkn_data/fht_data/OPD-State/runs/native-rollout-implementation/trainer-initial-fusion-four-v1/source-manifest.json"
+  },
+  "native_manifest_sha256": "79b98e18a1f80791afecd7d356c915f11be3c4a3a05252519815500c81971895",
+  "math_summary": {
+    "run_name": "trainer-initial-fusion-four-v1",
+    "run_directory": "/mnt/tidalfs-bdsz01/dataset/llm_dataset/zkn_data/fht_data/OPD-State/runs/native-rollout-implementation/trainer-initial-fusion-four-v1",
+    "source_commit": "248f9fcdb6fd3ddb0cbf16e49869f22ea9d3ecdf",
+    "source_manifest_sha256": "12f7e82ccd7458f4eb626a62189f11ef069f02214e7ecb07960fde7bb1fbc098",
+    "source_identity": "runtime_snapshot",
+    "training_steps": 2,
+    "samples_per_question": 16,
+    "full_benchmarks": false,
+    "checkpoints_saved": false,
+    "wandb_url": null,
+    "training_log_sha256": "e6518220a43b2cf7ab56a9eb3106551d8b97bbdc2aa5eaaff477ff060e3f36ce",
+    "training_log_observed_bytes": 222126,
+    "collection_scope": "final_validation",
+    "final_validation_marker_verified": true,
+    "collector_source_sha256": "d55fdb5753b7557a445c8584830f41fdbb3ca450ae53fa888791f2cdf81899fb",
+    "validation_steps": [2]
+  },
+  "collector_source_sha256": "48f150431e53eb6e0335b1b310fab8067ddf7c8725f374976d008de9f4b8ecaf"
+}

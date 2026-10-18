@@ -20,7 +20,7 @@ Status: proposed
 
 可变选择包括单引擎换权重/双引擎驻留、副本布局、批量分组与流水化、CUDA Graph 和后续 speculative fusion。验证原型保持已归档训练的源码和实验条件，也不以独立生成检查冒充完整 trainer 集成通过；真实训练热更新和两步端到端验收仍是正式接入前的独立条件。
 
-正式 trainer 的可选原生路径已接入协调器，三种单模型来源均完成四卡两步训练与最终短验证；分段、batch 与 fusion 训练仍需分别验收。初始审阅基线为 `d17d6c6`，范围是当前 math 的 FSDP、vLLM/HF fusion、权重同步、teacher 评分与验证执行链，涉及 32 个相关文件；另核对安装环境的 vLLM 0.10.0 V1 模型注册、采样、键值缓存（KV cache）与 worker 扩展接口。[代码核验清单](../../../../docs/experiment/results/2026-10-18-rollout-refactor-code-audit.json)保存范围、哈希与源码观察。方案优先使用 vLLM 原生执行；正式实验保留各自固定的源码快照。后续流程图描述目标算法和接入方式，具体实现状态以“实施进展”与对应验收证据为准。
+正式 trainer 已接入可选原生路径。三种单模型、四种分段方向、两种 batch 混合与两种 fusion 均已有四卡两步和最终短验证证据；分段/batch 使用固定的 4994d2b，fusion 使用后续运行源码快照。统一训练/验证引擎后的完整质量对照、CUDA Graph 与原生排空仍待验收。初始审阅基线为 `d17d6c6`，范围是当前 math 的 FSDP、vLLM/HF fusion、权重同步、teacher 评分与验证执行链，涉及 32 个相关文件；另核对安装环境的 vLLM 0.10.0 V1 模型注册、采样、键值缓存（KV cache）与 worker 扩展接口。[代码核验清单](../../../../docs/experiment/results/2026-10-18-rollout-refactor-code-audit.json)保存范围、哈希与源码观察。方案优先使用 vLLM 原生执行；正式实验保留各自固定的源码快照。后续流程图描述目标算法和接入方式，具体实现状态以“实施进展”与对应验收证据为准。
 
 ### 实施进展
 
@@ -39,6 +39,37 @@ Status: proposed
 [teacher-fresh 四卡接入](../../../../docs/experiment/results/native-rollout/trainer-teacher/native-acceptance.json)随后通过：训练始终使用固定 q，无 actor→生成权重同步，最终验证仍是更新后的 student 版本 2。独立数值检查也已验证[native 双 Qwen2 模型](../../../../verl/verl/workers/rollout/fusion/vllm_model.py)：λ=0/0.5/1 的两条短 prefix 在完整有效词表上与 HF 参考逐值相同，paired 有 56 个独立 KV 区域，端点有 28 个，sleep/wake 后一致；见[数值证据](../../../../docs/experiment/results/native-rollout/fusion-numerics/receipt.json)。该检查每条只生成一个 token，连续 decode、actor 热更新、graph 与 fusion trainer 尚待完成，不能据此开放正式 fusion 训练。
 
 [initial-student 四卡接入](../../../../docs/experiment/results/native-rollout/trainer-initial/native-acceptance.json)也已通过：生成身份保持为固定 p0，两步重新采样，actor 正常更新，验证仍是最终 student 版本 2。分段和简单 batch 的独立矩阵固定使用 4994d2b 源码，逐项成功后才继续，任意失败均保留现场；它们不复用正在修改的训练代码。
+
+### 训练与验证引擎的实现边界
+
+模型池将验证放在独立的纯 current-student 引擎中，训练 current 也使用训练专用副本。单模型、分段、batch 与 fusion 的训练引擎统一采用 prompt+response 的上下文和共同 token/batch 设置；训练来源共享一个总显存预算，最终验证始终使用完整的验证预算。该布局增加冷启动副本，消除了“current 使用长验证上下文、固定模型使用短训练上下文”和不同策略验证预算不同的混杂。
+
+actor 的 FSDP 权重流在每次导出前显式选择 sleeping current 接收端，核对角色、初始化路径、运行命名空间、用途与 frozen companion。fusion 只将原始 HF 命名张量交给 base loader，teacher 不参加 actor 的 post-load 变换；initial fusion 的两套生成权重均拒绝 actor 写入。可选完整参数摘要用于 GPU 验收，graph 模式还核对参数地址；这些检查不能代替实际 graph/缓存测试。
+
+```mermaid
+flowchart TD
+    X["共同 prompt batch"] --> P["平面策略编译：single / fusion / switch / batch"]
+    A["FSDP 训练 student θ(u−1)"] --> R["显式选择 current 训练接收端并发布版本"]
+    R --> T["训练专用 vLLM 模型池<br/>共同上下文、采样与总显存预算"]
+    F["固定 initial student / teacher<br/>checkpoint 加载；拒绝 actor 覆盖"] --> T
+    P --> T
+    T --> Y["完整响应、全部 prefix、mask 与来源记录"]
+    Y --> S["当前 student 与固定 teacher 重新评分"]
+    S --> U["只更新训练 student：θ(u−1) → θ(u)"]
+    U --> A
+    U --> E["最终验证：同步 θ 到独立纯 student 引擎<br/>共同验证上下文与完整显存预算"]
+    E --> V["完整 math eval16；不保存 checkpoint"]
+```
+
+current 与 initial 的 λ=0.5 原生 fusion 均完成两步四卡更新和九十六条最终 student 响应，完整冻结参数摘要跨步骤/副本一致；见[current fusion](../../../../docs/experiment/results/native-rollout/trainer-current-fusion/native-acceptance.json)与[initial fusion](../../../../docs/experiment/results/native-rollout/trainer-initial-fusion/native-acceptance.json)。分段/batch 的六项矩阵也完成，包括 teacher 仅一条响应、其余三个推理副本无该来源请求的情况。一次并行调试导致 vLLM 显存探测失败，串行原参数重跑通过；共享负载结果不作独占速度证据。
+
+[连续解码检查](../../../../docs/experiment/results/native-rollout/fusion-decode-eager/receipt.json)覆盖 λ=0/0.5/1、两条 prompt 各八步和完整有效词表；最大跨后端 logits 差为 0.125、TV 为 0.027081，满足已定 BF16 界限。λ=0.5 的[CUDA Graph 检查](../../../../docs/experiment/results/native-rollout/fusion-decode-graph/receipt.json)实际捕获 114 个图，十六个 prefix 的完整 logits 与参考相同，sleep/wake 后内容、地址和输出一致；当前仍需真实训练热更新、原生 abort/drain、长响应性能和完整质量对照，Status 保持 proposed。
+
+### 完整 prompt 池与访问次数
+
+[完整题库生成器](../../../../data/prep/build_fresh_math_data.py)按实际 token IDs 去重，剔除所有答案冲突题，独立于训练步数和 batch 大小。DAPO 的 17,917 行在 1,024 token 上限下过滤 8 行，去重 662 条额外记录，再移除 12 个答案冲突的唯一 prompt，得到 17,235 题。真实 RLHFDataset 和随机 sampler 已核对该行数，batch 64 时每 epoch 269 批、末尾 19 行按现有 drop-last 规则省略；前五十批恰好消费 3,200 道不同题，后续 epoch 重新打乱全题库。
+
+访问次数现在按题目内容而不是原始行号累加，原始行 ID 另存。相同题目即使出现在不同数据行，也使用递增 visit 重新采样；验证响应计数与训练 visit 分离。正式运行可通过 `NATIVE_DATA_MANIFEST` 绑定数据、词表/模板、prompt 上限和文件哈希。新原生路径暂不提供无偏 top-k tail 所需的已核验行为分数，显式拒绝该组合；历史 `policy=null` 路径继续可用。
 
 ### 目标与算法含义
 

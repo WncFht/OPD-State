@@ -209,6 +209,9 @@ class RolloutConfig(BaseConfig):
     generation_role: str = "current_student"
     generation_fingerprint: Optional[str] = None
     generation_sync_namespace: str = ""
+    generation_fusion: Optional[dict] = None
+    generation_verify_frozen: bool = False
+    generation_purpose: str = "evaluation"
     preserve_source_weights: bool = False
 
     # Whether to enable full determinism for reproducibility.

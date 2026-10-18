@@ -15,11 +15,13 @@ from itertools import groupby
 import torch
 from torch import nn
 from transformers import AutoConfig
+from vllm.compilation.decorators import support_torch_compile
 from vllm.distributed import get_tensor_model_parallel_world_size
 from vllm.model_executor.model_loader.default_loader import DefaultModelLoader
 from vllm.model_executor.models.qwen2 import Qwen2ForCausalLM
 
 
+@support_torch_compile(dynamic_arg_dims={"input_ids": 0, "positions": 0})
 class NativeQwen2Fusion(nn.Module):
     packed_modules_mapping = Qwen2ForCausalLM.packed_modules_mapping
 

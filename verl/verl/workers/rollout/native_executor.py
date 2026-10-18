@@ -22,6 +22,7 @@ class Request:
     prompt_ids: tuple[int, ...]
     visit: int = 0
     sample: int = 0
+    row_id: str | None = None
 
     def __post_init__(self):
         if not isinstance(self.prompt_id, str) or not self.prompt_id:

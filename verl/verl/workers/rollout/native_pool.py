@@ -12,15 +12,19 @@ import copy
 from dataclasses import asdict
 
 from .native_executor import Completion
+from .policy import Fusion, parse_policy
 
 
 class NativeModelPool:
     def __init__(self, config, main_manager):
         self.config = config
-        self.replicas = {"current_student": main_manager.get_replicas()}
-        self.handles = {"current_student": main_manager.server_handles}
+        self.eval_slot = "eval:current_student"
+        self.replicas = {self.eval_slot: main_manager.get_replicas()}
+        self.handles = {self.eval_slot: main_manager.server_handles}
         self.awake = set()
         self.cold_start = {}
+        self.actor_slots = {"current_student", self.eval_slot}
+        self.fusion_config = None
 
     async def initialize(self):
         import time
@@ -34,49 +38,90 @@ class NativeModelPool:
         await self.sleep_all()
         rollout = self.config.actor_rollout_ref.rollout
         replica_cls = get_rollout_replica_class("vllm")
-        for role, descriptor in rollout.generation_models.items():
-            if role == "current_student":
-                continue
+        policy = parse_policy(OmegaConf.to_container(rollout.policy, resolve=True), int(rollout.response_length))
+        if isinstance(policy, Fusion):
+            teacher = rollout.generation_models.teacher
+            self.fusion_config = {
+                "teacher_path": teacher.path,
+                "teacher_fingerprint": teacher.fingerprint,
+                "teacher_weight": policy.teacher_weight,
+            }
+            slot = f"fusion:{policy.base}"
+            if policy.base == "current_student":
+                self.actor_slots.add(slot)
+            sources = [
+                (
+                    slot,
+                    policy.base,
+                    {
+                        "path": self.config.actor_rollout_ref.model.path,
+                        "fingerprint": None
+                        if policy.base == "current_student"
+                        else rollout.generation_models.initial_student.fingerprint,
+                        "memory_fraction": self.config.trainer.native_generation_memory_budget,
+                    },
+                )
+            ]
+        else:
+            sources = [(role, role, dict(d)) for role, d in rollout.generation_models.items()]
+            if "current_student" in self.config.trainer.native_required_models:
+                sources.insert(
+                    0,
+                    (
+                        "current_student",
+                        "current_student",
+                        {
+                            "path": self.config.actor_rollout_ref.model.path,
+                            "fingerprint": None,
+                            "memory_fraction": self.config.trainer.native_generation_memory_budget
+                            / len(self.config.trainer.native_required_models),
+                        },
+                    ),
+                )
+        for slot, role, descriptor in sources:
             start = time.perf_counter()
             rcfg = OmegaConf.create(OmegaConf.to_container(rollout, resolve=True))
             rcfg.generation_role = role
-            rcfg.generation_fingerprint = descriptor.fingerprint
-            rcfg.load_format = "auto"
-            rcfg.gpu_memory_utilization = descriptor.memory_fraction
+            rcfg.generation_purpose = "training"
+            rcfg.generation_fingerprint = descriptor["fingerprint"]
+            rcfg.generation_fusion = self.fusion_config
+            rcfg.preserve_source_weights = self.fusion_config is not None
+            rcfg.load_format = "dummy" if role == "current_student" and self.fusion_config is None else "auto"
+            rcfg.gpu_memory_utilization = descriptor["memory_fraction"]
             rcfg.max_model_len = int(rollout.prompt_length + rollout.response_length)
             rcfg.max_num_batched_tokens = min(int(rollout.max_num_batched_tokens), rcfg.max_model_len)
             mcfg = copy.deepcopy(self.config.actor_rollout_ref.model)
-            mcfg.path = descriptor.path
+            mcfg.path = descriptor["path"]
             # Bind the checkpoint config and canonical tokenizer independently.
             for key in ["local_path", "hf_config", "generation_config", "tokenizer", "processor"]:
                 if key in mcfg:
                     mcfg[key] = None
             if "hf_config_path" in mcfg:
-                mcfg.hf_config_path = descriptor.path
+                mcfg.hf_config_path = descriptor["path"]
             if "local_hf_config_path" in mcfg:
                 mcfg.local_hf_config_path = None
             if "tokenizer_path" in mcfg:
                 mcfg.tokenizer_path = self.config.actor_rollout_ref.model.path
 
-            async def launch(main, rcfg=rcfg, mcfg=mcfg, role=role):
+            async def launch(main, rcfg=rcfg, mcfg=mcfg, slot=slot):
                 replica = replica_cls(
                     replica_rank=main.replica_rank,
                     config=rcfg,
                     model_config=mcfg,
                     gpus_per_node=main.gpus_per_node,
-                    name_suffix=f"native_{role}",
+                    name_suffix=f"native_{slot.replace(':', '_')}",
                 )
                 # Reuse handles strictly for node/device placement, not weights.
-                replica.rollout_mode = RolloutMode.COLOCATED
+                replica.rollout_mode = RolloutMode.HYBRID if slot in self.actor_slots else RolloutMode.COLOCATED
                 replica.workers = list(main.workers)
                 await replica.launch_servers()
                 await replica.sleep()
                 return replica
 
-            replicas = await asyncio.gather(*(launch(main) for main in self.replicas["current_student"]))
-            self.replicas[role] = replicas
-            self.handles[role] = [r._server_handle for r in replicas]
-            self.cold_start[role] = time.perf_counter() - start
+            replicas = await asyncio.gather(*(launch(main) for main in self.replicas[self.eval_slot]))
+            self.replicas[slot] = replicas
+            self.handles[slot] = [r._server_handle for r in replicas]
+            self.cold_start[slot] = time.perf_counter() - start
 
     async def prepare(self, slots):
         unknown = set(slots) - self.handles.keys()
@@ -85,10 +130,25 @@ class NativeModelPool:
         # Current weights are woken by the checkpoint writer, not blindly here:
         # sleep2 discarded them and waking allocations alone is insufficient.
         for slot in slots:
-            if slot != "current_student" and slot not in self.awake:
+            if slot not in self.actor_slots and slot not in self.awake:
                 await asyncio.gather(*(r.wake_up() for r in self.replicas[slot]))
                 self.awake.add(slot)
             await asyncio.gather(*(h.reopen_native_generation.remote() for h in self.handles[slot]))
+
+    def describe(self):
+        return {
+            slot: {
+                "replicas": len(replicas),
+                "role": replicas[0].config.generation_role,
+                "purpose": replicas[0].config.generation_purpose,
+                "context_limit": replicas[0].config.max_model_len,
+                "max_num_batched_tokens": replicas[0].config.max_num_batched_tokens,
+                "max_num_seqs": replicas[0].config.max_num_seqs,
+                "gpu_memory_utilization": replicas[0].config.gpu_memory_utilization,
+                "cold_start_seconds": self.cold_start.get(slot),
+            }
+            for slot, replicas in self.replicas.items()
+        }
 
     async def sleep_all(self):
         async def one(replica):
@@ -109,17 +169,24 @@ class NativeModelPool:
 class NativeRayBackend:
     """One batch RPC per source/replica with shielded native completion futures."""
 
-    def __init__(self, pool, sampling_params):
+    def __init__(self, pool, sampling_params, *, validate=False):
         self.pool, self.sampling_params = pool, sampling_params
+        self.validate = validate
         self.pending = set()
+        self.verifications = []
 
     async def prepare_phase(self, stages):
-        await self.pool.prepare({stage.slot for stage, _ in stages})
+        await self.pool.prepare({self.slot(stage) for stage, _ in stages})
+
+    def slot(self, stage):
+        if self.validate:
+            if stage.models != ("current_student",):
+                raise ValueError("Evaluation must use the pure current student engine")
+            return self.pool.eval_slot
+        return stage.slot
 
     async def generate(self, stage, calls, refs):
-        if len(stage.models) != 1:
-            raise NotImplementedError("Native paired fusion has not been registered in this pool")
-        handles = self.pool.handles[stage.slot]
+        handles = self.pool.handles[self.slot(stage)]
         shards = [[] for _ in handles]
         for i, call in enumerate(calls):
             shards[i % len(handles)].append((i, call))
@@ -128,6 +195,8 @@ class NativeRayBackend:
             records = await ref
             if len(records) != len(rows):
                 raise RuntimeError("Native server changed replica request count")
+            if records and records[0].get("frozen_digests"):
+                self.verifications.append({"slot": stage.slot, "frozen_digests": records[0]["frozen_digests"]})
             return [
                 (
                     i,
@@ -135,10 +204,11 @@ class NativeRayBackend:
                         row["request_id"],
                         tuple(row["prompt_ids"]),
                         tuple(row["token_ids"]),
-                        (tuple(row["identity"]),),
+                        tuple(tuple(i) for i in row.get("identities", [row["identity"]])),
                         row["finish_reason"],
                         row["stop_reason"],
                         tuple(row["log_probs"]) if row["log_probs"] is not None else None,
+                        row.get("teacher_weight"),
                     ),
                 )
                 for (i, _), row in zip(rows, records, strict=True)
@@ -148,7 +218,14 @@ class NativeRayBackend:
         for handle, rows in zip(handles, shards, strict=True):
             if rows:
                 ref = handle.generate_native_batch.remote(
-                    [asdict(call) for _, call in rows], refs[0].identity, dict(self.sampling_params)
+                    [asdict(call) for _, call in rows],
+                    refs[0].identity,
+                    dict(self.sampling_params),
+                    **(
+                        {"expected_companion": refs[1].identity, "teacher_weight": stage.teacher_weight}
+                        if len(stage.models) == 2
+                        else {}
+                    ),
                 )
                 task = asyncio.create_task(fetch(ref, rows))
                 self.pending.add(task)

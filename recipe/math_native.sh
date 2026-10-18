@@ -8,6 +8,11 @@ case "$SOURCE" in
     student_fresh) POLICY='{kind:single,model:current_student}' ;;
     initial_student_fresh) POLICY='{kind:single,model:initial_student}' ;;
     teacher_fresh) POLICY='{kind:single,model:teacher}' ;;
+    student_teacher_fusion|initial_teacher_fusion)
+        BASE=current_student
+        [[ "$SOURCE" != initial_teacher_fusion ]] || BASE=initial_student
+        POLICY="{kind:logit_fusion,base:${BASE},teacher_weight:${TEACHER_WEIGHT:-0.5}}"
+        ;;
     teacher_current|current_teacher|teacher_initial|initial_teacher)
         case "$SOURCE" in
             teacher_current) FIRST=teacher; SECOND=current_student ;;
@@ -30,11 +35,16 @@ export STEPS=${STEPS:-50}
 export EXPERIMENT_NAME=${EXPERIMENT_NAME:-math-native-${SOURCE}-${STEPS}steps-$(TZ=Asia/Shanghai date +%Y%m%d-%H%M%S)}
 export OPD_ROOT=${OPD_ROOT:-${ROOT}/runs/native-rollout/${EXPERIMENT_NAME}}
 export WANDB_JOB_TYPE=native_rollout WANDB_RUN_GROUP=math-native-rollout-sources
+if [[ -n ${NATIVE_DATA_MANIFEST:-} ]]; then
+    NATIVE_DATA_MANIFEST=$(realpath "$NATIVE_DATA_MANIFEST")
+    export TRAIN_FILES=${TRAIN_FILES:-[$(dirname "$NATIVE_DATA_MANIFEST")/ordered.parquet]}
+    set -- "++trainer.native_data_manifest=${NATIVE_DATA_MANIFEST}" "$@"
+fi
 exec bash "$ROOT/recipe/math_baseline.sh" \
     "actor_rollout_ref.rollout.policy=${POLICY}" \
     actor_rollout_ref.rollout.generation_backend=vllm_native \
     actor_rollout_ref.rollout.collection.mode=fresh \
     ++actor_rollout_ref.rollout.logit_fusion.enabled=False \
     actor_rollout_ref.rollout.multi_turn.enable=False \
-    algorithm.rollout_correction=null data.shuffle=False \
+    algorithm.rollout_correction=null data.shuffle=True \
     "$@"

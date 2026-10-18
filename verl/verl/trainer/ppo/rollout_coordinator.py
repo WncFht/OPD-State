@@ -24,6 +24,8 @@ def prepare_native_config(config, tokenizer, processor):
     rollout = config.actor_rollout_ref.rollout
     if rollout.get("policy") is None:
         return False
+    if rollout.get("generation_fusion") is not None:
+        raise ValueError("generation_fusion is reserved for the model pool; configure policy.kind=logit_fusion")
     policy = OmegaConf.to_container(rollout.policy, resolve=True)
     parsed = parse_policy(policy, int(rollout.response_length))
     plan = compile_policy(
@@ -33,8 +35,6 @@ def prepare_native_config(config, tokenizer, processor):
         seed=int(rollout.seed),
         batch_id=0,
     )
-    if isinstance(parsed, Fusion):
-        raise NotImplementedError("Native paired-model registration is the next implementation stage")
     if rollout.name != "vllm" or rollout.get("generation_backend", "vllm_native") != "vllm_native":
         raise ValueError("Flat native sources require vllm_native; no HF fallback is supported")
     if processor is not None or rollout.agent.default_agent_loop != "single_turn_agent" or rollout.multi_turn.enable:
@@ -77,6 +77,8 @@ def prepare_native_config(config, tokenizer, processor):
         raise ValueError("Native source visit counters currently require resume_mode=disable")
     if config.distillation.fsdp_teacher.get("unbiased_topk_tail", False) and plan.models != {"current_student"}:
         raise ValueError("Unbiased top-k tail requires fresh current-student actions")
+    if config.distillation.fsdp_teacher.get("unbiased_topk_tail", False):
+        raise ValueError("Native policies lack verified behavior scores for unbiased top-k tail; use policy=null")
     if rollout.checkpoint_engine.backend != "naive":
         raise ValueError("Native source placement currently uses the existing naive IPC checkpoint writer")
 
@@ -99,10 +101,25 @@ def prepare_native_config(config, tokenizer, processor):
         "rope_theta",
         "rope_scaling",
         "tie_word_embeddings",
+        "hidden_act",
+        "rms_norm_eps",
     ]
     descriptors = {}
+    prepared_manifest = config.trainer.get("native_data_manifest")
+    if prepared_manifest:
+        from verl.trainer.ppo.fixed_rollout import tokenizer_signature
+
+        prepared = json.loads(Path(prepared_manifest).read_text())
+        if (
+            len(config.data.train_files) != 1
+            or digest_file(config.data.train_files[0]) != prepared["ordered_parquet_sha256"]
+            or tokenizer_signature(tokenizer) != prepared["tokenizer_signature"]
+            or int(rollout.prompt_length) != prepared["prompt_cap"]
+            or canonical(config.data.get("apply_chat_template_kwargs", {})) != prepared["apply_chat_template_kwargs"]
+        ):
+            raise ValueError("Native prepared prompt pool does not match the training data/tokenizer/template/cap")
     budget = float(rollout.gpu_memory_utilization)
-    fraction = budget / max(len(plan.models), 1)
+    fraction = budget if isinstance(parsed, Fusion) else budget / max(len(plan.models), 1)
     for role in sorted(plan.models - {"current_student"}):
         c = json.loads((Path(paths[role]) / "config.json").read_text())
         if any(c.get(k) != base_config.get(k) for k in fields):
@@ -122,7 +139,8 @@ def prepare_native_config(config, tokenizer, processor):
         rollout.generation_sync_namespace = uuid.uuid4().hex
         # The eval-only current engine may use the full budget when it is never
         # concurrent with the fixed training sources.
-        rollout.gpu_memory_utilization = fraction if "current_student" in plan.models else budget
+        rollout.gpu_memory_utilization = budget
+        rollout.generation_purpose = "evaluation"
         config.trainer.native_generation_memory_budget = budget
         config.trainer.native_required_models = sorted(plan.models)
     return True
@@ -144,6 +162,9 @@ class RolloutCoordinator:
         self.rollout = config.actor_rollout_ref.rollout
         self.policy = OmegaConf.to_container(self.rollout.policy, resolve=True)
         self.uses_actor = "current_student" in config.trainer.native_required_models
+        parsed = parse_policy(self.policy, int(self.rollout.response_length))
+        self.fusion = parsed if isinstance(parsed, Fusion) else None
+        self.train_slot = f"fusion:{parsed.base}" if self.fusion is not None else "current_student"
         self.current_path = str(Path(config.actor_rollout_ref.model.path).resolve())
         self.version = None
         self.visits = defaultdict(int)
@@ -162,6 +183,12 @@ class RolloutCoordinator:
             "seed": int(self.rollout.seed),
             "eos_token_id": tokenizer.eos_token_id,
             "pad_token_id": tokenizer.pad_token_id,
+            "trainer_gpu_count": int(config.trainer.n_gpus_per_node) * int(config.trainer.nnodes),
+            "verify_frozen_parameters": bool(self.rollout.generation_verify_frozen),
+            "engines": model_pool.describe() if model_pool is not None and hasattr(model_pool, "describe") else {},
+            "prepared_data_manifest_sha256": digest_file(config.trainer.native_data_manifest)
+            if config.trainer.get("native_data_manifest")
+            else None,
         }
         (self.trace_dir / "manifest.json").write_text(json.dumps(manifest, indent=2) + "\n")
 
@@ -176,10 +203,29 @@ class RolloutCoordinator:
             return {"source/rollout_sync": 0.0}
         return self.sync_current(global_steps)
 
-    def sync_current(self, version):
+    def sync_current(self, version, *, for_eval=False):
+        slot = self.pool.eval_slot if for_eval else self.train_slot
+        import ray
+
+        expected_fusion = canonical(self.pool.fusion_config) if self.fusion is not None and not for_eval else None
+        ray.get(
+            self.checkpoint.actor_wg.set_native_rollout_target(
+                self.pool.handles[slot], expected_fusion, "evaluation" if for_eval else "training"
+            )
+        )
         self.checkpoint.update_weights(version)
         self.version = int(version)
-        self.pool.awake.add("current_student")
+        self.pool.awake.add(slot)
+        if self.fusion is not None:
+
+            async def statuses():
+                return await asyncio.gather(*(h.native_source_status.remote() for h in self.pool.handles[slot]))
+
+            published = asyncio.run(statuses())
+            if any(s["identity"] != ("current_student", self.current_path, int(version)) for s in published):
+                raise RuntimeError("Actor publication did not reach the selected native engines")
+            with (self.trace_dir / "publications.jsonl").open("a") as stream:
+                stream.write(json.dumps({"version": int(version), "slot": slot, "sources": published}) + "\n")
         return {"source/rollout_sync": 1.0}
 
     def sleep_replicas(self):
@@ -190,7 +236,7 @@ class RolloutCoordinator:
 
     def begin_eval(self, version):
         self.sleep_replicas()
-        self.sync_current(version)
+        self.sync_current(version, for_eval=True)
         self.eval_samples.clear()
         self.eval_version = version
 
@@ -225,10 +271,10 @@ class RolloutCoordinator:
                     if explicit is not None
                     else str(batch.non_tensor_batch.get("index", [""] * len(batch))[i])
                 )
-                key = f"train:{index}:{stable_id}"
+                key = f"train:{stable_id}"
                 visit = self.visits[key]
                 self.visits[key] += 1
-                request = Request(key, tuple(ids), visit=visit)
+                request = Request(key, tuple(ids), visit=visit, row_id=index)
             requests.append(request)
         return requests
 
@@ -259,7 +305,7 @@ class RolloutCoordinator:
             "top_k": self.rollout.val_kwargs.top_k if validate else self.rollout.top_k,
             "logprobs": False,
         }
-        backend = NativeRayBackend(self.pool, sampling)
+        backend = NativeRayBackend(self.pool, sampling, validate=validate)
         contexts = {
             role: int(self.rollout.max_model_len)
             if role == "current_student"
@@ -325,6 +371,7 @@ class RolloutCoordinator:
             "identities": sorted({i for r in trajectories for s in r.segments for i in s.identities}),
             "metrics": metrics,
             "generation": timing,
+            "frozen_verifications": backend.verifications,
         }
         with (self.trace_dir / "batches.jsonl").open("a") as stream:
             stream.write(json.dumps(audit, separators=(",", ":")) + "\n")

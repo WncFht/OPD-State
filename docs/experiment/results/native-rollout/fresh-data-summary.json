@@ -1,0 +1,42 @@
+{
+  "schema": 1,
+  "collection": "fresh",
+  "conflict_policy": "exclude",
+  "ordering": "source order; training sampler owns seeded epoch permutations",
+  "identity": "SHA-256 of canonical rendered token IDs; no training-step or batch-size cap",
+  "original_rows": 17917,
+  "excluded_overlong": 8,
+  "duplicates_removed": 662,
+  "conflicting_prompts_removed": 12,
+  "conflicting_prompt_ids": [
+    "24e5f103ed49d9f7ba90968ff9b0e25e7db1da176bd497e7c29dbcbde9b2aa0f",
+    "305aaeb2b631b63a465e558a063ccb6a116aa0bf8baff9b6339a31ea099b195f",
+    "40fbf92fcaf53c19c0514b3b329b297e1259e3aa0167228c3374a75284f574a5",
+    "514c1e88c7249abf8b0080eddf0132cdd24b2683cd93577feedcd0fd8f568b2b",
+    "547b9647355abda9c73a5516b3806ac4d70acddc5d10f9797c2efe03944d6bd5",
+    "58bf7b299be968dbe07e53ad52ec406797648306a985df1ac5bc643b61d3fff1",
+    "5b6ba15930c5971d4186a088ed2fa85644e3b8e1052a6940c77f85f95ee7cead",
+    "b9717d6ff90497c9c6625c2168beb87adea1d582a2da1d8cdf3cee5c16e0e941",
+    "c5fbef0b420cfad7a1b51947aaae6205b32109b32d705cdacf2cd30b7b8e0c68",
+    "cd5aa842225ef660189e950f98810690d6e8cc82ee34581841b46b17dc44265a",
+    "d3bd510887ce1227790173d4bc8dc486f6965cb3982596eb3cecd21fb6c860c6",
+    "eb69017a1bfabe18ae0bac0f360dc465027503ada55d510d17ce5427ae5f0385"
+  ],
+  "unique_prompts": 17235,
+  "prompt_cap": 1024,
+  "apply_chat_template_kwargs": {},
+  "source_files": {
+    "/mnt/tidalfs-bdsz01/dataset/llm_dataset/zkn_data/fht_data/MD-OPD/data/math/DAPO/train.parquet": "c69f0fb5cb09b642b77dc3e78615e1ba113388ca3fd5aa8c451c782ff1508719"
+  },
+  "ordered_parquet_sha256": "e0e309312b17a7b0e3e39af09543f6200d873e715fa0f341e11548e6b7fef27b",
+  "prompts_jsonl_sha256": "87f38b721da6896343e040017427c090dd5e4209266a74c8e3687d6a8d2a0620",
+  "builder_source_sha256": "81cb2acec065fdd3dc48014307a8b94704266c30fe12f125ce5ec2629d142975",
+  "vocabulary_and_template_sha256": "ac73ad8e421aab1d9fff928ea3b8c8bdf30c614ffa6aad6c821dae5013e68e7c",
+  "loader_audit": {
+    "dataset_rows": 17235,
+    "batches_per_epoch_at_64": 269,
+    "unused_rows_per_epoch": 19,
+    "first_50_batches_unique_questions": 3200,
+    "manifest_sha256": "1b7df20867351f99c10ffa7cb8c4ebf5921f2552abdad7efa755a80763222e96"
+  }
+}

@@ -1,0 +1,195 @@
+{
+  "teacher_weight": 0.0,
+  "native_paired_backbones": false,
+  "vocab_size": 151665,
+  "prompt_ids": [
+    [
+      151646, 151644, 3838, 374, 220, 22, 3039, 220, 23, 30, 6928, 697, 32711,
+      13, 151645, 151648, 198
+    ],
+    [
+      151646, 151644, 50, 3948, 856, 61, 17, 481, 220, 20, 87, 488, 220, 21,
+      284, 220, 15, 13, 151645, 151648, 198
+    ]
+  ],
+  "response_ids": [
+    [5338, 11, 358, 15282, 429, 279, 3491, 374],
+    [1249, 11625, 279, 79151, 23606, 17767, 856, 61]
+  ],
+  "tokens_per_request_cap": 8,
+  "cuda_graph_requested": false,
+  "max_abs_logit_error": [
+    0.0, 0.125, 0.125, 0.125, 0.125, 0.125, 0.125, 0.125, 0.0, 0.0, 0.0, 0.0,
+    0.0, 0.0, 0.0, 0.0
+  ],
+  "total_variation": [
+    0.0, 5.839122968609445e-5, 0.004740341100841761, 0.02594422549009323,
+    0.004763417411595583, 0.027081239968538284, 0.0032562471460551023,
+    7.940531213534996e-5, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0
+  ],
+  "sleep_wake_logits_bitwise_equal": true,
+  "native_sampler": true,
+  "native_layout": {
+    "model_class": "Qwen2ForCausalLM",
+    "kv_regions": [
+      {
+        "layer": "model.layers.0.self_attn.attn",
+        "pointer": 17179869184,
+        "bytes": 322355200
+      },
+      {
+        "layer": "model.layers.1.self_attn.attn",
+        "pointer": 17515413504,
+        "bytes": 322355200
+      },
+      {
+        "layer": "model.layers.2.self_attn.attn",
+        "pointer": 17850957824,
+        "bytes": 322355200
+      },
+      {
+        "layer": "model.layers.3.self_attn.attn",
+        "pointer": 18186502144,
+        "bytes": 322355200
+      },
+      {
+        "layer": "model.layers.4.self_attn.attn",
+        "pointer": 18522046464,
+        "bytes": 322355200
+      },
+      {
+        "layer": "model.layers.5.self_attn.attn",
+        "pointer": 18857590784,
+        "bytes": 322355200
+      },
+      {
+        "layer": "model.layers.6.self_attn.attn",
+        "pointer": 19193135104,
+        "bytes": 322355200
+      },
+      {
+        "layer": "model.layers.7.self_attn.attn",
+        "pointer": 19528679424,
+        "bytes": 322355200
+      },
+      {
+        "layer": "model.layers.8.self_attn.attn",
+        "pointer": 19864223744,
+        "bytes": 322355200
+      },
+      {
+        "layer": "model.layers.9.self_attn.attn",
+        "pointer": 20199768064,
+        "bytes": 322355200
+      },
+      {
+        "layer": "model.layers.10.self_attn.attn",
+        "pointer": 20535312384,
+        "bytes": 322355200
+      },
+      {
+        "layer": "model.layers.11.self_attn.attn",
+        "pointer": 20870856704,
+        "bytes": 322355200
+      },
+      {
+        "layer": "model.layers.12.self_attn.attn",
+        "pointer": 21206401024,
+        "bytes": 322355200
+      },
+      {
+        "layer": "model.layers.13.self_attn.attn",
+        "pointer": 21541945344,
+        "bytes": 322355200
+      },
+      {
+        "layer": "model.layers.14.self_attn.attn",
+        "pointer": 21877489664,
+        "bytes": 322355200
+      },
+      {
+        "layer": "model.layers.15.self_attn.attn",
+        "pointer": 22213033984,
+        "bytes": 322355200
+      },
+      {
+        "layer": "model.layers.16.self_attn.attn",
+        "pointer": 22548578304,
+        "bytes": 322355200
+      },
+      {
+        "layer": "model.layers.17.self_attn.attn",
+        "pointer": 22884122624,
+        "bytes": 322355200
+      },
+      {
+        "layer": "model.layers.18.self_attn.attn",
+        "pointer": 23219666944,
+        "bytes": 322355200
+      },
+      {
+        "layer": "model.layers.19.self_attn.attn",
+        "pointer": 23555211264,
+        "bytes": 322355200
+      },
+      {
+        "layer": "model.layers.20.self_attn.attn",
+        "pointer": 23890755584,
+        "bytes": 322355200
+      },
+      {
+        "layer": "model.layers.21.self_attn.attn",
+        "pointer": 24226299904,
+        "bytes": 322355200
+      },
+      {
+        "layer": "model.layers.22.self_attn.attn",
+        "pointer": 24561844224,
+        "bytes": 322355200
+      },
+      {
+        "layer": "model.layers.23.self_attn.attn",
+        "pointer": 24897388544,
+        "bytes": 322355200
+      },
+      {
+        "layer": "model.layers.24.self_attn.attn",
+        "pointer": 25232932864,
+        "bytes": 322355200
+      },
+      {
+        "layer": "model.layers.25.self_attn.attn",
+        "pointer": 25568477184,
+        "bytes": 322355200
+      },
+      {
+        "layer": "model.layers.26.self_attn.attn",
+        "pointer": 25904021504,
+        "bytes": 322355200
+      },
+      {
+        "layer": "model.layers.27.self_attn.attn",
+        "pointer": 26239565824,
+        "bytes": 322355200
+      }
+    ],
+    "parameter_tensors": 199,
+    "parameter_bytes": 3554176000,
+    "cuda_graph_enabled": false,
+    "cuda_graphs_captured": 0,
+    "compiled_code_counts": {}
+  },
+  "native_source": {
+    "role": "initial_student",
+    "path": "/mnt/tidalfs-bdsz01/dataset/llm_dataset/zkn_data/fht_data/models/DeepSeek-R1-Distill-Qwen-1.5B",
+    "parameter_count": 339,
+    "fusion": null,
+    "companion": null,
+    "frozen_digests": {
+      "initial_student": "207eb42c211107fe0abf4af27c9329f846bc4770e5a040cb2693babb158472f1"
+    },
+    "parameter_addresses": null
+  },
+  "reference": "HF BF16 FlashAttention2, same token prefix and valid vocabulary",
+  "source_sha256": "3f7bb816e2cd65af386a5ff23118e7301abaee0c6a5bad77ef17ad2a5e9e8b08"
+}
