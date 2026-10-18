@@ -1,0 +1,51 @@
+{
+  "plotter_sha256": "5e71d410b120e1f4d927a13d4dd84f75702439ba912d9db9704d4318d1dd6266",
+  "style_sha256": "a9670b726e4890688bad9bec5cf5f39dcc6a1604ceebff8043c26cee95726581",
+  "matplotlib_version": "3.10.7",
+  "sources": {
+    "docs/experiment/results/2026-10-18-math-student-online-50steps-eval16-20261018-044021/training-1-50.csv": "395d2cedc2c4cc89c34ff6c1aefd6b4900a2913b6e6ff08b103eda4eaab9fdf7",
+    "docs/experiment/results/2026-10-18-math-student-online-50steps-eval16-20261018-044021/validation-step50.json": "4e7935d860ea4ef5560a3f7bd3a8ddcdccfa91f03476bb3211ae2cfb09ee2cd0",
+    "docs/experiment/results/2026-10-18-math-student-online-50steps-eval16-20261018-044021/questions-step50.csv": "8ec21fffce0e713e1399d381073446c1d2d6b3ee80624f5a192b67c18b2d64ac",
+    "docs/experiment/results/2026-10-18-math-teacher-cache-50steps-eval16-20261018-005033/training-1-50.csv": "7f4255f5199810257831d033c91ef84b950c0b2c12f115e68921255d31646fdb",
+    "docs/experiment/results/2026-10-18-math-teacher-cache-50steps-eval16-20261018-005033/validation-step50.json": "56d2c6f184065626362e6f406c81cd5624f17f4022f864730667805e7b0a06e2",
+    "docs/experiment/results/2026-10-18-math-teacher-cache-50steps-eval16-20261018-005033/questions-step50.csv": "a2a760bf5d70a2131a31733301565bce4e64301461a7f60534673ff7777973e8",
+    "docs/experiment/results/2026-10-18-math-semi-opd-50steps-eval16-20261018-025524/training-1-50.csv": "78269269c3947c0b8cd3977988409c404d6cb8646ae1a8febb294950fa42de82",
+    "docs/experiment/results/2026-10-18-math-semi-opd-50steps-eval16-20261018-025524/validation-step50.json": "659bd1f03f2113fddbef926c17eb6264ae13e9ff359a383928bd71850c0fd31e",
+    "docs/experiment/results/2026-10-18-math-semi-opd-50steps-eval16-20261018-025524/questions-step50.csv": "e761691260a2127f36aded359655dcd44fa0c97b35cb495fcae65e28314fdecd",
+    "docs/experiment/results/2026-10-18-math-fusion-lambda05-50steps-eval16-20261018-065746/training-1-50.csv": "77feb07fe4e5630cada047225cdca22c3a7e14e6ca5fd2e40a777e4a791be7ba",
+    "docs/experiment/results/2026-10-18-math-fusion-lambda05-50steps-eval16-20261018-065746/validation-step50.json": "47e444612ffe921c962f0c2a3889999bcc4e7d28543609a71f05174929f5e5b7",
+    "docs/experiment/results/2026-10-18-math-fusion-lambda05-50steps-eval16-20261018-065746/questions-step50.csv": "d596520e40a1dbba60018caf6b58e5cf6980830952e9c745a3353667335cb025",
+    "docs/experiment/results/reference-accuracy.json": "be9a1e7a45994edd356ecab4bad630f85ed29ec38ae4271a6e50dec23c40252f"
+  },
+  "colors": {
+    "Online student": "#4F8FA5",
+    "Teacher rollout": "#EE995B",
+    "Semi-OPD": "#C95B5B",
+    "Fusion 0.5": "#8A74B5"
+  },
+  "training_rows": 200,
+  "accuracy_rows": 16,
+  "audit": {
+    "training-optimization": [],
+    "training-rollouts": [],
+    "accuracy-step50": [],
+    "pass-at-k": []
+  },
+  "outputs": {
+    "accuracy-plotted.csv": "bb7f3589d8539bb96254d5a9fc77569c3351f3b569c9da65642ec5f9bfa80a5a",
+    "accuracy-step50.pdf": "a16da68af84e7be415211ac99134c17012fca922c56c1d474d23890c35114cea",
+    "accuracy-step50.png": "eddab57a1d1c5ce97679a7150f8e60148839b453ee5bba29cadb4be7f89bcc7d",
+    "pass-at-k.pdf": "1404bbeb63cfe48a714dd18b9e7dd6eb1142af5323ace177e981c67d22c4ee44",
+    "pass-at-k.png": "8e003b8abd3712b9e2efa6ac5fb336f23db37e88c43f21852628947f069d2f10",
+    "training-optimization.pdf": "f2491f938f6360145d22291c74c81b2ae21bf6e71f418e1464bce4562a0bcdce",
+    "training-optimization.png": "9bc6a9523c21d3be69857cce4649213fa5b03ed95d904d0cb59720082fcc677d",
+    "training-plotted.csv": "85d59ce4b6a5316e558ef3ac121295ae6a46a6819cbb2e34d67955e5b118a88c",
+    "training-rollouts.pdf": "21328e5de302fc5078c0024bb777d83ecf44d49dce818a16f4502109a19ec8af",
+    "training-rollouts.png": "3a6e4407cf36140713c4de14a6c27e90af338304ac910ea5ad89e31032646b81"
+  },
+  "metric_semantics": {
+    "signed_log_ratio": "-opd/token_reward_mean; sampled log(student/teacher), not full conditional KL",
+    "grad_norm": "actor/grad_norm before clipping; one recorded training run per source",
+    "accuracy": "completed step-50 evaluations only; external references are not paired local step-0 measurements"
+  }
+}

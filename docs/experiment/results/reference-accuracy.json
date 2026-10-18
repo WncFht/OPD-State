@@ -1,0 +1,96 @@
+{
+  "retrieved_at_utc": "2026-10-18T02:17:32.528925+00:00",
+  "exporter_sha256": "ad26b08fa903b66b5a12fd86bd5f6ef3581e31fa6dc65aab2c4d0f229ee34843",
+  "runs": {
+    "teacher": {
+      "role": "teacher",
+      "id": "u87buult",
+      "name": "math_teacher",
+      "state": "finished",
+      "source_url": "https://forge.coreweave.com/wandb/wncfht/One-Shot-OPD/runs/u87buult",
+      "api_url": "https://wandb.ai/wncfht/One-Shot-OPD/runs/u87buult",
+      "model_name": "JustRL-DeepSeek-1.5B",
+      "model_path": "/mnt/dolphinfs/hdd_pool/docker/user/hadoop-hmart-poistar/fanghaotian/model/JustRL-DeepSeek-1.5B",
+      "val_only": true,
+      "sampling": {
+        "n": 16,
+        "temperature": 0.7,
+        "top_p": 0.9,
+        "max_tokens": 31744,
+        "do_sample": true,
+        "top_k": -1
+      },
+      "validation_files": [
+        "/mnt/dolphinfs/hdd_pool/docker/user/hadoop-hmart-poistar/fanghaotian/One-Shot-OPD/data/math/MATH-500/test.parquet",
+        "/mnt/dolphinfs/hdd_pool/docker/user/hadoop-hmart-poistar/fanghaotian/One-Shot-OPD/data/math/AMC23/test.parquet",
+        "/mnt/dolphinfs/hdd_pool/docker/user/hadoop-hmart-poistar/fanghaotian/One-Shot-OPD/data/math/AIME25/test.parquet"
+      ],
+      "val_max_samples": -1,
+      "metrics": {
+        "eval/MATH-500/mean@16": 0.891125,
+        "eval/MATH-500/pass@2": 0.9250333333333332,
+        "eval/MATH-500/pass@4": 0.9419725274725276,
+        "eval/MATH-500/pass@8": 0.9518702408702407,
+        "eval/MATH-500/pass@16": 0.96,
+        "eval/AMC23/mean@16": 0.89375,
+        "eval/AMC23/pass@2": 0.9295833333333334,
+        "eval/AMC23/pass@4": 0.9462637362637364,
+        "eval/AMC23/pass@8": 0.9499650349650348,
+        "eval/AMC23/pass@16": 0.95,
+        "eval/AIME25/mean@16": 0.39166666666666666,
+        "eval/AIME25/pass@2": 0.4508333333333333,
+        "eval/AIME25/pass@4": 0.5117032967032967,
+        "eval/AIME25/pass@8": 0.5724475524475525,
+        "eval/AIME25/pass@16": 0.6333333333333333,
+        "eval/macro/mean@16": 0.7255138888888889,
+        "eval/micro/mean@16": 0.8650219298245614
+      },
+      "evidence_scope": "Remote summary and configuration; no raw responses or dataset/weight hashes verified"
+    },
+    "initial_student": {
+      "role": "initial_student",
+      "id": "6uorrk2k",
+      "name": "math_student",
+      "state": "finished",
+      "source_url": "https://forge.coreweave.com/wandb/wncfht/One-Shot-OPD/runs/6uorrk2k",
+      "api_url": "https://wandb.ai/wncfht/One-Shot-OPD/runs/6uorrk2k",
+      "model_name": "DeepSeek-R1-Distill-Qwen-1.5B",
+      "model_path": "/mnt/dolphinfs/hdd_pool/docker/user/hadoop-hmart-poistar/fanghaotian/model/DeepSeek-R1-Distill-Qwen-1.5B",
+      "val_only": true,
+      "sampling": {
+        "n": 16,
+        "temperature": 0.7,
+        "top_p": 0.9,
+        "max_tokens": 31744,
+        "do_sample": true,
+        "top_k": -1
+      },
+      "validation_files": [
+        "/mnt/dolphinfs/hdd_pool/docker/user/hadoop-hmart-poistar/fanghaotian/One-Shot-OPD/data/math/MATH-500/test.parquet",
+        "/mnt/dolphinfs/hdd_pool/docker/user/hadoop-hmart-poistar/fanghaotian/One-Shot-OPD/data/math/AMC23/test.parquet",
+        "/mnt/dolphinfs/hdd_pool/docker/user/hadoop-hmart-poistar/fanghaotian/One-Shot-OPD/data/math/AIME25/test.parquet"
+      ],
+      "val_max_samples": -1,
+      "metrics": {
+        "eval/MATH-500/mean@16": 0.8325,
+        "eval/MATH-500/pass@2": 0.8882333333333333,
+        "eval/MATH-500/pass@4": 0.9183054945054946,
+        "eval/MATH-500/pass@8": 0.9369159285159284,
+        "eval/MATH-500/pass@16": 0.95,
+        "eval/AMC23/mean@16": 0.7203125,
+        "eval/AMC23/pass@2": 0.8139583333333332,
+        "eval/AMC23/pass@4": 0.8799038461538462,
+        "eval/AMC23/pass@8": 0.9183313908313908,
+        "eval/AMC23/pass@16": 0.95,
+        "eval/AIME25/mean@16": 0.2375,
+        "eval/AIME25/pass@2": 0.30388888888888893,
+        "eval/AIME25/pass@4": 0.3635897435897436,
+        "eval/AIME25/pass@8": 0.42982387982387976,
+        "eval/AIME25/pass@16": 0.5,
+        "eval/macro/mean@16": 0.5967708333333334,
+        "eval/micro/mean@16": 0.7933114035087719
+      },
+      "evidence_scope": "Remote summary and configuration; no raw responses or dataset/weight hashes verified"
+    }
+  }
+}
