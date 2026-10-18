@@ -1,0 +1,655 @@
+{
+  "scope": "Exact sampled prefix overlap; not a conditional KL or population state-distribution distance",
+  "steps": 50,
+  "reference": {
+    "run": "/mnt/tidalfs-bdsz01/dataset/llm_dataset/zkn_data/fht_data/OPD-State/runs/native-formal-suite-20261018/student_fresh",
+    "files_sha256": {
+      "manifest.json": "4002ecd2493056bd230d8536d714c5cddce55d2115307e97c208fddf43f588ff",
+      "command.json": "94e719130cd08135af34a9c67ba008b97f88e95e046120cb77104fe8c65510e7",
+      "source-manifest.json": "dda265c9626c89ea19018c50b535a9c789d5701be6e400381c19bd5db7fde9fc",
+      "step-1.jsonl": "ce2500c5361139d397aa34c4fa5a981573713d0a5b3e500ebbe21ca2b73bd2fb",
+      "step-2.jsonl": "4dfba1485d89132bf4e14aedb9761d5513e00c62efbabda3e015ddb560e7de79",
+      "step-3.jsonl": "d2fdb3590c055b2a42dac5e21504c77f2c1011388b498d6ac24fc95459e41178",
+      "step-4.jsonl": "a596921329ded4810cac7c674dae8cc78409dce3c61c293438fb6a750b06cfdb",
+      "step-5.jsonl": "e874db2a5bb46e86321b345ddd340bf88ca4352565ea90518a7f3bf07d789f59",
+      "step-6.jsonl": "f38eb0cb81df93f54353a1296408a40ce9b0fb7571f359d54304c8afd2d6f357",
+      "step-7.jsonl": "fb4a7b45fe5d920dd926feb112145f5a0049a4aac5cedf2504945e8db11bbc97",
+      "step-8.jsonl": "6046a772d57e3e252ef053e6e37431ba05404a436e2ac788cdc2784e0eef89af",
+      "step-9.jsonl": "ef96bb37a2889ce6924001470e2ca7644133bfdc79d498d4d54f3de1c2016676",
+      "step-10.jsonl": "fd586bd5a8d06e827b68408d0bbfcf7262532fbd40fea20e9ce228f3032c7774",
+      "step-11.jsonl": "ae2b0e5add4ecb762e5b4d1cd25c4d4094fbc0b374d06c8f77fa54efb4794b16",
+      "step-12.jsonl": "99cf731d6af5c3a8624defc8d7cbbf490808972d9fb3e1e7357d62a82d412441",
+      "step-13.jsonl": "1d73430698a90917a570e7d28c807c4d61b9fe4dc76aae690c6e75d2bb45254a",
+      "step-14.jsonl": "b82a82b54f029dcfb7c7ea4c0ab9a153f3d3cfe277a88d8aa2640718b8fe9466",
+      "step-15.jsonl": "00144ef729b64cae4c7d7c054b3a9e0e8972ddb759ce2439ce9bd4e3d9a92f23",
+      "step-16.jsonl": "9c72e97a0f97caaeac2ff2b1f86ccbe045c86b111530c57f3f378662c8ebe6d4",
+      "step-17.jsonl": "c22289d4ca30a113cbd7c46dc1af636709ea23988fc5a5eceadf2c4c68458212",
+      "step-18.jsonl": "ff17f616981b436ed7421d9e7214464c0cfbdf40989f0263b0cc6576962712e2",
+      "step-19.jsonl": "7b0d9efa52f20ecb39e3d7a721cc7b8de853abd8e4056697d45186894cc03312",
+      "step-20.jsonl": "673f009cc62c72b844eb42f24ce91decb34100272f3f3006aedd4130b70e65b6",
+      "step-21.jsonl": "c8dbcd8d5c8fea4db0f55e46af3215f00824bd8b387bd13b1bc3eef82b91af2d",
+      "step-22.jsonl": "417b208bd51b5b0d101bcc076abef0e71ec3ff8fa52b921f42da5e57718fa05d",
+      "step-23.jsonl": "688952661f1af3857122ab18d12008c61860269ad45dc68594883a8c13659b88",
+      "step-24.jsonl": "02a13d73337e77220fbae63fa19dde9f4d5f21f58687a4eaf9458cf1ab807cb3",
+      "step-25.jsonl": "6baef54fb21bb6cb216cb47dd33e9e21c74ca15c6202edf4983fa811405e1a26",
+      "step-26.jsonl": "feae9dd831afc1fff2d51195db47665ab293089e2f56a9d17c4c9d50c597edde",
+      "step-27.jsonl": "1157295dd11c7c1d921d495800214155bed0bb288905c6f587eafc7283158740",
+      "step-28.jsonl": "f4706ec1470283a2e3bfccafe7ee433220830704507fd4ec9220afe4c0a4d4f9",
+      "step-29.jsonl": "a2fc1cf8c24ac74594da4a15e927d4b1d9414c46d16f641b6abc528b612f8131",
+      "step-30.jsonl": "6496203f914f07f2ba93838cc102c94c370e185a34a171458488bab7a049094c",
+      "step-31.jsonl": "cbf4edd3ec356e8a8fe6046b78bcff18f970a1b77353f625f37ed3b9bc450cef",
+      "step-32.jsonl": "ad14894fb5bbe26e2794a2f768ba6becbf3352b83be863f7886daea613a080ad",
+      "step-33.jsonl": "f51b461d4b7637f902457b7703486547cfd967ee92df56f7cdc26417118fa2cc",
+      "step-34.jsonl": "0d859afc8a3b5cf46049b0acc496296a663602d2c346e6d07ed80f6bbcfb0a5d",
+      "step-35.jsonl": "f15181ed0ec14a8bc5e540dd03fcb3b32d650dc96cdaaa6e5b610d578b057d37",
+      "step-36.jsonl": "37c395c53cf5d0a3fa2a922e9cbae410e3b6ceee7c489793240f397a11b20d25",
+      "step-37.jsonl": "eba8ee305ecae502b5156240a512c4736233352c862ff9becaa5c961519790fc",
+      "step-38.jsonl": "a9108f2915f34ebb7dc06c2585533f60d80c6eac1f7803e2cd277a9720624c95",
+      "step-39.jsonl": "8572eb70ffcdd138de97c878cc49632c6224ffc81323c91d429169cb56367c5f",
+      "step-40.jsonl": "67538252a1422766086fe361bfd161b96b8c2b1279642461fe148606eecc95cc",
+      "step-41.jsonl": "be8cc91e1c9ce48dc1ba2377fb17155044e94ea6af2414bda0bee69dd85f3920",
+      "step-42.jsonl": "a16f7a2cac3eb6d7367a230137718ec09ba7b13d0b9fcda8e4002d0a7b0d737b",
+      "step-43.jsonl": "b921dc30cf49ec604b0c11eb627744adeef0f0fb7b1e4e830a52741fe376195d",
+      "step-44.jsonl": "37ef8766f025717c5f15b4f7b72ea809e567c29caa0d5d21d5201a1551a9b8d8",
+      "step-45.jsonl": "6d55a05d325e8364d1ce1bacf6b83480b34ada6c3d1789f2fe53cb0aa2135a16",
+      "step-46.jsonl": "aa9ef507c65ee396635ded2818d8863ee7258cdb645150f1da36bec2c78a9438",
+      "step-47.jsonl": "6e79458581e91f84d03651635e3c3315a698c7fee13343fe6570442660bd0730",
+      "step-48.jsonl": "52055bd1a47897dfde8b28e7e3797f4a22fe0839d8814bc5384e368ab39a2f13",
+      "step-49.jsonl": "dc2a6f4ffa5d223a92969c6a6ada5d4934a2381c62c6fc98e18c70e32d823b3f",
+      "step-50.jsonl": "b850e141218614759bdee02e7ccc7fde71057716c44bc8c44b493b7e457eb071"
+    },
+    "statistics": {
+      "responses": 3200,
+      "unique_prompts": 3200,
+      "revisited_responses": 0,
+      "sampled_training_positions": 12370198,
+      "response_length": {
+        "mean": 3865.686875,
+        "min": 388,
+        "max": 4096
+      },
+      "termination": {
+        "length": 2626,
+        "eos": 574
+      },
+      "response_survival_at_depth": {
+        "0": 1.0,
+        "1": 1.0,
+        "16": 1.0,
+        "64": 1.0,
+        "256": 1.0,
+        "1024": 0.99125,
+        "2048": 0.966875,
+        "4096": 0.0
+      },
+      "action_policy_segments": {
+        "current_student": {
+          "training_positions": 12370198,
+          "response_prefix_depth_sum": 24510186216,
+          "mean_response_prefix_depth": 1981.3899677272748
+        }
+      }
+    }
+  },
+  "candidate": {
+    "run": "/mnt/tidalfs-bdsz01/dataset/llm_dataset/zkn_data/fht_data/OPD-State/runs/native-formal-suite-20261018/initial_student_fresh",
+    "files_sha256": {
+      "manifest.json": "0ef27736d4241b353de7d02faa92af1d69deb450424825bd5658c0bdea6933f1",
+      "command.json": "72fa505e00c134c23a76d0e855938f9f29582d74bed9cf9403d3126da2948f85",
+      "source-manifest.json": "dda265c9626c89ea19018c50b535a9c789d5701be6e400381c19bd5db7fde9fc",
+      "step-1.jsonl": "7796aaa327d93d78c347fd933713577dc99d4f71153a1bd254119c10ab734d0e",
+      "step-2.jsonl": "d5b4008ce380effc13a0c1fc5c0adaa457a80aab2c1519f00718be706fadda3e",
+      "step-3.jsonl": "f699367a43b4e501a5b9125d118c7989979af521dff79eddadf23ea062a3c98e",
+      "step-4.jsonl": "374ddae8e0bb3010f863dc1644de26e98c7f0644200038ebc4251b085e175026",
+      "step-5.jsonl": "27a7576d9909797ffb525ca6f064b298ee4804a935e5cde21bd78e8c40f491f2",
+      "step-6.jsonl": "275ed0323dfaa66baa533ffce25f396194ed2effdeb55811b5ccf019f39cd373",
+      "step-7.jsonl": "323fedb091c89007116547c301a283bf01203399d45eda7b0e00e2b2aa58fd3a",
+      "step-8.jsonl": "a9717630701dbccce2a0021bcf440676fd6a5336721f861539c91ab15cc5a1d1",
+      "step-9.jsonl": "5ce8d58759325301b8503af5fc0342b461e411c5e184470245d2ddb89e5d41bb",
+      "step-10.jsonl": "9385d9055db31b4db38fa1eef5a95f2e4f43a815a57a3acb93b48ebcf8374b58",
+      "step-11.jsonl": "b8f58029e5271862bdbb6ed3f67f363880a251a69540566352ec82dec837fe0f",
+      "step-12.jsonl": "78889cc009725f5a550080d572407c9481f4e41ebaa44f688f1e8dcae9b011ce",
+      "step-13.jsonl": "ddb75764d5903a2631a6165071aaafc8914d915e69af10f1a34b084f99da3e85",
+      "step-14.jsonl": "944f4568afd6869a30f0085be385de07ec7475ec788530b78b3ea4ca857140fa",
+      "step-15.jsonl": "e824ae88174fc9dc0c2fa55646c2e4a15ea4e0ef141a5912aed4c01fd25e2658",
+      "step-16.jsonl": "6bebe1263564da544d5282ee0385c5743b90c76eea5a7cff543355cbd4b0afc0",
+      "step-17.jsonl": "6f8f05599d79dbd56bdbc4c4cb10054791aaf14bc136cfa7005a195a3627395d",
+      "step-18.jsonl": "c3b08d008e4e4e732967c099162bbe3c8b7344a43828b5596afb07c58ab02d72",
+      "step-19.jsonl": "4826dbb66c76a6c3d0b94c40bf1fa86355ae0ac6aacaab94cc52813ca6960993",
+      "step-20.jsonl": "b104d0ad93ef5b9e62da1da17905a6dfbdb7d6e5f24fdf3fb536d9f6c3e1912b",
+      "step-21.jsonl": "389abb5346053231b1e68531e39d6ac20f9a07482f20c38291ad73e4e5999c24",
+      "step-22.jsonl": "746822895ded937667183f2cd0aa6d0bbd9e4103e491e92666b5d40e67ac1795",
+      "step-23.jsonl": "31a44fef8dd548333380c0d04fcc3786932be035676a285eb6078516239ffba1",
+      "step-24.jsonl": "2c21b8e69d0cab39ff209eeaaa9bb37b6fb1aff32dd7348cc1327e23d4e95d2a",
+      "step-25.jsonl": "641b511fbccbbe5e22ca1d2c211fcb8b78ba753092549971d21aa25e257c42d5",
+      "step-26.jsonl": "c6454f9840a8d4f7e389ca91dfc9471fc0c276ccd99a46f3d37bc529e8e07c88",
+      "step-27.jsonl": "76e97b43093f3ef757ee91f425c78544ed54861f2346137254aceb9eb304083f",
+      "step-28.jsonl": "bb5698f0be33e91b4753f32b85a4203d7a9db45cfacbdb891e0956f4b351436a",
+      "step-29.jsonl": "9f9d85d66c8fe5af0c4369a8b3146d3837b1028aa279ca59e36502eb49a037e9",
+      "step-30.jsonl": "1c2c347d5ec17e4bc5c23d3af923aab33571141362ab89c562e669ff23612cc8",
+      "step-31.jsonl": "8b897bdb4d4d0bc7252e4301aaac31211524fa83be53b46af4f8a0900db13819",
+      "step-32.jsonl": "2778798f75700f44f87eb66629fdef67c783e57d178cd86bba66c86effa79031",
+      "step-33.jsonl": "c02f2995c95e862f1ce4716fa7e577dbf0a4d841aafceb2e4457110cfa1e7e90",
+      "step-34.jsonl": "44da360725a7126458c55722aec5305213db34cd8359293e3563175c27af9c8b",
+      "step-35.jsonl": "fb7d8049726cba5f3aa9c200bf9df5d19c8de8637627fae711d5bbd664821ccf",
+      "step-36.jsonl": "8db0ad4848b2e6db2d0e629e5999faf7e51a44dfdac5c38b88e264f2e219f5eb",
+      "step-37.jsonl": "0c1f3ce6ba0cf9e2f676ee9cad860ebf594bd38469482d9ef89e3e09ddcf652c",
+      "step-38.jsonl": "a3887cb1b927ecda3f8e54b7ee6e181a7c6cdf7f2284f46ed4d9b2acb2ffa6c5",
+      "step-39.jsonl": "23f34b1e65a4882d89bed701f190ed6a9866cdbe10921e71563c93c3e0a5c2ff",
+      "step-40.jsonl": "93d8580c5487d7130c44db368038ab6413aeb88905a84dfef0bcf8968e0911c5",
+      "step-41.jsonl": "9ad83ea6a3b0af5073ada0c9410ae6e0530cbf047d30be0bbccdbd37760cf974",
+      "step-42.jsonl": "4d31f317ef3057e3276391969616e5fcffe9a37fc6540787f5930cdae97c7f66",
+      "step-43.jsonl": "43fb7d399725e2c110ef4eada5edd3c200c7fd64d76614e0e9dc31cbb921f232",
+      "step-44.jsonl": "7ce6242062353739aecbce259c02b5fbe39c9c9d5993cfbed438eb55ea5b6b81",
+      "step-45.jsonl": "e86fcde852d076fc74fb1c7c1fc8191301b6ad6d863c7280370eaf1f1625ac62",
+      "step-46.jsonl": "fa5641f360f11cead3cdcd11fee7f799fa0a6cbf46a7c2dc5277524098409aa4",
+      "step-47.jsonl": "dfa48f3fcb7918cb8f4935fe2b5a7ae9046b91d6b16e830cee4fd17356cb4777",
+      "step-48.jsonl": "93310fb667123f6a19b372a85ac27c103c88bdd06d4aee9e457b03b1e9315189",
+      "step-49.jsonl": "9ad64be6cd48ef6b8ba3977b9031a41d65260dec2844a91014dcfb90a1c8cf16",
+      "step-50.jsonl": "af735b5d9db7f44d8e43153441e31a68e907d432e32161fce234b86db7b51a6e"
+    },
+    "statistics": {
+      "responses": 3200,
+      "unique_prompts": 3200,
+      "revisited_responses": 0,
+      "sampled_training_positions": 12484215,
+      "response_length": {
+        "mean": 3901.3171875,
+        "min": 375,
+        "max": 4096
+      },
+      "termination": {
+        "eos": 494,
+        "length": 2706
+      },
+      "response_survival_at_depth": {
+        "0": 1.0,
+        "1": 1.0,
+        "16": 1.0,
+        "64": 1.0,
+        "256": 1.0,
+        "1024": 0.9909375,
+        "2048": 0.9696875,
+        "4096": 0.0
+      },
+      "action_policy_segments": {
+        "initial_student": {
+          "training_positions": 12484215,
+          "response_prefix_depth_sum": 24887406870,
+          "mean_response_prefix_depth": 1993.509953969873
+        }
+      }
+    }
+  },
+  "paired": {
+    "responses": 3200,
+    "identical_responses": 0,
+    "first_action_agreement": 0.5065625,
+    "shared_sampled_states": 12301,
+    "mean_common_response_prefix_tokens": 2.8440625,
+    "mean_per_response_state_jaccard": 0.000509332271734657,
+    "pooled_state_jaccard_on_matched_trajectories": 0.0004951672385987149
+  },
+  "by_step": {
+    "1": {
+      "responses": 64,
+      "identical_responses": 0,
+      "first_action_agreement": 0.65625,
+      "shared_sampled_states": 373,
+      "mean_common_response_prefix_tokens": 4.828125,
+      "mean_per_response_state_jaccard": 0.0007611442678242211,
+      "pooled_state_jaccard_on_matched_trajectories": 0.0007454945546919189
+    },
+    "2": {
+      "responses": 64,
+      "identical_responses": 0,
+      "first_action_agreement": 0.5,
+      "shared_sampled_states": 200,
+      "mean_common_response_prefix_tokens": 2.125,
+      "mean_per_response_state_jaccard": 0.00040403143307237593,
+      "pooled_state_jaccard_on_matched_trajectories": 0.00039761115219759684
+    },
+    "3": {
+      "responses": 64,
+      "identical_responses": 0,
+      "first_action_agreement": 0.53125,
+      "shared_sampled_states": 217,
+      "mean_common_response_prefix_tokens": 2.390625,
+      "mean_per_response_state_jaccard": 0.0004500053413375825,
+      "pooled_state_jaccard_on_matched_trajectories": 0.0004287851154261867
+    },
+    "4": {
+      "responses": 64,
+      "identical_responses": 0,
+      "first_action_agreement": 0.4375,
+      "shared_sampled_states": 187,
+      "mean_common_response_prefix_tokens": 1.921875,
+      "mean_per_response_state_jaccard": 0.0003862995543717281,
+      "pooled_state_jaccard_on_matched_trajectories": 0.000376026028240158
+    },
+    "5": {
+      "responses": 64,
+      "identical_responses": 0,
+      "first_action_agreement": 0.46875,
+      "shared_sampled_states": 276,
+      "mean_common_response_prefix_tokens": 3.3125,
+      "mean_per_response_state_jaccard": 0.0005723738042500899,
+      "pooled_state_jaccard_on_matched_trajectories": 0.0005569883880029544
+    },
+    "6": {
+      "responses": 64,
+      "identical_responses": 0,
+      "first_action_agreement": 0.546875,
+      "shared_sampled_states": 317,
+      "mean_common_response_prefix_tokens": 3.953125,
+      "mean_per_response_state_jaccard": 0.0006502176430940069,
+      "pooled_state_jaccard_on_matched_trajectories": 0.0006391708925204908
+    },
+    "7": {
+      "responses": 64,
+      "identical_responses": 0,
+      "first_action_agreement": 0.515625,
+      "shared_sampled_states": 257,
+      "mean_common_response_prefix_tokens": 3.015625,
+      "mean_per_response_state_jaccard": 0.0005172884488630015,
+      "pooled_state_jaccard_on_matched_trajectories": 0.0005159492562902646
+    },
+    "8": {
+      "responses": 64,
+      "identical_responses": 0,
+      "first_action_agreement": 0.5,
+      "shared_sampled_states": 242,
+      "mean_common_response_prefix_tokens": 2.78125,
+      "mean_per_response_state_jaccard": 0.0005208702635215234,
+      "pooled_state_jaccard_on_matched_trajectories": 0.000506967663004768
+    },
+    "9": {
+      "responses": 64,
+      "identical_responses": 0,
+      "first_action_agreement": 0.4375,
+      "shared_sampled_states": 214,
+      "mean_common_response_prefix_tokens": 2.34375,
+      "mean_per_response_state_jaccard": 0.0004891967966126677,
+      "pooled_state_jaccard_on_matched_trajectories": 0.00045317284520547365
+    },
+    "10": {
+      "responses": 64,
+      "identical_responses": 0,
+      "first_action_agreement": 0.5625,
+      "shared_sampled_states": 316,
+      "mean_common_response_prefix_tokens": 3.9375,
+      "mean_per_response_state_jaccard": 0.0006303791821329736,
+      "pooled_state_jaccard_on_matched_trajectories": 0.0006256669986397683
+    },
+    "11": {
+      "responses": 64,
+      "identical_responses": 0,
+      "first_action_agreement": 0.515625,
+      "shared_sampled_states": 266,
+      "mean_common_response_prefix_tokens": 3.15625,
+      "mean_per_response_state_jaccard": 0.0005343483060328017,
+      "pooled_state_jaccard_on_matched_trajectories": 0.0005227514808016571
+    },
+    "12": {
+      "responses": 64,
+      "identical_responses": 0,
+      "first_action_agreement": 0.5,
+      "shared_sampled_states": 190,
+      "mean_common_response_prefix_tokens": 1.96875,
+      "mean_per_response_state_jaccard": 0.00037065250785705336,
+      "pooled_state_jaccard_on_matched_trajectories": 0.00037287656608157757
+    },
+    "13": {
+      "responses": 64,
+      "identical_responses": 0,
+      "first_action_agreement": 0.40625,
+      "shared_sampled_states": 230,
+      "mean_common_response_prefix_tokens": 2.59375,
+      "mean_per_response_state_jaccard": 0.0006188708553079448,
+      "pooled_state_jaccard_on_matched_trajectories": 0.00047036881004871385
+    },
+    "14": {
+      "responses": 64,
+      "identical_responses": 0,
+      "first_action_agreement": 0.578125,
+      "shared_sampled_states": 203,
+      "mean_common_response_prefix_tokens": 2.171875,
+      "mean_per_response_state_jaccard": 0.0004189598759699637,
+      "pooled_state_jaccard_on_matched_trajectories": 0.0004061234615323058
+    },
+    "15": {
+      "responses": 64,
+      "identical_responses": 0,
+      "first_action_agreement": 0.5625,
+      "shared_sampled_states": 371,
+      "mean_common_response_prefix_tokens": 4.796875,
+      "mean_per_response_state_jaccard": 0.0007539541597091565,
+      "pooled_state_jaccard_on_matched_trajectories": 0.0007472351293159878
+    },
+    "16": {
+      "responses": 64,
+      "identical_responses": 0,
+      "first_action_agreement": 0.5625,
+      "shared_sampled_states": 261,
+      "mean_common_response_prefix_tokens": 3.078125,
+      "mean_per_response_state_jaccard": 0.0005426010785765905,
+      "pooled_state_jaccard_on_matched_trajectories": 0.0005226323851860752
+    },
+    "17": {
+      "responses": 64,
+      "identical_responses": 0,
+      "first_action_agreement": 0.4375,
+      "shared_sampled_states": 186,
+      "mean_common_response_prefix_tokens": 1.90625,
+      "mean_per_response_state_jaccard": 0.00037115920403757647,
+      "pooled_state_jaccard_on_matched_trajectories": 0.0003740543062499246
+    },
+    "18": {
+      "responses": 64,
+      "identical_responses": 0,
+      "first_action_agreement": 0.453125,
+      "shared_sampled_states": 182,
+      "mean_common_response_prefix_tokens": 1.84375,
+      "mean_per_response_state_jaccard": 0.00037246432767812316,
+      "pooled_state_jaccard_on_matched_trajectories": 0.00036439719294030493
+    },
+    "19": {
+      "responses": 64,
+      "identical_responses": 0,
+      "first_action_agreement": 0.5625,
+      "shared_sampled_states": 256,
+      "mean_common_response_prefix_tokens": 3.0,
+      "mean_per_response_state_jaccard": 0.000528272691494553,
+      "pooled_state_jaccard_on_matched_trajectories": 0.0005327151617810167
+    },
+    "20": {
+      "responses": 64,
+      "identical_responses": 0,
+      "first_action_agreement": 0.5,
+      "shared_sampled_states": 245,
+      "mean_common_response_prefix_tokens": 2.828125,
+      "mean_per_response_state_jaccard": 0.0005290938615295206,
+      "pooled_state_jaccard_on_matched_trajectories": 0.0004990680667732704
+    },
+    "21": {
+      "responses": 64,
+      "identical_responses": 0,
+      "first_action_agreement": 0.484375,
+      "shared_sampled_states": 265,
+      "mean_common_response_prefix_tokens": 3.140625,
+      "mean_per_response_state_jaccard": 0.0005266885421720326,
+      "pooled_state_jaccard_on_matched_trajectories": 0.0005346396024702367
+    },
+    "22": {
+      "responses": 64,
+      "identical_responses": 0,
+      "first_action_agreement": 0.4375,
+      "shared_sampled_states": 368,
+      "mean_common_response_prefix_tokens": 4.75,
+      "mean_per_response_state_jaccard": 0.0007333722088304802,
+      "pooled_state_jaccard_on_matched_trajectories": 0.0007518382240273604
+    },
+    "23": {
+      "responses": 64,
+      "identical_responses": 0,
+      "first_action_agreement": 0.4375,
+      "shared_sampled_states": 264,
+      "mean_common_response_prefix_tokens": 3.125,
+      "mean_per_response_state_jaccard": 0.0005163057168850329,
+      "pooled_state_jaccard_on_matched_trajectories": 0.0005212302613653864
+    },
+    "24": {
+      "responses": 64,
+      "identical_responses": 0,
+      "first_action_agreement": 0.5,
+      "shared_sampled_states": 241,
+      "mean_common_response_prefix_tokens": 2.765625,
+      "mean_per_response_state_jaccard": 0.0004686231254858305,
+      "pooled_state_jaccard_on_matched_trajectories": 0.0004733239716005617
+    },
+    "25": {
+      "responses": 64,
+      "identical_responses": 0,
+      "first_action_agreement": 0.515625,
+      "shared_sampled_states": 279,
+      "mean_common_response_prefix_tokens": 3.359375,
+      "mean_per_response_state_jaccard": 0.0005826381518319473,
+      "pooled_state_jaccard_on_matched_trajectories": 0.0005555212641194987
+    },
+    "26": {
+      "responses": 64,
+      "identical_responses": 0,
+      "first_action_agreement": 0.515625,
+      "shared_sampled_states": 282,
+      "mean_common_response_prefix_tokens": 3.40625,
+      "mean_per_response_state_jaccard": 0.0005709945802104675,
+      "pooled_state_jaccard_on_matched_trajectories": 0.0005653817931023422
+    },
+    "27": {
+      "responses": 64,
+      "identical_responses": 0,
+      "first_action_agreement": 0.609375,
+      "shared_sampled_states": 226,
+      "mean_common_response_prefix_tokens": 2.53125,
+      "mean_per_response_state_jaccard": 0.0004552500562526606,
+      "pooled_state_jaccard_on_matched_trajectories": 0.0004518138526926906
+    },
+    "28": {
+      "responses": 64,
+      "identical_responses": 0,
+      "first_action_agreement": 0.515625,
+      "shared_sampled_states": 224,
+      "mean_common_response_prefix_tokens": 2.5,
+      "mean_per_response_state_jaccard": 0.00045077178602170235,
+      "pooled_state_jaccard_on_matched_trajectories": 0.0004445891123302027
+    },
+    "29": {
+      "responses": 64,
+      "identical_responses": 0,
+      "first_action_agreement": 0.703125,
+      "shared_sampled_states": 317,
+      "mean_common_response_prefix_tokens": 3.953125,
+      "mean_per_response_state_jaccard": 0.0006564791007071893,
+      "pooled_state_jaccard_on_matched_trajectories": 0.0006485893692724136
+    },
+    "30": {
+      "responses": 64,
+      "identical_responses": 0,
+      "first_action_agreement": 0.609375,
+      "shared_sampled_states": 232,
+      "mean_common_response_prefix_tokens": 2.625,
+      "mean_per_response_state_jaccard": 0.0005056605091054572,
+      "pooled_state_jaccard_on_matched_trajectories": 0.00048189167407505876
+    },
+    "31": {
+      "responses": 64,
+      "identical_responses": 0,
+      "first_action_agreement": 0.53125,
+      "shared_sampled_states": 234,
+      "mean_common_response_prefix_tokens": 2.65625,
+      "mean_per_response_state_jaccard": 0.00046336375179939753,
+      "pooled_state_jaccard_on_matched_trajectories": 0.00046352237386843096
+    },
+    "32": {
+      "responses": 64,
+      "identical_responses": 0,
+      "first_action_agreement": 0.375,
+      "shared_sampled_states": 210,
+      "mean_common_response_prefix_tokens": 2.28125,
+      "mean_per_response_state_jaccard": 0.0004572480065373338,
+      "pooled_state_jaccard_on_matched_trajectories": 0.00042460355170761396
+    },
+    "33": {
+      "responses": 64,
+      "identical_responses": 0,
+      "first_action_agreement": 0.546875,
+      "shared_sampled_states": 241,
+      "mean_common_response_prefix_tokens": 2.765625,
+      "mean_per_response_state_jaccard": 0.0004857959729442476,
+      "pooled_state_jaccard_on_matched_trajectories": 0.0004793091583848276
+    },
+    "34": {
+      "responses": 64,
+      "identical_responses": 0,
+      "first_action_agreement": 0.53125,
+      "shared_sampled_states": 297,
+      "mean_common_response_prefix_tokens": 3.640625,
+      "mean_per_response_state_jaccard": 0.0005931230642013994,
+      "pooled_state_jaccard_on_matched_trajectories": 0.0005927268227846586
+    },
+    "35": {
+      "responses": 64,
+      "identical_responses": 0,
+      "first_action_agreement": 0.546875,
+      "shared_sampled_states": 237,
+      "mean_common_response_prefix_tokens": 2.703125,
+      "mean_per_response_state_jaccard": 0.0004984787238403813,
+      "pooled_state_jaccard_on_matched_trajectories": 0.00048135412837328707
+    },
+    "36": {
+      "responses": 64,
+      "identical_responses": 0,
+      "first_action_agreement": 0.515625,
+      "shared_sampled_states": 265,
+      "mean_common_response_prefix_tokens": 3.140625,
+      "mean_per_response_state_jaccard": 0.0005274208270296261,
+      "pooled_state_jaccard_on_matched_trajectories": 0.0005212277371832066
+    },
+    "37": {
+      "responses": 64,
+      "identical_responses": 0,
+      "first_action_agreement": 0.515625,
+      "shared_sampled_states": 204,
+      "mean_common_response_prefix_tokens": 2.1875,
+      "mean_per_response_state_jaccard": 0.00042072416727489677,
+      "pooled_state_jaccard_on_matched_trajectories": 0.0004174485300286689
+    },
+    "38": {
+      "responses": 64,
+      "identical_responses": 0,
+      "first_action_agreement": 0.46875,
+      "shared_sampled_states": 212,
+      "mean_common_response_prefix_tokens": 2.3125,
+      "mean_per_response_state_jaccard": 0.0004407011930904438,
+      "pooled_state_jaccard_on_matched_trajectories": 0.000427432281218182
+    },
+    "39": {
+      "responses": 64,
+      "identical_responses": 0,
+      "first_action_agreement": 0.515625,
+      "shared_sampled_states": 274,
+      "mean_common_response_prefix_tokens": 3.28125,
+      "mean_per_response_state_jaccard": 0.0005584800307328807,
+      "pooled_state_jaccard_on_matched_trajectories": 0.0005598795237346007
+    },
+    "40": {
+      "responses": 64,
+      "identical_responses": 0,
+      "first_action_agreement": 0.4375,
+      "shared_sampled_states": 197,
+      "mean_common_response_prefix_tokens": 2.078125,
+      "mean_per_response_state_jaccard": 0.0004142468397628964,
+      "pooled_state_jaccard_on_matched_trajectories": 0.0003995878363028592
+    },
+    "41": {
+      "responses": 64,
+      "identical_responses": 0,
+      "first_action_agreement": 0.5,
+      "shared_sampled_states": 195,
+      "mean_common_response_prefix_tokens": 2.046875,
+      "mean_per_response_state_jaccard": 0.00039815692628558154,
+      "pooled_state_jaccard_on_matched_trajectories": 0.00039533544719534843
+    },
+    "42": {
+      "responses": 64,
+      "identical_responses": 0,
+      "first_action_agreement": 0.453125,
+      "shared_sampled_states": 229,
+      "mean_common_response_prefix_tokens": 2.578125,
+      "mean_per_response_state_jaccard": 0.0004466720011815293,
+      "pooled_state_jaccard_on_matched_trajectories": 0.00044782628251385033
+    },
+    "43": {
+      "responses": 64,
+      "identical_responses": 0,
+      "first_action_agreement": 0.46875,
+      "shared_sampled_states": 241,
+      "mean_common_response_prefix_tokens": 2.765625,
+      "mean_per_response_state_jaccard": 0.0005181168264362931,
+      "pooled_state_jaccard_on_matched_trajectories": 0.0004925967410944232
+    },
+    "44": {
+      "responses": 64,
+      "identical_responses": 0,
+      "first_action_agreement": 0.5,
+      "shared_sampled_states": 193,
+      "mean_common_response_prefix_tokens": 2.015625,
+      "mean_per_response_state_jaccard": 0.0004520187338711054,
+      "pooled_state_jaccard_on_matched_trajectories": 0.0003846560118944408
+    },
+    "45": {
+      "responses": 64,
+      "identical_responses": 0,
+      "first_action_agreement": 0.421875,
+      "shared_sampled_states": 205,
+      "mean_common_response_prefix_tokens": 2.203125,
+      "mean_per_response_state_jaccard": 0.0004300792749040442,
+      "pooled_state_jaccard_on_matched_trajectories": 0.0004045874293698896
+    },
+    "46": {
+      "responses": 64,
+      "identical_responses": 0,
+      "first_action_agreement": 0.59375,
+      "shared_sampled_states": 289,
+      "mean_common_response_prefix_tokens": 3.515625,
+      "mean_per_response_state_jaccard": 0.0005704168078767304,
+      "pooled_state_jaccard_on_matched_trajectories": 0.0005764895972551914
+    },
+    "47": {
+      "responses": 64,
+      "identical_responses": 0,
+      "first_action_agreement": 0.40625,
+      "shared_sampled_states": 163,
+      "mean_common_response_prefix_tokens": 1.546875,
+      "mean_per_response_state_jaccard": 0.0003318110845659275,
+      "pooled_state_jaccard_on_matched_trajectories": 0.00032675480359630745
+    },
+    "48": {
+      "responses": 64,
+      "identical_responses": 0,
+      "first_action_agreement": 0.4375,
+      "shared_sampled_states": 231,
+      "mean_common_response_prefix_tokens": 2.609375,
+      "mean_per_response_state_jaccard": 0.0004858864071914705,
+      "pooled_state_jaccard_on_matched_trajectories": 0.00047014861580920515
+    },
+    "49": {
+      "responses": 64,
+      "identical_responses": 0,
+      "first_action_agreement": 0.546875,
+      "shared_sampled_states": 291,
+      "mean_common_response_prefix_tokens": 3.546875,
+      "mean_per_response_state_jaccard": 0.0006582946216130895,
+      "pooled_state_jaccard_on_matched_trajectories": 0.0005946578877997045
+    },
+    "50": {
+      "responses": 64,
+      "identical_responses": 0,
+      "first_action_agreement": 0.453125,
+      "shared_sampled_states": 206,
+      "mean_common_response_prefix_tokens": 2.21875,
+      "mean_per_response_state_jaccard": 0.0004266109448175633,
+      "pooled_state_jaccard_on_matched_trajectories": 0.00042078171437909164
+    }
+  },
+  "interpretation": [
+    "One training state precedes each valid action, including EOS; the terminal post-response prefix is excluded.",
+    "A shared sampled prefix is exact token equality conditional on a matched question and visit.",
+    "Pooled overlap counts matched visits separately; it is not a deduplicated state-support Jaccard across visits.",
+    "Action-policy labels describe the model selecting the next action; the state retains the entire prior mixed prefix.",
+    "Stochastic branching lowers exact overlap even for the same policy; overlap alone cannot rank distribution shift or quality."
+  ],
+  "analysis_source_sha256": "bd71f50e49a8242b729a5290243f27373507da5ccc4dcef9ba729c5a47ab7bfe",
+  "prefix_counter_source_sha256": "a70d62628138656d29efb9c03f472ddbe83486f862418c44388ed768c9c6c5f8",
+  "paired_csv_sha256": "09a5a4081b18e044417710d4687b00292dd9dc037430eff8b9e88243722c3353"
+}

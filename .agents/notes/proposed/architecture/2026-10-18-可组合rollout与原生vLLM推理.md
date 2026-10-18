@@ -665,7 +665,7 @@ prompt 池由 `data.train_files`、清洗、去重与 sampler 决定，训练步
 
 统一生成结果只负责 token、mask、结束原因与来源身份，verifier 和 teacher 信号在共同阶段产生。训练轨迹保存在忽略的运行目录，至少包含 prompt/response token、访问轮次和模型身份；复用现有异步 dump 设施，支持后来对初始、teacher 与混合 states 做同口径诊断。所有策略均记录有效 token 数，既按相同更新步数比较，也报告实际 token 与生成成本，避免将长度变化隐藏在“相同 50 步”里。混合策略额外记录每来源的响应数、token 数、提前 EOS 比例、实际切换位置，以及切换前后分层的 state 指标。
 
-[原生轨迹分析器](../../../../eval/analyze_native_states.py)已复用历史 prefix 计数，按同题、visit、sample 和实际训练顺序配对，检查完整 batch、EOS 与分段覆盖，并分层报告 action 策略对应位置的已有前缀深度。[真实两步计数验收](../../../../docs/experiment/results/native-rollout/state-prefix-canary/summary.json)有 128 对响应；它是不同源码快照下的工程验收，不是来源效应实验。精确前缀重合对随机分叉敏感，不能代替固定 teacher 表示的覆盖或共同 probe 上完整条件 KL；后两项保持独立的待验证诊断。
+[原生轨迹分析器](../../../../eval/analyze_native_states.py)已复用历史 prefix 计数，按同题、visit、sample 和实际训练顺序配对，检查完整 batch、EOS 与分段覆盖，并分层报告 action 策略对应位置的已有前缀深度。[真实两步计数验收](../../../../docs/experiment/results/native-rollout/state-prefix-canary/summary.json)有 128 对响应；它是不同源码快照下的工程验收，不是来源效应实验。精确前缀重合对随机分叉敏感，不能代替固定 teacher 表示的覆盖或共同 probe 上完整条件 KL；后两项保持独立的待验证诊断。四组正式训练现已完成三组全五十步配对，各为 3,200 条同题首次访问响应；相对 current 的平均共同响应前缀为 2.8441/2.7403/2.5044 token，原始 token 的独立重算与图见统一报告。阶段 slot 参与生成 seed 派生，跨来源不是共同随机数对照，这些数值不用于来源效应或语义覆盖排名。
 
 新增 `generation_state_metrics` 以每行的分段元数据保留来源，随 DataProto 重排，不依赖生成前的全局行号。共同评分后统计实际 action 的 sampled log-ratio、RMS、teacher 所选 action 概率与前缀深度，按来源、分段和绝对深度分层；fusion 独立标记，padding 与空组不产生 NaN。该实现不增加模型前向；[十八项运行检查](../../../../docs/experiment/results/native-rollout/state-metrics-cpu.json)覆盖真实 DataProto 转换及 OPD 评分 hook，未改变 reward。四卡实际训练和后续表示空间诊断仍待验收，冻结 d59a7c3 矩阵不含这项后加指标。
 

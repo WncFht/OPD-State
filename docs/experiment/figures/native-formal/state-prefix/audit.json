@@ -1,0 +1,39 @@
+{
+  "scope": "Exact paired training prefixes, not semantic coverage or KL",
+  "source_sha256": "b11c84aaa8a1e9f4b586ebbacac363e1eef855da8ee8c0d633d03601ab0b801e",
+  "style_sha256": "a9670b726e4890688bad9bec5cf5f39dcc6a1604ceebff8043c26cee95726581",
+  "input_sha256": {
+    "/mnt/tidalfs-bdsz01/dataset/llm_dataset/zkn_data/fht_data/OPD-State/docs/experiment/results/native-rollout/formal/state-prefix/initial_student_fresh/summary.json": "434c7bf0bf61fb8d7982d97a3dffc44fbaa659a404fd3f7614779974438ebb57",
+    "/mnt/tidalfs-bdsz01/dataset/llm_dataset/zkn_data/fht_data/OPD-State/docs/experiment/results/native-rollout/formal/state-prefix/initial_student_fresh/paired-prefixes.csv": "09a5a4081b18e044417710d4687b00292dd9dc037430eff8b9e88243722c3353",
+    "/mnt/tidalfs-bdsz01/dataset/llm_dataset/zkn_data/fht_data/OPD-State/docs/experiment/results/native-rollout/formal/state-prefix/teacher_fresh/summary.json": "ac789da749d6c9c13996b05a5079a5cdda66cb04e9ac6c162eb66fdf2c8f985d",
+    "/mnt/tidalfs-bdsz01/dataset/llm_dataset/zkn_data/fht_data/OPD-State/docs/experiment/results/native-rollout/formal/state-prefix/teacher_fresh/paired-prefixes.csv": "ffc10d3fb642edc3cab147d1105a2e15e2db294e2755276b8953956ea435db85",
+    "/mnt/tidalfs-bdsz01/dataset/llm_dataset/zkn_data/fht_data/OPD-State/docs/experiment/results/native-rollout/formal/state-prefix/student_teacher_fusion/summary.json": "adb27d94290213e62419d805ce9cec22deaf263e603c932c907553480981eab9",
+    "/mnt/tidalfs-bdsz01/dataset/llm_dataset/zkn_data/fht_data/OPD-State/docs/experiment/results/native-rollout/formal/state-prefix/student_teacher_fusion/paired-prefixes.csv": "12eee4595a83e745c561ca9176c8ee884149d7e548697260b069b2419539d1d0"
+  },
+  "output_sha256": {
+    "training-prefixes.png": "8cbf67c2a4934827f35a75cb6ac3e310770a4d6a78e632ef170b2e7da0baab6c",
+    "training-prefixes.pdf": "addc138ce1849a8ce75ebf5efdca8fb77a354fe51d54f657ddfed6afc290c7f0",
+    "per-step.csv": "85909fe82d97c8447e8fb7e8644ada7eb8335f1989d9154ca69da59b845ce30f",
+    "ecdf.csv": "fd1731a784eb24ce9ef9972b1b5211c78cc0e5ebc76b9255617ac919bd003cbc"
+  },
+  "raw_verification": {
+    "initial_student_fresh": {
+      "responses_recounted": 3200,
+      "raw_files_hash_verified": 106,
+      "algorithm": "NumPy first mismatch"
+    },
+    "teacher_fresh": {
+      "responses_recounted": 3200,
+      "raw_files_hash_verified": 106,
+      "algorithm": "NumPy first mismatch"
+    },
+    "student_teacher_fusion": {
+      "responses_recounted": 3200,
+      "raw_files_hash_verified": 106,
+      "algorithm": "NumPy first mismatch"
+    }
+  },
+  "audit": [],
+  "audit_exemption": "Different y quantities: token mean and cumulative percentage",
+  "comparison_limit": "Role-dependent request seeds; no common-random-number or source-only causal claim"
+}

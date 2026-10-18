@@ -160,21 +160,21 @@ $$
 
 `eval/analyze_native_states.py` 复用已有的精确 prefix 计数，将配对身份扩展为 prompt、visit 和 sample，同时核对实际 prompt token 与训练步骤。脚本拒绝不完整 batch、EOS 后继续生成、分段覆盖缺口和不相同的配对集合；保存输入、源码与逐条 CSV 的哈希。每个有效 action 前恰有一个训练 state，EOS 自身的 action 计入，响应结束后的额外 prefix 不计入。来源分层表示选择下一 action 的策略，另报该位置已有响应前缀的平均深度，不把后段 student 的 state 全部归给 student。
 
-[真实轨迹计数验收](results/native-rollout/state-prefix-canary/summary.json)配对完整清单两步 canary 与正式 student_fresh 的前两步，共 128 条响应。两者为不同源码快照下的工程运行，不能当作严格相同训练的独立 seed 对照；这里只核验工具和解释边界。
+[早期计数验收](results/native-rollout/state-prefix-canary/summary.json)配对两步 canary 与正式 current 的前两步，共 128 条响应：第一步 64 条全部相同，第二步没有相同回答，pooled Jaccard 为 2.129%。它们来自不同源码快照，不能单独确定分叉原因。
 
-| 步骤 | 配对响应 | 完全相同的响应 | 平均共同响应前缀 | 配对训练 state 的 pooled Jaccard |
-| ---- | -------: | -------------: | ---------------: | -------------------------------: |
-| 1    |       64 |             64 |  3,854.828 token |                             100% |
-| 2    |       64 |              0 |    161.734 token |                           2.129% |
+随后对冻结 d59a7c3 的四组正式训练完成 50 步诊断。每对均按同题、visit、sample 和实际步骤匹配 3,200 条回答，全部为首次访问的 3,200 道不同题。下表以 current 为共同参考，结果来自 [Initial](results/native-rollout/formal/state-prefix/initial_student_fresh/summary.json)、[Teacher](results/native-rollout/formal/state-prefix/teacher_fresh/summary.json) 与 [Fusion](results/native-rollout/formal/state-prefix/student_teacher_fusion/summary.json)。
 
-第一步的全部训练响应逐 token 一致，第二步已经分叉；该结果不能单独确定分叉原因。即使配置使用相同来源模型，精确文本 state 的重合也不能充当分布距离或质量排序。跨访问汇总仍将每个 visit 分开配对计数，不宣称对全部历史 state 去重。完整矩阵后续按同题、同 visit 比较，表示簇覆盖与完整条件 KL 仍属下文独立测量。
+| 配对来源               | 完全相同的回答 | 平均共同响应前缀 | 配对训练 state 的 pooled Jaccard |
+| ---------------------- | -------------: | ---------------: | -------------------------------: |
+| Initial                |      0 / 3,200 |     2.8441 token |                         0.04952% |
+| Teacher                |      0 / 3,200 |     2.7403 token |                         0.04820% |
+| Current/teacher fusion |      0 / 3,200 |     2.5044 token |                         0.04522% |
 
-```bash
-.venv/bin/python eval/analyze_native_states.py \
-    --reference runs/native-rollout-implementation/trainer-manifest-long-v1 \
-    --candidate runs/native-formal-suite-20261018/student_fresh \
-    --steps 2 --output docs/experiment/results/native-rollout/state-prefix-canary
-```
+生成 seed 由 prompt/visit/sample、stage slot 和 phase 派生，slot 包含模型角色；配置同为 seed=42 不表示跨来源复用相同采样随机数。因此小重合率同时受随机分叉影响，不能作为语义覆盖、分布距离或来源质量的排序。统计将每个 visit 分开，不对全部历史 state 去重；共同固定 prefix 上的完整 KL 与表示簇覆盖仍是独立测量。原分析器之外，另从原始 token 重算全部 9,600 对，三组配对分别核对 106 个输入文件哈希，均与已保存 CSV 相符。
+
+![正式训练的共同响应前缀：逐步均值与完整配对分布](figures/native-formal/state-prefix/training-prefixes.png)
+
+图的 [PDF](figures/native-formal/state-prefix/training-prefixes.pdf)、[逐步数据](figures/native-formal/state-prefix/per-step.csv)、[经验累积分布](figures/native-formal/state-prefix/ecdf.csv) 与 [审计](figures/native-formal/state-prefix/audit.json)一并保存。复现绘图与原始 token 重算：`.venv/bin/python eval/plot_native_prefix_states.py --input docs/experiment/results/native-rollout/formal/state-prefix --output docs/experiment/figures/native-formal/state-prefix --verify-raw`。
 
 ### 按来源与深度分层的训练诊断
 
