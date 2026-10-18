@@ -1,0 +1,266 @@
+{
+  "source_revision": "d17d6c627324876fa112a9b79bff5c48fecd4d6f",
+  "review_scope": "Current math FSDP + vLLM/HF-fusion execution paths, not every upstream backend or algorithm",
+  "implementation_status": "Review and proposal only; no new fresh-generator mode implemented",
+  "excluded_scope": [
+    "SGLang/TensorRT-LLM/Megatron internals",
+    "Multimodal and multi-turn behavior",
+    "LoRA/FP8/TP>1 or PP>1 fusion",
+    "New GPU experiment or active-run mutation"
+  ],
+  "files": [
+    {
+      "path": "recipe/math_baseline.sh",
+      "reviewed_scope": "full: source snapshot, common budgets and eval16",
+      "sha256": "2c8da1740d310386673f27320e6c4a05e589a10a4d0ec8597c740e2b7c96a9d2"
+    },
+    {
+      "path": "recipe/math_online.sh",
+      "reviewed_scope": "full: selected schedule and epoch capacity",
+      "sha256": "a290a852210f6e87434dfddc793c2fb5e84ea7c6d6e38bccf2bc600e9f8df70c"
+    },
+    {
+      "path": "recipe/math_cached.sh",
+      "reviewed_scope": "full: cache source and epoch capacity",
+      "sha256": "5a6cc25ec8ab848876f77cef687fed53492b8ac7a7c75be8ad19aeaec4020646"
+    },
+    {
+      "path": "recipe/math_fusion.sh",
+      "reviewed_scope": "full: fusion settings",
+      "sha256": "540eb618c63a8685eb68afcb7c84d7ace25d04b2fd6d8c5b806e0df75a4e39e6"
+    },
+    {
+      "path": "recipe/opd.sh",
+      "reviewed_scope": "full: actor/teacher defaults and launch",
+      "sha256": "69836810c142e4c858ee83c08035226e84607074f4aa93ff043b3e27fa37de5d"
+    },
+    {
+      "path": "recipe/_common.sh",
+      "reviewed_scope": "shared settings, common_args, teacher_args and launch",
+      "sha256": "72adca4a6af51e69760598d96db1cb8bddae22e164bafa3a926a9999d869fe37"
+    },
+    {
+      "path": "data/prep/build_rollout_cache.py",
+      "reviewed_scope": "schedule selection, fixed generation and manifest construction",
+      "sha256": "51079f6d42163bf383c1ef538b7b9d57adc3c4bc3a0d70344438f21d400b5e5d"
+    },
+    {
+      "path": "verl/verl/trainer/main_ppo.py",
+      "reviewed_scope": "trainer.use_v1 dispatch",
+      "sha256": "7558a2f5a8829f0d86b45d7e03f0c1dbdd117836261d7beed45f89c8a4947f78"
+    },
+    {
+      "path": "verl/verl/trainer/main_ppo_v0.py",
+      "reviewed_scope": "worker/teacher/tokenizer setup and RayPPOTrainer construction",
+      "sha256": "52a22ac10fac9126fa37e6c25e48686d0d85387d2d23070e813ee1c91d8bd784"
+    },
+    {
+      "path": "verl/verl/trainer/ppo/ray_trainer.py",
+      "reviewed_scope": "initialization guards, dataloader contract, init_workers, fit, validation and plateau integration",
+      "sha256": "2e4fb5e86ab91b70719dae42c8702b12e36d6a64588d9111b9abe55098461614"
+    },
+    {
+      "path": "verl/verl/trainer/ppo/fixed_rollout.py",
+      "reviewed_scope": "full: cache integrity, packing and binding",
+      "sha256": "53c7c0f1339c0472ef283fa627a273d543ab975057485292a28899b74a85378e"
+    },
+    {
+      "path": "verl/verl/trainer/ppo/opd_trainer_mixin.py",
+      "reviewed_scope": "full: teacher lifecycle, top-K guards and dense reward replacement",
+      "sha256": "04716ba1fe53bf583361d64266db26d37b6551e6a2620dd60c060dd04dbe5dc9"
+    },
+    {
+      "path": "verl/verl/trainer/ppo/opd_core_algos.py",
+      "reviewed_scope": "direct-token and GRPO-mixed advantage estimators",
+      "sha256": "afbd08bcf44d9f825024bd1eafeb03895d05ce7b34479163c27741991b777fb1"
+    },
+    {
+      "path": "verl/verl/trainer/ppo/core_algos.py",
+      "reviewed_scope": "PPO vanilla loss and rollout-correction contract",
+      "sha256": "5d70aaab9063ed533e7dc139b28d8347339b64a8f242a673263fb4662e9659d6"
+    },
+    {
+      "path": "verl/verl/trainer/ppo/plateau.py",
+      "reviewed_scope": "full: fixed-cache window semantics",
+      "sha256": "51de1d5276834ff76270084250da00ddec20cebc2c008af13522c1a416bd198d"
+    },
+    {
+      "path": "verl/verl/workers/config/rollout.py",
+      "reviewed_scope": "SamplingConfig, LogitFusionConfig, RolloutConfig and extensibility fields",
+      "sha256": "542cff8b019b50ffa557f19f01dcdf2d694902d81f67664f2d2d6da8e92ec516"
+    },
+    {
+      "path": "verl/verl/workers/engine_workers.py",
+      "reviewed_scope": "ActorRolloutRefWorker init_model, fusion RPC, compute/update actor and weight lifecycle",
+      "sha256": "d6af3e0f875b31fb9213e74c7f9cadaf2028ff7ff22da12cee38f1ae0e0bbc06"
+    },
+    {
+      "path": "verl/verl/workers/utils/losses.py",
+      "reviewed_scope": "ppo_loss data selection and old/behavior probability separation",
+      "sha256": "889a648a26548b35d6837dba4d942eb092f4d58988e110e70bb9b84c3d5907f2"
+    },
+    {
+      "path": "verl/verl/workers/fsdp_teacher_worker.py",
+      "reviewed_scope": "frozen FSDP model setup, score normalization, masked reward and collective scheduling",
+      "sha256": "8fe7394ed77b76320ee6c85745e95a7ed5fd49c8adf1f96e6249e4b653c7f7e5"
+    },
+    {
+      "path": "verl/verl/checkpoint_engine/base.py",
+      "reviewed_scope": "registry, checkpoint worker and manager sync/sleep lifecycle",
+      "sha256": "2a7338d5c1615e29af1105e62029da4ddc961177cf2bc0589042610cb27967ce"
+    },
+    {
+      "path": "verl/verl/workers/rollout/base.py",
+      "reviewed_scope": "BaseRollout contract and async registry",
+      "sha256": "4494fbc2cce765ebfb2ab7f71a1c2603aa1439097777b2fe001e1f44eab36a19"
+    },
+    {
+      "path": "verl/verl/workers/rollout/hf_rollout.py",
+      "reviewed_scope": "full: legacy synchronous HF implementation",
+      "sha256": "de5a42d352bb96a3352ebdcc8a9ec1e7c1dd47924ec21e540015d74b7cf1909f"
+    },
+    {
+      "path": "verl/verl/workers/rollout/replica.py",
+      "reviewed_scope": "hybrid/colocated/standalone ownership and worker mapping",
+      "sha256": "e4f9415dbfe550e464413c664a7b680d797f75bf5b108a9b22cb0162dbaaabed"
+    },
+    {
+      "path": "verl/verl/workers/rollout/llm_server.py",
+      "reviewed_scope": "request routing and LLMServerManager replica/model construction",
+      "sha256": "757ca42f2d745d56d7e35a7c08f0b100f41d2abb726d91bc9fe8b2e41624e83a"
+    },
+    {
+      "path": "verl/verl/experimental/agent_loop/agent_loop.py",
+      "reviewed_scope": "worker generate/postprocess/reward path and AgentLoopManager dispatch",
+      "sha256": "85f7b8068f6cfe9bb2e3cb6b874a9c0d13f000434155bbe72dfd2450596e22d1"
+    },
+    {
+      "path": "verl/verl/experimental/agent_loop/single_turn_agent_loop.py",
+      "reviewed_scope": "full: canonical prompt generation and token metadata",
+      "sha256": "69059aaf95e4947aa726ce27d5e851570899ea2cce3944fcceb9ce9a990be32b"
+    },
+    {
+      "path": "verl/verl/workers/rollout/vllm_rollout/vllm_rollout.py",
+      "reviewed_scope": "full: IPC transfer, fusion binding, versions and cache reset",
+      "sha256": "22ebe9ee96374add8c2b0f60bc1d55a681a3049dc5cdd85ebb21bd19b906b85c"
+    },
+    {
+      "path": "verl/verl/workers/rollout/vllm_rollout/vllm_async_server.py",
+      "reviewed_scope": "server model construction, sampling, wake/sleep, cache control and custom RPC",
+      "sha256": "1a888b6cb19472c607a8385435f47c076d0862e597e0a34ebdeee37221456792"
+    },
+    {
+      "path": "verl/verl/workers/rollout/vllm_rollout/utils.py",
+      "reviewed_scope": "valid-vocabulary mask, fusion initialization and dual weight sinks",
+      "sha256": "1e23222c6843787616d874f19b4dee3467b683e478366edd14fc3a3c7336c0b3"
+    },
+    {
+      "path": "verl/verl/workers/rollout/fusion/decoder.py",
+      "reviewed_scope": "full: shared prefixes, KV contexts, CUDA Graph, fusion and weight ownership",
+      "sha256": "d5aea5198ab477884a0f7be6e85b7f4ed99db7380f8e922ea543a0a3b438f694"
+    },
+    {
+      "path": "verl/tests/opd/test_logit_fusion_on_cpu.py",
+      "reviewed_scope": "full: numerical, prefix, EOS, frozen teacher and version tests",
+      "sha256": "752bfe59d8d17ff2bf95f66b02fc98b5072d8300026a0a8ca27a8181072b455c"
+    },
+    {
+      "path": "verl/tests/opd/test_fusion_bridge_on_cpu.py",
+      "reviewed_scope": "full: typed configuration and actor RPC contract",
+      "sha256": "61b68f2e9832bf361ba40ce2a197467aea6f054f016793ccea936b586b1ccf04"
+    }
+  ],
+  "findings": [
+    {
+      "id": "shared_model_configuration",
+      "claim": "Actor and native rollout/server initialization share actor_rollout_ref.model.",
+      "path": "verl/verl/workers/engine_workers.py",
+      "line": 534,
+      "status": "observed_in_code"
+    },
+    {
+      "id": "actor_sync_overwrites_generator",
+      "claim": "The normal weight stream targets current actor weights; fixed sources need explicit ownership.",
+      "path": "verl/verl/workers/engine_workers.py",
+      "line": 759,
+      "status": "observed_in_code"
+    },
+    {
+      "id": "fusion_base_is_mutable_actor",
+      "claim": "Fusion always loads actor buckets into the decoder student slot.",
+      "path": "verl/verl/workers/rollout/vllm_rollout/utils.py",
+      "line": 329,
+      "status": "observed_in_code"
+    },
+    {
+      "id": "fusion_requires_previous_actor_version",
+      "claim": "Fusion RPC expects global_steps - 1, incompatible with treating a frozen base as an actor version.",
+      "path": "verl/verl/workers/engine_workers.py",
+      "line": 727,
+      "status": "observed_in_code"
+    },
+    {
+      "id": "sleep_discards_native_weights",
+      "claim": "Full-parameter HYBRID sleep uses level 2, whose recovery assumes an actor weight stream.",
+      "path": "verl/verl/workers/rollout/vllm_rollout/vllm_async_server.py",
+      "line": 1121,
+      "status": "observed_in_code"
+    },
+    {
+      "id": "kv_only_control_is_stub",
+      "claim": "KV-only release and resume methods contain guards but no release/restore operation.",
+      "path": "verl/verl/workers/rollout/vllm_rollout/vllm_async_server.py",
+      "line": 826,
+      "status": "observed_in_code"
+    },
+    {
+      "id": "dual_fusion_and_native_weight_sinks",
+      "claim": "Fusion receiver writes its HF base, then also updates native engine weights.",
+      "path": "verl/verl/workers/rollout/vllm_rollout/utils.py",
+      "line": 327,
+      "status": "observed_in_code"
+    },
+    {
+      "id": "actor_probability_recomputation",
+      "claim": "Off-policy sources must retain current-actor old_log_probs; bypass and correction must be explicit choices.",
+      "path": "verl/verl/trainer/ppo/ray_trainer.py",
+      "line": 1725,
+      "status": "observed_in_code"
+    },
+    {
+      "id": "pure_opd_replaces_verifier",
+      "claim": "Direct OPD overwrites verifier reward; packing/reward paths still differ in diagnostics and GRPO extension semantics.",
+      "path": "verl/verl/trainer/ppo/opd_trainer_mixin.py",
+      "line": 176,
+      "status": "observed_in_code"
+    },
+    {
+      "id": "vocabulary_normalization_contract",
+      "claim": "Generation masks padded vocabulary while the FSDP teacher normalizes full output logits; score reuse needs parity verification.",
+      "path": "verl/verl/workers/fsdp_teacher_worker.py",
+      "line": 308,
+      "status": "observed_in_code"
+    },
+    {
+      "id": "prompt_pool_coupled_to_fifty_steps",
+      "claim": "Math source recipes bind the paired schedule and derive epochs using 50 batches.",
+      "path": "recipe/math_online.sh",
+      "line": 7,
+      "status": "observed_in_code"
+    },
+    {
+      "id": "legacy_hf_not_async_backend",
+      "claim": "HFRollout is an old synchronous interface, not a registered async backend in the current factory.",
+      "path": "verl/verl/workers/rollout/base.py",
+      "line": 88,
+      "status": "observed_in_code"
+    },
+    {
+      "id": "plateau_fixed_replay_only",
+      "claim": "Existing plateau guard and window diagnostics explicitly require fixed cache replay.",
+      "path": "verl/verl/trainer/ppo/ray_trainer.py",
+      "line": 422,
+      "status": "observed_in_code"
+    }
+  ]
+}

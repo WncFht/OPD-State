@@ -109,3 +109,9 @@ Fusion 随后完成全部 50 步和三基准 eval16，进程退出码 0，W&B g5
 补充速度判断边界：同 checkpoint、实际 batch、长度分布、生成分数与推理执行路径一致时，纯 rollout 吞吐应接近；仅统一参数上限不等于实际 batch 一致。完整首轮还包含参数同步、阶段切换与缓存/初始化成本，两者总时间不保证相同。当前两组都重新做 teacher 评分，没有将尚未实现的 teacher 分数缓存归为当前收益。
 
 按用户追问，核对 vLLM 0.10.0 的 GPU worker/model runner 与 HF 4.57.1 缓存说明，补充 prefill/decode、模型权重/活跃 KV/临时张量/引擎预留池的区别。活跃 batch 变小不保证 vLLM 固定池在 nvidia-smi 中变小，也不会自动把空间让给另一模型。按本地 28 层、2 KV head、128 head dim 与 BF16 推导每序列每 token 28 KiB，给出固定全局 batch 与固定每卡 batch 的多卡 KV 表和稳态吞吐近似，明确不是实测加速。内容继续归统一报告。仅终止等待下次时点的会话内计时 cell 724，以便响应用户问题；后台每小时检查 PID 304315 和 GPU 遥测均未停止，没有提前读取 Semi 进度。
+
+按用户要求全面审阅实时 rollout 重构，沿当前 math 的 recipe→main_ppo_v0→RayPPOTrainer→actor/rollout worker→IPC/vLLM/HF decoder→teacher scoring→actor loss→student-only 验证逐段核对，涉及 32 个文件；范围与 SHA 保存在 docs/experiment/results/2026-10-18-rollout-refactor-code-audit.json，源码基线 d17d6c6。13 项源码观察包括 actor/rollout 共用 model config、actor 流覆盖 fusion base、固定模型不适用 step-1 版本约定、sleep level 2 的恢复来源、KV-only 方法空实现、原生与 HF 双参数写入、旧 HF 类不在 async registry、旧 50 批数据与平台判据耦合。没有把整个上游所有后端称为已审阅范围。
+
+在既有 docs/architecture.md 写入拟议方案，并从统一实验报告链接：ModelRef、RolloutPolicySpec、RolloutCoordinator 与 GenerationBackend 支持三种单模型和两种 shared-prefix fusion；训练时实时生成与 on-policy 语义区分，初始 student fresh 不冒称固定缓存 Semi。保留现有 actor 更新、teacher 评分和完整 eval16；建议先用同一 HF 单/双模型内核比较五种来源，再独立接入 vLLM 单模型性能路径。完整数据清单与预算分开，统一轨迹、mask、行为概率诊断和原子参数版本，控制 CUDA Graph 地址与 KV 生命周期。首版明确成功/否决条件、逐文件归属、两步 GPU 与后续 50 步验收，不把提案当作新功能已通过。
+
+此次只修改设计与代码核验记录，没有切换正式生成路径或改变运行中训练。终止的仅是会话内等待 cell 734，以便响应代码审阅请求；每小时后台观察和独立 GPU 遥测继续保留。
