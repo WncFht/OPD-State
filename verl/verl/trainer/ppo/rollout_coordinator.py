@@ -340,6 +340,21 @@ class RolloutCoordinator:
             pad_token_id=self.tokenizer.pad_token_id,
             source="native_policy",
         )
+        if validate:
+            import numpy as np
+
+            response_info = np.empty(len(trajectories), dtype=object)
+            for index, row in enumerate(trajectories):
+                response_info[index] = {
+                    "termination": row.termination,
+                    "finish_reason": row.segments[-1].finish_reason,
+                    "stop_reason": row.segments[-1].stop_reason,
+                    "response_cap": cap,
+                    "prompt_id": row.request.prompt_id,
+                    "sample": row.request.sample,
+                    "student_version": version,
+                }
+            result.non_tensor_batch["native_response_info"] = response_info
         if not validate and self.rollout.get("generation_state_metrics", True):
             import numpy as np
 

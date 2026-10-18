@@ -1,0 +1,90 @@
+{
+  "schema": "validation-metrics-cpu-v1",
+  "verified_at": "2026-10-18T14:17:24.207612+00:00",
+  "checks": [
+    {
+      "command": [
+        "/mnt/tidalfs-bdsz01/dataset/llm_dataset/zkn_data/fht_data/OPD-State/.venv/bin/python",
+        "-m",
+        "unittest",
+        "discover",
+        "-s",
+        "verl/tests/opd",
+        "-p",
+        "test_native_*_on_cpu.py",
+        "-v"
+      ],
+      "exit_code": 0,
+      "tests": 77,
+      "seconds": 0.8279203847050667,
+      "log_sha256": "052a315fd57845238247f348344900be217a148434111e94bff65dfa6e47cc55"
+    },
+    {
+      "command": [
+        "/mnt/tidalfs-bdsz01/dataset/llm_dataset/zkn_data/fht_data/OPD-State/../envs/opd-state/bin/python",
+        "-m",
+        "unittest",
+        "discover",
+        "-s",
+        "verl/tests/opd",
+        "-p",
+        "test_*_runtime.py",
+        "-v"
+      ],
+      "exit_code": 0,
+      "tests": 26,
+      "seconds": 14.491900227963924,
+      "log_sha256": "1f506589372ebd5c76327eb1ac109de5454f766b5c9a3b756a1b4c39e53fcf6c"
+    }
+  ],
+  "full_vocabulary_numeric_stress": {
+    "states": 4,
+    "output_width": 151936,
+    "effective_vocab": 151665,
+    "dtype": "BF16 inputs / FP32 reduction / FP64 reference",
+    "nan_head_padding_ignored": true,
+    "results": [
+      {
+        "chunk_size": 1024,
+        "max_absolute_errors": {
+          "student_teacher_kl": 1.8031159558784537e-6,
+          "teacher_student_kl": 1.845906787756313e-6,
+          "student_entropy": 6.710170881163435e-6,
+          "teacher_entropy": 8.3426682007115e-6
+        }
+      },
+      {
+        "chunk_size": 8192,
+        "max_absolute_errors": {
+          "student_teacher_kl": 1.1849881788039696e-6,
+          "teacher_student_kl": 9.555115166870465e-7,
+          "student_entropy": 5.695280501427646e-6,
+          "teacher_entropy": 4.878489008319775e-6
+        }
+      },
+      {
+        "chunk_size": 151665,
+        "max_absolute_errors": {
+          "student_teacher_kl": 1.7435113111030631e-6,
+          "teacher_student_kl": 1.5714207095562926e-6,
+          "student_entropy": 6.710170881163435e-6,
+          "teacher_entropy": 5.645795017272803e-6
+        }
+      }
+    ]
+  },
+  "gpu_generation_or_scoring_verified": false,
+  "kl_valid_hook_connected": false,
+  "validation_rollout_hook_connected": true,
+  "frozen_formal_matrix_changed": false,
+  "source_sha256": {
+    "eval/probe_validation_metrics_cpu.py": "0ea299d099acc8e9bcf2c75bbe565cdf334075dff3cdadbe1217f8e7fb8a6766",
+    "verl/verl/trainer/ppo/validation_kl.py": "f143c25648a6c46c3d7784216bc8bf2d694351b25988d837928d5ddccb3fe390",
+    "verl/verl/trainer/ppo/validation_rollout.py": "0bab63aa4ebdcaf5cf823bad264a50e96dc2a82a436b43e281e57a0e712ffb55",
+    "verl/verl/trainer/ppo/ray_trainer.py": "efc6054b8ed5a9b4e7136de1db7fa54352eb48b77f347fafe44e091422f5f97c",
+    "verl/verl/trainer/ppo/rollout_coordinator.py": "3c3c3e1a6c956d1a2d7fef796c79acd8df6fab58cbdedefc7cb43cc8bb5ef094",
+    "verl/tests/opd/test_native_validation_on_cpu.py": "f1a0f47da44cf6848ec6a634a845dc4a2ccb6137fd00f9577fe17d8b3229d142",
+    "verl/tests/opd/test_validation_metrics_runtime.py": "b3c37a9f1a3ad72055cf05dba663d27929b483617b287b2f32cd7239699817d6",
+    "verl/tests/opd/test_rollout_coordinator_runtime.py": "dbda1660e8b19b11a9b85a03a6b70980958305d24e0cc12bb1271fe541ec7458"
+  }
+}

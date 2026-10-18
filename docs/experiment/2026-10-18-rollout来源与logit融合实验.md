@@ -908,6 +908,14 @@ env -u WANDB_API_KEY NETRC="$PWD/../.secrets/netrc" WANDB_CONFIG_DIR="$PWD/../co
 
 Teacher 组训练源码固定于 `350a286be0d586f04e4cd0b0e89624a336b17a81`，其余正式来源组、fusion 与长时组固定于 `4eb96bb1ab62fc7bac735c463dd54bafd315a62a`。采集、远端核验、分析和绘图源码分别记录哈希，不把后续分析提交误当作训练版本。配对 parquet SHA-256 为 `a98110172a296c791ceb10c27de9f335b905ffb46f98ab119383ddcb9886c760`；完整模型和缓存签名见各组 manifest 与 fusion model-provenance。
 
+### 验证长度与 KL 的开发验收
+
+开发源码的 `_validate` 已接入有效 token 长度与 p50/p90/p95、EOS/非 EOS 截断、答案解析、每题答案多样性、重复 4-gram，以及正确/错误响应的长度分布。DP padding 去除后再收集，逐响应保存原始 finish/stop reason 与最终 student 版本，整轮按响应汇总，避免平均不等大 batch 的均值。EOS=PAD 与 EOS 恰在 cap 时仍计入有效长度。真实 DataProto 重排、实际验证与合并方法的 CPU 检查通过，尚无该新增 hook 的四卡验收。
+
+[KL 数值与验证链路证据](results/native-rollout/validation-metrics-cpu.json)记录七十七项原生 CPU 检查与二十六项训练环境运行检查；后者使用真实 Torch/DataProto，未运行 GPU 模型。BF16 输入、151,665 个有效词表项和 151,936 宽输出 head 在三种分块下的双向 KL/entropy 均满足相对独立 FP64 参考的绝对误差上限 $10^{-5}$；词表外 NaN 填充未参与归一化。该证据只验证数值函数与长度统计，不表示最终 student/teacher 的验证 KL 已经算出。
+
+KL 主方案按最新要求复用全部 570×16 验证响应，对全部有效位置计算完整词表散度，不另生成 student 探针；另建共享的 initial-student/teacher 固定前缀 bank。验证采样维持 temperature=0.7、top-p=0.9，累计量标注为验证状态上的累计条件 KL。评分 worker、位置分块的真实显存与耗时、固定 bank 和完整 GPU 验收仍待完成，详见[Agent Note](../../.agents/notes/proposed/architecture/2026-10-18-可组合rollout与原生vLLM推理.md)。冻结的 d59a7c3 正式矩阵不含上述新增指标；已结束且未保存最终权重的运行不能仅由响应文本补算最终 KL。
+
 ## 历史调试与后续范围
 
 可组合原生 rollout 已完成生产策略、模型身份、执行与协调器接入，current-student 四卡两步通过；其他变体仍需分别验证。已有三十八场景的[实施前原生基准](results/native-rollout/baseline-throughput.json)保留实际输入、源码哈希、引擎冷启动和三十六个性能子测；GPU 0 启动占用 6,921 MiB，属于共享负载测试。后续生成、更新、验证和资源结果继续并入本文，不另建实验正文；实施状态归对应 Agent Note。

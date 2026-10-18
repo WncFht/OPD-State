@@ -706,6 +706,7 @@ class RayPPOTrainer(OPDTrainerMixin):
         sample_scores = []
         sample_turns = []
         sample_uids = []
+        rollout_rows = []
 
         for test_data in self.val_dataloader:
             test_batch = DataProto.from_single_dict(test_data)
@@ -777,6 +778,11 @@ class RayPPOTrainer(OPDTrainerMixin):
             scores = reward_tensor.sum(-1).cpu().tolist()
             sample_scores.extend(scores)
 
+            if self.rollout_coordinator is not None:
+                from verl.trainer.ppo.validation_rollout import rows_from_batch
+
+                rollout_rows.extend(rows_from_batch(test_batch, reward_extra_info, self.tokenizer.eos_token_id))
+
             reward_extra_infos_dict["reward"].extend(scores)
             for key, values in reward_extra_info.items():
                 if key not in reward_extra_infos_dict:
@@ -801,6 +807,8 @@ class RayPPOTrainer(OPDTrainerMixin):
         # dump generations
         val_data_dir = self.config.trainer.get("validation_data_dir", None)
         if val_data_dir:
+            from verl.trainer.ppo.validation_rollout import dump_columns
+
             self._dump_generations(
                 inputs=sample_inputs,
                 outputs=sample_outputs,
@@ -810,6 +818,7 @@ class RayPPOTrainer(OPDTrainerMixin):
                     **reward_extra_infos_dict,
                     "validation_uid": sample_uids,
                     "data_source": np.concatenate(data_source_lst).tolist(),
+                    **dump_columns(rollout_rows),
                 },
                 dump_path=val_data_dir,
             )
@@ -824,9 +833,19 @@ class RayPPOTrainer(OPDTrainerMixin):
                 "sample_uids": sample_uids,
                 "sample_turns": sample_turns,
                 "reward_extra_infos_dict": reward_extra_infos_dict,
+                "rollout_rows": rollout_rows,
             }
         data_sources = np.concatenate(data_source_lst, axis=0)
-        return self._val_metrics_update(data_sources, sample_uids, reward_extra_infos_dict, sample_turns)
+        metrics = self._val_metrics_update(data_sources, sample_uids, reward_extra_infos_dict, sample_turns)
+        if rollout_rows:
+            from verl.trainer.ppo.validation_rollout import summarize_rollouts
+
+            metrics.update(
+                summarize_rollouts(
+                    rollout_rows, samples_per_question=int(self.config.actor_rollout_ref.rollout.val_kwargs.n)
+                )
+            )
+        return metrics
 
     def _val_metrics_update(self, data_sources, sample_uids, reward_extra_infos_dict, sample_turns):
         metric_dict = {}
@@ -894,7 +913,13 @@ class RayPPOTrainer(OPDTrainerMixin):
             list_b = result_b["reward_extra_infos_dict"].get(key, [])
             reward_extra_infos_dict[key] = list_a + list_b
 
-        return self._val_metrics_update(data_sources, sample_uids, reward_extra_infos_dict, sample_turns)
+        metrics = self._val_metrics_update(data_sources, sample_uids, reward_extra_infos_dict, sample_turns)
+        rollout_rows = result_a.get("rollout_rows", []) + result_b.get("rollout_rows", [])
+        if rollout_rows:
+            from verl.trainer.ppo.validation_rollout import summarize_rollouts
+
+            metrics.update(summarize_rollouts(rollout_rows))
+        return metrics
 
     def init_workers(self):
         """Initialize distributed training workers using Ray backend.
