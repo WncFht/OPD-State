@@ -1,10 +1,12 @@
 """Render the unified rollout-source experiment from audited local evidence.
 
 Semantic ledger: each color denotes one trajectory source in every panel;
-each line point is one optimizer step, each accuracy bar is one completed
-step-50 student evaluation. Gray references are separate evaluation-only runs.
+each training-line point is one optimizer step, each accuracy marker is one
+completed step-50 student evaluation, and each pass-curve point is one k at
+that same checkpoint. Gray references are separate evaluation-only runs.
 Geometric ledger: x=optimizer steps or sample count k; y units are explicit
-per panel. Accuracy bars start at zero. No interpolated accuracy trajectory,
+per panel. Accuracy uses point plots with explicitly zoomed benchmark axes.
+No interpolated accuracy trajectory,
 training-seed band, or full-vocabulary KL is invented. The signed log-ratio is
 the negative logged token reward, not a conditional KL on off-policy actions.
 """
@@ -49,6 +51,22 @@ def write_csv(path, rows):
         writer = csv.DictWriter(stream, fieldnames=list(rows[0]), lineterminator="\n")
         writer.writeheader()
         writer.writerows(rows)
+
+
+def reference_metric(references, role, benchmark, k):
+    """Use exported exact pass@k, never upstream bootstrap best@k."""
+    metric = "mean@16" if k == 1 else f"pass@{k}"
+    metrics = references[role]["metrics"]
+    if benchmark == "macro":
+        return sum(metrics[f"eval/{b}/{metric}"] for b in BENCHMARKS[:-1]) / 3
+    return metrics[f"eval/{benchmark}/{metric}"]
+
+
+def zoom_limits(values):
+    """Percent axes include every point/reference with a visible margin."""
+    low, high = min(values), max(values)
+    padding = max(1.0, (high - low) * 0.15)
+    return max(0, math.floor(low - padding)), min(100, math.ceil(high + padding))
 
 
 def load_evidence(results):
@@ -110,11 +128,22 @@ def main():
     args.output.mkdir(parents=True, exist_ok=True)
     write_csv(args.output / "training-plotted.csv", training)
     write_csv(args.output / "accuracy-plotted.csv", accuracy)
+    reference_rows = [
+        {
+            "source": role,
+            "benchmark": b,
+            **{f"pass@{k}": reference_metric(references, role, b, k) for k in (1, 2, 4, 8, 16)},
+        }
+        for role in ("initial_student", "teacher")
+        for b in BENCHMARKS
+    ]
+    write_csv(args.output / "references-plotted.csv", reference_rows)
     colors = dict(zip(RUNS, fv.series_colors("paper", 4), strict=True))
     audits = {}
     neutral = fv.NEUTRALS["baseline"]
     ink = fv.NEUTRALS["vink"]
     handles = [Line2D([], [], color=colors[arm], lw=1.5, label=arm) for arm in RUNS]
+    axis_limits = {}
 
     def save(fig, stem, caption, *, legend=handles, bottom=0.13):
         for ax in fig.axes:
@@ -124,7 +153,10 @@ def main():
         fig.tight_layout(rect=(0, bottom, 1, 1), h_pad=1.8, w_pad=1.8)
         fig.legend(handles=legend, loc="lower center", bbox_to_anchor=(0.5, 0.035), ncol=2)
         fig.text(0.5, 0.009, caption, ha="center", color=neutral, fontsize="small")
-        audits[stem] = fv.audit(fig)
+        # Different benchmarks deliberately use independent zoom ranges.
+        scoped = [("facet-ylim-mismatch", ax) for ax in fig.axes] if stem in {"accuracy-step50", "pass-at-k"} else []
+        audits[stem] = fv.audit(fig, scoped_ignore=scoped)
+        axis_limits[stem] = [list(ax.get_ylim()) for ax in fig.axes]
         metadata = {"Creator": "eval/plot_math_experiment.py", "Subject": caption}
         fig.savefig(args.output / f"{stem}.png", dpi=240, metadata={"Description": caption})
         fig.savefig(args.output / f"{stem}.pdf", metadata=metadata)
@@ -162,7 +194,7 @@ def main():
     )
     training_panels(
         [
-            ("response_tokens", "Training response length", "tokens / response"),
+            ("response_tokens", "Batch mean response length", "tokens / response"),
             ("cap_fraction", "Responses reaching 4K cap", "fraction"),
             ("sequence_reward", "Summed teacher reward", "nats / response"),
             ("actor_update_seconds", "Actor update time", "seconds / step"),
@@ -173,16 +205,23 @@ def main():
 
     fig, axes = plt.subplots(2, 2, figsize=(5.5, 4.9))
     for index, (ax, benchmark) in enumerate(zip(axes.flat, BENCHMARKS, strict=True)):
+        values = [r["mean@16"] * 100 for r in accuracy if r["benchmark"] == benchmark]
+        values += [reference_metric(references, role, benchmark, 1) * 100 for role in ("initial_student", "teacher")]
+        limits = zoom_limits(values)
         for j, arm in enumerate(RUNS):
             score = next(r["mean@16"] for r in accuracy if r["source"] == arm and r["benchmark"] == benchmark)
-            ax.bar(j, score * 100, width=0.65, color=colors[arm], label=arm)
-            ax.text(j, score * 100 + 1.5, f"{score * 100:.1f}", ha="center", fontsize="small")
+            ax.plot(j, score * 100, marker="o", ms=4.5, ls="none", color=colors[arm], label=arm)
+            ax.text(
+                j, score * 100 + (limits[1] - limits[0]) * 0.045, f"{score * 100:.2f}", ha="center", fontsize="small"
+            )
         for role, style, color in (("initial_student", "--", neutral), ("teacher", ":", ink)):
             score = references[role]["metrics"][f"eval/{benchmark}/mean@16"]
             fv.mark_neutral(ax.axhline(score * 100, color=color, ls=style, lw=1))
         ax.set_title(f"({chr(97 + index)}) {benchmark}", loc="left")
         ax.set_xticks(range(4), ("Online", "Teacher", "Semi", "Fusion"))
-        ax.set_ylim(0, 100)
+        ax.set_xlim(-0.45, 3.45)
+        ax.set_ylim(*limits)
+        ax.yaxis.set_major_locator(MaxNLocator(4))
         ax.set_ylabel("mean@16 (%)")
     reference_handles = [
         Line2D([], [], color=neutral, ls="--", label="Initial student (external)"),
@@ -191,25 +230,39 @@ def main():
     save(
         fig,
         "accuracy-step50",
-        "Step-50 student evaluations; dashed/dotted lines: user-provided reference runs.",
+        "Step 50; benchmark axes zoom independently; dashed/dotted: external references.",
         legend=handles + reference_handles,
         bottom=0.22,
     )
 
     fig, axes = plt.subplots(2, 2, figsize=(5.5, 4.8))
     for index, (ax, benchmark) in enumerate(zip(axes.flat, BENCHMARKS, strict=True)):
+        values = []
         for arm in RUNS:
             row = next(r for r in accuracy if r["source"] == arm and r["benchmark"] == benchmark)
             ks = (1, 2, 4, 8, 16)
             ax.plot(ks, [row[f"pass@{k}"] * 100 for k in ks], color=colors[arm], marker="o", ms=2, label=arm)
+            values.extend(row[f"pass@{k}"] * 100 for k in ks)
+        for role, style, color in (("initial_student", "--", neutral), ("teacher", ":", ink)):
+            scores = [reference_metric(references, role, benchmark, k) * 100 for k in ks]
+            assert all(a <= b + 1e-10 for a, b in zip(scores[:-1], scores[1:], strict=True))
+            values.extend(scores)
+            ax.plot(ks, scores, color=color, ls=style, marker="s" if role == "teacher" else "x", ms=2.8)
         ax.set_xscale("log", base=2)
         ax.set_xticks((1, 2, 4, 8, 16), ("1", "2", "4", "8", "16"))
         ax.minorticks_off()
-        ax.set_ylim(0, 100)
+        ax.set_ylim(*zoom_limits(values))
+        ax.yaxis.set_major_locator(MaxNLocator(4))
         ax.set_title(f"({chr(97 + index)}) {benchmark}", loc="left")
         ax.set_xlabel("Samples k")
         ax.set_ylabel("pass@k (%)")
-    save(fig, "pass-at-k", "Step 50; unbiased without-replacement pass@k estimated from 16 responses.", bottom=0.16)
+    save(
+        fig,
+        "pass-at-k",
+        "Exact pass@k from 16 responses; independent zoom; dashed/dotted: external references.",
+        legend=handles + reference_handles,
+        bottom=0.22,
+    )
     report = {
         "plotter_sha256": sha256(Path(__file__)),
         "style_sha256": sha256(skill / "assets/mpl/fvstyle.py"),
@@ -219,6 +272,8 @@ def main():
         "training_rows": len(training),
         "accuracy_rows": len(accuracy),
         "audit": audits,
+        "axis_limits": axis_limits,
+        "audit_scope": "Accuracy/pass panels have different benchmarks and intentionally independent y ranges",
         "outputs": {p.name: sha256(p) for p in args.output.iterdir() if p.suffix in {".png", ".pdf", ".csv"}},
         "metric_semantics": {
             "signed_log_ratio": "-opd/token_reward_mean; sampled log(student/teacher), not full conditional KL",

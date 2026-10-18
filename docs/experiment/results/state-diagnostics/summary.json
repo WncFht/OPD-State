@@ -1,0 +1,118 @@
+{
+  "analyzer_sha256": "a70d62628138656d29efb9c03f472ddbe83486f862418c44388ed768c9c6c5f8",
+  "schedule_sha256": "578b41e53de162b41ccada99164bc3e611740fbe0c70b7e321bf3ce2fbe8c854",
+  "semi_training_csv_sha256": "78269269c3947c0b8cd3977988409c404d6cb8646ae1a8febb294950fa42de82",
+  "database_sha256": {
+    "student": "0a3c3dff4d507e6e3e3a532ddd45e22d58325d379618f47b7b33baf4e78028b0",
+    "teacher": "c61a86ca7e9bac6f273495696d8718c6879dc440af5bfb1ba2c2907724e9953f"
+  },
+  "records": 3200,
+  "cached_response_lengths": {
+    "student": {
+      "min": 417,
+      "mean": 3900.651875,
+      "median": 4096.0,
+      "p90": 4096,
+      "max": 4096
+    },
+    "teacher": {
+      "min": 218,
+      "mean": 3904.3025,
+      "median": 4096.0,
+      "p90": 4096,
+      "max": 4096
+    }
+  },
+  "batch_mean_lengths": {
+    "student": {
+      "min": 3728.21875,
+      "mean": 3900.651875,
+      "median": 3920.4375,
+      "p90": 3993.6875,
+      "max": 4028.828125
+    },
+    "teacher": {
+      "min": 3723.234375,
+      "mean": 3904.3025,
+      "median": 3914.2578125,
+      "p90": 3976.5625,
+      "max": 4020.25
+    }
+  },
+  "semi_all_50_batch_means_match_cache": true,
+  "long_observed_steps": 49,
+  "long_completed_cycles": 0,
+  "long_all_observed_lengths_match_periodic_cache": true,
+  "expected_period_steps": 50,
+  "teacher_student_common_prefix_tokens": {
+    "min": 0,
+    "mean": 16.675625,
+    "median": 10.0,
+    "p90": 43,
+    "max": 183
+  },
+  "identical_response_pairs": 0,
+  "finish_reasons": {
+    "student/length": 2684,
+    "teacher/stop": 651,
+    "teacher/length": 2549,
+    "student/stop": 516
+  },
+  "paired_shared_prefix_positions": 56562,
+  "paired_prefix_position_jaccard": 0.002269807665482631,
+  "student_positions_also_in_paired_teacher": 0.004531454117524907,
+  "teacher_positions_also_in_paired_student": 0.0045272170893520675,
+  "state_metric_scope": "Exact lexical prefix positions within paired prompt records; not semantic state coverage",
+  "benchmark_profile": {
+    "question_counts": {
+      "MATH-500": 500,
+      "AMC23": 40,
+      "AIME25": 30
+    },
+    "raw_and_evaluation_content_match": true,
+    "math_levels": {
+      "1": 43,
+      "2": 90,
+      "3": 105,
+      "4": 128,
+      "5": 134
+    },
+    "math_subjects": {
+      "Precalculus": 56,
+      "Intermediate Algebra": 97,
+      "Algebra": 124,
+      "Number Theory": 62,
+      "Prealgebra": 82,
+      "Geometry": 41,
+      "Counting & Probability": 38
+    },
+    "amc_source_counts": {
+      "12A": 22,
+      "12B": 18
+    },
+    "amc_problem_numbers": {
+      "12A": [
+        1, 2, 3, 4, 5, 6, 7, 8, 10, 11, 12, 13, 14, 16, 17, 19, 20, 21, 22, 23,
+        24, 25
+      ],
+      "12B": [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 16, 17, 23, 24]
+    },
+    "aime_parts": {
+      "I": 15,
+      "II": 15
+    },
+    "input_sha256": {
+      "/mnt/tidalfs-bdsz01/dataset/llm_dataset/zkn_data/fht_data/MD-OPD/data/.cache/amc23.parquet": "aca7ed828c4de33d70b8ba3e00f57f86d1c39d2afeaa091eb78cdc02ce572f7b",
+      "/mnt/tidalfs-bdsz01/dataset/llm_dataset/zkn_data/fht_data/MD-OPD/data/.cache/upstream/math500_test.jsonl": "35dc41080a3680858b27fa7e0533d2d547825316fc5dafe5d316f4ccc5a06132",
+      "/mnt/tidalfs-bdsz01/dataset/llm_dataset/zkn_data/fht_data/MD-OPD/data/.cache/aime2025-I.jsonl": "b91b3c96f05d9635d2a0692b124ebe023c1ff59cb19c074275e6c4b349d0659e",
+      "/mnt/tidalfs-bdsz01/dataset/llm_dataset/zkn_data/fht_data/MD-OPD/data/.cache/aime2025-II.jsonl": "16a2dcfbbf9db1b11f8a69a3ba5e4cac73e3641b19a37e2307e9c12240bbed5e",
+      "/mnt/tidalfs-bdsz01/dataset/llm_dataset/zkn_data/fht_data/MD-OPD/data/math/MATH-500/test.parquet": "49e1b2c7bddd84791f38287bcdd4a99639c599e699d5906c238c74d0b31ccf8c",
+      "/mnt/tidalfs-bdsz01/dataset/llm_dataset/zkn_data/fht_data/MD-OPD/data/math/AMC23/test.parquet": "02389cd00016eb8330134f4fe4fb47bb6fadf0c57b19af48aafd2d115c798072",
+      "/mnt/tidalfs-bdsz01/dataset/llm_dataset/zkn_data/fht_data/MD-OPD/data/math/AIME25/test.parquet": "3fcf0118e87348af9a1c996438aa5fb00e91c4df5a5a00fe29a0c909886075b6"
+    }
+  },
+  "outputs_sha256": {
+    "cache-batch-diagnostics.csv": "27d045ab0c1263408e9217aa51ea316722238204e5d6dbba19298fa1261f43f6",
+    "long-length-observations.csv": "66126edc2e5d154139c298a8aa47fa860ab3492fc026e8e7f1277c7daa8ce831"
+  }
+}

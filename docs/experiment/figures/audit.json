@@ -1,5 +1,5 @@
 {
-  "plotter_sha256": "5e71d410b120e1f4d927a13d4dd84f75702439ba912d9db9704d4318d1dd6266",
+  "plotter_sha256": "709b0bb98aa17110b875e78f3e04f559f6c3db01de373c43e08749b579f439f3",
   "style_sha256": "a9670b726e4890688bad9bec5cf5f39dcc6a1604ceebff8043c26cee95726581",
   "matplotlib_version": "3.10.7",
   "sources": {
@@ -31,17 +31,47 @@
     "accuracy-step50": [],
     "pass-at-k": []
   },
+  "axis_limits": {
+    "training-optimization": [
+      [-0.10039771946765186, 0.12852433899099122],
+      [-0.12852433899099122, 0.10039771946765186],
+      [0.28295022486814686, 0.5801432733834163],
+      [0.4299135714769363, 2.3909347146749496],
+      [0.6156554609537125, 0.8948675602674484],
+      [-0.10039772838354111, 0.1285243257880211]
+    ],
+    "training-rollouts": [
+      [3627.69296875, 4053.13515625],
+      [0.6265625, 0.9359375],
+      [-507.67462158203125, 393.43646240234375],
+      [3.7971619326621293, 9.748966928943991]
+    ],
+    "accuracy-step50": [
+      [82.0, 91.0],
+      [69.0, 92.0],
+      [21.0, 42.0],
+      [57.0, 75.0]
+    ],
+    "pass-at-k": [
+      [81.0, 99.0],
+      [68.0, 99.0],
+      [17.0, 70.0],
+      [55.0, 89.0]
+    ]
+  },
+  "audit_scope": "Accuracy/pass panels have different benchmarks and intentionally independent y ranges",
   "outputs": {
     "accuracy-plotted.csv": "bb7f3589d8539bb96254d5a9fc77569c3351f3b569c9da65642ec5f9bfa80a5a",
-    "accuracy-step50.pdf": "a16da68af84e7be415211ac99134c17012fca922c56c1d474d23890c35114cea",
-    "accuracy-step50.png": "eddab57a1d1c5ce97679a7150f8e60148839b453ee5bba29cadb4be7f89bcc7d",
-    "pass-at-k.pdf": "1404bbeb63cfe48a714dd18b9e7dd6eb1142af5323ace177e981c67d22c4ee44",
-    "pass-at-k.png": "8e003b8abd3712b9e2efa6ac5fb336f23db37e88c43f21852628947f069d2f10",
-    "training-optimization.pdf": "f2491f938f6360145d22291c74c81b2ae21bf6e71f418e1464bce4562a0bcdce",
+    "accuracy-step50.pdf": "d308232ea18f8f011e5179d2aefeb1c63b94fb8fa3c885443353d0f80c547880",
+    "accuracy-step50.png": "d80084a1ae4e53e44f2d7bdced0ffbd44df43ee88cc3e2214fbb50c5388031a9",
+    "pass-at-k.pdf": "06de195a42987e9c94f147f5abab07bdfc588304480e51108b29fbb88d2f3201",
+    "pass-at-k.png": "30616a7bbda27c952897490e690dca9952ef5a7c9615de4ba54f3122ae02e8fd",
+    "references-plotted.csv": "246cf2e567046895b68b822590105a55e355f58122b5afc00f5912b26b81d5e6",
+    "training-optimization.pdf": "95d45881d902d359892c3c242d6408d2e430c2cd7a697591dc25adf66af7c367",
     "training-optimization.png": "9bc6a9523c21d3be69857cce4649213fa5b03ed95d904d0cb59720082fcc677d",
     "training-plotted.csv": "85d59ce4b6a5316e558ef3ac121295ae6a46a6819cbb2e34d67955e5b118a88c",
-    "training-rollouts.pdf": "21328e5de302fc5078c0024bb777d83ecf44d49dce818a16f4502109a19ec8af",
-    "training-rollouts.png": "3a6e4407cf36140713c4de14a6c27e90af338304ac910ea5ad89e31032646b81"
+    "training-rollouts.pdf": "3e68383ed7adcc83f60c79e3a4e172e39ff22a1dc9d7ad23c1d0cf014df0afd3",
+    "training-rollouts.png": "a7b312b0ef750cdc8b5bcdaeb3acccdb96539a51180344b4bebb35b3cc9bad7e"
   },
   "metric_semantics": {
     "signed_log_ratio": "-opd/token_reward_mean; sampled log(student/teacher), not full conditional KL",

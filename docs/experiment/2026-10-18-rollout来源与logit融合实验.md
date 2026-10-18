@@ -23,7 +23,7 @@
 
 ![四个训练设置的末步准确率与 teacher、初始 student 外部参考](figures/accuracy-step50.png)
 
-准确率图只画实际完成的 step-50 结果，没有连接训练前后两点来伪造中间验证曲线。所有训练后 student 的平均正确率高于给定初始 student 参考、低于 teacher 参考；严格的训练增益估计仍需在本地核对同一模型资产和数据，并补充训练 seed。
+准确率图用点表示实际完成的 step-50 结果，各基准独立缩放纵轴，范围包含全部训练结果和两个参考，不从零起画柱高。没有连接训练前后两点来伪造中间验证曲线。所有训练后 student 的平均正确率高于给定初始 student 参考、低于 teacher 参考；严格的训练增益估计仍需在本地核对同一模型资产和数据，并补充训练 seed。
 
 | 设置         | MATH-500 pass@16 | AMC23 pass@16 | AIME25 pass@16 | macro pass@16 | micro pass@16 |
 | ------------ | ---------------: | ------------: | -------------: | ------------: | ------------: |
@@ -33,6 +33,8 @@
 | Fusion λ=0.5 |            95.80 |         95.00 |          53.33 |         81.38 |         93.51 |
 
 ![相同 16 个响应上的标准 pass@k](figures/pass-at-k.png)
+
+pass@k 图也按基准独立缩放，保留全部六条曲线：四个训练后 student、虚线初始 student、点线 teacher。两个外部参考直接使用用户指定 run 的精确 `acc/pass@k`，不以 bootstrap best@k 替代；$k=1$ 使用 mean@16，macro 在三个基准间等权平均。不同面板的纵轴范围不同，不能凭图上斜率或垂直距离跨基准比较效应大小。
 
 Fusion 的 macro mean@16 比在线组低 0.682 个百分点，macro pass@16 高 1.178 个百分点；AIME25 至少一次正确的题数分别为 16/30 与 15/30。平均正确率与多次采样覆盖表达不同性质，不能只选较高的一项宣布整体更好。
 
@@ -84,6 +86,119 @@ $$
 ![响应长度、4K 触顶比例、序列奖励与 actor 更新耗时](figures/training-rollouts.png)
 
 响应长度与触顶比例用于判断 4K 训练预算的影响。`clip_ratio` 表示长度达到 cap，不单独判定该位置是否恰好为自然 EOS。缓存保留 finish reason，但上图使用四组共同记录的长度指标。序列奖励为 token reward 的逐响应求和均值，会受长度影响；actor update time 仅含参数更新阶段，不包含轨迹生成、缓存准备或验证。
+
+### Semi-OPD 固定长度与 batch 波动
+
+Semi-OPD 固定的是每条 prompt 记录的响应 token 序列，其长度 $L_i$ 不随 student 更新变化。图中记录的是当前 batch 的平均值，而不是整份缓存的平均值：
+
+$$
+\overline L_k=\frac1{64}\sum_{i\in B_k}L_i.
+$$
+
+不同 batch 含不同记录，因此 $\overline L_k$ 可以波动。当前 schedule 有 50 个 batch，长时组不 shuffle，重复同一顺序；重复消费同一批记录时应满足 $\overline L_{k+50}=\overline L_k$。整份初始 student 缓存的平均长度始终为 3,900.651875 token。
+
+已实际读取只读 SQLite 并校验数据库哈希：3,200 条初始 student 响应的长度从 417 到 4,096；50 个 batch 均值从 3,728.21875 到 4,028.828125。第 1 批均值 3,993.6875，第 50 批 3,959.734375；全部 50 步的日志均值都与对应缓存精确一致。独立长时组已记录的 1–49 步也逐步精确匹配同一缓存，尚未经过完整第二轮，跨轮周期性需等后续日志核验。波动来自 batch 内容，没有证据显示 Semi 训练时重新生成了响应。
+
+长度核验、每批缓存统计和长时观测保存在[缓存诊断](results/state-diagnostics/summary.json)与同目录 CSV。缓存中的实际 `finish_reason=length` 分别为初始 student 的 2,684/3,200（83.875%）、teacher 的 2,549/3,200（79.65625%）；它们说明当前 4K 预算下大部分轨迹没有自然结束，state 比较须控制深度和截断。
+
+## 基准组成、难度与统计粒度
+
+以下题目数和组成来自本地上游缓存，已逐题核对 problem、answer 与实际评测 parquet 完全一致，来源文件哈希保存在[基准元数据](results/state-diagnostics/summary.json)。三组评测都比较最终数学答案，不按推理过程逐步评分。
+
+| 基准     | 实际题数 / 每次验证响应数 | 题目组成                                                    | 难度解释                                                                 |
+| -------- | ------------------------- | ----------------------------------------------------------- | ------------------------------------------------------------------------ |
+| MATH-500 | 500 / 8,000               | OpenAI 从 MATH 选取的 500 题，覆盖七类数学主题及 level 1–5  | 难度混合的竞赛数学集合；不能当作 500 道同等难度题                        |
+| AMC23    | 40 / 640                  | 本地 `knoveleng/AMC-23` 版本，2023 AMC 12A 22 题、12B 18 题 | 高中竞赛数学，含容易题和后段难题；这 40 题是子集，不是两套完整 25 题试卷 |
+| AIME25   | 30 / 480                  | `opencompass/AIME2025` 的 2025 AIME I、II，各 15 题         | AMC 高分选手参加的邀请赛，答案为 0–999 整数；竞赛定位比 AMC 更难         |
+
+MATH-500 的来源与抽样关系见数据卡；[^math500] 本地 level 1/2/3/4/5 分别为 43/90/105/128/134 题，level 4–5 合计 262 题（52.4%）。七类主题分别为 Algebra 124、Intermediate Algebra 97、Prealgebra 82、Number Theory 62、Precalculus 56、Geometry 41、Counting & Probability 38。该结构比单一平均分更能说明测试覆盖。
+
+AMC 的原考试为选择题，但当前数据准备使用题面与实际数值答案，不能将成绩解释为选项猜测率。数据卡确认该版本有 40 条记录，[^amc23] 12A/12B 的 22/18 分布由各题来源 URL 核对。AIME 的 I/II 组成由数据文件核对；[^aime25] MAA 对 AIME 的官方介绍也明确其难度高于 AMC 10/12。[^maa-aime]
+
+在当前模型与协议下，teacher 的 MATH-500/AMC23/AIME25 mean@16 为 89.11%/89.38%/39.17%，初始 student 为 83.25%/72.03%/23.75%。AIME25 对两个模型都最难；MATH-500 与 AMC23 的相对顺序依模型变化，不存在对所有模型固定不变的难度排序。
+
+AIME25 一题的 pass@16 改变会使该基准变化 3.33 个百分点，AMC23 为 2.5，MATH-500 为 0.2。每题采样 16 次减少采样噪声，但不会把 30 道 AIME 题变成 480 个独立问题。macro 让三个基准等权，可避免 500 道 MATH 题淹没其他基准，同时也会受到小基准题目波动影响；应同时保留逐题分析与 micro。
+
+## State 的测量与后续诊断
+
+### 已测量的固定缓存与精确 prefix
+
+自回归 state 是 action 之前的 prefix $s_{it}=(x_i,y_{i,<t})$。Semi-OPD 的响应固定，所以同一记录的全部 token state 也固定；每轮覆盖同一集合，student 在这些 state 上的概率、熵和梯度仍会变化。固定 state 集上的准确率提升属于吸收已有监督的现象，不需要假定每轮访问了新 state。response length、action overlap、state 覆盖和模型对齐分别是不同的量。
+
+以同一 prompt 记录配对初始 student 与 teacher 缓存，令响应长度为 $L_i^S,L_i^T$，共同响应前缀长度为 $c_i$。共享的 action 前 state 数为
+
+$$
+I_i=\min(c_i+1,L_i^S,L_i^T),\qquad
+J_{\mathrm{paired}}=\frac{\sum_i I_i}{\sum_i(L_i^S+L_i^T-I_i)}.
+$$
+
+第一个分歧 action 仍由相同 prefix 出发，因此是 $c_i+1$；不能多算生成结束后的终止位置。该计数已用二元 token 表、长度 1–4 的全部轨迹对与显式 prefix 集合穷举核对。
+
+真实缓存的 3,200 对响应中，没有完全相同的响应；共同前缀中位数为 10 token、均值 16.675625、90 分位为 43，最长 183。配对共享 prefix 位置共 56,562，$J_{\mathrm{paired}}=0.227\%$；初始 student 的 token 位置对应的 state 有约 0.453% 出现在配对 teacher 轨迹上。这是按 prompt 记录条件化的精确文本 prefix 重合，**不是语义 state 覆盖率**，也不代表两组只共享 0.453% 的可迁移知识。
+
+精确 prefix 对字符串分叉非常敏感：一处措辞不同后，后面的完整 prefix 都不同，即使推理意图相似。同一模型独立采样两次也可能很早分叉，因此缺少同来源重复采样对照时，不能将小重合率单独归因于 teacher/student 分布差异。它适合核验固定缓存、是否重复采样和分叉位置，不能作为主要的泛化机制指标。在线 student 与 fusion 的实际配置均为 `rollout_data_dir=None`，没有保留完整训练轨迹；现有验证响应也不能替代训练访问分布来补算这两组的历史覆盖。
+
+### 建议优先记录的三个 state 指标
+
+我建议把状态供给与状态吸收分开测量，优先记录下列三个互补指标。它们尚未在当前运行上完成，不能与上面的 CPU 缓存结果混称为实测。
+
+| 指标                          | 固定的测量对象                                                | 回答的问题                                                  |
+| ----------------------------- | ------------------------------------------------------------- | ----------------------------------------------------------- |
+| 表示簇覆盖率与新增簇比例      | 冻结 teacher 的 prefix 隐表示、一次拟合的 PCA/聚类            | 相同采样预算下访问了多大范围，还有多少新状态区域            |
+| 访问频率分布与 teacher 的距离 | 同一簇划分上的占用频率，按深度分层                            | 两组是否访问同一批区域但训练权重不同                        |
+| 固定 probe 上的完整条件 KL    | 同一批固定 prefix、当前 student 与冻结 teacher 的完整词表分布 | 已经供给的状态是否被 student 吸收，避免状态更换混入对齐曲线 |
+
+One-Shot-OPD 的覆盖分析使用冻结 teacher 最后一层、prefix 最后一个 token 的隐向量，将参考表示经 PCA 后聚为 200 簇，每条轨迹均匀抽取八个位置。[^oneshot-state] 这里可沿用 PCA 50 维、$C=200$ 的起点，并对 $C=50/100/200$ 检查敏感性。编码器、PCA 和簇中心必须固定；每 50 步重新聚类或使用不断变化的 student 编码器，都会让坐标系漂移，无法直接比较覆盖变化。
+
+设 $M$ 个 probe state 的固定簇标签为 $c(s_j)$，归一化访问频率为
+
+$$
+\widehat d_\mu(c)=\frac1M\sum_{j=1}^{M}\mathbf1\{c(s_j)=c\},\qquad
+\operatorname{Cov}_\mu=\frac1C\sum_{c=1}^C\mathbf1\{\widehat d_\mu(c)>0\}.
+$$
+
+覆盖相同也可以有完全不同的权重。用 $m=(\widehat d_\mu+\widehat d_q)/2$，再记录
+
+$$
+\operatorname{JSD}(\widehat d_\mu,\widehat d_q)
+=\tfrac12D_{\mathrm{KL}}(\widehat d_\mu\Vert m)
++\tfrac12D_{\mathrm{KL}}(\widehat d_q\Vert m),\qquad
+N_{\mathrm{eff}}=\exp\!\left(-\sum_c\widehat d_\mu(c)\log\widehat d_\mu(c)\right).
+$$
+
+Jensen–Shannon 散度（JSD）衡量访问权重差异，有效簇数 $N_{\mathrm{eff}}$ 区分集中访问少数簇与较均匀访问。零频项按 $0\log0=0$ 处理；这里的 KL 位于离散簇频率空间，与 token 条件分布的 KL 不同。对固定 Semi，在跨轮复用同一组抽样位置时，第一轮之后累计新增簇应为零，但固定 probe 上的 KL 仍可以下降；这可量化继续吸收已有状态监督的过程。零新增本身是固定数据的结果，不证明缓存已充分覆盖目标分布。若每轮随机换位置，观测到的新簇也可能只是首次看见原缓存里未抽中的位置。
+
+固定 prefix 集 $\mathcal P$ 在训练前确定，不随各组 rollout 更新。完整条件 KL 采用共同测度：
+
+$$
+K_{\mathrm{probe}}(\theta)=\frac1{|\mathcal P|}\sum_{s\in\mathcal P}\sum_{a\in\mathcal V}
+p_\theta(a\mid s)\log\frac{p_\theta(a\mid s)}{q(a\mid s)}.
+$$
+
+它使用完整有效词表，当前配对为 151,665 个 token，直接回答共同 prefix 上的对齐程度。可同时记录条件分布 overlap
+
+$$
+O_{\mathrm{probe}}(\theta)=\frac1{|\mathcal P|}\sum_{s\in\mathcal P}\sum_a\min\{p_\theta(a\mid s),q(a\mid s)\}.
+$$
+
+该 overlap 是 action 分布兼容性，不是 state 覆盖。两者分开后，才能区分“缺少目标 state”与“到达相同 state 后仍未学好目标 action”。若只保存 top-k，必须把结果另命名为截断或聚合诊断，不能继续标成完整词表 KL。
+
+### 最小测量设置与机制辨识
+
+下一轮从每组相同的 128 个训练 prompt、每题一条实际训练轨迹抽取八个有效 response 位置，各组每个时间点共 1,024 个 state；缓存来源的八个位置按固定 seed 一次选定，跨轮复用。参考聚类使用各来源平衡、与测量 prompt 分开的固定训练 prompt 池；不能只在 teacher 轨迹上拟合后把 teacher 高覆盖当作结果，也不使用评测题生成训练诊断样本。固定 KL probe 可从 teacher 与初始 student 轨迹各取一半，共 512 个 prefix，同时分别报告两个来源子集，避免混合平均掩盖差异。另以 teacher–teacher、初始 student–初始 student 独立 rollout 配对校准同来源采样噪声；聚类 JSD 和覆盖差异也须相对这一基线解释。
+
+位置选择要对齐 action 之前的 prefix：第一个 response action 对应 prompt 的最后一个隐藏位置，之后依次取前一个 response token 的位置。除整体结果，还按绝对生成深度及轨迹前/中/后段分层；只看相对位置会混入长度变化，只看总覆盖会被 4K 截断支配。采样预算按 prompt/轨迹等权，另报 token 等权占用，明确归约差异。区间重采样 prompt，不能把同一长轨迹中的上千个相邻 token 当作独立样本。
+
+在 rollout 生成后、teacher 评分前保存选中 prefix 的 token ID、prompt 身份、来源、student 权重版本、原响应长度与位置。冻结 teacher 编码时只提取最后层选中位置，不保存全部层和全部 token 的隐藏向量；固定 KL probe 的 LM head 也只投影选中位置。这样可以复用 teacher 前向并控制存储与显存。当前正在运行的私有源码快照未改动，因此上述新指标不会追溯出现在已完成的 50 步运行中。
+
+表示空间聚类仍是代理：邻近隐藏向量未必给共享参数提供同一更新方向。若覆盖相近但收敛速率仍不同，可进一步在小型固定 probe 上比较末层或 LM head 梯度的余弦冲突与有效秩，明确其只代表所选参数子空间。更直接的辨识实验是在相同固定 prefix 上统一 action 为当前 student 采样，或使用完整条件 KL 更新，再与原 action 缓存更新比较；否则更换 rollout 同时改变 state 与 action，无法把准确率差异单独归因于 state。
+
+CPU 诊断复现命令如下，不占用 GPU：
+
+```bash
+CUDA_VISIBLE_DEVICES='' ../envs/opd-state/bin/python eval/analyze_cached_states.py \
+    --long-run runs/rollout-sources/math-semi-opd-long-800steps-eval16-20261018-092912
+```
 
 ## 共同设置与数据范围
 
@@ -230,7 +345,7 @@ batch 均为 64，使用平均响应长度作权重与 $N_b$ 等价。训练器�
 | ------------------ | --------------------------------------------------------------------------------------------------------------------------------------- |
 | 固定缓存           | SQLite 只读完整性、模型完整文件签名、tokenizer/模板、prompt ID/内容、响应 cap/EOS 与配对数据哈希；miss 拒绝；50 步全命中                |
 | 当前 student 更新  | 缓存不含 old_log_probs，当前 actor 每步重算；teacher requires_grad=False、eval/no_grad；验证前同步最终 student                          |
-| CPU 与维护         | 12 项原生 CPU 测试覆盖融合端点、共享 prefix、EOS、padding、缓存重置、teacher 冻结和版本；27 项维护测试涵盖指标、缓存、RPC 与平台控制    |
+| CPU 与维护         | 12 项原生 CPU 测试覆盖融合端点、共享 prefix、EOS、padding、缓存重置、teacher 冻结和版本；33 项维护测试涵盖指标、缓存、RPC 与平台控制    |
 | Fusion 数值        | 同 FlashAttention KV 内核 graph/eager logits 最大差为零；静态/动态 FP32 最大 logits 差 $4.96\times10^{-5}$、分布 TV $2.27\times10^{-6}$ |
 | Attention 独立核验 | 含左 padding、GQA、prefill/decode 的原始 Q/K/V 对 FP32 数学内核，相对 L2 误差 0.00159–0.00199，阈值 0.005                               |
 | 权重流与训练桥接   | GPU 版本 0→1→2 原地更新、改变 lm_head 后输出变化、恢复后还原、teacher 探针不变；完整两步训练和 96 条短验证通过                          |
@@ -305,7 +420,7 @@ env -u WANDB_API_KEY NETRC="$PWD/../.secrets/netrc" WANDB_CONFIG_DIR="$PWD/../co
 .venv/bin/python eval/plot_math_experiment.py
 ```
 
-图件提供 PNG 和 PDF，`figures/training-plotted.csv` 保存 200 个训练点，`accuracy-plotted.csv` 保存四设置、四聚合范围的末步指标，`audit.json` 保存输入和输出哈希及机器审计。原始逐题表、训练 CSV、精确验证 JSON 和 W&B 核验保留在各结果目录，合并报告不删除数据证据。
+图件提供 PNG 和 PDF，`figures/training-plotted.csv` 保存 200 个训练点，`accuracy-plotted.csv` 保存四设置、四聚合范围的末步指标，`references-plotted.csv` 保存两个外部参考的精确 pass@k，`audit.json` 保存输入和输出哈希、各面板纵轴范围及机器审计。原始逐题表、训练 CSV、精确验证 JSON 和 W&B 核验保留在各结果目录，合并报告不删除数据证据。
 
 | 设置         | W&B run                | 结果摘要                                                                                            |
 | ------------ | ---------------------- | --------------------------------------------------------------------------------------------------- |
@@ -339,3 +454,13 @@ Teacher 组训练源码固定于 `350a286be0d586f04e4cd0b0e89624a336b17a81`，�
 [^fusion-run]: wncfht. OPD-State g5m60gys. W&B 2026. [Fusion 训练](https://wandb.ai/wncfht/OPD-State/runs/g5m60gys).
 
 [^long-run]: wncfht. OPD-State uq1riryx. W&B 2026. [长时 Semi-OPD](https://wandb.ai/wncfht/OPD-State/runs/uq1riryx).
+
+[^math500]: Hugging Face H4. MATH-500 dataset card. Hugging Face 2024. [MATH-500](https://huggingface.co/datasets/HuggingFaceH4/MATH-500).
+
+[^amc23]: Knovel Engineering. AMC-23 dataset card. Hugging Face 2025. [AMC-23](https://huggingface.co/datasets/knoveleng/AMC-23).
+
+[^aime25]: OpenCompass. AIME2025 dataset. Hugging Face 2025. [AIME2025](https://huggingface.co/datasets/opencompass/AIME2025).
+
+[^maa-aime]: Mathematical Association of America. MAA Invitational Competitions. MAA 2026. [AIME 介绍](https://maa.org/maa-invitational-competitions/).
+
+[^oneshot-state]: Fu 等。Rethinking On-Policy Distillation of Large Language Models II: One Training Example. arXiv 2609.04172, 2026. [论文](https://arxiv.org/abs/2609.04172). 状态定义和覆盖方法按工作区 Sections/4_Mechanism-Data.tex 与 Appendix.tex 核对。
