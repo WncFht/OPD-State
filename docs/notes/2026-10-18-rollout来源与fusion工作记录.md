@@ -103,3 +103,7 @@ Fusion 随后完成全部 50 步和三基准 eval16，进程退出码 0，W&B g5
 按用户要求重构统一报告的显存与速度部分，集中列出四组实际生成后端、每卡请求数、引擎预算、训练/验证 cap、CPU offload、阶段时间、吞吐、actor allocator 与整卡采样；区分完整准备、训练循环、完整验证三个成本范围。核对四组实际配置与 engine_workers 源码，actor 参数/optimizer 及 teacher 参数均 offload，权重同步后 actor 参数移回 CPU；在线每卡约 16 条来自全局 64 条分四卡，不能归因于更新权重常驻 GPU 导致容量不足。Fusion 的 HF 双模型与双 StaticCache 不受原生 vLLM 0.55 预算控制，文档补充重复驻留的待测优化空间，没有修改正式训练行为。
 
 新增 eval/plot_math_resources.py，读取已有 W&B GPU 0–3 采样并核对哈希，捕获每卡 81,559 MiB 容量记录，以 79.65 GiB 为参考绘制四组阶段耗时/显存总览，以及四张卡的显存与 GPU busy 时间线。两图均输出 PNG/PDF，逐张查看无重叠或裁切，机器审计均为空；保存分片绘图 CSV、逐卡阶段统计、实际设置与全部输入/输出哈希。整卡最高采样占容量分别为在线 57.47%、teacher 78.25%、Semi 59.55%、Fusion 74.45%；历史离线生成没有显存采样，不填零、不声称覆盖瞬时峰值。正式长时 Semi 原进程和两秒监控继续运行。
+
+用户要求停止频繁盯跑、改为每小时检查。新增 eval/watch_math_progress.py，首次也等待 3,600 秒，之后每小时核对 PID 启动身份和完整日志；仅对具有原始响应文件及完整验证日志的候选步调用既有采集器，输出保存在忽略的 hourly-watch/，不修改正式训练。两个回归验证响应文件不能单独证明完成、部分写入的未来行不被计入。后台进程 PID 304315 已启动，状态文件位于 runs/rollout-sources/math-semi-opd-long-800steps-eval16-20261018-092912/hourly-watch/state.json；首次检查时间为 2026-10-18 13:16:37（Asia/Shanghai），启动核验确认 last_checked_at_utc 仍为 null。后续 agent 不再按分钟检查 Semi，按该小时状态记录处理结果；独立两秒 GPU 遥测继续用于曲线。
+
+补充速度判断边界：同 checkpoint、实际 batch、长度分布、生成分数与推理执行路径一致时，纯 rollout 吞吐应接近；仅统一参数上限不等于实际 batch 一致。完整首轮还包含参数同步、阶段切换与缓存/初始化成本，两者总时间不保证相同。当前两组都重新做 teacher 评分，没有将尚未实现的 teacher 分数缓存归为当前收益。
