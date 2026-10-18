@@ -156,6 +156,26 @@ $$
 
 精确 prefix 对字符串分叉非常敏感：一处措辞不同后，后面的完整 prefix 都不同，即使推理意图相似。同一模型独立采样两次也可能很早分叉，因此缺少同来源重复采样对照时，不能将小重合率单独归因于 teacher/student 分布差异。它适合核验固定缓存、是否重复采样和分叉位置，不能作为主要的泛化机制指标。在线 student 与 fusion 的实际配置均为 `rollout_data_dir=None`，没有保留完整训练轨迹；现有验证响应也不能替代训练访问分布来补算这两组的历史覆盖。
 
+### 原生 fresh 轨迹的前缀诊断
+
+`eval/analyze_native_states.py` 复用已有的精确 prefix 计数，将配对身份扩展为 prompt、visit 和 sample，同时核对实际 prompt token 与训练步骤。脚本拒绝不完整 batch、EOS 后继续生成、分段覆盖缺口和不相同的配对集合；保存输入、源码与逐条 CSV 的哈希。每个有效 action 前恰有一个训练 state，EOS 自身的 action 计入，响应结束后的额外 prefix 不计入。来源分层表示选择下一 action 的策略，另报该位置已有响应前缀的平均深度，不把后段 student 的 state 全部归给 student。
+
+[真实轨迹计数验收](results/native-rollout/state-prefix-canary/summary.json)配对完整清单两步 canary 与正式 student_fresh 的前两步，共 128 条响应。两者为不同源码快照下的工程运行，不能当作严格相同训练的独立 seed 对照；这里只核验工具和解释边界。
+
+| 步骤 | 配对响应 | 完全相同的响应 | 平均共同响应前缀 | 配对训练 state 的 pooled Jaccard |
+| ---- | -------: | -------------: | ---------------: | -------------------------------: |
+| 1    |       64 |             64 |  3,854.828 token |                             100% |
+| 2    |       64 |              0 |    161.734 token |                           2.129% |
+
+第一步的全部训练响应逐 token 一致，第二步已经分叉；该结果不能单独确定分叉原因。即使配置使用相同来源模型，精确文本 state 的重合也不能充当分布距离或质量排序。跨访问汇总仍将每个 visit 分开配对计数，不宣称对全部历史 state 去重。完整矩阵后续按同题、同 visit 比较，表示簇覆盖与完整条件 KL 仍属下文独立测量。
+
+```bash
+.venv/bin/python eval/analyze_native_states.py \
+    --reference runs/native-rollout-implementation/trainer-manifest-long-v1 \
+    --candidate runs/native-formal-suite-20261018/student_fresh \
+    --steps 2 --output docs/experiment/results/native-rollout/state-prefix-canary
+```
+
 ### 建议优先记录的三个 state 指标
 
 我建议把状态供给与状态吸收分开测量，优先记录下列三个互补指标。它们尚未在当前运行上完成，不能与上面的 CPU 缓存结果混称为实测。

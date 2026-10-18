@@ -645,6 +645,8 @@ prompt 池由 `data.train_files`、清洗、去重与 sampler 决定，训练步
 
 统一生成结果只负责 token、mask、结束原因与来源身份，verifier 和 teacher 信号在共同阶段产生。训练轨迹保存在忽略的运行目录，至少包含 prompt/response token、访问轮次和模型身份；复用现有异步 dump 设施，支持后来对初始、teacher 与混合 states 做同口径诊断。所有策略均记录有效 token 数，既按相同更新步数比较，也报告实际 token 与生成成本，避免将长度变化隐藏在“相同 50 步”里。混合策略额外记录每来源的响应数、token 数、提前 EOS 比例、实际切换位置，以及切换前后分层的 state 指标。
 
+[原生轨迹分析器](../../../../eval/analyze_native_states.py)已复用历史 prefix 计数，按同题、visit、sample 和实际训练顺序配对，检查完整 batch、EOS 与分段覆盖，并分层报告 action 策略对应位置的已有前缀深度。[真实两步计数验收](../../../../docs/experiment/results/native-rollout/state-prefix-canary/summary.json)有 128 对响应；它是不同源码快照下的工程验收，不是来源效应实验。精确前缀重合对随机分叉敏感，不能代替固定 teacher 表示的覆盖或共同 probe 上完整条件 KL；后两项保持独立的待验证诊断。
+
 计时分开记录磁盘首次加载、权重激活/同步、KV 分配与释放、队列等待、各阶段 prefill/decode、切换重算、student 评分、teacher 评分、更新和验证；以整卡采样补充 allocator 指标，不将嵌套 timer 重复相加。冷启动与热调用、训练与验证、单模型与双模型的显存和吞吐分别呈现。报告端到端输出 token/s、引擎 decode token/s、完成响应/s、每卡活跃 batch、有效/预留 KV 与 preemption；分段的总 prefill token 不能漏算，GPU busy 也不能代替吞吐。
 
 现有固定缓存平台判据继续只服务历史 replay。fresh 的训练 RMS 同时受访问 state 与 action 变化影响，不再代表同一缓存上的拟合残差。新模式先用固定步数完成比较；若要提前停止，结合多验证点和固定 prefix/action probe 的 teacher–student 残差另定判据，不能直接删除旧 guard 后沿用原解释。验证始终保留 MATH-500/AMC23/AIME25 的 570 题、每题 16 次和精确 mean/pass@k。
