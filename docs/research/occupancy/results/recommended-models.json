@@ -1,0 +1,161 @@
+{
+  "date": "2026-10-18",
+  "scope": "Pinned public metadata only; no model weights, inference, or training",
+  "producer_sha256": "cebbbd584de41997e0919dd66896e3a8cfe0f948f8cf2d16fc94b092ed8babca",
+  "models": [
+    {
+      "id": "deepseek-ai/DeepSeek-R1-Distill-Qwen-1.5B",
+      "revision": "ad9f0ae0864d7fbcd1cd905e3c6c5b069cc8b562",
+      "files": {
+        "config.json": {
+          "sha256": "37bd455e9679d2959536270fed49d25cc7c290a64f6e52abb97c71345a9cee41",
+          "bytes": 679,
+          "url": "https://huggingface.co/deepseek-ai/DeepSeek-R1-Distill-Qwen-1.5B/resolve/ad9f0ae0864d7fbcd1cd905e3c6c5b069cc8b562/config.json",
+          "selected_fields": {
+            "model_type": "qwen2",
+            "architectures": [
+              "Qwen2ForCausalLM"
+            ],
+            "vocab_size": 151936,
+            "hidden_size": 1536,
+            "num_hidden_layers": 28,
+            "bos_token_id": 151643,
+            "eos_token_id": 151643
+          }
+        },
+        "tokenizer_config.json": {
+          "sha256": "8ac8c85fb242563c2260baec0909debd69d718af6a0b3d90e6cab62b4d341cd5",
+          "bytes": 3071,
+          "url": "https://huggingface.co/deepseek-ai/DeepSeek-R1-Distill-Qwen-1.5B/resolve/ad9f0ae0864d7fbcd1cd905e3c6c5b069cc8b562/tokenizer_config.json",
+          "selected_fields": {
+            "tokenizer_class": "LlamaTokenizerFast",
+            "bos_token": "<｜begin▁of▁sentence｜>",
+            "eos_token": "<｜end▁of▁sentence｜>",
+            "pad_token": "<｜end▁of▁sentence｜>",
+            "chat_template_sha256": "56a1447ad31926fdc21fb07e56e5642bd9c850c4f52d8c8af7bbe5f079a84f5f"
+          }
+        },
+        "tokenizer.json": {
+          "sha256": "88145e3c3249adc2546ede277e9819d6e405e19072456e4b521cbc724bd60773",
+          "bytes": 7031660,
+          "url": "https://huggingface.co/deepseek-ai/DeepSeek-R1-Distill-Qwen-1.5B/resolve/ad9f0ae0864d7fbcd1cd905e3c6c5b069cc8b562/tokenizer.json"
+        }
+      }
+    },
+    {
+      "id": "deepseek-ai/DeepSeek-R1-Distill-Qwen-7B",
+      "revision": "916b56a44061fd5cd7d6a8fb632557ed4f724f60",
+      "files": {
+        "config.json": {
+          "sha256": "8290d3c1e385e2616572eb6926f7e2745f901d1c13da95970326a8a73f6c379c",
+          "bytes": 680,
+          "url": "https://huggingface.co/deepseek-ai/DeepSeek-R1-Distill-Qwen-7B/resolve/916b56a44061fd5cd7d6a8fb632557ed4f724f60/config.json",
+          "selected_fields": {
+            "model_type": "qwen2",
+            "architectures": [
+              "Qwen2ForCausalLM"
+            ],
+            "vocab_size": 152064,
+            "hidden_size": 3584,
+            "num_hidden_layers": 28,
+            "bos_token_id": 151643,
+            "eos_token_id": 151643
+          }
+        },
+        "tokenizer_config.json": {
+          "sha256": "8ac8c85fb242563c2260baec0909debd69d718af6a0b3d90e6cab62b4d341cd5",
+          "bytes": 3071,
+          "url": "https://huggingface.co/deepseek-ai/DeepSeek-R1-Distill-Qwen-7B/resolve/916b56a44061fd5cd7d6a8fb632557ed4f724f60/tokenizer_config.json",
+          "selected_fields": {
+            "tokenizer_class": "LlamaTokenizerFast",
+            "bos_token": "<｜begin▁of▁sentence｜>",
+            "eos_token": "<｜end▁of▁sentence｜>",
+            "pad_token": "<｜end▁of▁sentence｜>",
+            "chat_template_sha256": "56a1447ad31926fdc21fb07e56e5642bd9c850c4f52d8c8af7bbe5f079a84f5f"
+          }
+        },
+        "tokenizer.json": {
+          "sha256": "88145e3c3249adc2546ede277e9819d6e405e19072456e4b521cbc724bd60773",
+          "bytes": 7031660,
+          "url": "https://huggingface.co/deepseek-ai/DeepSeek-R1-Distill-Qwen-7B/resolve/916b56a44061fd5cd7d6a8fb632557ed4f724f60/tokenizer.json"
+        }
+      }
+    },
+    {
+      "id": "hbx/JustRL-DeepSeek-1.5B",
+      "revision": "0637e4096c789c67f9eecbe8355e0bdeddede1c2",
+      "files": {
+        "config.json": {
+          "sha256": "f62729adb55c028ee1a59a27279b4c35510211aebf5f987e7080c2312ce71755",
+          "bytes": 703,
+          "url": "https://huggingface.co/hbx/JustRL-DeepSeek-1.5B/resolve/0637e4096c789c67f9eecbe8355e0bdeddede1c2/config.json",
+          "selected_fields": {
+            "model_type": "qwen2",
+            "architectures": [
+              "Qwen2ForCausalLM"
+            ],
+            "vocab_size": 151936,
+            "hidden_size": 1536,
+            "num_hidden_layers": 28,
+            "bos_token_id": 151643,
+            "eos_token_id": 151643
+          }
+        },
+        "tokenizer_config.json": {
+          "sha256": "8ac8c85fb242563c2260baec0909debd69d718af6a0b3d90e6cab62b4d341cd5",
+          "bytes": 3071,
+          "url": "https://huggingface.co/hbx/JustRL-DeepSeek-1.5B/resolve/0637e4096c789c67f9eecbe8355e0bdeddede1c2/tokenizer_config.json",
+          "selected_fields": {
+            "tokenizer_class": "LlamaTokenizerFast",
+            "bos_token": "<｜begin▁of▁sentence｜>",
+            "eos_token": "<｜end▁of▁sentence｜>",
+            "pad_token": "<｜end▁of▁sentence｜>",
+            "chat_template_sha256": "56a1447ad31926fdc21fb07e56e5642bd9c850c4f52d8c8af7bbe5f079a84f5f"
+          }
+        },
+        "tokenizer.json": {
+          "sha256": "88145e3c3249adc2546ede277e9819d6e405e19072456e4b521cbc724bd60773",
+          "bytes": 7031660,
+          "url": "https://huggingface.co/hbx/JustRL-DeepSeek-1.5B/resolve/0637e4096c789c67f9eecbe8355e0bdeddede1c2/tokenizer.json"
+        }
+      }
+    }
+  ],
+  "tokenizer_matches_to_student": {
+    "deepseek-ai/DeepSeek-R1-Distill-Qwen-1.5B": {
+      "model": true,
+      "added_tokens": true,
+      "normalizer": true,
+      "pre_tokenizer": true,
+      "post_processor": true,
+      "decoder": true
+    },
+    "deepseek-ai/DeepSeek-R1-Distill-Qwen-7B": {
+      "model": true,
+      "added_tokens": true,
+      "normalizer": true,
+      "pre_tokenizer": true,
+      "post_processor": true,
+      "decoder": true
+    },
+    "hbx/JustRL-DeepSeek-1.5B": {
+      "model": true,
+      "added_tokens": true,
+      "normalizer": true,
+      "pre_tokenizer": true,
+      "post_processor": true,
+      "decoder": true
+    }
+  },
+  "tokenizer_config_selected_fields_equal": true,
+  "common_tokenizer": {
+    "token_count": 151665,
+    "max_token_id": 151664,
+    "special_ids": {
+      "<｜begin▁of▁sentence｜>": 151646,
+      "<｜end▁of▁sentence｜>": 151643,
+      "<think>": 151648,
+      "</think>": 151649
+    }
+  }
+}
