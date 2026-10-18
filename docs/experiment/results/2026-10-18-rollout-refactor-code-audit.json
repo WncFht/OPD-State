@@ -262,5 +262,172 @@
       "line": 422,
       "status": "observed_in_code"
     }
-  ]
+  ],
+  "backend_extension_review": {
+    "reviewed_at": "2026-10-18",
+    "package": "vllm",
+    "version": "0.10.0",
+    "engine": "V1",
+    "source_root": "../envs/opd-state/lib/python3.12/site-packages/vllm",
+    "scope": "Targeted installed-source review for native generation composition and exact paired-model extension; no new GPU runtime validation.",
+    "files": [
+      {
+        "path": "v1/engine/processor.py",
+        "reviewed_scope": ["_validate_supported_sampling_params"],
+        "sha256": "673d6ce51fc62fccd76e021195a67e868db9c457591f703f5f5bf06e89babf58"
+      },
+      {
+        "path": "v1/worker/gpu_model_runner.py",
+        "reviewed_scope": [
+          "__init__",
+          "execute_model: forward/compute_logits/sampler",
+          "load_model",
+          "_allocate_kv_cache_tensors",
+          "initialize_kv_cache_tensors",
+          "get_kv_cache_spec"
+        ],
+        "sha256": "d860738611304706f87531bd9f2fb897ef5de4c723b2624ad3171555c9686288"
+      },
+      {
+        "path": "v1/worker/gpu_worker.py",
+        "reviewed_scope": [
+          "sleep",
+          "wake_up",
+          "_maybe_get_memory_pool_context",
+          "load_model"
+        ],
+        "sha256": "37c953ac5801d1647327f0b13a61831893a75c97ebc65e7e122f7968817fd8d0"
+      },
+      {
+        "path": "v1/worker/utils.py",
+        "reviewed_scope": ["bind_kv_cache"],
+        "sha256": "da34bf07827c46d79af9b5d6291d2443eaa1ce28b56bd904d09e7d54cd34b2fa"
+      },
+      {
+        "path": "v1/sample/sampler.py",
+        "reviewed_scope": ["forward", "sample", "compute_logprobs"],
+        "sha256": "db2dd76516188d5ccde26eb2856f363ddbd5910d84b821eebc5a1b119e3ceeae"
+      },
+      {
+        "path": "v1/sample/metadata.py",
+        "reviewed_scope": ["SamplingMetadata"],
+        "sha256": "e84cbb66765e43109d920eec12ba548d9dc8600b18b062f507c050c0916b02ea"
+      },
+      {
+        "path": "v1/sample/logits_processor.py",
+        "reviewed_scope": ["LogitsProcessor", "LogitsProcessorManager"],
+        "sha256": "63d3c483598019286acfd4128efda6ae9778bf19499cec9f6c8840a94b102709"
+      },
+      {
+        "path": "v1/kv_cache_interface.py",
+        "reviewed_scope": ["KVCacheSpec", "AttentionSpec", "FullAttentionSpec"],
+        "sha256": "3c85d725e32e1f21c3c84a0b50ac2ffb9008d1c67ab17f45ac467ec218ca5eb0"
+      },
+      {
+        "path": "v1/core/kv_cache_utils.py",
+        "reviewed_scope": ["get_num_blocks", "max_concurrency calculation"],
+        "sha256": "cdc838d454cbb8ee82b855523edb16b55329a48cdfcda5d328cb66b98c4fc44c"
+      },
+      {
+        "path": "model_executor/models/registry.py",
+        "reviewed_scope": ["register_model"],
+        "sha256": "4f82b6f0a8143dfd77639bb4c63867afa82e0352d170ae6994fb95ef26537082"
+      },
+      {
+        "path": "model_executor/models/qwen2.py",
+        "reviewed_scope": ["Qwen2Attention", "Qwen2Model", "Qwen2ForCausalLM"],
+        "sha256": "b840bf6e5cacbac523ab43ae0b8e63a9e4043290f64564c5f9af37c52bc12406"
+      },
+      {
+        "path": "model_executor/models/utils.py",
+        "reviewed_scope": ["extract_layer_index", "make_layers"],
+        "sha256": "5f54116e156967ea5bb6fd2e36f9775be78757450d2c49d6f64681e6b2fd2acd"
+      },
+      {
+        "path": "worker/worker_base.py",
+        "reviewed_scope": ["WorkerWrapperBase.init_worker: extension loading"],
+        "sha256": "a218ea7d5bd9f498fb4b582b0b8d7d0d6cd32c31359a007688596c0aba71fa54"
+      },
+      {
+        "path": "v1/spec_decode/eagle.py",
+        "reviewed_scope": [
+          "load_model: native second-model and layer registration pattern; not a fusion implementation"
+        ],
+        "sha256": "68318d5e414fe792b64efb2fce61e9b4501fafdb4e9a756f86d6771e52db3ae5"
+      },
+      {
+        "path": "config.py",
+        "reviewed_scope": ["get_layers_from_vllm_config"],
+        "sha256": "ea3878b2ac9de3aba944263a9f865790fe47d6936e91d8595b0c8c0f41dcbf10"
+      }
+    ],
+    "findings": [
+      {
+        "id": "v1_rejects_request_logits_processors",
+        "path": "v1/engine/processor.py",
+        "line": 126,
+        "claim": "V1 explicitly rejects per-request user logits processors; SamplingParams field existence is not support.",
+        "status": "observed_in_installed_source"
+      },
+      {
+        "id": "worker_extension_is_additive",
+        "path": "worker/worker_base.py",
+        "line": 569,
+        "claim": "Extension loading checks member conflicts; an added collective RPC does not replace the runner execution loop.",
+        "status": "observed_in_installed_source"
+      },
+      {
+        "id": "native_model_registration",
+        "path": "model_executor/models/registry.py",
+        "line": 409,
+        "claim": "An external model can be registered by class or lazy module reference; paired-model feasibility remains untested.",
+        "status": "observed_in_installed_source"
+      },
+      {
+        "id": "native_logits_before_sampler",
+        "path": "v1/worker/gpu_model_runner.py",
+        "line": 1496,
+        "claim": "The runner selects sampled hidden states then computes model logits before the shared sampler.",
+        "status": "observed_in_installed_source"
+      },
+      {
+        "id": "kv_spec_registered_attention",
+        "path": "v1/worker/gpu_model_runner.py",
+        "line": 2766,
+        "claim": "KV specs come from registered attention layers; a paired wrapper must expose both components and budget both caches.",
+        "status": "observed_in_installed_source"
+      },
+      {
+        "id": "kv_binding_duplicate_layer_index",
+        "path": "v1/worker/utils.py",
+        "line": 151,
+        "claim": "KV binding raises for multiple attention names with the same integer layer index; textual branch prefixes alone do not fix this.",
+        "status": "observed_in_installed_source"
+      },
+      {
+        "id": "sleep_one_instance_per_process",
+        "path": "v1/worker/gpu_worker.py",
+        "line": 130,
+        "claim": "Sleep-mode allocator requires one instance per process; colocated engines need separate worker processes and explicit budgets.",
+        "status": "observed_in_installed_source"
+      }
+    ],
+    "additional_project_findings": [
+      {
+        "id": "stage_budget_clamping",
+        "path": "verl/verl/workers/rollout/vllm_rollout/vllm_async_server.py",
+        "line": 577,
+        "claim": "Explicit token caps are clamped to at least one and available context; a staged coordinator must validate and skip empty stages first.",
+        "status": "observed_in_code"
+      },
+      {
+        "id": "finish_reason_collapsed",
+        "path": "verl/verl/workers/rollout/vllm_rollout/vllm_async_server.py",
+        "line": 668,
+        "claim": "The adapter maps stop and length to completed; staged continuation needs raw finish and stop reasons to distinguish stage boundaries from termination.",
+        "status": "observed_in_code"
+      }
+    ],
+    "proposed_not_implemented": ["sequence_switch", "batch_mix", "vllm_paired"]
+  }
 }

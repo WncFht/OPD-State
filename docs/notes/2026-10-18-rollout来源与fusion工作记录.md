@@ -115,3 +115,13 @@ Fusion 随后完成全部 50 步和三基准 eval16，进程退出码 0，W&B g5
 在既有 docs/architecture.md 写入拟议方案，并从统一实验报告链接：ModelRef、RolloutPolicySpec、RolloutCoordinator 与 GenerationBackend 支持三种单模型和两种 shared-prefix fusion；训练时实时生成与 on-policy 语义区分，初始 student fresh 不冒称固定缓存 Semi。保留现有 actor 更新、teacher 评分和完整 eval16；建议先用同一 HF 单/双模型内核比较五种来源，再独立接入 vLLM 单模型性能路径。完整数据清单与预算分开，统一轨迹、mask、行为概率诊断和原子参数版本，控制 CUDA Graph 地址与 KV 生命周期。首版明确成功/否决条件、逐文件归属、两步 GPU 与后续 50 步验收，不把提案当作新功能已通过。
 
 此次只修改设计与代码核验记录，没有切换正式生成路径或改变运行中训练。终止的仅是会话内等待 cell 734，以便响应代码审阅请求；每小时后台观察和独立 GPU 遥测继续保留。
+
+用户扩展需求：同一响应 teacher→student 或 student→teacher 的分段切换，batch 内按比例分配来源，并要求尽量使用 vLLM。据此修订既有架构提案，替换上一版 HF-first 次序：原生单模型、双向分段、batch 混合优先接入，精确 fusion 优先验证原生双模型扩展；HF decoder 保留为数值参考与历史复现，不再作为新 pipeline 的默认执行后端。参数分别为 λ、响应 token 切换位置/总预算比例、全局 batch 配额，可组合但按后端已验收能力开放。默认两段都训练 student，EOS 结束整条响应，切换不重套模板，总 response cap 不翻倍；明确 batch 比例与实际 token 比例不同。
+
+补充核对安装的 vLLM 0.10.0 V1，15 个相关源码文件的范围与哈希追加到原审阅 JSON。确认请求级自定义 logits_processors 被拒绝，worker extension 是带名称冲突检查的 RPC 扩展；仓外模型注册可作为原生 paired wrapper 的入口。KV 规格来自已注册 attention，但两个模型相同整数层号会在 bind_kv_cache 触发 NotImplementedError，需全局唯一缓存层编号或局部适配，不能只加 branch 前缀。双 hidden-state、profile、参数加载和 graph 仍待真实验证，未声称 wrapper 已可运行。
+
+分段接口审阅还确认本仓 generate 会原地 pop 采样参数、把显式 0 预算提升为 1，并把 stop/length 都折为 completed；新协调器须独立参数副本、预检阶段预算并保留原始结束原因。跨模型不能沿用 KV，后段要按自己的权重重新 prefill 原 prompt 和前段响应，成本在表与公式中单列。多引擎与单引擎整组换权重均保留为基准候选；sleep 每进程仅支持一实例，双引擎需要独立 worker、联合预算和 Ray 资源归属。按来源聚合、小分组集中、连续批处理、chunked prefill、graph 与有界队列按依赖验收，不预报加速倍数。
+
+设计继续放 docs/architecture.md，统一实验报告仅更新链接与当前推荐，未增加实验正文文件。没有修改训练实现、共享环境或运行中任务，也没有提前读取长时 Semi 进度。
+
+设计核验：32 个项目源码和 15 个环境源码哈希均匹配，22 项观察定位仍有效；两段拟议 YAML 可解析，架构正文 57 个数学表达式通过 KaTeX。docs 模式、本地链接、研究正文审计、Markdown lint、Prettier、中文间距与 diff 检查通过。没有为文档变更重跑 GPU 实验，以上检查不证明新增生成策略已可运行。
