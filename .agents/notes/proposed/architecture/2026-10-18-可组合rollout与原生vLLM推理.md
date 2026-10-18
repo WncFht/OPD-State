@@ -683,7 +683,7 @@ prompt 池由 `data.train_files`、清洗、去重与 sampler 决定，训练步
 
 ### 验证 KL 与 rollout 诊断提案
 
-开发源码已用 `trainer.validation_kl.enabled=True` 接入完整条件 KL 的可选验证 hook，默认关闭以保留原实验协议。输入校验对整个调用复用一次有效词表大小；本环境 tokenizer 的长度查询存在实测开销，不能放在逐响应循环内重复执行。缓存值同时用于记录支持集、worker metadata 和报告，保持词表解释一致。[CPU 对照](../../../../docs/experiment/results/native-rollout/tokenizer-vocab-cache-cpu.json)在相同 180 条真实 bank 记录上验证位置/权重输出逐值一致，只描述校验成本，不作为神经网络评分加速证据。它复用整轮准确率响应，在原生引擎休眠后使用同卡的最终 student 和冻结 teacher 评分，保存逐响应累计量、均值、分层统计及原始 token。开发版长度/EOS/解析/多样性指标和 KL 链路已通过真实 Torch/DataProto、实际 trainer 方法与小型 Qwen2 的 CPU 检查；两进程 CPU FSDP 还验证优化器更新后读取新 student、teacher 参数不变。真实四卡短响应 checkpoint 已通过下文验收，长响应显存/速度与完整 bank 仍待验证。冻结的 d59a7c3 矩阵不含新增指标，已结束且未保存最终权重的运行不能仅凭响应文本补算最终 KL。
+开发源码已用 `trainer.validation_kl.enabled=True` 接入完整条件 KL 的可选验证 hook，默认关闭以保留原实验协议。输入校验对整个调用复用一次有效词表大小；本环境 tokenizer 的长度查询存在实测开销，不能放在逐响应循环内重复执行。缓存值同时用于记录支持集、worker metadata 和报告，保持词表解释一致。[CPU 对照](../../../../docs/experiment/results/native-rollout/tokenizer-vocab-cache-cpu.json)在相同 180 条真实 bank 记录上验证位置/权重输出逐值一致，只描述校验成本，不作为神经网络评分加速证据。它复用整轮准确率响应，在原生引擎休眠后使用同卡的最终 student 和冻结 teacher 评分，保存逐响应累计量、均值、分层统计及原始 token。开发版长度/EOS/解析/多样性指标和 KL 链路已通过真实 Torch/DataProto、实际 trainer 方法与小型 Qwen2 的 CPU 检查；两进程 CPU FSDP 还验证优化器更新后读取新 student、teacher 参数不变。真实四卡短响应、固定 bank 与长响应评分已通过下文验收；完整 570×16 评分正在运行，最终数值与资源报告尚未返回。冻结的 d59a7c3 矩阵不含新增指标，已结束且未保存最终权重的运行不能仅凭响应文本补算最终 KL。
 
 #### 散度方向、状态来源与归约
 
@@ -730,7 +730,7 @@ $$
 
 固定前缀对照的起始预算为每个 benchmark 固定抽取 30 题，共 90 题；AIME25 使用全部 30 题，其余按固定 ID 抽取。由 $p_0$ 和 $q$ 各生成每题一条、上限 4,096 的响应，每条初版选至多八个固定位置，合计至多 1,440 个抽样位置（包含两来源共同的 prompt-only 前缀）。第一个动作必选，将其余 $L_i-1$ 个位置划为最多七个非空连续区间，每区间均匀抽一个位置；短响应直接选取全部位置。若区间 $h$ 有 $n_h$ 个位置、抽中位置为 $T_h$，固定来源轨迹上的累计估计为 $\widehat S_i=k(s_{i,1})+\sum_h n_h k(s_{i,T_h})$；对区间采样取期望即恢复 $S_i$，归一化时除以实际有效长度。该位置抽样仅服务固定前缀 bank，不缩减主验证的评分范围。
 
-固定前缀 bank 保存完整生成 token IDs、抽中位置、区间权重、采样配置与清单哈希，所有变体使用相同 bank。分别报告 `on_initial_states` 和 `on_teacher_states` 的完整条件 KL，不把两者合并后称为 sequence KL。它衡量相同状态下分布如何变化；全量验证响应则衡量模型实际访问到的状态。固定前缀的 teacher 结果可按完整身份缓存，student 每次重算；当前 student 新生成的前缀不能套用旧 bank 的 teacher 分数。bank 的规模与 GPU 开销仍需真实验证。
+固定前缀 bank 保存完整生成 token IDs、抽中位置、区间权重、采样配置与清单哈希，所有变体使用相同 bank。分别报告 `on_initial_states` 和 `on_teacher_states` 的完整条件 KL，不把两者合并后称为 sequence KL。它衡量相同状态下分布如何变化；全量验证响应则衡量模型实际访问到的状态。固定前缀的 teacher 结果可按完整身份缓存，student 每次重算；当前 student 新生成的前缀不能套用旧 bank 的 teacher 分数。下文已记录真实 bank 与长响应验收；完整 570×16 的评分成本仍待全量运行返回。
 
 | 范围           | 必备指标                                                                                  | 统计条件                                                               |
 | -------------- | ----------------------------------------------------------------------------------------- | ---------------------------------------------------------------------- |
@@ -760,7 +760,7 @@ $$
 
 真实 [bank 独立审计](../../../../docs/experiment/results/native-rollout/prefix-bank-gpu/audit.json)与[四卡长响应审计](../../../../docs/experiment/results/native-rollout/validation-kl-long/kl-independent-audit.json)随后通过。v2 的输入与 0f2c1d8 神经网络源码不变，设备选择使用已核验的 PCI/序号映射；两来源共 180 条轨迹和 1,440 个位置对应 1,350 个不同的完整 token 前缀。两次工程更新后的六题×16 验证覆盖 605,977 个有效位置，实际最长 31,744；固定 bank 另计 1,440 个位置。完整词表评分 wall time 为 46.749 s，四卡区间采样最高 10,761 MiB，W&B 1sndtege 与最终行 KL 核对通过。它不包含完整 570 题，不能外推全量成本或来源训练效果；完整规模 gate 已串行启动。
 
-完整规模验收增加 `eval/run_validation_kl_gate.py` 和 `eval/collect_validation_kl.py`，等待真实 bank/长响应前置验收后独立执行。两次 B8、64-token 工程更新后，以原准确率采样、31,744 cap 验证完整 500/40/30 题×16；主指标对 9,120 条响应的全部有效位置评分，另算固定 bank 的 180 条轨迹，不把 bank 选中的九十题当成完整验证。核对最终版本、完整词表、同一 bank、输入哈希、逐题 bootstrap 与 W&B 最终行；评分阶段的整卡采样和 worker 分项单列，缺少阶段采样时不宣称显存覆盖。归档保留原始报告/输入校验值与每类实际长度范围；`--audit-only` 可重试归档而不重新训练。[九项 CPU 检查](../../../../docs/experiment/results/native-rollout/validation-kl-full-cpu.json)包括完整 9,120+180 条合成记录、缺失采样、错误版本/输入/范围及 CLI 计划；真实三个 Parquet 的行数、data_source 和文件哈希也已核对。合成记录不是模型输出，完整规模 GPU 数值与资源结论仍待实测；这两步验收也不替代五十步质量对照。
+完整规模验收使用 `eval/run_validation_kl_gate.py` 和 `eval/collect_validation_kl.py`，已在真实 bank/长响应前置验收通过后串行启动；十八批准确率生成已返回，当前进入评分 RPC，最终 KL 报告尚未写出。两次 B8、64-token 工程更新后，以原准确率采样、31,744 cap 验证完整 500/40/30 题×16；主指标对 9,120 条响应的全部有效位置评分，另算固定 bank 的 180 条轨迹，不把 bank 选中的九十题当成完整验证。核对最终版本、完整词表、同一 bank、输入哈希、逐题 bootstrap 与 W&B 最终行；评分阶段的整卡采样和 worker 分项单列，缺少阶段采样时不宣称显存覆盖。归档保留原始报告/输入校验值与每类实际长度范围；`--audit-only` 可重试归档而不重新训练。[九项 CPU 检查](../../../../docs/experiment/results/native-rollout/validation-kl-full-cpu.json)包括完整 9,120+180 条合成记录、缺失采样、错误版本/输入/范围及 CLI 计划；真实三个 Parquet 的行数、data_source 和文件哈希也已核对。合成记录不是模型输出，完整规模 GPU 数值与资源结论仍待实测；这两步验收也不替代五十步质量对照。
 
 ### 修改范围与实施顺序
 
