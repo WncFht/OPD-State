@@ -1,11 +1,15 @@
 {
   "checked_on": "2026-10-18",
-  "document": "2026-10-17-OPD访问测度与收敛机制研究.md",
-  "document_sha256": "9991708cbc83ba70c3f0ce007d7e4f173d53bab363d0a5528cbc6841762447b5",
+  "documents": {
+    "2026-10-18-局部梯度与长度归约.md": "b089ab0ba74fc5c34856886bc99c816ed37bd8fa10f2908ab9bf70fc38d6300e",
+    "2026-10-18-重复退化与TIDE机制.md": "9c00987bfcbce838c1a26f04e21b9046d730f0f46c3e965c610cc73fdc7e7b04"
+  },
   "renderer": "@mermaid-js/mermaid-cli",
   "renderer_version": "12.0.0",
   "browser": "existing Chromium, GPU disabled",
-  "scope": "Actual Mermaid parsing and PNG rendering; formula correctness is checked separately by KaTeX.",
+  "scope": "Split-document sources match the exact Mermaid blocks previously rendered and visually checked; rendering results are reused, not claimed as new renders.",
+  "previous_document": "2026-10-17-OPD访问测度与收敛机制研究.md",
+  "previous_document_sha256": "9991708cbc83ba70c3f0ce007d7e4f173d53bab363d0a5528cbc6841762447b5",
   "command": "mmdc -i <document.md> -o <preview.md> -a <render-dir> -e png -p <puppeteer-config.json> --size 1800 -j 1",
   "diagrams": [
     {
@@ -16,7 +20,10 @@
       "width": 1800,
       "height": 1362,
       "render_exit_code": 0,
-      "visually_checked": true
+      "visually_checked": true,
+      "source_document": "2026-10-18-局部梯度与长度归约.md",
+      "diagram_in_document": 1,
+      "source_unchanged_since_render": true
     },
     {
       "diagram": 2,
@@ -26,7 +33,10 @@
       "width": 1086,
       "height": 1800,
       "render_exit_code": 0,
-      "visually_checked": true
+      "visually_checked": true,
+      "source_document": "2026-10-18-重复退化与TIDE机制.md",
+      "diagram_in_document": 1,
+      "source_unchanged_since_render": true
     },
     {
       "diagram": 3,
@@ -36,7 +46,10 @@
       "width": 963,
       "height": 1800,
       "render_exit_code": 0,
-      "visually_checked": true
+      "visually_checked": true,
+      "source_document": "2026-10-18-重复退化与TIDE机制.md",
+      "diagram_in_document": 2,
+      "source_unchanged_since_render": true
     }
   ]
 }

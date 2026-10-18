@@ -1,10 +1,110 @@
 {
-  "math_expressions": 789,
+  "entry": "2026-10-17-OPD访问测度与收敛机制研究.md",
+  "document_count": 8,
+  "math_expressions": 817,
   "mermaid_diagrams": 3,
   "mermaid_math_expressions": 19,
   "theorem_statements": 29,
-  "local_links": 12,
+  "local_links": 69,
   "footnotes": 14,
   "unavailable_external_links": [],
+  "documents": [
+    {
+      "document": "2026-10-17-OPD访问测度与收敛机制研究.md",
+      "lines": 38,
+      "math_expressions": 0,
+      "mermaid_diagrams": 0,
+      "mermaid_math_expressions": 0,
+      "theorem_statements": 0,
+      "local_links": 12,
+      "footnotes": 0,
+      "unavailable_external_links": [],
+      "issues": []
+    },
+    {
+      "document": "2026-10-18-Sampled-token与无偏尾部估计.md",
+      "lines": 214,
+      "math_expressions": 111,
+      "mermaid_diagrams": 0,
+      "mermaid_math_expressions": 0,
+      "theorem_statements": 4,
+      "local_links": 9,
+      "footnotes": 2,
+      "unavailable_external_links": [],
+      "issues": []
+    },
+    {
+      "document": "2026-10-18-State诊断与实验设计.md",
+      "lines": 215,
+      "math_expressions": 44,
+      "mermaid_diagrams": 0,
+      "mermaid_math_expressions": 0,
+      "theorem_statements": 1,
+      "local_links": 11,
+      "footnotes": 4,
+      "unavailable_external_links": [],
+      "issues": []
+    },
+    {
+      "document": "2026-10-18-双向实验运行与验证.md",
+      "lines": 108,
+      "math_expressions": 20,
+      "mermaid_diagrams": 0,
+      "mermaid_math_expressions": 0,
+      "theorem_statements": 0,
+      "local_links": 12,
+      "footnotes": 0,
+      "unavailable_external_links": [],
+      "issues": []
+    },
+    {
+      "document": "2026-10-18-对齐指标与基本记号.md",
+      "lines": 260,
+      "math_expressions": 121,
+      "mermaid_diagrams": 0,
+      "mermaid_math_expressions": 0,
+      "theorem_statements": 3,
+      "local_links": 4,
+      "footnotes": 0,
+      "unavailable_external_links": [],
+      "issues": []
+    },
+    {
+      "document": "2026-10-18-局部梯度与长度归约.md",
+      "lines": 266,
+      "math_expressions": 137,
+      "mermaid_diagrams": 1,
+      "mermaid_math_expressions": 6,
+      "theorem_statements": 7,
+      "local_links": 5,
+      "footnotes": 1,
+      "unavailable_external_links": [],
+      "issues": []
+    },
+    {
+      "document": "2026-10-18-访问测度与六种rollout的收敛.md",
+      "lines": 414,
+      "math_expressions": 211,
+      "mermaid_diagrams": 0,
+      "mermaid_math_expressions": 0,
+      "theorem_statements": 8,
+      "local_links": 6,
+      "footnotes": 8,
+      "unavailable_external_links": [],
+      "issues": []
+    },
+    {
+      "document": "2026-10-18-重复退化与TIDE机制.md",
+      "lines": 362,
+      "math_expressions": 173,
+      "mermaid_diagrams": 2,
+      "mermaid_math_expressions": 13,
+      "theorem_statements": 6,
+      "local_links": 10,
+      "footnotes": 3,
+      "unavailable_external_links": [],
+      "issues": []
+    }
+  ],
   "issues": []
 }

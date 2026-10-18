@@ -205,7 +205,7 @@ The code in this repository is released under the Apache License 2.0. The releas
 
 本仓直接基于 One-Shot-OPD 修改。训练入口在 `recipe/`，数据准备在 `data/prep/`，评测在 `eval/`，训练实现及其原有脚本在 `verl/`。导入版本与许可见[来源说明](docs/provenance.md)。
 
-[访问测度研究](docs/research/occupancy/2026-10-17-OPD访问测度与收敛机制研究.md)集中说明定理与证明、六种 rollout 来源、state 分析、失败配对选择与机制辨识实验，以及 KL 对齐与 accuracy 的关系、长度归约、重复退化和 TIDE 的完整 loss。JustRL/R1 双向实验使用 `recipe/math_alignment.sh` 的无偏 head-tail 路径，完整词表校准使用 `eval/measure_student_kl.py`。[统一实验报告](docs/experiment/2026-10-18-rollout来源与logit融合实验.md)集中说明四种 rollout 设置、三基准 eval16、训练与准确率图、已完成结果和复现方法；长时 Semi-OPD 每 50 步验证继续检查收敛。[开发指南](docs/development.md)说明维护工具与 hooks，[代码结构](docs/architecture.md)说明算法修改位置。研究过程记录统一保存在 `docs/notes/`。
+[访问测度研究导读](docs/research/occupancy/2026-10-17-OPD访问测度与收敛机制研究.md)按阅读目标组织七篇专题：对齐指标、局部梯度与长度、访问测度与收敛、重复退化与 TIDE、采样估计器、State 诊断和双向实验运行。JustRL/R1 双向实验使用 `recipe/math_alignment.sh` 的无偏 head-tail 路径，完整词表校准使用 `eval/measure_student_kl.py`。[统一实验报告](docs/experiment/2026-10-18-rollout来源与logit融合实验.md)集中说明四种 rollout 设置、三基准 eval16、训练与准确率图、已完成结果和复现方法；长时 Semi-OPD 每 50 步验证继续检查收敛。[开发指南](docs/development.md)说明维护工具与 hooks，[代码结构](docs/architecture.md)说明算法修改位置。研究过程记录统一保存在 `docs/notes/`。
 
 维护环境与 GPU 训练环境分别准备。安装维护工具并启用 hooks：
 

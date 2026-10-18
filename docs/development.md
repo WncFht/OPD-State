@@ -38,7 +38,7 @@ CUDA_VISIBLE_DEVICES='' PYTHONPATH=verl ../envs/opd-state/bin/python \
     -m unittest discover -s verl/tests/opd -p test_topk_tail_on_cpu.py -v
 ```
 
-测试核验条件梯度与数值估计、行为概率修正、有效词表、冻结候选、padding/EOS 位置和全局 token 归约；它们不作为真实 LLM 收敛证据。训练验收还需四卡短更新。双向配方、完整词表校准命令与正式长时实验的区别见[研究正文](research/occupancy/2026-10-17-OPD访问测度与收敛机制研究.md)。该配方导出的 HF 快照用于评分，不含优化器状态，不能用于完整中断恢复。
+测试核验条件梯度与数值估计、行为概率修正、有效词表、冻结候选、padding/EOS 位置和全局 token 归约；它们不作为真实 LLM 收敛证据。训练验收还需四卡短更新。双向配方、完整词表校准命令与正式长时实验的区别见[运行与验证](research/occupancy/2026-10-18-双向实验运行与验证.md)。该配方导出的 HF 快照用于评分，不含优化器状态，不能用于完整中断恢复。
 
 ## 上游对照
 
@@ -57,7 +57,7 @@ CUDA_VISIBLE_DEVICES='' .venv/bin/python docs/research/occupancy/experiments/exa
 node docs/research/occupancy/experiments/check_document.cjs
 ```
 
-既有数值程序只作代数与梯度回归核验，不作为真实 LLM 的收敛或失败机制证据；研究正文以一般证明和真实实验来源支撑结论。数学核验只依赖 NumPy；公式语法检查使用本仓锁定的 KaTeX，覆盖正文和 Mermaid 标签中的数学公式；同时检查定理编号、先陈述后证明的顺序、定理引用与本页目录锚点。Mermaid 语法及实际布局另用 CLI 渲染核验，不能把 KaTeX 检查当作完整图语法检查。研究正文的外部本地链接使用相邻 `Awesome-Paper/` 与 `MirrorOPD/`，并保留历史名称 `Awesome-OPD-Paper/` 的来源识别，检查结果单独列出缺少的外部材料，不将外部缺失视为内部断链。
+既有数值程序只作代数与梯度回归核验，不作为真实 LLM 的收敛或失败机制证据；研究正文以一般证明和真实实验来源支撑结论。数学核验只依赖 NumPy；公式语法检查使用本仓锁定的 KaTeX，覆盖正文和 Mermaid 标签中的数学公式；检查入口会扫描 occupancy 根目录的整个 Markdown 文档集，验证各篇独立编号、先陈述后证明、脚注和跨页锚点，并拒绝导读无法到达的孤立文档。Mermaid 语法及实际布局另用 CLI 渲染核验，不能把 KaTeX 检查当作完整图语法检查。研究正文的外部本地链接使用相邻 `Awesome-Paper/` 与 `MirrorOPD/`，并保留历史名称 `Awesome-OPD-Paper/` 的来源识别，检查结果单独列出缺少的外部材料，不将外部缺失视为内部断链。
 
 绘图额外使用工作区 figure-viz 技能的 `assets/mpl`，其资源不随训练代码导入。默认定位当前工作区 `.agents/skills/figure-viz`；跨机器用 `FIGURE_VIZ_HOME` 指定技能根目录。缺少该资源时先准备资源，再运行：
 
