@@ -1,0 +1,67 @@
+{
+  "scope": "Completed generation-batch prefix; no final accuracy or KL estimate; different trained checkpoints prevent causal speed attribution",
+  "completed_batches": 12,
+  "runs": {
+    "full_gate": {
+      "path": "/mnt/tidalfs-bdsz01/dataset/llm_dataset/zkn_data/fht_data/OPD-State/runs/native-validation-kl-full-20261019-v2/checkpoints/native-trajectories/batches.jsonl",
+      "prefix_bytes": 191713,
+      "prefix_sha256": "49517471d336c6bb3b4adedbc081c25a35bd6a32cec98f1be94bead3ccf8638d",
+      "responses": 6144,
+      "output_tokens": 33246903,
+      "native_generate_seconds": 5767.732394173741,
+      "mean_response_length": 5411.27978515625,
+      "observed_tokens_per_s": 5764.293612786936,
+      "recorded_evaluation_engine": {
+        "replicas": 4,
+        "role": "current_student",
+        "purpose": "evaluation",
+        "context_limit": 32768,
+        "max_num_batched_tokens": 32768,
+        "max_num_seqs": 8,
+        "gpu_memory_utilization": 0.55,
+        "cold_start_seconds": null
+      },
+      "engine_manifest_sha256": "ce6e65b4e17b2e599690344829f419c8f0cfbc70e24ee65b49ebeb966baed40e",
+      "student_versions": [2],
+      "training_batch": 8,
+      "row_identity_scope": "Same batch positions, response counts and total prefill tokens; incomplete current outputs prevent per-response prompt-identity re-audit"
+    },
+    "formal_current": {
+      "path": "/mnt/tidalfs-bdsz01/dataset/llm_dataset/zkn_data/fht_data/OPD-State/runs/native-formal-suite-20261018/student_fresh/checkpoints/native-trajectories/batches.jsonl",
+      "prefix_bytes": 40749,
+      "prefix_sha256": "ab95aa76a92a84c7c362224a9361c8568e8d1f062b45ca92a8274222928b2e2b",
+      "responses": 6144,
+      "output_tokens": 26718952,
+      "native_generate_seconds": 2259.4613546803594,
+      "mean_response_length": 4348.787760416667,
+      "observed_tokens_per_s": 11825.363573779676,
+      "recorded_evaluation_engine": {
+        "replicas": 4,
+        "role": "current_student",
+        "purpose": "evaluation",
+        "context_limit": 32768,
+        "max_num_batched_tokens": 32768,
+        "max_num_seqs": 64,
+        "gpu_memory_utilization": 0.55,
+        "cold_start_seconds": null
+      },
+      "engine_manifest_sha256": "4002ecd2493056bd230d8536d714c5cddce55d2115307e97c208fddf43f588ff",
+      "student_versions": [50],
+      "training_batch": 64,
+      "row_identity_scope": "Same batch positions, response counts and total prefill tokens; incomplete current outputs prevent per-response prompt-identity re-audit"
+    }
+  },
+  "accounting_ratios": {
+    "generation_time_ratio": 2.5527023873305805,
+    "output_work_ratio": 1.244319125989672,
+    "inverse_observed_throughput_ratio": 2.0514852934533843
+  },
+  "collection_scope": "through_completed_generation_batch_12",
+  "limitations": [
+    "Running full gate is incomplete; this is neither final accuracy nor final KL",
+    "Student2/B8 and Student50/B64 differ; concurrency is 8 vs 64 in recorded engine configuration",
+    "Time/work/throughput ratios are an accounting identity, not a causal attribution",
+    "Native generate call wall includes scheduler/RPC overhead; not pure CUDA kernel time"
+  ],
+  "by_batch_csv_sha256": "40735cd50ef2ca6095feca7ac4111856ea6c2302730b29c79a67e2f554710d8f"
+}
