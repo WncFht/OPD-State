@@ -31,6 +31,7 @@ def collect(run):
     if len(observations) != summary["observations"]:
         raise ValueError("Benchmark observation count does not match its completion summary")
     groups, warmups = {}, {}
+    previous_binding = None
     for row in observations:
         if not all(
             math.isfinite(row[k]) and row[k] > 0 for k in ["seconds", "tokens_per_second", "responses_per_second"]
@@ -61,11 +62,80 @@ def collect(run):
                 if len(ids) != execution["requests"] or len(set(ids)) != len(ids) or request_ids.intersection(ids):
                     raise ValueError("Physical benchmark receipts duplicate or miscount native requests")
                 request_ids.update(ids)
-                routed[(phase, slot)] = routed.get((phase, slot), 0) + len(ids)
+                logical = execution.get("logical_phase", phase), execution.get("logical_slot", slot)
+                if summary.get("weight_mode") == "staged":
+                    binding = row["source_bindings"][execution["publication_index"]]
+                    if (
+                        slot != "current_student"
+                        or execution["runtime_identity"] != binding["runtime_identity"]
+                        or execution["logical_identity"] != binding["source_identity"]
+                        or execution["logical_slot"] != binding["source_identity"][0]
+                        or binding["committed"] is not True
+                    ):
+                        raise ValueError("Staged physical requests are not bound to a committed checkpoint publication")
+                routed[logical] = routed.get(logical, 0) + len(ids)
             expected_routes = {(g["phase"], g["slot"]): g["requests"] for g in row["groups"]}
             if routed != expected_routes:
                 raise ValueError("Physical benchmark receipts do not cover every generation group")
         key = policy_name(row["policy"]), row["batch"], row["cap"], row["natural_eos"]
+        if summary.get("weight_mode") == "staged":
+            bindings = row["source_bindings"]
+            if len(bindings) != len(row["groups"]) or any(not b["committed"] for b in bindings):
+                raise ValueError("Staged benchmark did not bind every generation group")
+            if row["weight_copy_count"] != sum(b["copied"] for b in bindings):
+                raise ValueError("Staged benchmark miscounted checkpoint publications")
+            activation = math.fsum(b["seconds"] for b in bindings)
+            if not 0 <= activation <= row["seconds"] or not math.isclose(
+                activation, row["weight_activation_seconds"], abs_tol=1e-7
+            ):
+                raise ValueError("Staged activation time disagrees with its end-to-end measurement")
+            for binding in bindings:
+                arguments_replicas = summary["arguments"]["replicas"]
+                if (
+                    binding["runtime_identity"][:2] != ["current_student", summary["model_refs"]["initial_student"][1]]
+                    or type(binding["runtime_identity"][2]) is not int
+                    or binding["runtime_identity"][2] < 0
+                    or type(binding["copied"]) is not bool
+                    or not math.isfinite(binding["seconds"])
+                    or binding["seconds"] < 0
+                ):
+                    raise ValueError("Staged publication has an invalid mutable container identity or timing")
+                expected_transfers = arguments_replicas if binding["copied"] else 0
+                if (
+                    len(binding["transfers"]) != expected_transfers
+                    or len(binding["server_status"]) != arguments_replicas
+                ):
+                    raise ValueError("Staged publication is missing a sender or native server receipt")
+                if any(
+                    t["fingerprint"] != binding["source_identity"][2]
+                    or t["parameters"] <= 0
+                    or not math.isfinite(t["seconds"])
+                    or t["seconds"] <= 0
+                    for t in binding["transfers"]
+                ):
+                    raise ValueError("Staged sender loaded another or incomplete checkpoint")
+                if any(
+                    not s["valid"] or not s["awake"] or s["active"] or s["identity"] != binding["runtime_identity"]
+                    for s in binding["server_status"]
+                ):
+                    raise ValueError("Staged server publication was not valid, awake and idle")
+                role = binding["source_identity"][0]
+                if binding["source_identity"] != summary["model_refs"].get(role):
+                    raise ValueError("Staged logical source differs from the declared immutable checkpoint")
+                if previous_binding is not None:
+                    changed = binding["source_identity"] != previous_binding["source_identity"]
+                    version, previous_version = binding["runtime_identity"][2], previous_binding["runtime_identity"][2]
+                    if version < previous_version or (
+                        changed and (not binding["copied"] or version <= previous_version)
+                    ):
+                        raise ValueError("Staged checkpoint transition reused a previous container version")
+                previous_binding = binding
+            transfer_seconds = math.fsum(max((t["seconds"] for t in b["transfers"]), default=0) for b in bindings)
+            if (
+                not math.isclose(transfer_seconds, row["weight_transfer_seconds"], abs_tol=1e-7)
+                or transfer_seconds > activation
+            ):
+                raise ValueError("Staged weight-transfer timing does not match device-local sender receipts")
         if row["repeat"] < 0:
             warmups[key] = warmups.get(key, 0) + 1
             continue
@@ -83,6 +153,8 @@ def collect(run):
         result.append(
             {
                 "layout": arguments["layout"],
+                "run": run.name,
+                "weight_mode": summary.get("weight_mode", "resident_concurrent"),
                 "replicas": arguments["replicas"],
                 "graph": arguments["graph"],
                 "budget": arguments.get("budget"),
@@ -100,6 +172,9 @@ def collect(run):
                 "tokens_mean": statistics.mean(r["tokens"] for r in rows),
                 "tokens_per_second_mean": statistics.mean(r["tokens_per_second"] for r in rows),
                 "responses_per_second_mean": statistics.mean(r["responses_per_second"] for r in rows),
+                "weight_activation_seconds_mean": statistics.mean(r.get("weight_activation_seconds", 0) for r in rows),
+                "weight_copy_count_mean": statistics.mean(r.get("weight_copy_count", 0) for r in rows),
+                "weight_transfer_seconds_mean": statistics.mean(r.get("weight_transfer_seconds", 0) for r in rows),
                 "prefill_tokens_mean": statistics.mean(sum(g["input_tokens"] for g in r["groups"]) for r in rows),
             }
         )
@@ -109,6 +184,8 @@ def collect(run):
             memory.append(
                 {
                     "layout": arguments["layout"],
+                    "run": run.name,
+                    "weight_mode": summary.get("weight_mode", "resident_concurrent"),
                     "replicas": arguments["replicas"],
                     "slot": slot,
                     "gpu": gpu,
@@ -124,7 +201,73 @@ def collect(run):
         "observations_sha256": hashlib.sha256((run / "observations.jsonl").read_bytes()).hexdigest(),
         "observations": len(observations),
         "cold_seconds": summary["cold_seconds"],
+        "weight_mode": summary.get("weight_mode", "resident_concurrent"),
+        "sender_cpu_cache": summary.get("sender_cpu_cache", []),
+        "numerical_checks": summary.get("numerical_checks", []),
+        "numerical_reference": summary.get("numerical_reference"),
     }
+    if summary.get("weight_mode") == "staged":
+        checks = summary.get("numerical_checks", [])
+        expected_checks = {
+            (phase, source)
+            for phase in ("before_measurement", "after_measurement")
+            for source in ("initial_student", "teacher")
+        }
+        if {(c["phase"], c["source"]) for c in checks} != expected_checks or len(checks) != 4:
+            raise ValueError("Staged benchmark lacks before/after independent full-vocabulary reference checks")
+        if any(
+            c["reference_created"] is not False
+            or not 0 < c["logit_tolerance"] <= 0.5
+            or not 0 < c["tv_tolerance"] <= 0.05
+            or not 0 <= c["max_logit_error"] <= c["logit_tolerance"]
+            or not 0 <= c["max_tv"] <= c["tv_tolerance"]
+            for c in checks
+        ):
+            raise ValueError("Staged/resident numerical equivalence was not established")
+        reference = summary["numerical_reference"]
+        path = Path(reference["directory"]) / "reference.json"
+        if hashlib.sha256(path.read_bytes()).hexdigest() != reference["metadata_sha256"]:
+            raise ValueError("Independent resident numerical reference metadata changed")
+        metadata = json.loads(path.read_text())
+        if metadata["models"] != summary["model_refs"] or metadata["producer"]["weight_mode"] not in {
+            "resident_serial",
+            "resident_concurrent",
+        }:
+            raise ValueError("Staged and resident references use different checkpoint identities")
+        for role, digest in metadata["arrays"].items():
+            if hashlib.sha256((path.parent / f"{role}.npy").read_bytes()).hexdigest() != digest:
+                raise ValueError("Independent resident numerical reference logits changed")
+        import numpy as np
+
+        for check in checks:
+            observed_path = Path(check["observed_logits"])
+            if hashlib.sha256(observed_path.read_bytes()).hexdigest() != check["observed_sha256"]:
+                raise ValueError("Staged observed full-vocabulary logits changed")
+            observed = np.load(observed_path, allow_pickle=False)
+            expected = np.load(path.parent / f"{check['source']}.npy", allow_pickle=False)
+            shape = check["prefix_count"], summary["effective_vocab_size"]
+            if (
+                observed.shape != shape
+                or expected.shape != shape
+                or check["vocab_size"] != shape[1]
+                or shape[0] != len(metadata["prompts"])
+                or shape[0] <= 0
+                or metadata["vocabulary"] != shape[1]
+                or not np.isfinite(observed).all()
+                or not np.isfinite(expected).all()
+            ):
+                raise ValueError("Staged numerical comparison did not cover complete finite vocabulary logits")
+
+            def probability(logits):
+                values = np.exp(logits.astype(np.float64) - logits.max(-1, keepdims=True))
+                return values / values.sum(-1, keepdims=True)
+
+            error = float(np.abs(observed - expected).max())
+            tv = float(np.abs(probability(observed) - probability(expected)).sum(-1).max() / 2)
+            if not math.isclose(error, check["max_logit_error"], rel_tol=0, abs_tol=1e-7) or not math.isclose(
+                tv, check["max_tv"], rel_tol=0, abs_tol=1e-10
+            ):
+                raise ValueError("Staged numerical statistics disagree with independent full-vocabulary recomputation")
     telemetry = summary.get("gpu_telemetry")
     if telemetry is not None:
         observed = hashlib.sha256((run / "gpu.csv").read_bytes()).hexdigest()

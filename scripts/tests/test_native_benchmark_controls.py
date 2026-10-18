@@ -23,6 +23,7 @@ def load(name, filename):
 benchmark = load("native_benchmark_controls", "benchmark_native_policies.py")
 snapshot = load("native_benchmark_snapshot", "native_source_snapshot.py")
 sweep = load("native_benchmark_sweep", "run_native_scheduler_sweep.py")
+residency = load("native_residency_controls", "run_native_residency_controls.py")
 
 
 class NativeBenchmarkControlTests(unittest.TestCase):
@@ -119,6 +120,66 @@ class NativeBenchmarkControlTests(unittest.TestCase):
                 )
         with self.assertRaises(ValueError):
             benchmark.check_execution([], engines, uuids)
+
+    def test_residency_controls_reverse_order_and_keep_common_work_and_numerical_reference(
+        self,
+    ):
+        conditions = residency.cases()
+        self.assertEqual(sum(case["pilot"] for case in conditions), 2)
+        modes = [case["weight_mode"] for case in conditions if not case["pilot"]]
+        self.assertEqual(modes[:3], list(reversed(modes[3:])))
+        self.assertEqual(
+            set(modes), {"resident_serial", "resident_concurrent", "staged"}
+        )
+        for case in conditions:
+            argv = residency.command(
+                case, Path("output"), Path("reference"), "commit", Path("python")
+            )
+            self.assertEqual(
+                argv[argv.index("--budget") + 1], "0.3" if case["pilot"] else "0.4"
+            )
+            self.assertEqual(
+                argv[argv.index("--batches") + 1], "4" if case["pilot"] else "64"
+            )
+            self.assertEqual(
+                argv[argv.index("--natural-cap") + 1], "64" if case["pilot"] else "4096"
+            )
+            self.assertIn("--reference-dir", argv)
+            self.assertIn("--natural-warmup", argv)
+        with tempfile.TemporaryDirectory() as temporary:
+            directory = Path(temporary) / "plan"
+            subprocess.run(
+                [
+                    sys.executable,
+                    str(ROOT / "eval/run_native_residency_controls.py"),
+                    "--plan-only",
+                    "--source-commit",
+                    "HEAD",
+                    "--output",
+                    str(directory),
+                ],
+                cwd=ROOT,
+                check=True,
+            )
+            state = json.loads((directory / "state.json").read_text())
+            self.assertEqual(state["state"], "planned")
+            self.assertEqual(len(state["cases"]), 8)
+
+    def test_staged_requires_independent_reference_and_common_gpu_layout(self):
+        with self.assertRaisesRegex(ValueError, "reference"):
+            benchmark.validate_options(self.options(weight_mode="staged"))
+        for mode in ("staged", "resident_serial"):
+            with self.assertRaisesRegex(ValueError, "overlap"):
+                benchmark.validate_options(
+                    self.options(
+                        weight_mode=mode,
+                        layout="split",
+                        reference_dir=Path("reference"),
+                    )
+                )
+        benchmark.validate_options(
+            self.options(weight_mode="staged", reference_dir=Path("reference"))
+        )
 
     def test_committed_snapshot_does_not_copy_later_worktree_edits(self):
         with tempfile.TemporaryDirectory() as temporary:

@@ -1,0 +1,92 @@
+{
+  "schema": "native-weight-residency-cpu-v1",
+  "scope": "CPU protocol, lifecycle, independent numerical artifact audit, preflight and historical-data regression only; GPU residency comparison has not run",
+  "base_commit": "c7c643344be62e1e380c05f421cfb485846d5484",
+  "source_kind": "worktree_file_hashes",
+  "source_sha256": {
+    "eval/benchmark_native_policies.py": "54eaebfa68eb85d292a7d3a04eed123a63e41078fd9a468ec78880aa419f02a1",
+    "eval/summarize_native_benchmarks.py": "023c4da7f57837dba7de991da778b6c0239524a67b2d1bcac604150af7521206",
+    "eval/run_native_residency_controls.py": "9c6b32b42b4ead78c93701160570c9be78d02839bd9a6d90f969f85d58191a99",
+    "verl/verl/workers/rollout/native_staged.py": "e55b66662ba894bddf2d07fc6f6ef7b84f449a7a68c53fd5082cb00ec1bf3f84",
+    "verl/tests/opd/test_native_staged_on_cpu.py": "25f120df80c207466831822d5f26c77d4bcfb25db2cc633655c823126b0b6a63",
+    "scripts/tests/test_native_benchmark_controls.py": "78686968c3bf5d3b65d76ec10fc1e4b4b72753221837b751f4e7f453375e08b9",
+    "scripts/tests/test_native_benchmark_analysis.py": "02c8cb97f1c25134a8e61d9b5979109353493fe76681bd469e692848c2a84070"
+  },
+  "tests": {
+    "native_cpu": 84,
+    "benchmark_cpu": 12,
+    "new_staged_protocol_methods": 7,
+    "staged_audit_negative_controls": 11
+  },
+  "historical_regression": {
+    "conditions": 28,
+    "engine_records": 19
+  },
+  "gpu_plan": {
+    "engineering_cases": 2,
+    "engineering_gpus": [0],
+    "engineering_batch": 4,
+    "engineering_fixed_cap": 16,
+    "engineering_natural_cap": 64,
+    "engineering_joint_budget": 0.3,
+    "performance_cases": 6,
+    "performance_order": [
+      "resident_serial",
+      "staged",
+      "resident_concurrent",
+      "resident_concurrent",
+      "staged",
+      "resident_serial"
+    ],
+    "performance_gpus": [0, 1, 2, 3],
+    "performance_batch": 64,
+    "performance_fixed_cap": 128,
+    "performance_natural_cap": 4096,
+    "performance_joint_budget": 0.4,
+    "policies": [
+      "initial_student",
+      "teacher",
+      "switch_p0_q",
+      "switch_q_p0",
+      "batch_mix"
+    ],
+    "warmups_per_policy_and_length": 1,
+    "timed_repeats_per_policy_and_length": 3,
+    "observations_per_case": 40,
+    "pipeline_scope": "cached immutable pinned CPU checkpoints to native CUDA IPC; excludes training/FSDP export"
+  },
+  "numerical_gate": {
+    "reference": "independent resident checkpoints on same raw prompts",
+    "staged_checks": "both source checkpoints before and after measurement; save complete observed logits and independently recompute errors",
+    "max_absolute_logit_error": 0.5,
+    "max_total_variation": 0.05,
+    "vocabulary": "all effective tokenizer entries; no top-k renormalization"
+  },
+  "limitations": [
+    "Synthetic CPU records do not prove CUDA IPC or native GPU execution",
+    "GPU timing/memory and numerical equivalence must pass before choosing residency strategy",
+    "Single training seed and math accuracy are outside this inference benchmark"
+  ],
+  "actual_checkpoint_geometry": {
+    "scope": "CPU safetensor tensor headers; no native GPU forward or transfer",
+    "matching": true,
+    "models": {
+      "initial_student": {
+        "path": "/mnt/tidalfs-bdsz01/dataset/llm_dataset/zkn_data/fht_data/models/DeepSeek-R1-Distill-Qwen-1.5B",
+        "tensors": 339,
+        "parameter_elements": 1777088000,
+        "tensor_bytes": 3554176000,
+        "shape_dtype_sha256": "18749b2ce009c2609d600dbf7b9ae199c8f663290508ffc4d4a42d58f28b3119",
+        "dtypes": ["torch.bfloat16"]
+      },
+      "teacher": {
+        "path": "/mnt/tidalfs-bdsz01/dataset/llm_dataset/zkn_data/fht_data/models/JustRL-DeepSeek-1.5B",
+        "tensors": 339,
+        "parameter_elements": 1777088000,
+        "tensor_bytes": 3554176000,
+        "shape_dtype_sha256": "18749b2ce009c2609d600dbf7b9ae199c8f663290508ffc4d4a42d58f28b3119",
+        "dtypes": ["torch.bfloat16"]
+      }
+    }
+  }
+}
