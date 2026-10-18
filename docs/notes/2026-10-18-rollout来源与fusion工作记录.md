@@ -163,3 +163,13 @@ Fusion 随后完成全部 50 步和三基准 eval16，进程退出码 0，W&B g5
 原 Agent Note 的对应小节新增八幅 Mermaid，保留现有总览，共九幅；使用独立忽略目录中的 Mermaid CLI 11.12.0 与已有 Chromium 实际渲染，并查看九图总览及分段边界图。渲染、输入 mmd 和配置保存在 runs/state-variant-diagrams-20261018/，未给项目添加运行依赖。方案继续为 proposed，区分独立原型、现有 HF fusion 和待接入的正式 trainer；实现与研究架构文档均未修改，原训练保持停止。
 
 九幅当前 Mermaid 源码与渲染结果已逐一核对并记录哈希。文档/Agent Note 检查、本地链接检查、Markdown lint、Prettier 和正文间距检查均通过；只提交该方案与既有工作记录，不纳入其他并行修改。
+
+用户要求暂不考虑两类嵌套组合，首轮范围据此收紧为单模型、独立 fusion、单模型间的一次分段和单模型间的简单 batch 混合。移除嵌套配置示意与流程图，正式参数编译拒绝 batch 内使用 switch/fusion 或分段中使用 fusion；原型已做过的嵌套测试与旧测量保留为历史证据，不扩展接入要求，也不改动已运行的训练条件。
+
+按 huggingface-papers 技能获取 2604.24005 的元数据与正文，并核对 arXiv 最新 v3 的 §3–5、附录 C/D 及官方 kokolerk/TCOD 提交 465eef4406ad0cff675b36bd46f37f28b1736ff9。F2B 仅放宽 student 的环境交互轮数，不包含 teacher 后半段续写；B2F 回放 expert 环境动作后让 student 接管，前缀不进入直接蒸馏目标。公开代码与论文概念分开说明：B2F 后段循环可达全局 max_env_steps，ScienceWorld 用环境 gold actions，ALFWorld 接管上下文有结构化历史格式，advantage 使用 sampled log-ratio 加默认 PPO loss，不宣称精确全词表 forward KL。
+
+在忽略目录运行原始 ALFWorld workflow AST 的十个纯 CPU 替身检查，确认 prefix 不产生训练行、student-only 评测、课程进度、缺 expert 回退和提前完成；六轮 expert/三十轮上限的反例实际返回五轮回放与二十五条 student 训练行。没有运行真实环境、模型推理或复现论文成功率。核验输入、源码 SHA 和结果保存为统一实验结果目录下的 rollout-composition/tcod-review.json；测试脚本与外部源码保留在 runs/paper-reviews/2604.24005/。
+
+同一 Agent Note 增加 TCOD 调研、两种 Mermaid 流程与迁移边界；全篇十幅当前 Mermaid 均实际渲染通过并查看新图。该方向仅作为调研候选，未自动加入 math 首轮实验矩阵；原方案的双段全响应训练语义与 TCOD 的前缀条件化、仅后段训练明确分开，后续比较须单列 loss 范围。
+
+TCOD 控制流检查十项通过，当前十幅 Mermaid 均通过真实渲染与输入一致性核对；正式文档、Agent Note、本地链接、Markdown lint、Prettier 和正文间距检查通过。该变更只提交原方案、既有工作记录和新增 TCOD 核验 JSON，其他并行实现与研究修改保持原状。

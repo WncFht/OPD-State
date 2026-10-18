@@ -14,6 +14,8 @@ Status: proposed
 
 目标问题是验证：分段续写与 batch 路由能否复用 vLLM 原生 token-in/token-out 生成，在保持响应总预算、终止语义、顺序和来源身份的条件下运行；计量重复 prefill、请求分组与模型驻留的成本。
 
+首轮范围为三种单模型来源、两种独立 logit fusion、单模型之间的一次分段切换，以及单模型之间的简单 batch 混合。暂不考虑 batch 混合中包含分段策略、分段中包含 fusion 等嵌套组合；已有原型对此的历史测试不构成正式接入要求。
+
 成功条件是 CPU 边界/随机属性检查通过，真实 student/teacher checkpoint 的分段与 batch 混合可运行，保存原始 token 和结束原因、证明配额与拼接正确，并得到同会话显存与耗时证据。否决条件包括二次模板化、提前 EOS 后继续生成、预算翻倍、路由后记录错配、跨权重复用 KV、隐式 HF 回退或无法界定资源所有权。
 
 可变选择包括单引擎换权重/双引擎驻留、副本布局、批量分组与流水化、CUDA Graph 和后续 speculative fusion。验证原型保持已归档训练的源码和实验条件，也不以独立生成检查冒充完整 trainer 集成通过；真实训练热更新和两步端到端验收仍是正式接入前的独立条件。
@@ -141,14 +143,14 @@ $$
 
 ### 三种混合方式与参数
 
-逐 token 的 logit fusion、轨迹内分段切换和 batch 内分配生成来源改变分布的方式不同，分别配置。策略描述采用可组合的结构，不为每个组合增加一条 trainer 分支。
+逐 token 的 logit fusion、轨迹内分段切换和 batch 内分配生成来源改变分布的方式不同，分别配置。四类平面配置共用统一生成入口，各自独立选择，首轮不递归嵌套。
 
-| 策略类型          | 控制参数                      | 生成行为                                                | 默认训练范围                 |
-| ----------------- | ----------------------------- | ------------------------------------------------------- | ---------------------------- |
-| `single`          | `model`                       | 整条响应由一个来源生成                                  | 整条响应，只更新当前 student |
-| `logit_fusion`    | `base`、`teacher_weight=λ`    | 每个 token 都在同一 prefix 上融合两模型 logits 后采样   | 整条响应，只更新当前 student |
-| `sequence_switch` | `first`、`second`、`boundary` | 前 $k$ 个响应 token 用第一策略，随后换第二策略续写      | 两段响应，只更新当前 student |
-| `batch_mix`       | `components`、权重、分配规则  | 一个 batch 的不同响应交给不同策略；同一响应保持已选策略 | 所有响应，只更新当前 student |
+| 策略类型          | 控制参数                      | 生成行为                                              | 默认训练范围                 |
+| ----------------- | ----------------------------- | ----------------------------------------------------- | ---------------------------- |
+| `single`          | `model`                       | 整条响应由一个来源生成                                | 整条响应，只更新当前 student |
+| `logit_fusion`    | `base`、`teacher_weight=λ`    | 每个 token 都在同一 prefix 上融合两模型 logits 后采样 | 整条响应，只更新当前 student |
+| `sequence_switch` | `first`、`second`、`boundary` | 前 $k$ 个响应 token 用第一模型，随后换第二模型续写    | 两段响应，只更新当前 student |
+| `batch_mix`       | `components`、权重、分配规则  | 一个 batch 的不同完整响应分别交给选定单模型           | 所有响应，只更新当前 student |
 
 #### 双向分段切换的 state 来源
 
@@ -229,7 +231,7 @@ flowchart TD
     O --> L["合成一个训练 batch；全部响应共同评分<br/>只更新当前 student"]
 ```
 
-base 选 $p_\theta$ 时为 current/teacher batch 混合，选 $p_0$ 时为 initial/teacher batch 混合；同一抽象也允许三来源配额。单条响应不会在模型之间接力，批内 state 集来自各来源的不同完整轨迹。比如 $B=64,\alpha=0.25$ 时有 16 条 teacher 和 48 条 base 响应；这不能解释为每条响应有 25% teacher token，也不能解释为逐 token 的 λ=0.25 fusion。图中的分叉表示来源分组；两组可以串行执行，是否并发由模型驻留与联合显存预算决定。
+base 选 $p_\theta$ 时为 current/teacher batch 混合，选 $p_0$ 时为 initial/teacher batch 混合；首轮分别比较这两种二来源设置。单条响应不会在模型之间接力，批内 state 集来自各来源的不同完整轨迹。比如 $B=64,\alpha=0.25$ 时有 16 条 teacher 和 48 条 base 响应；这不能解释为每条响应有 25% teacher token，也不能解释为逐 token 的 λ=0.25 fusion。图中的分叉表示来源分组；两组可以串行执行，是否并发由模型驻留与联合显存预算决定。
 
 路由在全局 batch 上决定，随后按模型负载分发到副本，避免每个 GPU 单独取整造成比例偏差。每题多响应时，选择“每题同一来源”还是“每条响应独立来源”必须显式配置；当前训练 $n=1$，两者相同。来源占 50% 的响应不等于占 50% 的 token：不同来源的响应长度和提前 EOS 比例会改变实际 token 占比。
 
@@ -241,26 +243,7 @@ $$
 
 整数取整时 $\alpha_B$ 可以与配置的 α 不同；Bernoulli 分配的边缘权重才直接为 α。精确配额会让同批来源选择相关，但每条响应仍只有一个来源。batch 混合与每步融合 logits 的 $\mu_\lambda$ 不相同，α、λ 和切换位置 $k$ 分别控制三个独立维度。若记录行为分数，应同时标记来源条件分数与是否计算了边缘混合分数，不能把前者冒充后者。
 
-组合结构可以表达“半个 batch 为纯 teacher，另半个先 student 后 teacher”，也可以表达分段的一段使用 fusion。第一版只开放已经通过后端验收的组合：原生单模型、单模型之间的一次切换、这些策略之间的 batch 混合；fusion 叶节点通过原生双模型扩展验收后再开放。配置编译阶段拒绝能力不匹配，避免运行时静默换后端。
-
-#### 分段与 batch 混合的组合
-
-`batch_mix.components` 保存的是策略，不限于模型引用。下面以 64 条请求中 32 条纯 teacher、32 条 current→teacher 为例；它把两类轨迹放进同一个训练 batch，不会先生成两份完整答案再拼接。图中配额和 2,048/4,096 长度为说明语义的配置示例，真实原型的嵌套测试规模见后文实测表。
-
-```mermaid
-flowchart TD
-    X["B=64；总 cap=4096；全局路由一次"] --> R["两个组件各分配 32 条请求"]
-    R --> Q["组件一：single(teacher)<br/>q 生成整条响应"]
-    R --> S["组件二：switch(current, teacher, k=2048)<br/>pθ 先生成；提前 EOS 就结束"]
-    S --> E{"第一段结束整条响应？"}
-    E -->|是| M["按原始身份恢复顺序<br/>汇集 64 条完整或提前结束的响应"]
-    E -->|否| T["q 在已有 student 前缀上重新 prefill<br/>续写剩余预算"]
-    Q --> M
-    T --> M
-    M --> L["全部响应的两类 states 一起训练当前 student"]
-```
-
-若暂不考虑提前 EOS 且每条都达到 cap，此例的 teacher token 占比为 75%，尽管只有 50% 的响应选择“纯 teacher”组件。实际统计必须按段落和有效 token 计算。把 current 换成 initial 只改变模型引用与版本规则；包含 fusion 的嵌套策略还需要原生 fusion 能力，首版原型不会自动回退 HF。
+首轮将单模型、logit fusion、单次分段与简单 batch 混合列为独立模式。`sequence_switch` 的两段均为单模型，`batch_mix` 的组件也均为单模型；暂不设计或安排“batch 混合包含分段”和“分段中使用 fusion”这两类嵌套组合。配置编译阶段拒绝这些嵌套设置，已有原型的相关测试仅保留为历史能力证据，不扩大首轮实施与实验范围。
 
 ### 当前代码的耦合与影响
 
@@ -291,7 +274,7 @@ flowchart TD
 
 模型引用表启动时解析一次：`current_student` 指向 actor，`initial_student` 指向 actor 的训练前 checkpoint 快照，`teacher` 指向现有 `distillation.fsdp_teacher.model_path`。生成 teacher 与监督 teacher 是两个逻辑职责，首版明确绑定同一 checkpoint。参数传输复用现有 BucketedWeightSender/Receiver 和 checkpoint engine；这里的 checkpoint engine 是权重传输机制，不意味着训练时保存 checkpoint。
 
-每个 run 只编译选中的策略，去掉零比例与无效端点，再解析实际参与的模型；三个角色引用不要求同时建立三套 GPU 引擎。复杂组合若确实需要三个来源，须为三个来源安排资源，不能仍按双模型预算估计。teacher 评分和最终 student 验证的资源单独安排，冷启动成本与阶段恢复成本分别计时。
+每个 run 只编译选中的策略，去掉零比例与无效端点，再解析实际参与的模型；三个角色引用不要求同时建立三套 GPU 引擎。首轮每种策略最多涉及 base 与 teacher 两种生成来源，不同时驻留三个生成模型。teacher 评分和最终 student 验证的资源单独安排，冷启动成本与阶段恢复成本分别计时。
 
 ```mermaid
 flowchart TD
@@ -333,9 +316,9 @@ distillation:
         model_path: ../models/JustRL-DeepSeek-1.5B
 ```
 
-`model.path` 仍只定义 learner 的初始化及 canonical tokenizer；`initial_student` 在启动时从它绑定固定引用。`policy` 选择模型和组合，`generation_backend` 选择实际解码内核。单模型、分段与 batch 混合使用 `vllm_native`；精确 fusion 拟使用 `vllm_paired`。现有 HF fusion 只作为数值参考与历史复现路径；即使 RPC 容器来自 vLLM，也继续按 HF 计算后端记录其历史吞吐。
+`model.path` 仍只定义 learner 的初始化及 canonical tokenizer；`initial_student` 在启动时从它绑定固定引用。`policy` 选择一种模式及其模型来源，`generation_backend` 选择实际解码内核。单模型、分段与 batch 混合使用 `vllm_native`；精确 fusion 拟使用 `vllm_paired`。现有 HF fusion 只作为数值参考与历史复现路径；即使 RPC 容器来自 vLLM，也继续按 HF 计算后端记录其历史吞吐。
 
-下面的策略子树分别示意精确配额的 batch 混合与固定初始 student 的 fusion，也尚非可执行参数。
+下面分别示意精确配额的简单 batch 混合与固定初始 student 的独立 fusion，也尚非可执行参数。
 
 ```yaml
 batch_mix_example:
@@ -353,7 +336,7 @@ fusion_example:
     teacher_weight: 0.5
 ```
 
-切换方向只需交换 `first/second`；batch 中的组件也可以替换成已支持的 `sequence_switch`。采样、batch、数据和学习率沿共同配置继承，避免为组合复制配方。旧 math recipe 保留复现入口，新配方在同一公共启动器上选择策略。
+切换方向只需交换 `first/second`；batch 中的组件限定为 `single`，不能替换成 `sequence_switch` 或 `logit_fusion`。采样、batch、数据和学习率沿共同配置继承，避免为组合复制配方。旧 math recipe 保留复现入口，新配方在同一公共启动器上选择策略。
 
 配置编译时验证模型引用、后端能力、有限数值及范围：λ/α/ρ 在 $[0,1]$ 内，token 边界为非负整数，混合权重非负且总和为正，响应总预算为正。先归一化混合权重与化简端点，再决定需要哪些模型和同步目标；不支持的组合在启动前报错。
 
@@ -441,9 +424,63 @@ TRL GKD 的来源随机数在 `training_step` 中抽取一次，作用于整批�
 
 原生 multi-LoRA 也是一种高效请求级混合：多个 adapter 共享基座并可与基座请求共同调度。[^vllm-lora] 当前 teacher、初始 student 和训练 actor 都是完整 checkpoint/全参数更新，不能假设它们可无损表示为共享冻结基座加 LoRA；这条路线保留为未来明确采用 adapter 训练时的候选，不作为当前双全参数模型的替代。
 
+### TCOD：时序课程与 teacher 前缀条件化
+
+TCOD（Temporal Curriculum On-Policy Distillation，时序课程式 on-policy 蒸馏）研究多轮 agent，state 包含环境观察和动作历史，每轮动作又包含一段模型响应。论文 v3 的 F2B 从初始环境状态出发，逐渐放宽 student 的交互轮数；B2F 先执行成功 expert 轨迹的前缀，再把 student 的接管位置逐渐向轨迹起点移动。两者均只更新 student。[^tcod-paper]
+
+以初始 student 窗口为一轮为例，记 $n$ 为课程进度、$\eta$ 为增长间隔、$T_{\max}$ 为环境总轮数上限、$L$ 为成功 expert 轨迹长度，则 F2B 的最大 student 轮数和 B2F 的 expert 前缀长度分别为
+
+$$
+K_n^{\mathrm{F2B}}=\min\!\left(1+\left\lfloor\frac{n}{\eta}\right\rfloor,T_{\max}\right),\qquad
+m_n^{\mathrm{B2F}}=\max\!\left(L-1-\left\lfloor\frac{n}{\eta}\right\rfloor,0\right).
+$$
+
+这里的 $K_n,m_n$ 均以环境 turn 计数，与本方案按 response token 定义的切换位置 $k$ 不同。F2B 的截断后没有 teacher 续写；B2F 的 expert 前缀不计直接蒸馏 loss，student 的后续响应才是训练目标。[^tcod-paper]
+
+```mermaid
+flowchart TD
+    N["课程进度 n"] --> K["计算本阶段 student 轮数上限 K(n)<br/>从一轮逐步扩展到环境总上限"]
+    K --> E["从任务初始环境状态开始"]
+    E --> S["当前 student 原生生成动作并与环境交互<br/>完成任务或达到 K(n) 时停止"]
+    S --> Q["teacher 对 student 已采样响应计算 token log-prob"]
+    Q --> L["只用这些 student 响应更新 student"]
+```
+
+公开实现固定审阅到 `465eef4406ad0cff675b36bd46f37f28b1736ff9`。三个环境都有单独的 F2B/B2F workflow；下面的 B2F 图按公开代码的阶段与训练样本归属绘制。ALFWorld、WebShop 从任务的 `actions` 读取 expert 动作并在环境中回放，接管阶段只返回 student 的 `Experience`，没有把 expert 前段变成训练响应。[^tcod-b2f-code]
+
+```mermaid
+flowchart TD
+    D["已有 expert 动作轨迹；长度 L"] --> R["重置环境，执行前 m(n) 个 expert 动作<br/>只改变环境与上下文，不产生训练行"]
+    N["课程进度 n 增加"] --> M["expert 前缀 m(n) 逐步缩短到零"]
+    M --> R
+    R --> H["中间环境观察与结构化历史"]
+    H --> S["当前 student 接管并继续环境交互<br/>公开代码：完成任务或到全局轮数上限"]
+    S --> X["仅收集 student 接管后的响应为 Experience"]
+    X --> Q["teacher 对这些 student 响应重新评分"]
+    Q --> U["只计算 student 响应的蒸馏信号并更新 student<br/>expert 前缀仅提供条件"]
+```
+
+论文与公开实现需要分开使用，以下源码行为已逐项核对。
+
+| 核对项         | 固定提交中的实际行为                                                                                                   | 对本项目的含义                                                                        |
+| -------------- | ---------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------- |
+| F2B 轮数       | `_compute_distill_window()` 为 `1 + batch_id // checkpoint_steps`，训练时取与 `max_env_steps` 的最小值；评测用完整上限 | F2B 是 student 交互深度课程，不是 student→teacher 接力                                |
+| B2F 起点与后段 | 前缀为 `max(L−1−batch_id//checkpoint_steps, 0)`；student 循环为 `range(start_step, max_env_steps)`                     | expert 起点由 $L$ 决定，student 实际可用轮数由全局上限决定，不能承诺后段恰好 $K_n$ 轮 |
+| Expert 来源    | ALFWorld/WebShop 用任务中的离线 `actions`；ScienceWorld 调用环境 `get_gold_action_sequence()`                          | 不能将三个公开 workflow 都描述成训练时实时调用 teacher 生成前段                       |
+| 接管上下文     | ALFWorld 历史满两轮时格式化最近两轮，不足时使用无 history 模板；接管后的 student 对话继续累积                          | 这与本方案原始 token 直接拼接、保留完整 teacher token 前缀不同                        |
+| 训练行归属     | 仅 student 的响应进入 `turn_responses`；expert 前缀回放已完成任务则返回空列表，评测跳过 expert 前缀                    | 借鉴 B2F 时需明确 prefix 的直接 loss mask，不能沿用“两段全部作为目标”的默认值         |
+
+F2B 的循环与评测分支见其 workflow；[^tcod-f2b-code] B2F 的前缀来源、接管循环与返回训练行见对应 workflow 和环境恢复函数，ScienceWorld 的 gold 路径需单独识别。[^tcod-b2f-code][^tcod-sci-code] 对原始 ALFWorld workflow 的 AST 做了十个纯 CPU 控制流检查，用替身环境与模型验证前缀回放、训练行排除、评测绕过、缺 expert 回退和后段预算：例如 expert 长六轮、全局上限三十轮、初始课程阶段回放五轮后，student 可以继续二十五轮，并非只允许一轮。这些检查没有运行真实环境、GPU 模型或复现论文成绩；源码哈希、输入和结果见[TCOD 核验](../../../../docs/experiment/results/rollout-composition/tcod-review.json)。
+
+训练信号也需按源码解释：论文公式写 $D_{\mathrm{KL}}(q\Vert p_\theta)$，公开 `multi_turn_opd` 实现则在 student 已采样 token 上计算 `teacher_logprobs - old_log_probs` 作为 advantage，默认通过 PPO policy loss 更新，并按轨迹累计 sampled log-ratio 指标。它没有为每个位置枚举全词表计算该论文公式，不能将累计日志值直接当成精确 forward KL。[^tcod-paper][^tcod-opd-code]
+
+推理走 Trinity 的异步模型接口：student 使用 `chat_async`，teacher 使用 `logprobs_async`；默认 vLLM 后端通过已有 token 的 prompt log-prob 评分，不需要逐 token 协调两个生成模型。公开 ALFWorld 配置使用过期版本过滤、最大滞后二，TP=2 的两个 student 引擎与一个 teacher 引擎；`checkpoint_steps=5`，不能把论文讨论的其他增长间隔当作该配置实际参数。这里的 workflow checkpoint 表示环境中间状态，与保存模型 checkpoint 是两件事。[^tcod-runtime-code][^tcod-config-code]
+
+对当前 math 方案的判断是：可以借鉴“课程进度控制接管位置”和“前缀只作条件、只训练后段”这两个独立选择；它们均不要求嵌套生成策略。本方案现有 teacher→student 使用 fresh token 前缀、固定切换位置，并默认训练两段；TCOD-B2F 使用 expert 环境前缀、逐渐前移的接管位置和 student-only 目标。若后续比较 TCOD 风格的 token 迁移，应单列前缀来源、成功筛选、进度调度与直接 loss 范围，保留原全响应对照；单轮 math 的 token 课程结果不等于原论文多轮环境复现。该方向作为调研候选保留，首轮实施范围保持前述四类平面模式。
+
 ### 独立原型与测试合约
 
-[组合原型](../../../../eval/rollout_composition.py)只依赖 Python 标准库，支持 Single、一次 Switch 和包含两者的 Mixture；没有连接正式 trainer。Request 以 prompt ID、访问轮次、响应序号共同标识；Completion 同时返回模型身份、原始输入 token、输出 token 和原生结束原因。全局配额使用最大余数法，平局按组件顺序决定，再以独立 seed 排列位置。先化简零阶段和同源阶段，再按来源聚合；生成后恢复原始顺序。
+[组合原型](../../../../eval/rollout_composition.py)只依赖 Python 标准库，支持 Single、一次 Switch 和包含两者的 Mixture；没有连接正式 trainer。该原型已包含的嵌套能力超出当前首轮范围，历史测试结果保留，正式配置仍限制为单模型之间的一次切换或单模型之间的 batch 配额。Request 以 prompt ID、访问轮次、响应序号共同标识；Completion 同时返回模型身份、原始输入 token、输出 token 和原生结束原因。全局配额使用最大余数法，平局按组件顺序决定，再以独立 seed 排列位置。先化简零阶段和同源阶段，再按来源聚合；生成后恢复原始顺序。
 
 每个阶段按累计位置检查该来源的上下文容量，后一段预算是共同 cap 减去前段预算。返回结果验证模型身份、请求身份、前缀、条数、有效词表、阶段长度与 EOS；abort/未知结束原因不作为可训练响应。Segment 保留原生 finish/stop reason，Trajectory 另有语义 termination；mask 根据有效长度生成，EOS 与 PAD 同 ID 也保留。原始 Request 不变，给后段模型的扩展前缀只存在于后端 Call 中；交给 learner 的响应仍包含前段，不能把 teacher 前段迁进 prompt 后丢掉对应 loss。
 
@@ -560,7 +597,7 @@ prompt 池由 `data.train_files`、清洗、去重与 sampler 决定，训练步
 | 位置                                                | 建议变化                                                                   |
 | --------------------------------------------------- | -------------------------------------------------------------------------- |
 | `workers/config/rollout.py`                         | 新增模型引用、策略和 collection 的类型及组合校验；旧字段映射到共同描述     |
-| `workers/rollout/policy.py`（拟新增）               | 编译策略树、分配全局配额和阶段预算，解析模型身份、能力与同步目标           |
+| `workers/rollout/policy.py`（拟新增）               | 编译平面策略配置、分配全局配额和阶段预算，解析模型身份、能力与同步目标     |
 | `trainer/ppo/rollout_coordinator.py`（拟新增）      | 封装生成/同步/验证切换，适配历史 replay，移走 trainer 的来源分支           |
 | `workers/rollout/vllm_rollout/`                     | 原生模型池、按来源分组、分段 token 续写、生命周期与性能采集                |
 | `workers/rollout/fusion/vllm_model.py`（拟新增）    | 仓外注册双模型，原生 Qwen2 前向、独立 KV、FP32 logits 与单次采样           |
@@ -572,12 +609,12 @@ prompt 池由 `data.train_files`、清洗、去重与 sampler 决定，训练步
 
 实施按依赖顺序推进：
 
-1. 先定义 `ModelRef`、策略树与轨迹合约，把现有来源入口包到协调器。CPU 检查比例取整、端点、空分组、全局顺序、预算、EOS/PAD mask 与固定模型写保护，旧实验入口继续保留。
+1. 先定义 `ModelRef`、平面策略配置与轨迹合约，把现有来源入口包到协调器。CPU 检查比例取整、端点、空分组、全局顺序、预算、EOS/PAD mask 与固定模型写保护，旧实验入口继续保留。
 2. 优先接入三种单模型原生生成，补齐 $p_0/q$ 的加载、恢复与身份；再实现双向分段及 batch 配额路由。两种混合先采用分阶段归组，避免同时引入异步流水与算法变化。
 3. 独立验证原生双模型扩展，按 λ=0/0.5/1 对照完整 logits、共同 prefix 与采样分布；检查双 KV 是否完整计入预算、参数名映射及 graph。比较现有 0.10 的受控 wrapper 与独立 0.15 环境的插件/batch-invariance 路线；选定后同一正式对照固定一个版本，现有生产环境不原地升级。
 4. 在空闲 GPU 0–3 做各已开放策略两步训练，覆盖 current→initial→teacher→切换/混合→current-eval 的恢复，验证固定模型不变、actor 版本正确、分段 mask 完整、验证始终来自最终 student。原生 fusion 单独验收后纳入。
 5. 建立同 checkpoint、输入、采样和实际 batch 的原生基线。短确定长度序列测内核，真实 math 长度分布测端到端；扫描有效 batch 与 KV 预算，比较单引擎换权重/双引擎驻留，再测 graph 与流水。先披露冷启动和热成本，不承诺尚未实测的提升比例。
-6. 固定新数据 manifest、学习率、全局 batch 与预算后开展正式对照：单模型端点；分段方向与 $k\in\{0,1024,2048,4096\}$；batch 比例 $\alpha\in\{0,0.5,1\}$；fusion 的 λ 对照。端点复用相同基线，先用一个内部参数值筛选，避免一开始枚举所有嵌套组合。每组先 50 步、完整 eval16，质量结论补充训练 seed；历史缓存结果保留原算法和实验条件。
+6. 固定新数据 manifest、学习率、全局 batch 与预算后开展正式对照：单模型端点；分段方向与 $k\in\{0,1024,2048,4096\}$；batch 比例 $\alpha\in\{0,0.5,1\}$；fusion 的 λ 对照。端点复用相同基线，先用一个内部参数值筛选，首轮不安排嵌套组合。每组先 50 步、完整 eval16，质量结论补充训练 seed；历史缓存结果保留原算法和实验条件。
 
 首版目标是三种来源、双向分段与 batch 混合在同一训练链上使用原生 vLLM，student 初始化/更新/验证独立于生成来源；原生精确 fusion 是独立的第二项验收。成功证据须包括参数版本、固定权重不变、配额/阶段语义、两步恢复与完整 eval16；只通过构造测试不等于真实训练可用。若固定模型被 actor 覆盖、验证来自错误来源、分段预算或训练 mask 改变、评分归一化改变主 loss，或执行中静默回退 HF，该版本不能进入正式对照。引擎布局、副本映射、graph 与预取仍由基准结果决定。
 
@@ -598,6 +635,20 @@ prompt 池由 `data.train_files`、清洗、去重与 sampler 决定，训练步
 共享 GPU 负载会影响吞吐；短响应测试不能代表 4K/32K 长上下文。固定模型实时采样改变有限 states 的复用条件，必须与历史 Semi replay 区分。不同 vLLM 版本的 attention 注册、请求元数据、sleep 和采样接口仍需适配；任何近似融合或 KV 跨权重复用都不能默认为精确算法。
 
 ### 参考文献
+
+[^tcod-paper]: Jiaqi Wang, Wenhao Zhang, Weijie Shi, Yaliang Li, James Cheng. TCOD: Exploring Temporal Curriculum in On-Policy Distillation for Multi-turn Autonomous Agents. arXiv 2604.24005v3, 2026. [论文 §3–4 与附录 C](https://arxiv.org/html/2604.24005v3).
+
+[^tcod-b2f-code]: TCOD authors. ALFWorld B2F workflow and environment replay. GitHub，提交 465eef4406ad0cff675b36bd46f37f28b1736ff9，2026. [接管、student 训练行与后段上限](https://github.com/kokolerk/TCOD/blob/465eef4406ad0cff675b36bd46f37f28b1736ff9/trinity/common/workflows/envs/TCOD/alfworld/TCOD_b2f_workflow.py)、[动作回放与历史格式](https://github.com/kokolerk/TCOD/blob/465eef4406ad0cff675b36bd46f37f28b1736ff9/trinity/common/workflows/envs/TCOD/alfworld/utils.py).
+
+[^tcod-f2b-code]: TCOD authors. ALFWorld F2B workflow. GitHub，提交 465eef4406ad0cff675b36bd46f37f28b1736ff9，2026. [训练轮数窗口与完整评测](https://github.com/kokolerk/TCOD/blob/465eef4406ad0cff675b36bd46f37f28b1736ff9/trinity/common/workflows/envs/TCOD/alfworld/TCOD_f2b_workflow.py).
+
+[^tcod-sci-code]: TCOD authors. ScienceWorld B2F workflow. GitHub，提交 465eef4406ad0cff675b36bd46f37f28b1736ff9，2026. [环境 gold action sequence 与接管](https://github.com/kokolerk/TCOD/blob/465eef4406ad0cff675b36bd46f37f28b1736ff9/trinity/common/workflows/envs/TCOD/scienceworld/TCOD_b2f_workflow.py).
+
+[^tcod-opd-code]: TCOD authors. OPD advantage and algorithm defaults. GitHub，提交 465eef4406ad0cff675b36bd46f37f28b1736ff9，2026. [逐 token 信号与轨迹累计指标](https://github.com/kokolerk/TCOD/blob/465eef4406ad0cff675b36bd46f37f28b1736ff9/trinity/algorithm/advantage_fn/on_policy_distill_advantage.py)、[默认 PPO policy loss](https://github.com/kokolerk/TCOD/blob/465eef4406ad0cff675b36bd46f37f28b1736ff9/trinity/algorithm/algorithm.py).
+
+[^tcod-runtime-code]: TCOD authors. Native vLLM inference and staleness control. GitHub，提交 465eef4406ad0cff675b36bd46f37f28b1736ff9，2026. [vLLM 生成与 prompt log-prob](https://github.com/kokolerk/TCOD/blob/465eef4406ad0cff675b36bd46f37f28b1736ff9/trinity/common/models/vllm_model.py)、[过期版本过滤](https://github.com/kokolerk/TCOD/blob/465eef4406ad0cff675b36bd46f37f28b1736ff9/trinity/algorithm/sample_strategy/sample_strategy.py).
+
+[^tcod-config-code]: TCOD authors. ALFWorld TCOD-B2F example configuration. GitHub，提交 465eef4406ad0cff675b36bd46f37f28b1736ff9，2026. [课程参数与模型资源设置](https://github.com/kokolerk/TCOD/blob/465eef4406ad0cff675b36bd46f37f28b1736ff9/TCOD_examples/alfworld/tcod_b2f.yaml).
 
 [^vllm-register]: vLLM contributors. Registering a Model. vLLM v0.10.0, 2025. [仓外模型注册](https://docs.vllm.ai/en/v0.10.0/contributing/model/registration.html).
 
