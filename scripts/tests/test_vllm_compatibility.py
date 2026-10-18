@@ -95,6 +95,16 @@ class CurrentEngine(LegacyEngine):
 
 
 class LifecycleTests(unittest.IsolatedAsyncioTestCase):
+    async def test_native_paired_source_preserves_frozen_companion_during_sleep(self):
+        engine = LegacyEngine()
+        obj = self.fixture(engine)
+        obj.config = SimpleNamespace(
+            mtp=None, policy={"kind": "logit_fusion"}, preserve_source_weights=True
+        )
+        await obj._sleep_hybrid()
+        self.assertEqual(engine.calls, [("sleep", 1)])
+        self.assertEqual(obj._native_last_sleep_level, 1)
+
     def fixture(self, engine):
         obj = load_lifecycle()()
         obj.engine = engine

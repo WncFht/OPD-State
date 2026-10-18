@@ -206,6 +206,9 @@ class RolloutConfig(BaseConfig):
     collection: dict = field(default_factory=lambda: {"mode": "fresh"})
     # Resolved by the trainer; frozen paths must not change actor initialization.
     generation_models: dict = field(default_factory=dict)
+    generation_role: str = "current_student"
+    generation_fingerprint: Optional[str] = None
+    preserve_source_weights: bool = False
 
     # Whether to enable full determinism for reproducibility.
     full_determinism: bool = False

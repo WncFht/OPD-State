@@ -183,3 +183,13 @@ TCOD 控制流检查十项通过，当前十幅 Mermaid 均通过真实渲染与
 实施前原生基准三十八场景完成，三十六个热调用对照各三次。B16 单模型/串行混合/并发混合/分段均值以正式 JSON 为准；两个引擎冷启动约 21.5/22.3 秒。实际启动时 GPU0 另有 6,921 MiB 占用，因此保留 shared_gpu_load 标记，不解释为独占性能；原始轨迹与采样保存在忽略的 baseline-native-throughput/，压缩设置和耗时归统一实验结果目录 native-rollout/baseline-throughput.json。
 
 下一步原生模型池优先检验独立进程的固定来源引擎与当前 actor 引擎，统一联合显存预算并在评分/更新前休眠；按源聚合请求，避免每 token RPC。固定模型与 actor 的生成存储隔离，teacher/p0 不接受 actor 参数流，验证单独绑定 current。单引擎热换权重保留为基准候选，不以易实现代替联合显存与吞吐比较。工作区另一组 KL 四卡短测已启动，不终止或重启它；自己的真实训练在现场确认空闲后运行。
+
+阶段一已提交 7f4cb7c，隔离 worktree 的全量 CI 与两阶段 hooks 通过；没有暂存或恢复并行 KL 工作区。随后该工作以 60fe096 独立提交，继续基于当前实际源码接入生成接口。生产 native_executor/lifecycle 与异步服务接口新增检查，四十四项 CPU 合约和七项既有 vLLM 生命周期回归通过；包含真实结束原因、EOS=PAD、累计上下文、整批失败排空、冻结写保护及 actor 写入回执。按完整 HF safetensors 名称集合验证 339 个条目，不以 native 打包后的参数个数替代。
+
+补齐同版本恢复的原子性：只比较 actor 版本会误接受 sleep 丢弃权重前的旧回执，改为在 begin 读取实际 worker 写入序号，commit 要求成功完整流推进序号、版本匹配、缓存失效与 CUDA barrier。权重流缺最终 bucket、缺项、重复、未知名称均拒绝发布。新增 preserve_source_weights 以保留后续 paired 引擎的冻结 companion，状态以实际 sleep level 标记；旧配置不进入新协议。
+
+GPU 身份检查首轮在初始 student 上全部功能断言通过，但 in-process CUDA allocator 退出析构失败，整轮仍记为失败。换为生产默认多进程后，发现函数对象 RPC 不可序列化，子进程又在 multiprocessing finalizer 中等待 idle EngineCore，掩盖原始异常。py-spy 定位后仅终止自有 Core 以暴露异常；改用按方法名 RPC、立即打印错误及显式关闭自有 EngineCore。没有设置 insecure serialization 或更改共享环境。
+
+identity-gpu-v3 与最终 v4 均完整通过 p0/q 原生 worker 和生产 executor 检查：冻结来源拒绝真实 actor 写入 RPC，生成前后与 sleep/wake 后 greedy 响应一致，EOS=151643 与 PAD 同 ID 时 mask 仍为一，原生 finish_reason=length 保留。两个引擎各释放 8,090 MiB，进程退出后 GPU0 回到 4 MiB。v3 源码快照留在忽略目录，v4 基于当前写入序号实现重新验收；正式证据归 identity-gpu.json。此时仍未接通原生模型池、协调器、真实 FSDP 更新和 native paired fusion，未将 worker 检查当作 trainer 验收。
+
+临时 trainer 门控对 policy 非空报未接入，防止用户配置 teacher/initial 后实际仍从 actor 生成；下一阶段以真实 coordinator 替换。完整目标和所有待完成门控存于 runs/native-rollout-implementation/state.json，仍包括四卡两步恢复、完整 native fusion 数值/graph/缓存检查、公平吞吐与显存基准、独立数据清单及正式 50 步 math eval16。TCOD 与嵌套保持排除，没有缩小原实施目标。

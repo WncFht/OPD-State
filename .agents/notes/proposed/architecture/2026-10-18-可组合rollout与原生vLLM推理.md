@@ -26,6 +26,10 @@ Status: proposed
 
 生产目录新增 [policy.py](../../../../verl/verl/workers/rollout/policy.py)，实现不可变模型身份、平面配置解析、全局响应配额、分段预算与端点归约，显式拒绝嵌套和 TCOD。[十三项 CPU 合约检查](../../../../verl/tests/opd/test_native_policy_on_cpu.py)已通过，包含五百组随机配额；Hydra 配置往返也已验证。新增配置默认关闭，现有路径继续使用原入口。这些是契约层证据，尚不表示 worker、权重生命周期或 trainer 集成已完成。
 
+随后新增 [native_executor.py](../../../../verl/verl/workers/rollout/native_executor.py)、[lifecycle.py](../../../../verl/verl/workers/rollout/lifecycle.py)与原生服务端接口，生产 CPU 检查合计四十四项通过。执行层保持原 prompt 与完整响应，保留原始结束原因，核对来源/版本/λ；失败时要求原生 abort/drain。服务端将 actor 权重接收、完整 HF 名称集合、最终 bucket、实际写入序号、缓存失效与 CUDA barrier 纳入发布条件，同版本恢复也不能沿用上一次写入回执。固定来源在服务端和真实 inference worker 均拒绝 actor 流。
+
+真实 GPU 检查已覆盖冻结 $p_0$ 与 $q$：生产 worker 扩展拒绝 actor 写入，写入尝试前后及 sleep/wake 后输出一致，EOS=PAD 且原生 finish reason 为 length 时仍保留有效 EOS。每引擎 sleep 释放 8,090 MiB，两个自有进程退出后整卡占用回到基线；见[GPU 身份与恢复证据](../../../../docs/experiment/results/native-rollout/identity-gpu.json)。该证据仅覆盖 native worker 与生产 executor，不代表异步 server 或 FSDP/trainer 已验收；trainer 对非空 policy 暂时报未接入，防止忽略配置后仍从 actor 生成。下一阶段必须以真实协调器替换这一临时门控，并完成全部来源、分段、batch 与 native fusion 的训练验收。
+
 实施前的原生 vLLM 基准已完成三十八个场景，其中三十六个为 B=2/8/16、cap=128 的三次重复，见[基准记录](../../../../docs/experiment/results/native-rollout/baseline-throughput.json)。启动时 GPU 0 已有 6,921 MiB 其他负载，按共享 GPU 微基准记录，不当作独占或四卡训练吞吐。后续仍须完成真实 actor 热同步、固定引用保护、分段与 batch 混合、原生 fusion、阶段耗时和整卡显存、两步训练与正式 math 对照。
 
 ### 目标与算法含义

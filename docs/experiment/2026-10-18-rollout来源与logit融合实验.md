@@ -755,7 +755,9 @@ Teacher 组训练源码固定于 `350a286be0d586f04e4cd0b0e89624a336b17a81`，�
 
 ## 历史调试与后续范围
 
-可组合原生 rollout 开始实施，当前仅完成生产策略与模型身份契约，十三项 CPU 检查和 Hydra 配置往返通过；新 trainer 路径尚未接通。已有三十八场景的[实施前原生基准](results/native-rollout/baseline-throughput.json)保留实际输入、源码哈希、引擎冷启动和三十六个性能子测；GPU 0 启动占用 6,921 MiB，属于共享负载测试。后续生成、更新、验证和资源结果继续并入本文，不另建实验正文；实施状态归对应 Agent Note。
+可组合原生 rollout 的首个阶段完成生产策略与模型身份契约，十三项 CPU 检查和 Hydra 配置往返通过；新 trainer 路径尚未接通。已有三十八场景的[实施前原生基准](results/native-rollout/baseline-throughput.json)保留实际输入、源码哈希、引擎冷启动和三十六个性能子测；GPU 0 启动占用 6,921 MiB，属于共享负载测试。后续生成、更新、验证和资源结果继续并入本文，不另建实验正文；实施状态归对应 Agent Note。
+
+生产执行器与生命周期接口继续推进，CPU 检查增至四十四项。两个固定来源的[真实 worker GPU 检查](results/native-rollout/identity-gpu.json)通过：$p_0/q$ 均拒绝 actor 参数写入，拒绝前后及 sleep/wake 后响应恢复，EOS/PAD 有效 mask 保留；每引擎 sleep 释放 8,090 MiB，自有进程退出后整卡回到基线。测试使用原生 vLLM 默认 EngineCore 多进程布局、两个 prompt、greedy 32 token 与强制 EOS，不能作为数学准确率或真实 FSDP 接入结果。两次早期失败与修复条件保留在证据中，后续仍需四卡训练和 native fusion 验收。
 
 最初在线链路验证采用 MATH-500 greedy@1、8,192 cap，结果为 355/500，即 71%，W&B 为 finished，50 次更新和无 checkpoint 已核对。它只作为工程链路证据，不能与当前 eval16 三基准成绩直接比较；[原摘要](results/2026-10-18-math-baseline-summary.json)、[训练记录](results/2026-10-18-math-baseline-steps.csv)和[逐题分数](results/2026-10-18-math-baseline-scores.csv)继续保留。早期四卡两步 smoke 的[环境与数据证据](results/2026-10-17-math-smoke.json)同样不作为准确率结论。
 

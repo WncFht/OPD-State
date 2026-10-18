@@ -52,6 +52,7 @@ from verl.workers.rollout.utils import (
     qwen2_5_vl_dedup_image_tokens,
     run_uvicorn,
 )
+from verl.workers.rollout.vllm_rollout.native_server import NativePolicyServerMixin
 from verl.workers.rollout.vllm_rollout.utils import (
     VLLM_LORA_INT_ID,
     VLLM_LORA_NAME,
@@ -80,7 +81,7 @@ logger = logging.getLogger(__file__)
 logger.setLevel(logging.INFO)
 
 
-class vLLMHttpServer:
+class vLLMHttpServer(NativePolicyServerMixin):
     """vLLM http server in single node, this is equivalent to launch server with command line:
     ```
     vllm serve --tensor-parallel-size=8 ...
@@ -490,6 +491,7 @@ class vLLMHttpServer:
             logger.info(f"Initializing a V1 LLM engine with config: {vllm_config}")
 
         self.engine = engine_client
+        await self.initialize_native_source()
         self._server_port, self._server_task = await run_uvicorn(app, args, self._server_address)
 
     async def run_headless(self, args: argparse.Namespace):
@@ -515,7 +517,7 @@ class vLLMHttpServer:
         self.task = asyncio.create_task(asyncio.to_thread(run_headless_wrapper))
         self.task.add_done_callback(on_run_headless_done)
 
-    async def generate(
+    async def _generate_one(
         self,
         prompt_ids: list[int],
         sampling_params: dict[str, Any],
@@ -639,6 +641,9 @@ class vLLMHttpServer:
         # outputs may be empty. Return empty results with stop_reason="aborted"
         # instead of crashing with "IndexError: list index out of range".
         if not final_res.outputs:
+            if self.config.get("policy") is not None:
+                extra_fields["native_finish_reason"] = "abort"
+                extra_fields["native_stop_reason"] = "aborted"
             return TokenOutput(
                 token_ids=[],
                 log_probs=None,
@@ -663,6 +668,9 @@ class vLLMHttpServer:
 
         # Determine stop reason from finish_reason
         finish_reason = final_res.outputs[0].finish_reason
+        if self.config.get("policy") is not None:
+            extra_fields["native_finish_reason"] = finish_reason
+            extra_fields["native_stop_reason"] = final_res.outputs[0].stop_reason
         if finish_reason == "abort":
             stop_reason = "aborted"
         elif finish_reason in ("stop", "length"):
@@ -777,7 +785,7 @@ class vLLMHttpServer:
     async def _reset_prefix_cache(self):
         reset = self.engine.reset_prefix_cache
         kwargs = {"reset_connector": True} if "reset_connector" in inspect.signature(reset).parameters else {}
-        await reset(**kwargs)
+        return await reset(**kwargs)
 
     async def wake_up(self, tags: list[str] | None = None):
         if self.node_rank != 0:
@@ -800,6 +808,10 @@ class vLLMHttpServer:
         elif self.rollout_mode == RolloutMode.STANDALONE:
             logger.info("skip wake_up in standalone mode")
 
+        state = getattr(self, "native_state", None)
+        if state is not None and (self.rollout_mode != RolloutMode.HYBRID or tags is None or "kv_cache" in tags):
+            state.woke()
+
     async def sleep(self):
         if self.node_rank != 0 or not self.config.free_cache_engine:
             return
@@ -810,6 +822,12 @@ class vLLMHttpServer:
             await self.engine.sleep(level=1)
         elif self.rollout_mode == RolloutMode.STANDALONE:
             logger.info("skip sleep in standalone mode")
+
+        state = getattr(self, "native_state", None)
+        if state is not None and self.rollout_mode != RolloutMode.STANDALONE:
+            state.slept(
+                discarded_weights=self.rollout_mode == RolloutMode.HYBRID and self._native_last_sleep_level == 2
+            )
 
     async def clear_kv_cache(self):
         if self.node_rank == 0:
@@ -1115,10 +1133,14 @@ class vLLMHttpServer:
         # to be restored by actor weight sync after level 2 sleep discards them.
         # lora only update adapter weights, so set sleep level to 1
         # vllm_ascend not support sleep_level now. Enabling EP during training may lead to accuracy issues.
-        if mtp_rollout_enabled or self.lora_as_adapter or is_torch_npu_available(check_device=False):
+        preserve_native = getattr(self.config, "policy", None) is not None and getattr(
+            self.config, "preserve_source_weights", False
+        )
+        if mtp_rollout_enabled or self.lora_as_adapter or is_torch_npu_available(check_device=False) or preserve_native:
             sleep_level = 1
         else:
             sleep_level = 2
+        self._native_last_sleep_level = sleep_level
         await self.engine.sleep(level=sleep_level)
         if hasattr(self.engine, "reset_encoder_cache"):
             await self.engine.reset_encoder_cache()

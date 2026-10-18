@@ -14,6 +14,9 @@ collection:
   mode: fresh
 # Filled from the canonical actor / distillation paths before worker startup.
 generation_models: {}
+generation_role: current_student
+generation_fingerprint: null
+preserve_source_weights: false
 
 # Number of nodes for standalone rollout server, must be > 0 in one-step-off/fully async training.
 nnodes: 0

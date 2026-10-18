@@ -10,6 +10,7 @@ from __future__ import annotations
 import hashlib
 import math
 import random
+from collections.abc import Sequence
 from dataclasses import dataclass
 from numbers import Real
 from typing import Mapping
@@ -196,7 +197,7 @@ def parse_policy(config, cap):
         if config.get("routing_unit", "trajectory") != "trajectory":
             raise ValueError("Mixture routing is per response trajectory")
         components = config.get("components")
-        if not isinstance(components, (list, tuple)) or len(components) != 2:
+        if not isinstance(components, Sequence) or isinstance(components, (str, bytes)) or len(components) != 2:
             raise ValueError("The first implementation supports exactly two single-model components")
         models, weights = [], []
         for component in components:

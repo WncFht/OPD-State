@@ -241,6 +241,22 @@ class vLLMColocateWorkerExtension:
             expected_version=expected_version,
         )
 
+    def configure_native_source(self, role, path, fingerprint=None):
+        from verl.workers.rollout.vllm_rollout.native_weights import configure_source
+
+        return configure_source(self, role, path, fingerprint)
+
+    def native_source_status(self):
+        return {
+            "role": getattr(self, "_native_generation_role", None),
+            "actor_version": getattr(self, "_native_actor_version", None),
+            "write_serial": getattr(self, "_native_weight_write_serial", 0),
+        }
+
+    def native_request_barrier(self):
+        torch.cuda.synchronize()
+        return {"native_device_idle": True}
+
     def update_weights_from_ipc(
         self,
         peft_config: dict = None,
@@ -250,6 +266,8 @@ class vLLMColocateWorkerExtension:
         global_steps: int = None,
     ):
         """Update the weights of the rollout model."""
+        if getattr(self, "_native_generation_role", "current_student") != "current_student":
+            raise RuntimeError("Frozen native generation workers reject actor weight writes")
         from verl.workers.rollout.vllm_rollout.bucketed_weight_transfer import BucketedWeightReceiver
 
         if self.device is None:
@@ -324,7 +342,15 @@ class vLLMColocateWorkerExtension:
         # apply only after ``is_last``; standard base weights load per bucket.
         lora_weights: dict[str, torch.Tensor] | None = {} if (peft_config and base_sync_done) else None
 
+        native_received = set()
+        native_final_received = False
+
         def on_bucket_received(weights: list[tuple[str, torch.Tensor]], is_last: bool) -> None:
+            nonlocal native_final_received
+            from verl.workers.rollout.vllm_rollout.native_weights import check_actor_stream
+
+            check_actor_stream(self, (name for name, _ in weights), native_received, final=is_last)
+            native_final_received = is_last
             if fusion_config is not None:
                 self._logit_fusion_decoder.load_student_weights(weights, version=global_steps, final=is_last)
             if lora_weights is not None:
@@ -346,6 +372,8 @@ class vLLMColocateWorkerExtension:
             )
 
         receiver.receive_weights(on_bucket_received=on_bucket_received)
+        if getattr(self, "_native_generation_role", None) == "current_student" and not native_final_received:
+            raise RuntimeError("Actor stream returned without its final commit bucket")
 
         # =========================== step 3: process weights after loading ===========================
         if self._is_qat_model:
@@ -373,6 +401,10 @@ class vLLMColocateWorkerExtension:
 
             for model, model_config in self._iter_all_models_with_config():
                 process_weights_after_loading(model, model_config, self.device)
+
+        if getattr(self, "_native_generation_role", None) == "current_student":
+            self._native_actor_version = global_steps
+            self._native_weight_write_serial += 1
 
     def _apply_buffer_updates_all_models(self, buffer_updates, main_named_buffers):
         """Apply buffer updates to the main model and any synced MTP drafter.

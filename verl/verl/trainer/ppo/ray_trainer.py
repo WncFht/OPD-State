@@ -378,6 +378,11 @@ class RayPPOTrainer(OPDTrainerMixin):
 
         self.fixed_rollout_cache = open_training_cache(config, tokenizer)
         fusion = config.actor_rollout_ref.rollout.get("logit_fusion", {})
+        if config.actor_rollout_ref.rollout.get("policy") is not None:
+            raise NotImplementedError(
+                "Native policy worker contracts are available, but the trainer coordinator is not connected yet. "
+                "Keep rollout.policy=null for existing recipes; do not silently generate from the actor instead."
+            )
         self.use_fusion_rollout = bool(fusion.get("enabled", False))
         if self.opd_topk_tail_enabled() and (self.fixed_rollout_cache is not None or self.use_fusion_rollout):
             raise ValueError("Unbiased top-k tail only supports fresh current-student rollouts")

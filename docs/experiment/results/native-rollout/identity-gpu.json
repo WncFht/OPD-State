@@ -1,0 +1,96 @@
+{
+  "scope": "Real native inference worker + production executor, two frozen checkpoints; not Ray async server or FSDP/trainer integration.",
+  "roles": {
+    "initial_student": {
+      "role": "initial_student",
+      "path": "/mnt/tidalfs-bdsz01/dataset/llm_dataset/zkn_data/fht_data/models/DeepSeek-R1-Distill-Qwen-1.5B",
+      "fingerprint": "057649c466ec450a9c76300a4c34b05f3165456bbce177722bd528fc35acbc58",
+      "parameter_count": 339,
+      "cold_start_seconds": 23.012298084795475,
+      "denied": {
+        "rejected_actor_write": true,
+        "role": "initial_student"
+      },
+      "frozen_probe_unchanged": true,
+      "sleep_wake_restored_output": true,
+      "eos_equals_pad_preserved": true,
+      "native_eos_at_length_limit_reason": "length",
+      "awake": {
+        "used_mib": 8838,
+        "total_mib": 81559,
+        "time": 1792312741.0786421
+      },
+      "asleep": {
+        "used_mib": 748,
+        "total_mib": 81559,
+        "time": 1792312743.3739033
+      },
+      "sleep_released_mib": 8090,
+      "response_sha256": [
+        "f3722bf53d6b6677d79595c87ca7a0179c43156bef5879009feffbbf748423a1",
+        "ec33d12d533e02d5ad25b450ada4f3781ad4cde4056be688d4fe75d04cb09415"
+      ],
+      "engine_shutdown_called": true,
+      "vllm_enable_v1_multiprocessing": true
+    },
+    "teacher": {
+      "role": "teacher",
+      "path": "/mnt/tidalfs-bdsz01/dataset/llm_dataset/zkn_data/fht_data/models/JustRL-DeepSeek-1.5B",
+      "fingerprint": "678416f8a3caf59846e265242056326aad48ab51bcde4a92a14e9707f5567ec9",
+      "parameter_count": 339,
+      "cold_start_seconds": 22.51016803085804,
+      "denied": {
+        "rejected_actor_write": true,
+        "role": "teacher"
+      },
+      "frozen_probe_unchanged": true,
+      "sleep_wake_restored_output": true,
+      "eos_equals_pad_preserved": true,
+      "native_eos_at_length_limit_reason": "length",
+      "awake": {
+        "used_mib": 8838,
+        "total_mib": 81559,
+        "time": 1792312781.6416683
+      },
+      "asleep": {
+        "used_mib": 748,
+        "total_mib": 81559,
+        "time": 1792312783.9026606
+      },
+      "sleep_released_mib": 8090,
+      "response_sha256": [
+        "5e6225447954f5e0e87a23c22f9834195a497c71d32b08411e389f2ab3267175",
+        "eb75bcf2d9ac2398c1b83fa1d462a0c600d389b91f59c7636095983a3741b7a0"
+      ],
+      "engine_shutdown_called": true,
+      "vllm_enable_v1_multiprocessing": true
+    }
+  },
+  "receipt": {
+    "scope": "Native worker plus production executor GPU checks, not trainer/FSDP acceptance",
+    "gpu": 0,
+    "before": {
+      "used_mib": 1,
+      "total_mib": 81559,
+      "time": 1792312706.6052244
+    },
+    "after": {
+      "used_mib": 1,
+      "total_mib": 81559,
+      "time": 1792312788.327501
+    },
+    "source_sha256": "3106c1ed961a920fb1c5b38596ac6f6836475d40329ea6cd9c078da562510c6d"
+  },
+  "source_sha256": {
+    "eval/probe_native_identity.py": "3106c1ed961a920fb1c5b38596ac6f6836475d40329ea6cd9c078da562510c6d",
+    "verl/verl/workers/rollout/policy.py": "ca8d6df1701f797dcc7439e0503313648335cd551d5e960849c406e960508f0d",
+    "verl/verl/workers/rollout/native_executor.py": "05b7a95054ffe367e7e4ae8e480474b3d4e53543eaf3f90d92421777ee81f63e",
+    "verl/verl/workers/rollout/vllm_rollout/native_weights.py": "786163656f5d9b56f87bd2d3ea2fcd7132bdeed14f0bf73564c014c2af223510",
+    "verl/verl/workers/rollout/vllm_rollout/utils.py": "c32befed461e280886a1a44d3a0f5ac112a54ff73a55d46a3d133e34ebf553db"
+  },
+  "previous_attempts": {
+    "identity-gpu": "Initial student assertions completed, but CUDA allocator destructor failed at interpreter exit; overall failed.",
+    "identity-gpu-v2": "Callable RPC cannot be serialized in production MP mode; original exception hidden by multiprocessing finalizer join. Owned idle EngineCore terminated after stack inspection; overall failed.",
+    "identity-gpu-v3": "Named RPC plus explicit EngineCore shutdown passed both roles; v4 reran against the current worker write-serial metadata."
+  }
+}

@@ -213,6 +213,26 @@ class ServerAdapter(BaseRollout):
         wire_format: str = "named_tensors",
         **kwargs,
     ):
+        if self.config.get("policy") is None:
+            return await self._transfer_actor_weights(weights, global_steps, wire_format, **kwargs)
+        if not self._ensure_server_handle():
+            raise RuntimeError("Native policy cannot publish weights without its source server")
+        await self.server_handle.begin_native_update.remote(global_steps)
+        try:
+            await self._transfer_actor_weights(weights, global_steps, wire_format, **kwargs)
+            await self.server_handle.commit_native_update.remote(global_steps)
+        except BaseException:
+            await self.server_handle.fail_native_update.remote()
+            raise
+
+    @torch.no_grad()
+    async def _transfer_actor_weights(
+        self,
+        weights: Generator[tuple[str, torch.Tensor], None, None],
+        global_steps: int = None,
+        wire_format: str = "named_tensors",
+        **kwargs,
+    ):
         """Update model weights via CUDA IPC (fallback to shared memory if IPC not supported) to inference workers."""
         assert wire_format == "named_tensors", (
             f"vLLM rollout only consumes full named tensors; got wire_format={wire_format!r}"
