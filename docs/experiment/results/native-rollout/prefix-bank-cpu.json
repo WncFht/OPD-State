@@ -51,5 +51,6 @@
     "verl/tests/opd/test_prefix_bank_runtime.py": "4f745b814c4ce5e5a03ffa519fb6f355fd9a5a46cb5761b9556e0dd858ef3441"
   },
   "full_runtime_regression_tests": 51,
-  "runtime_log_sha256": "b55710a518d16b97d0fe796ecc645cb142f9f8418ac383affe1ecaebbc1d6271"
+  "runtime_log_sha256": "b55710a518d16b97d0fe796ecc645cb142f9f8418ac383affe1ecaebbc1d6271",
+  "source_commit": "fd242785a4e406512050ba8b589fd116a92e0c0e"
 }

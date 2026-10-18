@@ -70,6 +70,17 @@ def main():
         OMP_NUM_THREADS="2",
         RAY_TMPDIR="/tmp/opdbank-" + uuid.uuid4().hex[:10],
     )
+    (args.output / "command.json").write_text(
+        json.dumps(
+            {
+                "arguments": vars(args) | {"input": str(args.input.resolve()), "output": str(args.output)},
+                "input_sha256": hashlib.sha256(raw).hexdigest(),
+                "environment": {key: os.environ[key] for key in ("RAY_TMPDIR", "CUDA_VISIBLE_DEVICES")},
+            },
+            indent=2,
+        )
+        + "\n"
+    )
     import ray
     from hydra import compose, initialize_config_dir
     from omegaconf import open_dict
