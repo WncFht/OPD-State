@@ -936,6 +936,8 @@ KL 主方案复用全部 570×16 验证响应，对全部有效位置计算完�
 
 [固定前缀 bank 的 CPU 验收](results/native-rollout/prefix-bank-cpu.json)已从真实完整验证文件准备每基准三十题，共九十题，按固定 seed 的题目身份哈希排序选择，无超长题被排除。六项检查覆盖双冻结来源、准确原始 prefix、EOS、完整身份和位置权重及实际评分器读取；生成入口使用生产原生 vLLM RPC、四卡副本和冻结参数校验。当前只有输入准备与合成轨迹的 CPU 证据，真实 bank 仍待串行 GPU 生成，不能把九十个准备好的 prompt 当成已生成状态。
 
+新增[KL 结果独立审计与聚类统计](results/native-rollout/validation-kl-audit-cpu.json)：按原始准确率响应的 benchmark/UID/sample 和有效长度逐条绑定 KL，重新归约题目等权、token 加权、累计量与深度统计，并用 benchmark 分层的题目 bootstrap 生成区间。同题十六条响应共同重采样；区间条件于已训练模型和固定 bank，不覆盖训练 seed、bank 构造和位置抽样变化。八项正反例及 CLI 检查通过，当前属于合成记录证据，不替代真实 checkpoint 数值复算。
+
 ## 历史调试与后续范围
 
 可组合原生 rollout 已完成生产策略、模型身份、执行与协调器接入，current-student 四卡两步通过；其他变体仍需分别验证。已有三十八场景的[实施前原生基准](results/native-rollout/baseline-throughput.json)保留实际输入、源码哈希、引擎冷启动和三十六个性能子测；GPU 0 启动占用 6,921 MiB，属于共享负载测试。后续生成、更新、验证和资源结果继续并入本文，不另建实验正文；实施状态归对应 Agent Note。

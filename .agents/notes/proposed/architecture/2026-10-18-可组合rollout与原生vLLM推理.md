@@ -722,6 +722,8 @@ $$
 
 实际日志同时提供 `…/token_weighted`、`…/question_mean` 和 `…/cumulative_on_states`；macro 是各 benchmark 对应统计的等权平均。准确率 JSONL 保留在验证目录顶层，KL 报告与原始 token 放到 `validation/kl/`，避免原采集器把诊断文件名误读为 step。保存评分起止时间戳、引擎休眠时间及 worker 内 actor 恢复/释放、student forward、teacher forward、head/KL 耗时；teacher forward 扣除内部 head/KL 区间，避免重复相加。这些是带通信与管理成本的调用耗时，不等于纯 GPU kernel 时间。
 
+`eval/audit_validation_kl.py` 独立校验原始 token 哈希、响应身份、全位置/深度覆盖、固定 bank、四 worker 记录与归约数值，可绑定原准确率 JSONL；主验证缺失响应或多算 padding 都会拒绝。统计按 benchmark 分层，对题目成组 bootstrap，同题样本共用抽样索引，分别计算题目均值、累计量和 token 总量比值。区间条件于已训练模型及固定 bank，不能充当训练 seed 或 bank/位置构造的不确定性。[八项 CPU 与 CLI 检查](../../../../docs/experiment/results/native-rollout/validation-kl-audit-cpu.json)已通过；它审计证据与聚合，不声称重新执行了神经网络。
+
 ### 修改范围与实施顺序
 
 以下路径列出修改归属；已建立的策略、执行器、模型池与协调器继续接受端到端验收。

@@ -1,0 +1,21 @@
+{
+  "schema": "validation-kl-audit-cpu-v1",
+  "scope": "synthetic producer records and CLI audit; not model/GPU evidence",
+  "runtime_checks": 8,
+  "cli_exit_code": 0,
+  "fixture_responses": 64,
+  "fixture_effective_positions": 224,
+  "fixture_cluster_interval": {
+    "low": 1.0,
+    "high": 3.0
+  },
+  "bootstrap_replicates": 1000,
+  "bootstrap_seed": 7,
+  "source_sha256": {
+    "eval/audit_validation_kl.py": "c6492d2d47d508db88e90c5b1afcb3af65a0f066e109f97796eeec7bb596238d",
+    "scripts/tests/test_validation_kl_audit.py": "e05f8be19f7cece9ad53fb1f4c244924422692827b6ce8279520ad2d1190f608",
+    "verl/verl/trainer/ppo/validation_kl_runner.py": "c7dfe732fef60690c3e2bd7e75177582fe125319a1a385cb3acf11cde8ba4033"
+  },
+  "gpu_model_numeric_verification": false,
+  "test_log_sha256": "2c4224243a1d51f1b7cca2c36d6e497af1e2d80b0f03e274b6d1b1b65716b130"
+}
