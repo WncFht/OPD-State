@@ -102,13 +102,24 @@ def install(root, hook_type="pre-commit"):
         )
     ):
         hook.unlink()
+    python = shlex.quote(sys.executable)
+    if hook_type == "pre-push":
+        hook.write_text(
+            "#!/bin/sh\n# agent-maintenance managed hook\nset -eu\n"
+            f'export PATH={shlex.quote(str(Path(sys.executable).parent))}:"$PATH"\n'
+            f"exec {python} {shlex.quote(str(root / 'scripts/pre_push_checks.py'))}"
+            ' "$@"\n'
+        )
+        hook.chmod(0o755)
+        if delegate.exists():
+            delegate.unlink()
+        return
     subprocess.run(
         [sys.executable, "-m", "pre_commit", "install", "--hook-type", hook_type],
         cwd=root,
         check=True,
     )
     hook.replace(delegate)
-    python = shlex.quote(sys.executable)
     format_command = (
         f"{python} {shlex.quote(str(Path(__file__).resolve()))} --format-staged\n"
         if hook_type == "pre-commit"

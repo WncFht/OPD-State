@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-import shutil
+import importlib.util
 import subprocess
 from pathlib import Path
 
@@ -11,9 +11,8 @@ from install_hooks import install
 
 def main() -> None:
     root = Path(__file__).resolve().parents[1]
-    framework = shutil.which("pre-commit")
-    if not framework:
-        raise SystemExit("缺少 pre-commit；先安装 requirements-dev.txt 并激活环境")
+    if importlib.util.find_spec("pre_commit") is None:
+        raise SystemExit("当前 Python 缺少 pre-commit；先安装 requirements-dev.lock")
     old = subprocess.run(
         ["git", "config", "--get", "core.hooksPath"],
         cwd=root,

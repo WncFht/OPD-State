@@ -4,7 +4,11 @@
 
 维护和精确 CPU 实验使用根目录 `.venv`；Python 包归 `requirements-dev.txt` 与带哈希的 `requirements-dev.lock`，npm 工具归 `package.json` 与 `package-lock.json`。安装命令见 [README](../README.md)。Linux x86-64 使用 `.venv/bin/python scripts/install_dev_binaries.py` 将 AutoCorrect 2.16.3 与 gitleaks 8.30.1 下载到本仓虚拟环境，安装前核验固定 SHA-256；其他平台用系统包管理器安装相同版本。CI 复用该安装器和凭据检查。删除 `.venv` 后需重新安装这些工具。
 
-安装 hooks 使用 `.venv/bin/python scripts/setup.py`。第一阶段用 git-format-staged 格式化暂存区，第二阶段运行 pre-commit 检查；安装器保留外来 hook 和自定义 hooksPath，遇到冲突时退出。不要使用普通 pre-commit install 覆盖两阶段入口。虚拟环境移动或重建后重装 hooks。
+安装 hooks 使用 `.venv/bin/python scripts/setup.py`。`pre-commit` 第一阶段用 git-format-staged 格式化暂存区，第二阶段运行 pre-commit 检查。`pre-push` 读取 Git 提供的全部待推送引用，在临时 Git worktree 中逐个检查不同的提交版本，运行完整 CI 检查并扫描该版本可达的历史凭据；删除引用跳过检查。检查完成或失败后移除临时 worktree，原工作区和暂存区保持原状。临时目录复用当前仓库的 `.venv` 和 `node_modules`，需要先完成维护环境安装。安装器保留外来 hook 和自定义 hooksPath，遇到冲突时退出。不要使用普通 pre-commit install 覆盖两阶段入口。虚拟环境移动或重建后重装 hooks。
+
+GitHub Actions 的 `Checks / check` 对 `main`、`master` 的 push 和所有 pull request 运行，也支持手动触发。CI 从锁定依赖重建维护环境，运行完整检查与历史凭据扫描；令牌权限为 `contents: read`，单任务限时 15 分钟。仓库交付训练源码与研究资料，当前没有部署服务或自动发布目标。
+
+本仓发布地址为 `git@github.com:WncFht/OPD-State.git`，默认开发分支为 `main`；首次推送使用 `git push -u origin main`。推送前确认 `git status`，只有提交中的文件会进入远端。hooks 失败时按输出修复对应提交，再重新推送；CI 结果在仓库的 Actions 页面查看。
 
 ## 检查与格式
 

@@ -47,8 +47,8 @@ Python 3.12      vllm 0.28.0 (torch 2.13.0  transformers 5.10.4)      verl 0.9.0
 ```
 
 ```bash
-git clone https://github.com/Thinking-Space/One-Shot-OPD.git
-cd One-Shot-OPD
+git clone https://github.com/WncFht/OPD-State.git
+cd OPD-State
 
 export MODEL_BASE=/your/models          # student + teacher checkpoints live here
 export CONDA_ENV_BIN=/your/env/bin      # vllm >= 0.18, transformers 5.x

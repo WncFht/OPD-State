@@ -3,6 +3,7 @@ on:
   pull_request:
   push:
     branches: [main, master]
+  workflow_dispatch:
 permissions:
   contents: read
 concurrency:
@@ -11,6 +12,7 @@ concurrency:
 jobs:
   check:
     runs-on: ubuntu-latest
+    timeout-minutes: 15
     steps:
       - uses: actions/checkout@v4
         with:
@@ -29,6 +31,7 @@ jobs:
           .venv/bin/python -m pip install --require-hashes -r requirements-dev.lock
           npm ci
           .venv/bin/python scripts/install_dev_binaries.py
+          .venv/bin/python scripts/setup.py
       - name: Run repository checks
         run: .venv/bin/python scripts/run_checks.py --config scripts/checks.json --mode ci
       - name: Check credentials
