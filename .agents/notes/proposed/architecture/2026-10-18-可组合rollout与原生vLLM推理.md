@@ -659,6 +659,65 @@ prompt 池由 `data.train_files`、清洗、去重与 sampler 决定，训练步
 
 现有固定缓存平台判据继续只服务历史 replay。fresh 的训练 RMS 同时受访问 state 与 action 变化影响，不再代表同一缓存上的拟合残差。新模式先用固定步数完成比较；若要提前停止，结合多验证点和固定 prefix/action probe 的 teacher–student 残差另定判据，不能直接删除旧 guard 后沿用原解释。验证始终保留 MATH-500/AMC23/AIME25 的 570 题、每题 16 次和精确 mean/pass@k。
 
+### 验证 KL 与 rollout 诊断提案
+
+以下指标尚未接入 valid。现有 `_validate` 主要生成、判分和保存文本；训练侧的 sampled log-ratio/RMS 也不等于完整条件 KL。新增诊断进入后续源码和实验协议，已冻结的 d59a7c3 矩阵保持原条件；没有保留最终权重的已结束运行，不能仅凭响应文本补算最终 student 的 KL。
+
+#### 散度方向、状态来源与归约
+
+记 $p=p_\theta$ 为被评测的最终 student，$q$ 为冻结 teacher，二者均使用 temperature=1 的原始分布，并在共同有效词表 $\mathcal V$ 上归一化，排除输出 head 的填充词表项。在同一个实际前缀 $s_t=(x,y_{<t})$ 上定义
+
+$$
+k_{p\Vert q}(s_t)=\sum_{a\in\mathcal V}p(a\mid s_t)\log\frac{p(a\mid s_t)}{q(a\mid s_t)},\qquad
+k_{q\Vert p}(s_t)=\sum_{a\in\mathcal V}q(a\mid s_t)\log\frac{q(a\mid s_t)}{p(a\mid s_t)}.
+$$
+
+主指标采用 student→teacher 的反向 KL $k_{p\Vert q}$，teacher→student 的正向 KL $k_{q\Vert p}$ 作补充。前者衡量 student 概率质量落在 teacher 低概率动作上的程度，后者补充 teacher 高概率动作的覆盖；两者均不直接代表答案正确率。日志名称显式写 `student_teacher` 或 `teacher_student`，不单独用方向易混淆的 `kl`。GKD 将轨迹来源与条件分布散度作为独立选择；本文沿用该区分，不把 teacher 前缀上的 student→teacher KL 称为 teacher 轨迹分布的 sequence KL。[^gkd-valid-kl]
+
+对一条长度为 $L_i$ 的响应，保留累计量 $S_i=\sum_{t=1}^{L_i}k_{p\Vert q}(s_{i,t})$ 和长度归一化量 $A_i=S_i/L_i$。`token_kl` 报告 token 加权的 $\sum_i S_i/\sum_i L_i$，另报先按响应平均、再按题目平均的 $A_i$；`sequence_kl` 报告响应累计量的期望估计。累计量的单位是 nat/sequence，归一化量的单位是 nat/token；长度归一化后的量不再命名为 sequence KL。三个 benchmark 分别报告，macro 是三个 benchmark 均值的等权平均；总量直接汇总的 micro 单列，避免 MATH-500 的题数决定总体结果。
+
+严格的 sequence KL 需要明确轨迹采样分布与停止规则。令 $P_H,Q_H$ 分别是 $p,q$ 在遇到 EOS 或共同上限 $H$ 时停止的响应分布，$L(y)\le H$；EOS 是有效动作，上限处不额外添加虚构 EOS。共同词表上的 teacher 概率为正时，自回归分解和条件期望给出
+
+$$
+\begin{aligned}
+D_{\mathrm{KL}}(P_H(\cdot\mid x)\Vert Q_H(\cdot\mid x))
+&=\mathbb E_{y\sim P_H}\left[\log\frac{P_H(y\mid x)}{Q_H(y\mid x)}\right]\\
+&=\mathbb E_{y\sim P_H}\left[\sum_{t=1}^{L(y)}\log\frac{p(y_t\mid s_t)}{q(y_t\mid s_t)}\right]\\
+&=\sum_{t=1}^{H}\mathbb E_{s_t\sim P_H}\left[\mathbf 1_{\{L\ge t\}}\sum_{a\in\mathcal V}p(a\mid s_t)\log\frac{p(a\mid s_t)}{q(a\mid s_t)}\right]\\
+&=\mathbb E_{y\sim P_H}\left[\sum_{t=1}^{L(y)}k_{p\Vert q}(s_t)\right].
+\end{aligned}
+$$
+
+第三行的前缀分布只作用于尚未终止的轨迹；有限上限允许交换求和与期望，再对下一动作取条件期望。完整条件 KL 对每个前缀非负；采样动作上的 $\log p(y_t\mid s_t)-\log q(y_t\mid s_t)$ 可以为负，只有轨迹确实从 $P_H$ 采样时，其累计量才是上述 sequence KL 的蒙特卡洛估计。该估计不确定性来自轨迹采样，不能将单条响应的值当成精确 sequence KL。
+
+现有准确率评测使用 temperature=0.7、top-p=0.9，实际策略记为 $\mu$。在这些响应上计算的完整条件 KL 仍是合法的逐前缀诊断，但其累计均值是 $\mathbb E_{y\sim\mu}\sum_t k_{p\Vert q}(s_t)$，不等于上式的 $D_{\mathrm{KL}}(P_H\Vert Q_H)$；采样 log-ratio 也不能直接沿用无偏解释。准确率设置保持原值，严格 sequence KL 使用独立的小规模原始分布采样，避免改变既有 acc/pass@k 协议。
+
+#### 探针规模与 rollout 指标
+
+建议起始预算为每个 benchmark 固定抽取 30 道题，共 90 道；AIME25 使用全部 30 题，其他基准按固定题目 ID 抽取。每题从最终 student 生成两条响应，共 180 条，temperature=1、top-p=1、top-k=-1，上限 $H=4096$。这是独立的短上下文诊断，名称保留 `h4096`，不冒充准确率评测 31,744 token 上限下的 sequence KL。固定 prompt 与采样 seed 减少协议变化，但不同模型产生的响应仍会不同；置信区间按题目聚类重采样，不能把同题两条响应或多个 token 当成独立题目。
+
+每条响应初版最多评估八个位置的完整词表 KL：第一个动作必选，将其余 $L_i-1$ 个位置划为最多七个非空连续区间，每区间均匀抽一个位置；短响应直接评估全部位置。若区间 $h$ 有 $n_h$ 个位置、抽中位置为 $T_h$，累计估计为 $\widehat S_i=k(s_{i,1})+\sum_h n_h k(s_{i,T_h})$；对区间采样取期望即恢复 $S_i$。token 均值使用同一累计估计除以实际有效长度，不能只把八个位置直接相加。八个位置是待校准的开销选择：用若干短响应的全位置结果检查方差和误差，再决定增至十六个位置或扩大题目数。
+
+另建相同 90 题的固定前缀 bank：训练前由 $p_0$ 和 $q$ 各生成每题一条、同样上限 4,096 的响应，固定 token IDs、抽中位置、区间权重、采样配置与清单哈希，所有变体在同一 bank 上评分。分别报告 `on_initial_states` 和 `on_teacher_states` 的完整条件 KL，不把两者合并后称为 sequence KL。它衡量相同状态下分布如何变化；独立 student 探针则衡量模型自己访问到的状态。固定前缀的 teacher 结果可按完整身份缓存，student 每次重算；当前 student 新生成的前缀不能套用旧 bank 的 teacher 分数。该 bank 与严格 sequence 探针均属提议规模，GPU 开销尚未测量。
+
+| 范围              | 必备指标                                                                                 | 统计条件                                                               |
+| ----------------- | ---------------------------------------------------------------------------------------- | ---------------------------------------------------------------------- |
+| 全部准确率响应    | mean@16、pass@1/2/4/8/16、答案解析成功率                                                 | 保持 570×16；失败与缺失显式计数                                        |
+| 全部准确率响应    | response length 的均值、p50/p90/p95/max、有效 token 总数；prompt length                  | 原始 token/mask 统计，EOS 计入，prompt 与 padding 分开                 |
+| 全部准确率响应    | EOS 比例、非 EOS 的 cap 截断比例、空响应和 abort/error 数量                              | 原始 finish/stop reason 与实际 token 联合判断；EOS 恰在 cap 时仍按 EOS |
+| 全部准确率响应    | 正确/错误/截断响应的长度分布、每题答案多样性、重复 4-gram 比例                           | 重复率定义为重复出现次数除以有效 4-gram 总数，长度不足四时单列         |
+| KL 探针           | student→teacher 与 teacher→student 条件 KL、student/teacher entropy、按前缀深度分层的 KL | 全词表归一化；固定 bank 与当前 student 轨迹分别记录                    |
+| 严格 student 探针 | `sequence_kl_student_teacher_h4096_est`、token 加权 KL、题目等权 KL、题目聚类置信区间    | 原始分布采样；保存位置抽样权重、有效长度与截断比例                     |
+| 资源              | 准确率生成、KL 生成、student 评分、teacher 评分、归约/写盘的独立耗时与峰值显存           | KL 新增成本单列；端到端 token/s 与响应/s 不混入评分耗时                |
+
+#### 接入、开销与验收
+
+实现复用 `rollout_coordinator.py` 的原始 token 和身份记录，在 `_validate` 保留后续评分所需的 IDs、有效 mask、题目/样本 ID、长度和结束原因，避免 decode 后重新 tokenize。准确率和 KL 探针均由原生 vLLM 生成；生成结束后统一排空并休眠验证引擎，再调用无梯度的 student/teacher 评分 worker，在相同 prefix 上比较两套分布。评分不是 HF 自回归生成回退；诊断不更新权重、不要求保存 checkpoint，发生在最终 student 仍存活时。
+
+完整条件 KL 需要扩展评分接口；当前 `old_log_probs`/`teacher_log_probs` 只有已选动作，直接相减无法恢复完整词表 KL。优先只在选中位置应用输出 head，按位置或词表分块，在 FP32 中完成 logsumexp 与散度归约，只返回标量和分层统计，不跨 RPC 传全部词表 logits。计算前缀隐藏状态仍需要相应的 backbone 前向；八个位置不代表只处理八个输入 token。复用 teacher-forcing、去 padding 和微批机制，所有 FSDP rank 保持匹配的 collective 次数，空 rank 显式补齐协议。
+
+验收先覆盖 $p=q$ 时 KL 为零、已知小词表的双向 KL、有限长度序列枚举与链式分解、位置抽样权重、EOS=PAD、EOS 恰在 cap、padding/无效值排除，以及不同 batch 重排后的题目身份。随后四卡短训练验证最终 student 版本、teacher 冻结、所有 rank 完成评分、结果有限及原准确率流程可复现；实测额外耗时、显存与位置抽样误差后确定预算，再进入新的完整协议。只把 top-k 内概率重新归一化会改变被测分布，不能替代这里的完整条件 KL。
+
 ### 修改范围与实施顺序
 
 以下路径列出修改归属；已建立的策略、执行器、模型池与协调器继续接受端到端验收。
@@ -704,6 +763,8 @@ prompt 池由 `data.train_files`、清洗、去重与 sampler 决定，训练步
 共享 GPU 负载会影响吞吐；短响应测试不能代表 4K/32K 长上下文。固定模型实时采样改变有限 states 的复用条件，必须与历史 Semi replay 区分。不同 vLLM 版本的 attention 注册、请求元数据、sleep 和采样接口仍需适配；任何近似融合或 KV 跨权重复用都不能默认为精确算法。
 
 ### 参考文献
+
+[^gkd-valid-kl]: Rishabh Agarwal et al. On-Policy Distillation of Language Models: Learning from Self-Generated Mistakes. ICLR，2024，§2–3. [原始论文](https://arxiv.org/html/2306.13649v3).
 
 [^tcod-paper]: Jiaqi Wang, Wenhao Zhang, Weijie Shi, Yaliang Li, James Cheng. TCOD: Exploring Temporal Curriculum in On-Policy Distillation for Multi-turn Autonomous Agents. arXiv 2604.24005v3, 2026. [论文 §3–4 与附录 C](https://arxiv.org/html/2604.24005v3).
 
