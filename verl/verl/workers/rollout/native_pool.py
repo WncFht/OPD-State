@@ -196,6 +196,7 @@ class NativeRayBackend:
         self.verifications = []
         self.placements = {}
         self.placement_audit = []
+        self.execution_audit = []
 
     async def prepare_phase(self, stages):
         counts = {}
@@ -227,10 +228,29 @@ class NativeRayBackend:
         for i, call in enumerate(calls):
             shards[selected[i % len(selected)]].append((i, call))
 
-        async def fetch(ref, rows):
+        phase = len(self.placement_audit) - 1
+
+        async def fetch(ref, rows, replica_index):
             records = await ref
             if len(records) != len(rows):
                 raise RuntimeError("Native server changed replica request count")
+            execution = records[0].get("execution")
+            if (
+                not execution
+                or execution.get("replica_rank") != replica_index
+                or not execution.get("device_uuid")
+                or any(r.get("execution") != execution for r in records)
+            ):
+                raise RuntimeError("Native responses lack matching physical worker/replica receipts")
+            self.execution_audit.append(
+                {
+                    "slot": self.slot(stage),
+                    "phase": phase,
+                    "requests": len(rows),
+                    "request_ids": [row["request_id"] for row in records],
+                    **execution,
+                }
+            )
             if records and records[0].get("frozen_digests"):
                 self.verifications.append({"slot": stage.slot, "frozen_digests": records[0]["frozen_digests"]})
             return [
@@ -251,7 +271,7 @@ class NativeRayBackend:
             ]
 
         tasks = []
-        for handle, rows in zip(handles, shards, strict=True):
+        for replica_index, (handle, rows) in enumerate(zip(handles, shards, strict=True)):
             if rows:
                 ref = handle.generate_native_batch.remote(
                     [asdict(call) for _, call in rows],
@@ -263,7 +283,7 @@ class NativeRayBackend:
                         else {}
                     ),
                 )
-                task = asyncio.create_task(fetch(ref, rows))
+                task = asyncio.create_task(fetch(ref, rows, replica_index))
                 self.pending.add(task)
                 task.add_done_callback(self.pending.discard)
                 tasks.append(task)

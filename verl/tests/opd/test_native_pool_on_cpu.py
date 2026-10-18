@@ -35,7 +35,8 @@ class RPC:
 
 
 class Server:
-    def __init__(self, wait=None):
+    def __init__(self, wait=None, *, replica_rank=0):
+        self.replica_rank = replica_rank
         self.calls = []
         self.wait = wait
         self.finished = False
@@ -54,6 +55,13 @@ class Server:
                 "finish_reason": "length",
                 "stop_reason": None,
                 "log_probs": None,
+                "execution": {
+                    "replica_rank": self.replica_rank,
+                    "device_uuid": f"unit-gpu-{self.replica_rank}",
+                    "pid": 100 + self.replica_rank,
+                    "local_device": 0,
+                    "visible_devices": str(self.replica_rank),
+                },
             }
             for c in calls
         ]
@@ -128,7 +136,7 @@ class NativeActivationTests(unittest.IsolatedAsyncioTestCase):
 
 class NativePoolTests(unittest.IsolatedAsyncioTestCase):
     async def test_split_backend_routes_only_selected_devices_and_keeps_original_order(self):
-        handles = {role: [Server() for _ in range(4)] for role in ["current_student", "teacher"]}
+        handles = {role: [Server(replica_rank=i) for i in range(4)] for role in ["current_student", "teacher"]}
         prepared = []
 
         async def prepare(slots):
@@ -143,12 +151,22 @@ class NativePoolTests(unittest.IsolatedAsyncioTestCase):
             ref = Policy.ModelRef(
                 role, "/" + role, **({"version": 0} if role == "current_student" else {"fingerprint": "sha"})
             )
-            calls = [E.Call(str(i), (str(i), 0, 0), (1,), 2, i) for i in range(count)]
+            calls = [E.Call(f"{role}-{i}", (str(i), 0, 0), (1,), 2, i) for i in range(count)]
             output = await backend.generate(stages[role], calls, [ref])
             self.assertEqual([r.request_id for r in output], [c.request_id for c in calls])
             self.assertEqual([r.token_ids for r in output], [(i,) for i in range(count)])
         self.assertEqual([len(s.calls[0][0]) if s.calls else 0 for s in handles["current_student"]], [3, 2, 2, 0])
         self.assertEqual([len(s.calls[0][0]) if s.calls else 0 for s in handles["teacher"]], [0, 0, 0, 1])
+        self.assertEqual(
+            {(r["slot"], r["replica_rank"]): r["requests"] for r in backend.execution_audit},
+            {("current_student", 0): 3, ("current_student", 1): 2, ("current_student", 2): 2, ("teacher", 3): 1},
+        )
+
+    async def test_wrong_replica_receipt_cannot_be_accepted_as_the_selected_worker(self):
+        backend = P.NativeRayBackend(NS(handles={"teacher": [Server(replica_rank=3)]}), {})
+        ref = Policy.ModelRef("teacher", "/q", fingerprint="sha")
+        with self.assertRaisesRegex(RuntimeError, "physical worker/replica"):
+            await backend.generate(Policy.Stage(("teacher",), 2), [E.Call("a", ("a", 0, 0), (1,), 2, 1)], [ref])
 
     async def test_eval_always_uses_pure_current_all_devices_and_empty_phase_does_nothing(self):
         prepared = []
@@ -158,7 +176,12 @@ class NativePoolTests(unittest.IsolatedAsyncioTestCase):
 
         slot = "eval:current_student"
         backend = P.NativeRayBackend(
-            NS(handles={slot: [Server() for _ in range(4)]}, eval_slot=slot, layout="split", prepare=prepare),
+            NS(
+                handles={slot: [Server(replica_rank=i) for i in range(4)]},
+                eval_slot=slot,
+                layout="split",
+                prepare=prepare,
+            ),
             {},
             validate=True,
         )
@@ -171,7 +194,7 @@ class NativePoolTests(unittest.IsolatedAsyncioTestCase):
             await backend.prepare_phase([(Policy.Stage(("teacher",), 2), 1)])
 
     async def test_global_routes_survive_replica_sharding_and_empty_replicas(self):
-        servers = [Server() for _ in range(4)]
+        servers = [Server(replica_rank=i) for i in range(4)]
         pool = NS(handles={"teacher": servers})
         backend = P.NativeRayBackend(pool, {"temperature": 1})
         ref = Policy.ModelRef("teacher", "/q", fingerprint="sha")

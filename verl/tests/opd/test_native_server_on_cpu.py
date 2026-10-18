@@ -64,6 +64,12 @@ class Engine:
         return [
             {
                 "role": args["role"],
+                "worker_execution": {
+                    "device_uuid": "unit-gpu-0",
+                    "local_device": 0,
+                    "pid": 100,
+                    "visible_devices": "0",
+                },
                 "path": args["path"],
                 "fusion": fusion,
                 "companion": ("teacher", fusion["teacher_path"], fusion["teacher_fingerprint"]) if fusion else None,
@@ -75,6 +81,7 @@ class Engine:
 
 class Server(M.NativePolicyServerMixin):
     def __init__(self, role="teacher"):
+        self.replica_rank = 0
         self.engine = Engine()
         self.config = Config(
             policy={"kind": "single", "model": role},
@@ -111,6 +118,19 @@ class Server(M.NativePolicyServerMixin):
 
 
 class NativeServerTests(unittest.IsolatedAsyncioTestCase):
+    async def test_missing_physical_worker_identity_rejects_native_initialization(self):
+        server = Server()
+        original = server.engine.collective_rpc
+
+        async def without_device(method, **kwargs):
+            result = await original(method, **kwargs)
+            result[0].pop("worker_execution", None)
+            return result
+
+        server.engine.collective_rpc = without_device
+        with self.assertRaisesRegex(RuntimeError, "physical CUDA device"):
+            await server.initialize_native_source()
+
     async def test_failed_native_barrier_keeps_idle_engine_closed_to_reuse(self):
         s = await self.fixture()
         original = s.engine.collective_rpc
@@ -244,6 +264,8 @@ class NativeServerTests(unittest.IsolatedAsyncioTestCase):
         s = await self.fixture()
         params = {"temperature": 1.0, "top_p": 1.0}
         rows = await s.generate_native_batch([self.call()], s.native_state.identity, params)
+        self.assertEqual(rows[0]["execution"]["device_uuid"], "unit-gpu-0")
+        self.assertEqual(rows[0]["execution"]["replica_rank"], 0)
         self.assertEqual(rows[0]["identity"], ("teacher", "/q", "sha"))
         self.assertEqual(rows[0]["finish_reason"], "length")
         self.assertIsNone(rows[0]["stop_reason"])

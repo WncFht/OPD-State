@@ -385,6 +385,7 @@ class RolloutCoordinator:
             "metrics": metrics,
             "generation": timing,
             "generation_placement": backend.placement_audit,
+            "generation_execution": backend.execution_audit,
             "frozen_verifications": backend.verifications,
         }
         with (self.trace_dir / "batches.jsonl").open("a") as stream:

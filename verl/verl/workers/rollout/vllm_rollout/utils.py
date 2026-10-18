@@ -252,7 +252,15 @@ class vLLMColocateWorkerExtension:
     ):
         from verl.workers.rollout.vllm_rollout.native_weights import configure_source
 
-        return configure_source(self, role, path, fingerprint, sync_namespace, fusion, verify_frozen, verify_addresses)
+        source = configure_source(self, role, path, fingerprint, sync_namespace, fusion, verify_frozen, verify_addresses)
+        device = torch.cuda.current_device()
+        source["worker_execution"] = {
+            "device_uuid": str(torch.cuda.get_device_properties(device).uuid),
+            "local_device": device,
+            "visible_devices": os.environ.get("CUDA_VISIBLE_DEVICES", ""),
+            "pid": os.getpid(),
+        }
+        return source
 
     def native_source_status(self):
         from verl.workers.rollout.vllm_rollout.native_weights import frozen_digests, parameter_addresses

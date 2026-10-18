@@ -171,6 +171,13 @@ class CoordinatorTests(unittest.TestCase):
                         "finish_reason": "stop",
                         "stop_reason": 2,
                         "log_probs": None,
+                        "execution": {
+                            "replica_rank": 0,
+                            "device_uuid": "unit-gpu-0",
+                            "pid": 100,
+                            "local_device": 0,
+                            "visible_devices": "0",
+                        },
                     }
                     for call in calls
                 ]

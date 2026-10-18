@@ -1,0 +1,46 @@
+{
+  "scope": "CPU physical-routing protocol and artifact auditor only; no real GPU placement acceptance has run for this source",
+  "recorded_at": "2026-10-18T12:36:39.431477+00:00",
+  "base_commit": "290f82253de5bd6eb8982a21ed1b0162ec6e27b8",
+  "source_sha256": {
+    "verl/verl/workers/rollout/vllm_rollout/utils.py": "efc7c361087c08f9b81cf7605c73a24d0acd1f60ae24f82dc59ad675a2826837",
+    "verl/verl/workers/rollout/vllm_rollout/native_server.py": "47837d5363f95a606ea0b7dd2d8bc3ba98516e90ceacc51eea63bd4d570f1528",
+    "verl/verl/workers/rollout/native_pool.py": "1450eabfe8813a27d0eb9cca5a5f801b6c68995c54eb784544edfb0db963060e",
+    "verl/verl/trainer/ppo/rollout_coordinator.py": "b8e6a1b26d42d48259bf1df0f13095eb3ee6dc3f8c43af0737d9774232784c56",
+    "verl/tests/opd/test_native_pool_on_cpu.py": "b2dc5b4ff81030bf808b48786a1083b7feaaf7c63a593f653e61e81abd705336",
+    "verl/tests/opd/test_native_server_on_cpu.py": "25df3f655e8b77889502f4d28148f17afa964b128bec65eb12c572de5056cd0e",
+    "verl/tests/opd/test_rollout_coordinator_runtime.py": "1caba8836cf1990b9470fe46641bbd8f23ddec56d9806cd0f8663bdbecf3354d",
+    "eval/verify_native_layout.py": "cfc86f5983bcc40f9983975a7337c2792be228db9e3fdaaf37f4b9c34fdb0628",
+    "eval/run_native_followups.py": "37fb3e4f0ba5fd7c14b2ca5d1d86cb4abcbd9644957d2c4a23fe86381b81e045",
+    "scripts/tests/test_native_layout_acceptance.py": "db3ee0cf52c55708a0a87e9b47a3f0b9aa55c2293402b2e4f851971dce7040b3"
+  },
+  "test_counts": {
+    "runs/native-rollout-implementation/physical-receipts-cpu.log": 68,
+    "runs/native-rollout-implementation/physical-receipts-runtime.log": 18,
+    "runs/native-rollout-implementation/layout-auditor-cpu.log": 5
+  },
+  "test_logs_sha256": {
+    "runs/native-rollout-implementation/physical-receipts-cpu.log": "1a14a1f5ae07e975170a48230bc446bd929553c5a100798ade46abe2f22214fc",
+    "runs/native-rollout-implementation/physical-receipts-runtime.log": "418d3cc9ae7dec94c4fb044fea6ceaa26a62fd08b94454732650b4155bfeb9ab",
+    "runs/native-rollout-implementation/layout-auditor-cpu.log": "7f64a4a19571e93a72d1fcf1c160491b1515e2b11cfd5f6af1fe381e23411e92"
+  },
+  "real_gpu_verified": false,
+  "followup_cases": {
+    "correctness_cases": 6,
+    "steps_per_correctness_case": 2,
+    "batch_per_correctness_case": 8,
+    "training_cap_per_correctness_case": 64,
+    "frozen_parameter_hashes": true,
+    "layout_observations": ["overlap", "split", "split", "overlap"],
+    "steps_per_observation": 5,
+    "batch_per_observation": 64,
+    "training_cap_per_observation": 4096,
+    "frozen_parameter_hashes_during_observations": false,
+    "first_step_excluded_from_speed_summary": true
+  },
+  "formal_source_remains": "d59a7c3463244ef7533ca4acf73855e988043848",
+  "pending": [
+    "Run all follow-ups after the existing formal suite releases GPUs 0\u20133",
+    "Reconcile actual worker UUIDs against nvidia-smi and source-stratified metric reductions"
+  ]
+}

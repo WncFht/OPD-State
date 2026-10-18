@@ -798,6 +798,10 @@ $$
 
 生产配置新增 `actor_rollout_ref.rollout.generation_layout=split`，默认仍为 `overlap`。分卡按同阶段来源请求数分配副本，7/1 条使用 3+1 卡，32/32 条使用 2+2 卡；少量请求只唤醒实际使用的冻结副本，current 未使用副本休眠后须经下次 actor 发布恢复。该版本保持原 KV 预算，未将分卡引擎自动扩为完整预算；因此与上述分卡微基准仍有预算差异。阶段请求数和副本索引写入 batch 审计。[CPU 验收](results/native-rollout/placement-cpu.json)已通过，包含五百组随机分配；新生产布局的四卡训练验收尚未完成，不计入现有正式矩阵。
 
+后续原生响应还携带 worker 实际读取的 CUDA UUID、进程号和副本编号，协调器按 RPC 保存实际请求数与身份。`eval/verify_native_layout.py` 对照 `nvidia-smi` 的 GPU 0–3 UUID，核对来源配额、分卡、请求唯一性、物理副本稳定性，以及分层统计与共同 OPD reward 的归约一致性。[CPU 验收](results/native-rollout/physical-routing-cpu.json)包含六十八项原生检查、十八项训练环境检查和五项审计检查；真实 GPU 结果仍待产生，配置索引不能替代物理执行证据。
+
+`eval/run_native_followups.py` 安排六组 B8/cap64 的两步正确性验收：两种 batch 混合、两个 current/teacher 切换方向和两种 fusion；batch teacher 占比 1/8，覆盖 7/1 条请求与空副本。另按 overlap→split→split→overlap 顺序运行四组 B64/cap4096 的五步观测，排除首步，保持来源原预算与诊断设置相同，并关闭昂贵的完整冻结参数摘要。正确性阶段的摘要开销不混入布局速度比较。每组最终只做六题×16 的短验证，用来检查 student 恢复，不形成正式准确率结论；全部任务等现有正式矩阵结束后串行执行，任一训练或审计失败就停止后续任务。
+
 ### 真实排空与权重缓存检查
 
 [真实服务端检查](results/native-rollout/runtime/receipt.json)覆盖 eager 与 CUDA Graph。current 通过生产 CUDA IPC 接收 p0→teacher→p0 的完整权重流，prefix cache 原先命中 128/80 个 token，切换后两条请求均为零命中；完整词表 logits 与独立 teacher 引擎逐值相同，恢复 p0 后 logits 逐值恢复。APC 命中改变 BF16 的计算形状，复用前后最大 logits 差为 0.15625、TV 为 $1.293\times10^{-5}$，满足既定跨内核界限。

@@ -44,6 +44,9 @@ class NativePolicyServerMixin:
         self.native_companion = tuple(companion) if companion is not None else None
         self.native_frozen_digests = summaries[0].get("frozen_digests", {})
         self.native_parameter_addresses = summaries[0].get("parameter_addresses")
+        self.native_worker_execution = summaries[0].get("worker_execution")
+        if not self.native_worker_execution or not self.native_worker_execution.get("device_uuid"):
+            raise RuntimeError("Native source worker did not report its physical CUDA device")
 
     async def generate(
         self,
@@ -123,6 +126,7 @@ class NativePolicyServerMixin:
                 "finish_reason": output.extra_fields["native_finish_reason"],
                 "stop_reason": output.extra_fields["native_stop_reason"],
                 "num_preempted": output.num_preempted,
+                "execution": {**self.native_worker_execution, "replica_rank": self.replica_rank},
             }
 
         tasks = [asyncio.create_task(one(call)) for call in calls]
