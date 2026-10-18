@@ -748,6 +748,16 @@ $$
 
 `eval/run_native_math_suite.py` 保存固定源码、数据清单、参数与逐项状态，顺序执行十五组正式 case：三种单模型、两种 λ=0.5 fusion、四个分段方向各 k=2048/1024，以及两种 teacher 占比 0.5 的 batch 混合。λ/α 的 0/1 与 k 的 0/4096 端点复用编译后完全相同的单模型基线。所有设置统一 50 步、batch 64、lr=1e-6、T=1/top-p=1/top-k=-1、训练 1,024+4,096、验证 1,024+31,744，最终仅做 570 题×16，保存频率 -1，W&B 项目 `OPD-State`。完整 CLI 已核验三份验证文件、完整评测开关、数据清单和最终验证设置；正式结果须等进程与独立采集器成功，不能用预检代替。
 
+### 副本布局与自然长度结果
+
+[统一基准数据](results/native-rollout/throughput/combined/receipt.json)核对每次实际输出 token、原生分组计数、时间与吞吐，预热单列，不以两次重复计算置信区间。全局 B64、cap128、相同 prompt 和相同 50/50 整轨迹配额下，batch 混合的单卡双模型为 8.29k token/s，四卡各双模型为 8.91k，四卡按 2+2 分模型为 15.43k。对应实际模型副本数为 2/8/4，吞吐不能只按卡数推算。
+
+![同一 batch 混合策略在三种 GPU 模型布局下的吞吐](figures/native-layout-throughput.png)
+
+图中横线仅表示两次观察的范围，坐标从零开始；数据、图源与图件审计可独立重算。2+2 分卡相对四卡重叠提高约 73%，支持后续为 batch 混合配置专门映射；不能将这个结论直接套到序列分段。两种方向的分段在四卡重叠约 15.60k，而 2+2 分卡约 13.91–13.99k，固定长度下重叠略快。
+
+2+2 布局还完成真实 math prompt、B64、T=1、cap4096、自然 EOS 的单次观测，batch 混合生成 259,012 个 token、耗时 16.56 s，约 15.64k token/s。该值是推理观测，包含自然长度变化，不含 actor 更新或权重同步；可分配 KV 区域和权重字节见[memory.csv](results/native-rollout/throughput/combined/memory.csv)，它们不等于整卡训练峰值。
+
 ### 真实排空与权重缓存检查
 
 [真实服务端检查](results/native-rollout/runtime/receipt.json)覆盖 eager 与 CUDA Graph。current 通过生产 CUDA IPC 接收 p0→teacher→p0 的完整权重流，prefix cache 原先命中 128/80 个 token，切换后两条请求均为零命中；完整词表 logits 与独立 teacher 引擎逐值相同，恢复 p0 后 logits 逐值恢复。APC 命中改变 BF16 的计算形状，复用前后最大 logits 差为 0.15625、TV 为 $1.293\times10^{-5}$，满足既定跨内核界限。

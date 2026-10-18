@@ -1,0 +1,38 @@
+{
+  "scope": "inference-only native benchmark; allocator KV regions, not whole-job GPU peaks",
+  "inputs": [
+    {
+      "directory": "/mnt/tidalfs-bdsz01/dataset/llm_dataset/zkn_data/fht_data/OPD-State/runs/native-rollout-implementation/benchmark-overlap4-graph-v2",
+      "summary_sha256": "384601b0078049a7c33e8a839946809031b869edbfc66e11663e39703ce3211e",
+      "observations_sha256": "1a4398104e0a2334788f5c527db7a59f050f6a0f04251da0f2e2594862176bd9",
+      "observations": 36,
+      "cold_seconds": {
+        "initial_student": 195.94364760816097,
+        "teacher": 200.8651557713747,
+        "fusion:initial_student": 237.11131098121405
+      }
+    },
+    {
+      "directory": "/mnt/tidalfs-bdsz01/dataset/llm_dataset/zkn_data/fht_data/OPD-State/runs/native-rollout-implementation/benchmark-split4-graph-v1",
+      "summary_sha256": "fda2455f4904659abe5e654fdf590b5c01e077a54c563912f845a5b1f7ea7ee3",
+      "observations_sha256": "cf7a4c33fd004c2fbb1ad35f293188e57768d9473ff6d899d633875572c3c1d5",
+      "observations": 20,
+      "cold_seconds": {
+        "initial_student": 93.54648149013519,
+        "teacher": 97.6154062077403
+      }
+    },
+    {
+      "directory": "/mnt/tidalfs-bdsz01/dataset/llm_dataset/zkn_data/fht_data/OPD-State/runs/native-rollout-implementation/benchmark-overlap1-graph-v1",
+      "summary_sha256": "3c4d5dc456a8383437a2537e0e3e9fddcd97aeb3cf6cd094d3b4991548351b08",
+      "observations_sha256": "7e76c1e17df44b60c12ee964e818b1c03ea96654f327030925b9b58f585be491",
+      "observations": 18,
+      "cold_seconds": {
+        "initial_student": 47.200045324862,
+        "teacher": 48.798453494906425,
+        "fusion:initial_student": 69.64817106723785
+      }
+    }
+  ],
+  "source_sha256": "401c346f3c5bf2456c79ed706758ca6f9157efff9e38dbc9b6e821c46d18260a"
+}

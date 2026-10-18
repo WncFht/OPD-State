@@ -1,0 +1,58 @@
+{
+  "input_sha256": "30f7fae15cd3ecf9d7a2d0d3f4b267ef627b5cb95e603d7019aa0bfce4c34655",
+  "ledger": "GPU placement changes throughput of the same 50/50 trajectory mixture.\n\nLedger: each bar is one physical layout at global batch64/cap128, CUDA graphs,\nidentical prompt IDs and exact 50/50 whole-trajectory routing. The bar is the\nmean of two warm repeats; whiskers show the observed min/max, not a confidence\ninterval. x is thousands of completed response tokens per wall-clock second.\n",
+  "rows": [
+    {
+      "layout": "overlap",
+      "replicas": "1",
+      "graph": "True",
+      "policy": "batch_mix",
+      "batch": "64",
+      "cap": "128",
+      "natural_eos": "False",
+      "repeats": "2",
+      "seconds_mean": "0.9882328771054745",
+      "seconds_min": "0.9842469245195389",
+      "seconds_max": "0.9922188296914101",
+      "tokens_mean": "8192",
+      "tokens_per_second_mean": "8289.678944042756",
+      "responses_per_second_mean": "64.76311675033404",
+      "prefill_tokens_mean": "5436"
+    },
+    {
+      "layout": "overlap",
+      "replicas": "4",
+      "graph": "True",
+      "policy": "batch_mix",
+      "batch": "64",
+      "cap": "128",
+      "natural_eos": "False",
+      "repeats": "2",
+      "seconds_mean": "0.9191390462219715",
+      "seconds_min": "0.9120466932654381",
+      "seconds_max": "0.9262313991785049",
+      "tokens_mean": "8192",
+      "tokens_per_second_mean": "8913.21919678688",
+      "responses_per_second_mean": "69.6345249748975",
+      "prefill_tokens_mean": "5436"
+    },
+    {
+      "layout": "split",
+      "replicas": "4",
+      "graph": "True",
+      "policy": "batch_mix",
+      "batch": "64",
+      "cap": "128",
+      "natural_eos": "False",
+      "repeats": "2",
+      "seconds_mean": "0.5308549739420414",
+      "seconds_min": "0.5297811329364777",
+      "seconds_max": "0.5319288149476051",
+      "tokens_mean": "8192",
+      "tokens_per_second_mean": "15431.773127026165",
+      "responses_per_second_mean": "120.56072755489191",
+      "prefill_tokens_mean": "5436"
+    }
+  ],
+  "audit": []
+}

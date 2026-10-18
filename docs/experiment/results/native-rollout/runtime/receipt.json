@@ -10,5 +10,13 @@
     "max_abs_logit_error": 0.5,
     "max_tv": 0.05
   },
-  "source_hash_scope": "Current files at collection; first positive GPU checks preceded the later deadline/latch additions. Subsequent probes freeze a complete runtime source manifest."
+  "source_hash_scope": "Current files at collection; first positive GPU checks preceded the later deadline/latch additions. Subsequent probes freeze a complete runtime source manifest.",
+  "final_frozen_graph": {
+    "source_commit": "d59a7c3463244ef7533ca4acf73855e988043848",
+    "source_manifest_sha256": "04f51b70a1245728f12d550109c1110afa54cd53c6c8bc1d41459ed06dff90f0",
+    "driver_sha256": "89b97b3dfcc4cca47584b6e6fe429fdc78aa4ed490723e62ee038331b1996a17",
+    "runtime_directory": "/mnt/tidalfs-bdsz01/dataset/llm_dataset/zkn_data/fht_data/OPD-State/runs/native-rollout-implementation/native-runtime-graph-frozen-v2",
+    "decode_tokens_before_abort": 13,
+    "active_after_drain": 0
+  }
 }
