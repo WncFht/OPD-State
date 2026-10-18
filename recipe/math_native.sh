@@ -43,8 +43,17 @@ export STEPS=${STEPS:-50}
 export EXPERIMENT_NAME=${EXPERIMENT_NAME:-math-native-${SOURCE}-${STEPS}steps-$(TZ=Asia/Shanghai date +%Y%m%d-%H%M%S)}
 export OPD_ROOT=${OPD_ROOT:-${ROOT}/runs/native-rollout/${EXPERIMENT_NAME}}
 export WANDB_JOB_TYPE=native_rollout WANDB_RUN_GROUP=math-native-rollout-sources
+if [[ -z ${NATIVE_DATA_MANIFEST:-} && -z ${TRAIN_FILES:-} ]]; then
+    NATIVE_DATA_MANIFEST="$ROOT/runs/native-data/math-full/manifest.json"
+fi
 if [[ -n ${NATIVE_DATA_MANIFEST:-} ]]; then
+    if [[ ! -f "$NATIVE_DATA_MANIFEST" ]]; then
+        echo "Native math requires a prepared full-prompt manifest: $NATIVE_DATA_MANIFEST" >&2
+        echo "Prepare it with data/prep/build_fresh_math_data.py; see data/README.md#fresh-math-prompt-pool." >&2
+        exit 2
+    fi
     NATIVE_DATA_MANIFEST=$(realpath "$NATIVE_DATA_MANIFEST")
+    export NATIVE_DATA_MANIFEST
     export TRAIN_FILES=${TRAIN_FILES:-[$(dirname "$NATIVE_DATA_MANIFEST")/ordered.parquet]}
     set -- "++trainer.native_data_manifest=${NATIVE_DATA_MANIFEST}" "$@"
 fi

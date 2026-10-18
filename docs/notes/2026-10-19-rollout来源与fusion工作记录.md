@@ -319,3 +319,7 @@ v2 bank 后续完成生成，canonical bank 含 180 条轨迹、1,440 个抽样�
 长响应 KL 1sndtege finished，两次工程更新后九十六条主验证响应的 605,977 个有效位置及两 bank 的 1,440 个位置完成评分，实际 max=31,744。独立数据/归约审计和 W&B 最终行核验通过。评分 46.748563 s，四卡各二十条阶段采样，最高 10,761 MiB；主验证 macro token-weighted student→teacher KL=0.089225775、question-mean=0.080735288、累计 631.558667。表格明确工程预算和不同 state 来源，不能用于训练策略排序。控制器 2084206 已启动完整 570×16 gate 2233555，仍持有原矩阵串行窗口。
 
 归档 hook 将长响应结果中三个原始 token JSONL 的 SHA-256 元数据识别为 generic-api-key。逐项与真实原始文件重新计算的哈希核对一致后，仅为 validation-kl-long 的指定 JSON、tokens_sha256 字段和原始 step2 token 路径增加限定规则；扩大现有边界测试，其他字段、路径、step 和非小写 SHA-256 仍须拒绝。未放宽通用凭据检查。
+
+Bank/长响应验收提交为 f334951，完整 CI 与 hooks 通过。核对入口时发现，正式矩阵显式绑定完整去重清单，但 math_native.sh 未传数据参数会继承原始 DAPO 文件。默认值现指向 runs/native-data/math-full/manifest.json，缺失时先退出；显式 TRAIN_FILES 及 NATIVE_DATA_MANIFEST 保留，既有小型工程输入与排队任务不改。将已验证池的三个文件逐字节复用到默认位置，未重新抽样或过滤数据。
+
+四项 Bash 入口测试通过，实际 OPD_DRY_RUN 配置指向默认 ordered.parquet，随后使用真实 tokenizer 执行 prepare_native_config 的 pre-Ray 清单校验，17235 题与数据/模板/cap 签名匹配，CUDA 未初始化。新增默认清单是入口前置条件，迁移步骤在 data README 与开发指南；没有修改冻结训练源码、当前任务或历史实验协议。

@@ -64,8 +64,11 @@ CUDA_VISIBLE_DEVICES='' PYTHONPATH=verl ../envs/opd-state/bin/python \
     --input ../MD-OPD/data/math/DAPO/train.parquet \
     --student ../models/DeepSeek-R1-Distill-Qwen-1.5B \
     --output runs/native-data/math-full
-NATIVE_DATA_MANIFEST="$PWD/runs/native-data/math-full/manifest.json" \
-    OPD_FREEZE_SOURCE=1 bash recipe/math_native.sh student_fresh
+OPD_FREEZE_SOURCE=1 bash recipe/math_native.sh student_fresh
 ```
 
-Use a fresh output directory when rebuilding. The launcher binds the manifest to the exact Parquet, tokenizer/template and prompt cap before initializing GPU workers. The native path supports `student_teacher_fusion` and `initial_teacher_fusion` with `TEACHER_WEIGHT`, sequence directions with `SWITCH_TOKENS`, and batch mixtures with `TEACHER_FRACTION`; the experiment report distinguishes verified short runs from full quality results.
+The native launcher defaults to `runs/native-data/math-full/manifest.json` when neither `NATIVE_DATA_MANIFEST` nor `TRAIN_FILES` is set. Prepare this pool before the first run; a missing default manifest stops the launcher before training starts.
+
+Set `NATIVE_DATA_MANIFEST` to select another prepared pool. Explicit `TRAIN_FILES` still supports custom engineering inputs; without a manifest, that override does not certify a complete deduplicated pool.
+
+Use a fresh output directory when rebuilding. The launcher binds a selected manifest to the exact Parquet, tokenizer/template and prompt cap before initializing GPU workers. The native path supports `student_teacher_fusion` and `initial_teacher_fusion` with `TEACHER_WEIGHT`, sequence directions with `SWITCH_TOKENS`, and batch mixtures with `TEACHER_FRACTION`; the experiment report distinguishes verified short runs from full quality results.

@@ -1,0 +1,46 @@
+{
+  "schema": "native-data-default-entry-cpu-v1",
+  "scope": "Bash routing, actual Hydra composition and pre-Ray prepared-data validation; no training/GPU inference",
+  "source_sha256": {
+    "recipe/math_native.sh": "da2d053319c1c08ab2bcfa2277f61bb52d68a200ac0f392d05177e46aa0c13c2",
+    "scripts/tests/test_native_recipe_data.py": "dfdc42a047f0c7c3fe2f4e6dcd7ee05e26463a0aa325fdab0be921e92e892eb3"
+  },
+  "launcher_tests": {
+    "methods": 4,
+    "cases": [
+      "default full manifest and CLI forwarding",
+      "missing default stops before downstream launch",
+      "explicit engineering TRAIN_FILES preserved",
+      "explicit manifest with spaces plus file override preserved"
+    ]
+  },
+  "actual_runtime": {
+    "scope": "Actual Hydra default entry and pre-Ray manifest/tokenizer/config validation; no model inference",
+    "default_train_files": [
+      "/mnt/tidalfs-bdsz01/dataset/llm_dataset/zkn_data/fht_data/OPD-State/runs/native-data/math-full/ordered.parquet"
+    ],
+    "default_manifest": "/mnt/tidalfs-bdsz01/dataset/llm_dataset/zkn_data/fht_data/OPD-State/runs/native-data/math-full/manifest.json",
+    "prepared_unique_prompts": 17235,
+    "global_batch": 8,
+    "training_steps": 2,
+    "data_shuffle": true,
+    "dry_run_log_sha256": "9a082921173f24261989cd4c0f3359051376ff66299aa4badd1cbc28c7ef55ee",
+    "cuda_initialized": false,
+    "pre_ray_validation_passed": true
+  },
+  "data_reuse": {
+    "scope": "Reuse byte-identical prepared data; no generation or training",
+    "source": "/mnt/tidalfs-bdsz01/dataset/llm_dataset/zkn_data/fht_data/OPD-State/runs/native-rollout-implementation/fresh-math-data-v2",
+    "default": "/mnt/tidalfs-bdsz01/dataset/llm_dataset/zkn_data/fht_data/OPD-State/runs/native-data/math-full",
+    "files_sha256": {
+      "manifest.json": "1b7df20867351f99c10ffa7cb8c4ebf5921f2552abdad7efa755a80763222e96",
+      "ordered.parquet": "e0e309312b17a7b0e3e39af09543f6200d873e715fa0f341e11548e6b7fef27b",
+      "prompts.jsonl": "87f38b721da6896343e040017427c090dd5e4209266a74c8e3687d6a8d2a0620"
+    },
+    "unique_prompts": 17235,
+    "prompt_cap": 1024
+  },
+  "limitations": [
+    "New default entry has not launched a GPU training; the existing formal runs use the same data bytes through explicit manifests"
+  ]
+}

@@ -79,6 +79,8 @@ current 与 initial 的 λ=0.5 原生 fusion 均完成两步四卡更新和九�
 
 [完整题库生成器](../../../../data/prep/build_fresh_math_data.py)按实际 token IDs 去重，剔除所有答案冲突题，独立于训练步数和 batch 大小。DAPO 的 17,917 行在 1,024 token 上限下过滤 8 行，去重 662 条额外记录，再移除 12 个答案冲突的唯一 prompt，得到 17,235 题。真实 RLHFDataset 和随机 sampler 已核对该行数，batch 64 时每 epoch 269 批、末尾 19 行按现有 drop-last 规则省略；前五十批恰好消费 3,200 道不同题，后续 epoch 重新打乱全题库。
 
+默认入口现已对齐上述完整清单：`math_native.sh` 在未显式指定数据时绑定 `runs/native-data/math-full/manifest.json`，缺少准备产物时在下游训练启动前退出；显式 `TRAIN_FILES` 保留工程场景，显式 `NATIVE_DATA_MANIFEST` 继续绑定对应 Parquet。四项真实 Bash 入口检查覆盖默认值、缺失前置条件、带空格路径及覆盖优先级；实际 Hydra dry-run 和 pre-Ray 检查验证本机默认池为 17,235 题、tokenizer/模板/cap/文件哈希匹配，未初始化 CUDA。证据见[入口验收](../../../../docs/experiment/results/native-rollout/native-data-default-cpu.json)。
+
 访问次数现在按题目内容而不是原始行号累加，原始行 ID 另存。相同题目即使出现在不同数据行，也使用递增 visit 重新采样；验证响应计数与训练 visit 分离。正式运行可通过 `NATIVE_DATA_MANIFEST` 绑定数据、词表/模板、prompt 上限和文件哈希。新原生路径暂不提供无偏 top-k tail 所需的已核验行为分数，显式拒绝该组合；历史 `policy=null` 路径继续可用。
 
 ### 目标与算法含义
