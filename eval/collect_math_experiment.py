@@ -1,4 +1,4 @@
-"""Audit completed math runs and export compact, independently recomputed results.
+"""Audit final math runs or completed validation prefixes of a live run.
 
 Raw responses remain in the ignored run directory. This collector needs only the
 standard library; it imports the exact estimator directly from its source file.
@@ -35,11 +35,19 @@ def question_identity(row):
     return hashlib.sha256(canonical.encode()).hexdigest()
 
 
-def read_steps(log):
-    text = re.sub(r"\x1b\[[0-9;]*[A-Za-z]", "", log.read_text())
+def parse_steps(text, *, through_step=None):
+    # Match Path.read_text() universal-newline behavior while hashing the
+    # original bytes separately, including tqdm carriage returns.
+    text = text.replace("\r\n", "\n").replace("\r", "\n")
+    if through_step is not None:
+        # A live writer can be partway through a later training row.
+        text = text[: text.rfind("\n") + 1]
+    text = re.sub(r"\x1b\[[0-9;]*[A-Za-z]", "", text)
     rows = {}
     for match in re.finditer(r"step:(\d+) - ([^\n]*)", text):
         step = int(match[1])
+        if through_step is not None and step > through_step:
+            continue
         values = {key: float(value) for key, value in re.findall(r"([\w/@.()-]+):(-?[0-9.eE+\-]+)", match[2])}
         if not values or not all(math.isfinite(v) for v in values.values()):
             raise ValueError(f"Invalid training metrics at step {step}")
@@ -47,6 +55,10 @@ def read_steps(log):
             raise ValueError(f"Duplicate training log row at step {step}")
         rows[step] = {"step": step, **values}
     return text, rows
+
+
+def read_steps(log):
+    return parse_steps(log.read_text())
 
 
 def write_csv(path, rows):
@@ -58,21 +70,32 @@ def write_csv(path, rows):
         writer.writerows(rows)
 
 
-def collect(run, output, *, steps, interval, require_full=True):
+def collect(run, output, *, steps, interval, require_full=True, snapshot=False):
     run, output = Path(run).resolve(), Path(output).resolve()
+    if steps < 1 or interval < 1 or (snapshot and steps % interval):
+        raise ValueError("Snapshot steps must be positive completed validation intervals")
+    if snapshot and output.exists() and any(output.iterdir()):
+        raise FileExistsError("Use a fresh output directory for each immutable snapshot")
     logs = list((run / "logs").glob("*.log"))
     if len(logs) != 1:
         raise ValueError(f"Expected exactly one training log under {run}/logs")
-    text, training = read_steps(logs[0])
+    observed_log = logs[0].read_bytes()
+    if snapshot:
+        observed_log = observed_log[: observed_log.rfind(b"\n") + 1]
+    text, training = parse_steps(observed_log.decode(), through_step=steps if snapshot else None)
     if set(training) != set(range(1, steps + 1)):
         raise ValueError(f"Training log does not contain exactly steps 1..{steps}")
-    if "Final validation metrics:" not in text:
+    if not snapshot and "Final validation metrics:" not in text:
         raise ValueError("Run has no final validation success marker")
     if list(run.glob("checkpoints/**/global_step_*")):
         raise ValueError("Run unexpectedly contains saved checkpoints")
     revision = (run / "source/COMMIT").read_text().strip()
     required = set(range(interval, steps + 1, interval)) | {steps}
     paths = {int(path.stem): path for path in (run / "validation").glob("*.jsonl")}
+    if snapshot:
+        # Later JSONL files may still be open; only committed training rows
+        # through the requested validation step authorize reading responses.
+        paths = {step: path for step, path in paths.items() if step <= steps}
     if set(paths) != required:
         raise ValueError(f"Validation steps mismatch: {sorted(paths)} != {sorted(required)}")
     output.mkdir(parents=True, exist_ok=True)
@@ -112,7 +135,7 @@ def collect(run, output, *, steps, interval, require_full=True):
         }
         timeseries.append({"step": step, **metrics})
     # Keep each artifact below 1,000 lines, including multi-epoch experiments.
-    train_rows = list(training.values())
+    train_rows = [training[step] for step in range(1, steps + 1)]
     for start in range(0, len(train_rows), 900):
         write_csv(output / f"training-{start + 1}-{min(start + 900, steps)}.csv", train_rows[start : start + 900])
     write_csv(output / "validation-timeseries.csv", timeseries)
@@ -126,7 +149,10 @@ def collect(run, output, *, steps, interval, require_full=True):
         "full_benchmarks": require_full,
         "checkpoints_saved": False,
         "wandb_url": urls[-1] if urls else None,
-        "training_log_sha256": sha256(logs[0]),
+        "training_log_sha256": hashlib.sha256(observed_log).hexdigest(),
+        "training_log_observed_bytes": len(observed_log),
+        "collection_scope": "through_step_snapshot" if snapshot else "final_validation",
+        "final_validation_marker_verified": not snapshot,
         "collector_source_sha256": sha256(Path(__file__).resolve()),
         "validations": validations,
     }
@@ -146,10 +172,22 @@ def main():
     parser.add_argument("--steps", type=int, default=50)
     parser.add_argument("--interval", type=int, default=50)
     parser.add_argument("--smoke", action="store_true", help="Allow fewer questions, still requiring all three labels")
+    parser.add_argument(
+        "--snapshot",
+        action="store_true",
+        help="Audit only through --steps; require its complete validation but not run termination",
+    )
     args = parser.parse_args()
     print(
         json.dumps(
-            collect(args.run, args.output, steps=args.steps, interval=args.interval, require_full=not args.smoke)
+            collect(
+                args.run,
+                args.output,
+                steps=args.steps,
+                interval=args.interval,
+                require_full=not args.smoke,
+                snapshot=args.snapshot,
+            )
         )
     )
 

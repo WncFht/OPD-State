@@ -1,0 +1,10 @@
+{
+  "run": "runs/rollout-sources/math-student-online-50steps-eval16-20261018-044021",
+  "questions": 570,
+  "responses": 9120,
+  "training_steps": 50,
+  "validation_record_matches_existing_archive": true,
+  "training_csv_byte_identical": true,
+  "snapshot_and_final_scopes_distinct": true,
+  "collector_sha256": "fa450fe4d75a8731f5142138f860f89dd49bc0d3c23df96416584ab2dde6a213"
+}
