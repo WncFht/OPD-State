@@ -1,0 +1,73 @@
+{
+  "schema": "validation-kl-full-gate-cpu-v1",
+  "scope": "CPU coverage/resource audit and complete input preparation only; no full-scale neural GPU scores or timing measured",
+  "base_commit": "67d8b07219d1736c7055eee24e7f060ff277bc6c",
+  "source_kind": "worktree_file_hashes",
+  "source_sha256": {
+    "eval/collect_validation_kl.py": "7bbea3afa4bd3bd60d252dfd4c5148aa0e4b5f2a736b7dc5067144fbf18c1900",
+    "eval/run_validation_kl_gate.py": "fd2b49e6dd7a5ac6b89ab28b1f899b989ee56a3b91b665200d54290ebb0a2daf",
+    "scripts/tests/test_validation_kl_collection.py": "dae77d6060e68a24db3e80f77738c58f729a9e9f7bf716133e680093be7df32a"
+  },
+  "tests": {
+    "collection_and_gate_methods": 9,
+    "synthetic_complete_main_responses": 9120,
+    "synthetic_fixed_bank_responses": 180,
+    "synthetic_main_effective_positions": 18240,
+    "synthetic_vocabulary": 256,
+    "synthetic_scope": "Actual producer reductions with constructed two-token records; not inference outputs"
+  },
+  "actual_complete_inputs": {
+    "scope": "Actual complete validation Parquet files; CPU metadata/data_source and content checks, no GPU",
+    "files": [
+      {
+        "benchmark": "MATH-500",
+        "rows": 500,
+        "sha256": "49e1b2c7bddd84791f38287bcdd4a99639c599e699d5906c238c74d0b31ccf8c"
+      },
+      {
+        "benchmark": "AMC23",
+        "rows": 40,
+        "sha256": "02389cd00016eb8330134f4fe4fb47bb6fadf0c57b19af48aafd2d115c798072"
+      },
+      {
+        "benchmark": "AIME25",
+        "rows": 30,
+        "sha256": "3fcf0118e87348af9a1c996438aa5fb00e91c4df5a5a00fe29a0c909886075b6"
+      }
+    ]
+  },
+  "protocol": {
+    "gpus": [0, 1, 2, 3],
+    "training_steps": 2,
+    "training_global_batch": 8,
+    "training_response_cap": 64,
+    "purpose": "engineering full-evaluation scaling, not 50-step quality comparison",
+    "validation_questions": 570,
+    "validation_samples_per_question": 16,
+    "validation_response_cap": 31744,
+    "validation_temperature": 0.7,
+    "validation_top_p": 0.9,
+    "fixed_bank_questions": 90,
+    "fixed_bank_sources": 2,
+    "responses_total": 9300,
+    "scoring_temperature": 1,
+    "effective_vocab_size": 151665,
+    "position_chunk_size": 128,
+    "vocab_chunk_size": 8192,
+    "checkpoint_saved": false,
+    "wandb_project": "OPD-State"
+  },
+  "gates": [
+    "Complete original 500/40/30 Parquet hashes and final student version",
+    "Every effective validation position and the exact shared fixed bank",
+    "Independent question-cluster bootstrap and same final W&B history row",
+    "Scoring-phase sampled GPU coverage separated from whole-run peaks",
+    "Raw report/tokens/telemetry hashes and canonical native-acceptance identity",
+    "Completed-run audit-only path never relaunches training"
+  ],
+  "pending": [
+    "Real bank generation and long prerequisite",
+    "Complete full-scale four-GPU run and independent verification",
+    "Actual longest response/context coverage and resource measurements"
+  ]
+}

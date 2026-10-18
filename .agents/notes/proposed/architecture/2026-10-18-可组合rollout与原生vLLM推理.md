@@ -728,6 +728,8 @@ $$
 
 真实[四卡 KL canary](../../../../docs/experiment/results/native-rollout/validation-kl-canary/kl-short-gpu.json)固定 f1bcea0：两次更新后对最终 student2 的九十六条原生验证响应逐有效位置评分，共 12,288 个位置。独立 artifact 审计与 W&B 最终行 110 项指标核对通过，生成和准确率采集保持原路径；评分 wall time 5.955 s，四 worker 调用各约 5.47 s，阶段整卡采样约 8.1 GiB，之后 GPU 释放并恢复原矩阵。该证据不覆盖长上下文、完整 570×16 或固定 bank；相关门槛继续保留。调用时间含通信、参数恢复与框架开销，不能解释成纯 head kernel 吞吐。
 
+完整规模验收增加 `eval/run_validation_kl_gate.py` 和 `eval/collect_validation_kl.py`，等待真实 bank/长响应前置验收后独立执行。两次 B8、64-token 工程更新后，以原准确率采样、31,744 cap 验证完整 500/40/30 题×16；主指标对 9,120 条响应的全部有效位置评分，另算固定 bank 的 180 条轨迹，不把 bank 选中的九十题当成完整验证。核对最终版本、完整词表、同一 bank、输入哈希、逐题 bootstrap 与 W&B 最终行；评分阶段的整卡采样和 worker 分项单列，缺少阶段采样时不宣称显存覆盖。归档保留原始报告/输入校验值与每类实际长度范围；`--audit-only` 可重试归档而不重新训练。[九项 CPU 检查](../../../../docs/experiment/results/native-rollout/validation-kl-full-cpu.json)包括完整 9,120+180 条合成记录、缺失采样、错误版本/输入/范围及 CLI 计划；真实三个 Parquet 的行数、data_source 和文件哈希也已核对。合成记录不是模型输出，完整规模 GPU 数值与资源结论仍待实测；这两步验收也不替代五十步质量对照。
+
 ### 修改范围与实施顺序
 
 以下路径列出修改归属；已建立的策略、执行器、模型池与协调器继续接受端到端验收。

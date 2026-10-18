@@ -930,13 +930,13 @@ Teacher 组训练源码固定于 `350a286be0d586f04e4cd0b0e89624a336b17a81`，�
 
 ### 验证长度与 KL 的开发验收
 
-开发源码的 `_validate` 已接入有效 token 长度与 p50/p90/p95、EOS/非 EOS 截断、答案解析、每题答案多样性、重复 4-gram，以及正确/错误响应的长度分布。DP padding 去除后再收集，逐响应保存原始 finish/stop reason 与最终 student 版本，整轮按响应汇总，避免平均不等大 batch 的均值。EOS=PAD 与 EOS 恰在 cap 时仍计入有效长度。真实 DataProto 重排、实际验证与合并方法的 CPU 检查通过，尚无该新增 hook 的四卡验收。
+开发源码的 `_validate` 已接入有效 token 长度与 p50/p90/p95、EOS/非 EOS 截断、答案解析、每题答案多样性、重复 4-gram，以及正确/错误响应的长度分布。DP padding 去除后再收集，逐响应保存原始 finish/stop reason 与最终 student 版本，整轮按响应汇总，避免平均不等大 batch 的均值。EOS=PAD 与 EOS 恰在 cap 时仍计入有效长度。真实 DataProto 重排、实际验证与合并方法的 CPU 检查通过；该链路已有下文的四卡短响应验收，长响应与完整规模仍待验证。
 
 早期的 [KL 数值与验证链路证据](results/native-rollout/validation-metrics-cpu.json)记录七十七项原生 CPU 检查与二十六项训练环境运行检查；后者使用真实 Torch/DataProto，未运行 GPU 模型。BF16 输入、151,665 个有效词表项和 151,936 宽输出 head 在三种分块下的双向 KL/entropy 均满足相对独立 FP64 参考的绝对误差上限 $10^{-5}$；词表外 NaN 填充未参与归一化。该证据只验证数值函数与长度统计，不表示最终 student/teacher 的验证 KL 已经算出。该证据绑定 a0eb8d3，保留其实际验收范围。
 
-KL 主方案复用全部 570×16 验证响应，对全部有效位置计算完整词表散度，不另生成 student 探针；共享的 initial-student/teacher 固定 bank 用于相同状态对照。开发源码已接入可选评分 hook，`trainer.validation_kl.enabled=True` 时先休眠原生引擎，再直接读取最终 actor 与冻结 teacher。验证采样维持 temperature=0.7、top-p=0.9，累计量标注验证状态来源。KL 原始 token 与报告放在 `validation/kl/`，原准确率采集器继续只读取顶层数字 step 文件。冻结的 d59a7c3 矩阵保持原协议，已结束且未保存最终权重的运行不能仅由文本补算最终 KL。
+KL 主方案复用全部 570×16 验证响应，对全部有效位置计算完整词表散度，不另生成 student 探针；共享的 initial-student/teacher 固定 bank 用于相同状态对照。开发源码已接入可选评分 hook，`trainer.validation_kl.enabled=True` 时先休眠原生引擎，再直接读取最终 actor 与冻结 teacher。验证采样维持 temperature=0.7、top-p=0.9，累计量标注验证状态来源。KL 原始 token 与报告放在 `validation/kl/`，原准确率采集器继续只读取顶层数字 step 文件。新增[完整规模验收的 CPU 证据](results/native-rollout/validation-kl-full-cpu.json)核对真实 500/40/30 输入，并以构造的 9,120+180 条记录验证归档、范围和评分阶段资源统计；实际 GPU gate 将在两次工程更新后完整执行，仍待前置 bank/长响应验收。冻结的 d59a7c3 矩阵保持原协议，已结束且未保存最终权重的运行不能仅由文本补算最终 KL。
 
-[完整评分链路 CPU 验收](results/native-rollout/validation-scoring-cpu.json)通过七十七项原生 CPU 与四十二项训练环境运行检查，包含真实小型 Qwen2 的分块/直接前向比较、临时 hook 清理、RNG/模式/参数保持、DP 补齐和输入哈希/版本校验，以及新增诊断文件不干扰原准确率采集。[两进程 CPU FSDP 实验](results/native-rollout/validation-fsdp-cpu.json)进一步验证不同 rank 响应长度、正常参数收集、真实优化器更新后读取新 student，以及 teacher 参数不变；它使用随机初始化的小模型，不代表真实 1.5B checkpoint 或 GPU 性能。完整 bank 生成、四卡评分、长响应显存/耗时和完整数据验收仍待完成，整体实施状态见 [Agent Note](../../.agents/notes/proposed/architecture/2026-10-18-可组合rollout与原生vLLM推理.md)。
+[完整评分链路 CPU 验收](results/native-rollout/validation-scoring-cpu.json)通过七十七项原生 CPU 与四十二项训练环境运行检查，包含真实小型 Qwen2 的分块/直接前向比较、临时 hook 清理、RNG/模式/参数保持、DP 补齐和输入哈希/版本校验，以及新增诊断文件不干扰原准确率采集。[两进程 CPU FSDP 实验](results/native-rollout/validation-fsdp-cpu.json)进一步验证不同 rank 响应长度、正常参数收集、真实优化器更新后读取新 student，以及 teacher 参数不变；它使用随机初始化的小模型，不代表真实 1.5B checkpoint 或 GPU 性能。完整 bank 生成、长响应显存/耗时和完整数据四卡验收仍待完成，整体实施状态见 [Agent Note](../../.agents/notes/proposed/architecture/2026-10-18-可组合rollout与原生vLLM推理.md)。
 
 [固定前缀 bank 的 CPU 验收](results/native-rollout/prefix-bank-cpu.json)已从真实完整验证文件准备每基准三十题，共九十题，按固定 seed 的题目身份哈希排序选择，无超长题被排除。六项检查覆盖双冻结来源、准确原始 prefix、EOS、完整身份和位置权重及实际评分器读取；生成入口使用生产原生 vLLM RPC、四卡副本和冻结参数校验。当前只有输入准备与合成轨迹的 CPU 证据，真实 bank 仍待串行 GPU 生成，不能把九十个准备好的 prompt 当成已生成状态。
 
