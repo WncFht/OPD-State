@@ -2,7 +2,7 @@
 
 ## 进度与主要结果
 
-本页统一记录 math 蒸馏研究的历史缓存/融合对照和后续原生实时 rollout 矩阵。历史四组已完成五十次 student 更新和三基准 eval16；新的十五组矩阵已有当前、固定初始、teacher 三种来源完成，current/teacher fusion 也已成功退出并完成本地完整采集，结果待最终归档。固定前缀 bank 首次 GPU 尝试未通过跨接口 UUID 核验，原矩阵已恢复 initial/teacher fusion；修复后的重测、长响应和全量验证 KL 仍待串行验收，完整研究任务尚未完成。日志、逐题输出和 W&B 按各自源码/协议核对；正式运行使用物理 GPU 0–3，不保存模型 checkpoint。
+本页统一记录 math 蒸馏研究的历史缓存/融合对照和后续原生实时 rollout 矩阵。历史四组已完成五十次 student 更新和三基准 eval16；新的十五组矩阵已有当前、固定初始、teacher 来源与 current/teacher fusion 四组完成，并通过完整采集和 W&B 核验。固定前缀 bank 首次 GPU 尝试未通过跨接口 UUID 核验，原矩阵已恢复 initial/teacher fusion；修复后的重测、长响应和全量验证 KL 仍待串行验收，完整研究任务尚未完成。日志、逐题输出和 W&B 按各自源码/协议核对；正式运行使用物理 GPU 0–3，不保存模型 checkpoint。
 
 历史在线 student、teacher 轨迹、Semi-OPD、fusion 的 macro mean@16（三个基准等权平均）分别为 **64.84%、62.52%、64.59%、64.16%**。目前没有证据表明 λ=0.5 fusion 稳定提高平均正确率。四组都只有一个验证预算点，不能据此判断收敛。独立长时 Semi-OPD 已按用户要求于 2026-10-18 14:58（Asia/Shanghai）停止：完成 200 次更新，完整训练日志到第 199 步；第 50/100/150 步的 macro 分别为 **64.80%/66.92%/67.34%**，第 200 步验证中断，没有最终准确率或 checkpoint。训练队列、每小时观察器和 GPU 遥测均已退出，物理 GPU 0–3 已释放；停止状态与指标见[停止归档](results/long-semi-progress/stopped/summary.json)。
 
@@ -786,36 +786,36 @@ $$
 
 正式矩阵已固定 d59a7c3 源码和 17,235 题清单启动，使用 `overlap` 布局，首组为 `student_fresh`。工作区后续布局修改不会进入该矩阵；待所有 run 结束、逐题结果与 W&B 核对后再形成质量结论。[同清单两步长响应验收](results/native-rollout/trainer-manifest-long/native-acceptance.json)此前以 B64、4K 响应和 CUDA Graph 完成，两步各生成 246,709/246,491 token，最终仅验证六题×16，整卡采样峰值为 50,897/50,679/49,751/50,679 MiB；该短验证不提供正式准确率结论。
 
-前三组正式运行均完成五十次更新、完整 570 题×16 最终评测和独立重评分，没有保存 checkpoint；分别见[当前来源](results/native-rollout/formal/student_fresh/native-acceptance.json)、[固定初始来源](results/native-rollout/formal/initial_student_fresh/native-acceptance.json)与[teacher 来源](results/native-rollout/formal/teacher_fresh/native-acceptance.json)验收。三组都训练并验证最终 student50，差别只在训练生成来源，各消费 3,200 道不同题；W&B 核验均确认 finished、五十条有限 loss/grad 记录及唯一 step50 验证，并绑定远端原生 policy 与本地生成 manifest。下图 Current/Initial/Teacher 分别表示三种实时生成来源，Initial 每步重新 rollout，没有复用缓存；灰色虚线与点线是外部初始 student/teacher 参考。准确率与 [pass@k](figures/native-formal/single-sources/pass-at-k.png) 按基准独立缩放，训练曲线保留原始五十步，sampled log-ratio RMS 不代表完整条件 KL。[资源图](figures/native-formal/single-sources/resources.png)单列训练、最终验证计时和整轮整卡采样峰值；[绘图审计](figures/native-formal/single-sources/audit.json)绑定输入、程序与图件哈希，准确率由逐题成功数独立重算。表中每个来源单元格按 Mean@16 / Pass@16 列出；完整指标和逐题数据保留在各目录。
+前四组正式运行均完成五十次更新、完整 570 题×16 最终评测和独立重评分，没有保存 checkpoint；分别见[当前来源](results/native-rollout/formal/student_fresh/native-acceptance.json)、[固定初始来源](results/native-rollout/formal/initial_student_fresh/native-acceptance.json)、[teacher 来源](results/native-rollout/formal/teacher_fresh/native-acceptance.json)与 [current/teacher fusion](results/native-rollout/formal/student_teacher_fusion/native-acceptance.json) 验收。四组都训练并验证最终 student50，各消费同一顺序的 3,200 道不同题；W&B 核验均确认 finished、五十条有限 loss/grad 记录及唯一 step50 验证，并绑定原生 policy 与本地生成 manifest，新增 [fusion 远端核验](results/native-rollout/formal/student_teacher_fusion/wandb-verification.json)对应 7fxvmrcv。下图 Current/Initial/Teacher 分别表示三种单模型实时来源，Fusion 是 λ=0.5 当前 student/teacher logit 融合；Initial 每步重新 rollout，没有复用缓存。灰色虚线与点线是外部初始 student/teacher 参考。准确率与 [pass@k](figures/native-formal/first-four/pass-at-k.png) 按基准独立缩放，训练曲线保留原始五十步，sampled log-ratio RMS 不代表完整条件 KL，Fusion 的 token reward 接近零也不能据此认定对齐完成。[资源图](figures/native-formal/first-four/resources.png)单列训练、最终验证计时和整轮整卡采样峰值；[绘图审计](figures/native-formal/first-four/audit.json)绑定输入、程序与图件哈希，准确率由逐题成功数独立重算。表中各设置按 Mean@16 / Pass@16 列出；完整指标和逐题数据保留在各目录。
 
-![三种实时来源训练最终 student 的完整准确率及外部模型参考](figures/native-formal/single-sources/accuracy.png)
+![四种实时生成设置训练最终 student 的完整准确率及外部模型参考](figures/native-formal/first-four/accuracy.png)
 
-![三种实时来源的训练 log-ratio RMS、reward、梯度、长度、熵与每步时间](figures/native-formal/single-sources/training.png)
+![四种实时生成设置的训练 log-ratio RMS、reward、梯度、长度、熵与每步时间](figures/native-formal/first-four/training.png)
 
-| 基准     |       题数 | 当前来源 Mean / Pass@16 | 初始来源 Mean / Pass@16 | Teacher 来源 Mean / Pass@16 |
-| -------- | ---------: | ----------------------: | ----------------------: | --------------------------: |
-| MATH-500 |        500 |         86.59% / 96.40% |         86.61% / 96.40% |             86.05% / 95.40% |
-| AMC23    |         40 |         78.59% / 95.00% |         77.97% / 97.50% |             77.66% / 95.00% |
-| AIME25   |         30 |         27.71% / 53.33% |         27.92% / 46.67% |             27.71% / 53.33% |
-| Macro    | 三基准等权 |         64.30% / 81.58% |         64.17% / 80.19% |             63.80% / 81.24% |
+| 基准     |       题数 | 当前来源 Mean / Pass@16 | 初始来源 Mean / Pass@16 | Teacher 来源 Mean / Pass@16 | Fusion 0.5 Mean / Pass@16 |
+| -------- | ---------: | ----------------------: | ----------------------: | --------------------------: | ------------------------: |
+| MATH-500 |        500 |         86.59% / 96.40% |         86.61% / 96.40% |             86.05% / 95.40% |           86.30% / 95.80% |
+| AMC23    |         40 |         78.59% / 95.00% |         77.97% / 97.50% |             77.66% / 95.00% |           75.78% / 95.00% |
+| AIME25   |         30 |         27.71% / 53.33% |         27.92% / 46.67% |             27.71% / 53.33% |           29.58% / 50.00% |
+| Macro    | 三基准等权 |         64.30% / 81.58% |         64.17% / 80.19% |             63.80% / 81.24% |           63.89% / 80.27% |
 
-[逐题配对比较](results/native-rollout/formal/comparison/analysis.json)按 benchmark 分层、对同题成组 bootstrap 5,000 次。初始来源减当前来源的 macro mean@16 差为 −0.131 个百分点，95% 题目 bootstrap 区间为 [−1.695, 1.336] 个百分点。Teacher 来源减当前来源差为 −0.492 个百分点，区间为 [−1.997, 0.904] 个百分点。这只描述题目选择不确定性，不覆盖训练 seed 变化；当前不据此给来源排序，也不把五十步当作收敛证明。
+[逐题配对比较](results/native-rollout/formal/comparison/analysis.json)按 benchmark 分层、对同题成组 bootstrap 5,000 次。初始来源减当前来源的 macro mean@16 差为 −0.131 个百分点，95% 题目 bootstrap 区间为 [−1.695, 1.336] 个百分点。Teacher 来源减当前来源差为 −0.492 个百分点，区间为 [−1.997, 0.904] 个百分点；Fusion 0.5 减当前来源为 −0.408 个百分点，区间 [−1.779, 0.998] 个百分点。三个区间均跨零；它们只描述题目选择不确定性，不覆盖训练 seed 变化，不能据此给设置排序，也不把五十步当作收敛证明。
 
-| 计量项                      |                    当前来源 |                固定初始来源 |                Teacher 来源 |
-| --------------------------- | --------------------------: | --------------------------: | --------------------------: |
-| 有效训练响应 token          |                  12,370,198 |                  12,484,215 |                  12,473,493 |
-| Native generate / s         |                      825.85 |                      833.52 |                      834.31 |
-| Native 生成吞吐 / token·s⁻¹ |                   14,978.74 |                   14,977.73 |                   14,950.76 |
-| Student 重新评分 / s        |                      106.87 |                       86.62 |                       87.94 |
-| Teacher 评分 / s            |                       99.54 |                       96.95 |                       97.03 |
-| Actor 更新 / s              |                      256.28 |                      222.68 |                      223.19 |
-| 训练侧权重发布 / s          |                  121.303793 |                    0.000605 |                    0.000625 |
-| 五十步训练 timer / min      |                       24.65 |                       21.96 |                       22.02 |
-| 最终验证 timer / min        |                       63.74 |                       63.58 |                       68.82 |
-| 运行计时 / min              |                       92.16 |                       89.35 |                       94.72 |
-| GPU 0/1/2/3 整卡峰值 / MiB  | 50,369/50,759/48,905/50,759 | 54,037/54,109/54,059/54,071 | 54,917/54,943/55,043/54,071 |
+| 计量项                      |                    当前来源 |                固定初始来源 |                Teacher 来源 |                  Fusion 0.5 |
+| --------------------------- | --------------------------: | --------------------------: | --------------------------: | --------------------------: |
+| 有效训练响应 token          |                  12,370,198 |                  12,484,215 |                  12,473,493 |                  12,439,895 |
+| Native generate / s         |                      825.85 |                      833.52 |                      834.31 |                    1,414.86 |
+| Native 生成吞吐 / token·s⁻¹ |                   14,978.74 |                   14,977.73 |                   14,950.76 |                    8,792.34 |
+| Student 重新评分 / s        |                      106.87 |                       86.62 |                       87.94 |                       95.52 |
+| Teacher 评分 / s            |                       99.54 |                       96.95 |                       97.03 |                       99.67 |
+| Actor 更新 / s              |                      256.28 |                      222.68 |                      223.19 |                      249.86 |
+| 训练侧权重发布 / s          |                  121.303793 |                    0.000605 |                    0.000625 |                  132.897414 |
+| 五十步训练 timer / min      |                       24.65 |                       21.96 |                       22.02 |                       34.66 |
+| 最终验证 timer / min        |                       63.74 |                       63.58 |                       68.82 |                       66.96 |
+| 运行计时 / min              |                       92.16 |                       89.35 |                       94.72 |                      105.77 |
+| GPU 0/1/2/3 整卡峰值 / MiB  | 50,369/50,759/48,905/50,759 | 54,037/54,109/54,059/54,071 | 54,917/54,943/55,043/54,071 | 51,187/49,903/50,249/50,969 |
 
-当前与初始两组使用相同 d59a7c3、数据清单、四卡/B64、4K cap、训练采样与显存预算，原生生成吞吐在这两次运行中接近。训练 step 净差 161.73 s，其中权重发布差 121.30 s，约占 75%；固定初始来源仍在每步实时生成，未减少 rollout 次数。其余差异包含 student 评分和 actor 更新，尚未做因果归因。Native generate 嵌套于生成计时，不能重复相加；训练 step 与最终验证 timer 独立，两组各约 3.8 min 的运行残差尚未细分，源码归档复制在运行计时之外。整卡峰值也不等于 KV 容量，不能与历史不同题库/采样/预算的运行直接计算架构加速比。
+当前与初始两组使用相同 d59a7c3、数据清单、四卡/B64、4K cap、训练采样与显存预算，原生生成吞吐在这两次运行中接近。训练 step 净差 161.73 s，其中权重发布差 121.30 s，约占 75%；固定初始来源仍在每步实时生成，未减少 rollout 次数。其余差异包含 student 评分和 actor 更新，尚未做因果归因。Fusion 0.5 的原生生成吞吐为当前单模型的约 58.7%，五十步训练 timer 多约 10.01 min；代码包含两套 backbone/LM head，但这些 wall 观察没有把 kernel、调度与通信单独归因。Native generate 嵌套于生成计时，不能重复相加；训练 step 与最终验证 timer 独立，源码归档复制在运行计时之外。Fusion 整轮最高整卡采样为 51,187 MiB，不能据此视作占满设备或代表 KV 容量；设备容量与历史不同预算的运行也不能直接用于架构加速比。
 
 [训练与评测题面核验](results/native-rollout/formal/student_fresh/train-test-overlap.json)确认全训练池与评测集存在九道规范化 user 题面精确重合：MATH-500 四道、AMC23 五道、AIME25 零道。首组实际训练消费其中三道 MATH 题；排除后共 567 题，macro mean@16 为 64.2989%。保守排除全部九道后共 561 题，macro mean@16 为 64.1634%。完整 570 题结果继续保留，后续每组按实际消费记录附加这两种敏感性分析；这些检查不覆盖语义近重复或预训练数据暴露。
 

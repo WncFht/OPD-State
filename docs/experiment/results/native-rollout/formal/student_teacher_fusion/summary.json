@@ -1,0 +1,18 @@
+{
+  "run_name": "student_teacher_fusion",
+  "run_directory": "/mnt/tidalfs-bdsz01/dataset/llm_dataset/zkn_data/fht_data/OPD-State/runs/native-formal-suite-20261018/student_teacher_fusion",
+  "source_commit": "d59a7c3463244ef7533ca4acf73855e988043848",
+  "source_manifest_sha256": "dda265c9626c89ea19018c50b535a9c789d5701be6e400381c19bd5db7fde9fc",
+  "source_identity": "runtime_snapshot",
+  "training_steps": 50,
+  "samples_per_question": 16,
+  "full_benchmarks": true,
+  "checkpoints_saved": false,
+  "wandb_url": "https://wandb.ai/wncfht/OPD-State/runs/7fxvmrcv",
+  "training_log_sha256": "680ebde09dcc9333a4e7bda23b485742f89c5f4d4e346b14da89d745e26482e2",
+  "training_log_observed_bytes": 417686,
+  "collection_scope": "final_validation",
+  "final_validation_marker_verified": true,
+  "collector_source_sha256": "d55fdb5753b7557a445c8584830f41fdbb3ca450ae53fa888791f2cdf81899fb",
+  "validation_steps": [50]
+}
