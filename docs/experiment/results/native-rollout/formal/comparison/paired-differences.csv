@@ -1,0 +1,6 @@
+source,reference,benchmark,difference_mean@16,question_bootstrap_low,question_bootstrap_high
+initial_student_fresh,student_fresh,MATH-500,0.00025,-0.00625,0.006875
+initial_student_fresh,student_fresh,AMC23,-0.00625,-0.04375,0.028125
+initial_student_fresh,student_fresh,AIME25,0.0020833333333333333,-0.022968749999999982,0.03125
+initial_student_fresh,student_fresh,macro,-0.0013055555555555557,-0.0169515625,0.013361631944444438
+initial_student_fresh,student_fresh,micro,-0.00010964912280701756,-0.006469298245614034,0.0061403508771929825

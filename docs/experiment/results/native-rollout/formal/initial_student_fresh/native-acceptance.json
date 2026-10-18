@@ -1,0 +1,705 @@
+{
+  "scope": "Real 4-GPU trainer acceptance; short caps do not establish math accuracy",
+  "trainer_gpu_count": 4,
+  "resource_note": null,
+  "frozen_parameter_digests": {},
+  "training": [
+    {
+      "step": 1,
+      "responses": 64,
+      "response_tokens": 254003,
+      "generation_identities": [
+        [
+          "initial_student",
+          "/mnt/tidalfs-bdsz01/dataset/llm_dataset/zkn_data/fht_data/models/DeepSeek-R1-Distill-Qwen-1.5B",
+          "2fc42a962d3f6f5281e99686ab9a5ae32c8cb9529c8e3fd07709c5c056613f48"
+        ]
+      ],
+      "trace_sha256": "7796aaa327d93d78c347fd933713577dc99d4f71153a1bd254119c10ab734d0e"
+    },
+    {
+      "step": 2,
+      "responses": 64,
+      "response_tokens": 250035,
+      "generation_identities": [
+        [
+          "initial_student",
+          "/mnt/tidalfs-bdsz01/dataset/llm_dataset/zkn_data/fht_data/models/DeepSeek-R1-Distill-Qwen-1.5B",
+          "2fc42a962d3f6f5281e99686ab9a5ae32c8cb9529c8e3fd07709c5c056613f48"
+        ]
+      ],
+      "trace_sha256": "d5b4008ce380effc13a0c1fc5c0adaa457a80aab2c1519f00718be706fadda3e"
+    },
+    {
+      "step": 3,
+      "responses": 64,
+      "response_tokens": 253341,
+      "generation_identities": [
+        [
+          "initial_student",
+          "/mnt/tidalfs-bdsz01/dataset/llm_dataset/zkn_data/fht_data/models/DeepSeek-R1-Distill-Qwen-1.5B",
+          "2fc42a962d3f6f5281e99686ab9a5ae32c8cb9529c8e3fd07709c5c056613f48"
+        ]
+      ],
+      "trace_sha256": "f699367a43b4e501a5b9125d118c7989979af521dff79eddadf23ea062a3c98e"
+    },
+    {
+      "step": 4,
+      "responses": 64,
+      "response_tokens": 244287,
+      "generation_identities": [
+        [
+          "initial_student",
+          "/mnt/tidalfs-bdsz01/dataset/llm_dataset/zkn_data/fht_data/models/DeepSeek-R1-Distill-Qwen-1.5B",
+          "2fc42a962d3f6f5281e99686ab9a5ae32c8cb9529c8e3fd07709c5c056613f48"
+        ]
+      ],
+      "trace_sha256": "374ddae8e0bb3010f863dc1644de26e98c7f0644200038ebc4251b085e175026"
+    },
+    {
+      "step": 5,
+      "responses": 64,
+      "response_tokens": 248709,
+      "generation_identities": [
+        [
+          "initial_student",
+          "/mnt/tidalfs-bdsz01/dataset/llm_dataset/zkn_data/fht_data/models/DeepSeek-R1-Distill-Qwen-1.5B",
+          "2fc42a962d3f6f5281e99686ab9a5ae32c8cb9529c8e3fd07709c5c056613f48"
+        ]
+      ],
+      "trace_sha256": "27a7576d9909797ffb525ca6f064b298ee4804a935e5cde21bd78e8c40f491f2"
+    },
+    {
+      "step": 6,
+      "responses": 64,
+      "response_tokens": 247000,
+      "generation_identities": [
+        [
+          "initial_student",
+          "/mnt/tidalfs-bdsz01/dataset/llm_dataset/zkn_data/fht_data/models/DeepSeek-R1-Distill-Qwen-1.5B",
+          "2fc42a962d3f6f5281e99686ab9a5ae32c8cb9529c8e3fd07709c5c056613f48"
+        ]
+      ],
+      "trace_sha256": "275ed0323dfaa66baa533ffce25f396194ed2effdeb55811b5ccf019f39cd373"
+    },
+    {
+      "step": 7,
+      "responses": 64,
+      "response_tokens": 250211,
+      "generation_identities": [
+        [
+          "initial_student",
+          "/mnt/tidalfs-bdsz01/dataset/llm_dataset/zkn_data/fht_data/models/DeepSeek-R1-Distill-Qwen-1.5B",
+          "2fc42a962d3f6f5281e99686ab9a5ae32c8cb9529c8e3fd07709c5c056613f48"
+        ]
+      ],
+      "trace_sha256": "323fedb091c89007116547c301a283bf01203399d45eda7b0e00e2b2aa58fd3a"
+    },
+    {
+      "step": 8,
+      "responses": 64,
+      "response_tokens": 237113,
+      "generation_identities": [
+        [
+          "initial_student",
+          "/mnt/tidalfs-bdsz01/dataset/llm_dataset/zkn_data/fht_data/models/DeepSeek-R1-Distill-Qwen-1.5B",
+          "2fc42a962d3f6f5281e99686ab9a5ae32c8cb9529c8e3fd07709c5c056613f48"
+        ]
+      ],
+      "trace_sha256": "a9717630701dbccce2a0021bcf440676fd6a5336721f861539c91ab15cc5a1d1"
+    },
+    {
+      "step": 9,
+      "responses": 64,
+      "response_tokens": 236958,
+      "generation_identities": [
+        [
+          "initial_student",
+          "/mnt/tidalfs-bdsz01/dataset/llm_dataset/zkn_data/fht_data/models/DeepSeek-R1-Distill-Qwen-1.5B",
+          "2fc42a962d3f6f5281e99686ab9a5ae32c8cb9529c8e3fd07709c5c056613f48"
+        ]
+      ],
+      "trace_sha256": "5ce8d58759325301b8503af5fc0342b461e411c5e184470245d2ddb89e5d41bb"
+    },
+    {
+      "step": 10,
+      "responses": 64,
+      "response_tokens": 252483,
+      "generation_identities": [
+        [
+          "initial_student",
+          "/mnt/tidalfs-bdsz01/dataset/llm_dataset/zkn_data/fht_data/models/DeepSeek-R1-Distill-Qwen-1.5B",
+          "2fc42a962d3f6f5281e99686ab9a5ae32c8cb9529c8e3fd07709c5c056613f48"
+        ]
+      ],
+      "trace_sha256": "9385d9055db31b4db38fa1eef5a95f2e4f43a815a57a3acb93b48ebcf8374b58"
+    },
+    {
+      "step": 11,
+      "responses": 64,
+      "response_tokens": 255690,
+      "generation_identities": [
+        [
+          "initial_student",
+          "/mnt/tidalfs-bdsz01/dataset/llm_dataset/zkn_data/fht_data/models/DeepSeek-R1-Distill-Qwen-1.5B",
+          "2fc42a962d3f6f5281e99686ab9a5ae32c8cb9529c8e3fd07709c5c056613f48"
+        ]
+      ],
+      "trace_sha256": "b8f58029e5271862bdbb6ed3f67f363880a251a69540566352ec82dec837fe0f"
+    },
+    {
+      "step": 12,
+      "responses": 64,
+      "response_tokens": 252110,
+      "generation_identities": [
+        [
+          "initial_student",
+          "/mnt/tidalfs-bdsz01/dataset/llm_dataset/zkn_data/fht_data/models/DeepSeek-R1-Distill-Qwen-1.5B",
+          "2fc42a962d3f6f5281e99686ab9a5ae32c8cb9529c8e3fd07709c5c056613f48"
+        ]
+      ],
+      "trace_sha256": "78889cc009725f5a550080d572407c9481f4e41ebaa44f688f1e8dcae9b011ce"
+    },
+    {
+      "step": 13,
+      "responses": 64,
+      "response_tokens": 246904,
+      "generation_identities": [
+        [
+          "initial_student",
+          "/mnt/tidalfs-bdsz01/dataset/llm_dataset/zkn_data/fht_data/models/DeepSeek-R1-Distill-Qwen-1.5B",
+          "2fc42a962d3f6f5281e99686ab9a5ae32c8cb9529c8e3fd07709c5c056613f48"
+        ]
+      ],
+      "trace_sha256": "ddb75764d5903a2631a6165071aaafc8914d915e69af10f1a34b084f99da3e85"
+    },
+    {
+      "step": 14,
+      "responses": 64,
+      "response_tokens": 254789,
+      "generation_identities": [
+        [
+          "initial_student",
+          "/mnt/tidalfs-bdsz01/dataset/llm_dataset/zkn_data/fht_data/models/DeepSeek-R1-Distill-Qwen-1.5B",
+          "2fc42a962d3f6f5281e99686ab9a5ae32c8cb9529c8e3fd07709c5c056613f48"
+        ]
+      ],
+      "trace_sha256": "944f4568afd6869a30f0085be385de07ec7475ec788530b78b3ea4ca857140fa"
+    },
+    {
+      "step": 15,
+      "responses": 64,
+      "response_tokens": 249213,
+      "generation_identities": [
+        [
+          "initial_student",
+          "/mnt/tidalfs-bdsz01/dataset/llm_dataset/zkn_data/fht_data/models/DeepSeek-R1-Distill-Qwen-1.5B",
+          "2fc42a962d3f6f5281e99686ab9a5ae32c8cb9529c8e3fd07709c5c056613f48"
+        ]
+      ],
+      "trace_sha256": "e824ae88174fc9dc0c2fa55646c2e4a15ea4e0ef141a5912aed4c01fd25e2658"
+    },
+    {
+      "step": 16,
+      "responses": 64,
+      "response_tokens": 250614,
+      "generation_identities": [
+        [
+          "initial_student",
+          "/mnt/tidalfs-bdsz01/dataset/llm_dataset/zkn_data/fht_data/models/DeepSeek-R1-Distill-Qwen-1.5B",
+          "2fc42a962d3f6f5281e99686ab9a5ae32c8cb9529c8e3fd07709c5c056613f48"
+        ]
+      ],
+      "trace_sha256": "6bebe1263564da544d5282ee0385c5743b90c76eea5a7cff543355cbd4b0afc0"
+    },
+    {
+      "step": 17,
+      "responses": 64,
+      "response_tokens": 252281,
+      "generation_identities": [
+        [
+          "initial_student",
+          "/mnt/tidalfs-bdsz01/dataset/llm_dataset/zkn_data/fht_data/models/DeepSeek-R1-Distill-Qwen-1.5B",
+          "2fc42a962d3f6f5281e99686ab9a5ae32c8cb9529c8e3fd07709c5c056613f48"
+        ]
+      ],
+      "trace_sha256": "6f8f05599d79dbd56bdbc4c4cb10054791aaf14bc136cfa7005a195a3627395d"
+    },
+    {
+      "step": 18,
+      "responses": 64,
+      "response_tokens": 250600,
+      "generation_identities": [
+        [
+          "initial_student",
+          "/mnt/tidalfs-bdsz01/dataset/llm_dataset/zkn_data/fht_data/models/DeepSeek-R1-Distill-Qwen-1.5B",
+          "2fc42a962d3f6f5281e99686ab9a5ae32c8cb9529c8e3fd07709c5c056613f48"
+        ]
+      ],
+      "trace_sha256": "c3b08d008e4e4e732967c099162bbe3c8b7344a43828b5596afb07c58ab02d72"
+    },
+    {
+      "step": 19,
+      "responses": 64,
+      "response_tokens": 239421,
+      "generation_identities": [
+        [
+          "initial_student",
+          "/mnt/tidalfs-bdsz01/dataset/llm_dataset/zkn_data/fht_data/models/DeepSeek-R1-Distill-Qwen-1.5B",
+          "2fc42a962d3f6f5281e99686ab9a5ae32c8cb9529c8e3fd07709c5c056613f48"
+        ]
+      ],
+      "trace_sha256": "4826dbb66c76a6c3d0b94c40bf1fa86355ae0ac6aacaab94cc52813ca6960993"
+    },
+    {
+      "step": 20,
+      "responses": 64,
+      "response_tokens": 249952,
+      "generation_identities": [
+        [
+          "initial_student",
+          "/mnt/tidalfs-bdsz01/dataset/llm_dataset/zkn_data/fht_data/models/DeepSeek-R1-Distill-Qwen-1.5B",
+          "2fc42a962d3f6f5281e99686ab9a5ae32c8cb9529c8e3fd07709c5c056613f48"
+        ]
+      ],
+      "trace_sha256": "b104d0ad93ef5b9e62da1da17905a6dfbdb7d6e5f24fdf3fb536d9f6c3e1912b"
+    },
+    {
+      "step": 21,
+      "responses": 64,
+      "response_tokens": 247969,
+      "generation_identities": [
+        [
+          "initial_student",
+          "/mnt/tidalfs-bdsz01/dataset/llm_dataset/zkn_data/fht_data/models/DeepSeek-R1-Distill-Qwen-1.5B",
+          "2fc42a962d3f6f5281e99686ab9a5ae32c8cb9529c8e3fd07709c5c056613f48"
+        ]
+      ],
+      "trace_sha256": "389abb5346053231b1e68531e39d6ac20f9a07482f20c38291ad73e4e5999c24"
+    },
+    {
+      "step": 22,
+      "responses": 64,
+      "response_tokens": 250088,
+      "generation_identities": [
+        [
+          "initial_student",
+          "/mnt/tidalfs-bdsz01/dataset/llm_dataset/zkn_data/fht_data/models/DeepSeek-R1-Distill-Qwen-1.5B",
+          "2fc42a962d3f6f5281e99686ab9a5ae32c8cb9529c8e3fd07709c5c056613f48"
+        ]
+      ],
+      "trace_sha256": "746822895ded937667183f2cd0aa6d0bbd9e4103e491e92666b5d40e67ac1795"
+    },
+    {
+      "step": 23,
+      "responses": 64,
+      "response_tokens": 253245,
+      "generation_identities": [
+        [
+          "initial_student",
+          "/mnt/tidalfs-bdsz01/dataset/llm_dataset/zkn_data/fht_data/models/DeepSeek-R1-Distill-Qwen-1.5B",
+          "2fc42a962d3f6f5281e99686ab9a5ae32c8cb9529c8e3fd07709c5c056613f48"
+        ]
+      ],
+      "trace_sha256": "31a44fef8dd548333380c0d04fcc3786932be035676a285eb6078516239ffba1"
+    },
+    {
+      "step": 24,
+      "responses": 64,
+      "response_tokens": 256401,
+      "generation_identities": [
+        [
+          "initial_student",
+          "/mnt/tidalfs-bdsz01/dataset/llm_dataset/zkn_data/fht_data/models/DeepSeek-R1-Distill-Qwen-1.5B",
+          "2fc42a962d3f6f5281e99686ab9a5ae32c8cb9529c8e3fd07709c5c056613f48"
+        ]
+      ],
+      "trace_sha256": "2c21b8e69d0cab39ff209eeaaa9bb37b6fb1aff32dd7348cc1327e23d4e95d2a"
+    },
+    {
+      "step": 25,
+      "responses": 64,
+      "response_tokens": 255283,
+      "generation_identities": [
+        [
+          "initial_student",
+          "/mnt/tidalfs-bdsz01/dataset/llm_dataset/zkn_data/fht_data/models/DeepSeek-R1-Distill-Qwen-1.5B",
+          "2fc42a962d3f6f5281e99686ab9a5ae32c8cb9529c8e3fd07709c5c056613f48"
+        ]
+      ],
+      "trace_sha256": "641b511fbccbbe5e22ca1d2c211fcb8b78ba753092549971d21aa25e257c42d5"
+    },
+    {
+      "step": 26,
+      "responses": 64,
+      "response_tokens": 250733,
+      "generation_identities": [
+        [
+          "initial_student",
+          "/mnt/tidalfs-bdsz01/dataset/llm_dataset/zkn_data/fht_data/models/DeepSeek-R1-Distill-Qwen-1.5B",
+          "2fc42a962d3f6f5281e99686ab9a5ae32c8cb9529c8e3fd07709c5c056613f48"
+        ]
+      ],
+      "trace_sha256": "c6454f9840a8d4f7e389ca91dfc9471fc0c276ccd99a46f3d37bc529e8e07c88"
+    },
+    {
+      "step": 27,
+      "responses": 64,
+      "response_tokens": 255720,
+      "generation_identities": [
+        [
+          "initial_student",
+          "/mnt/tidalfs-bdsz01/dataset/llm_dataset/zkn_data/fht_data/models/DeepSeek-R1-Distill-Qwen-1.5B",
+          "2fc42a962d3f6f5281e99686ab9a5ae32c8cb9529c8e3fd07709c5c056613f48"
+        ]
+      ],
+      "trace_sha256": "76e97b43093f3ef757ee91f425c78544ed54861f2346137254aceb9eb304083f"
+    },
+    {
+      "step": 28,
+      "responses": 64,
+      "response_tokens": 249587,
+      "generation_identities": [
+        [
+          "initial_student",
+          "/mnt/tidalfs-bdsz01/dataset/llm_dataset/zkn_data/fht_data/models/DeepSeek-R1-Distill-Qwen-1.5B",
+          "2fc42a962d3f6f5281e99686ab9a5ae32c8cb9529c8e3fd07709c5c056613f48"
+        ]
+      ],
+      "trace_sha256": "bb5698f0be33e91b4753f32b85a4203d7a9db45cfacbdb891e0956f4b351436a"
+    },
+    {
+      "step": 29,
+      "responses": 64,
+      "response_tokens": 245230,
+      "generation_identities": [
+        [
+          "initial_student",
+          "/mnt/tidalfs-bdsz01/dataset/llm_dataset/zkn_data/fht_data/models/DeepSeek-R1-Distill-Qwen-1.5B",
+          "2fc42a962d3f6f5281e99686ab9a5ae32c8cb9529c8e3fd07709c5c056613f48"
+        ]
+      ],
+      "trace_sha256": "9f9d85d66c8fe5af0c4369a8b3146d3837b1028aa279ca59e36502eb49a037e9"
+    },
+    {
+      "step": 30,
+      "responses": 64,
+      "response_tokens": 236990,
+      "generation_identities": [
+        [
+          "initial_student",
+          "/mnt/tidalfs-bdsz01/dataset/llm_dataset/zkn_data/fht_data/models/DeepSeek-R1-Distill-Qwen-1.5B",
+          "2fc42a962d3f6f5281e99686ab9a5ae32c8cb9529c8e3fd07709c5c056613f48"
+        ]
+      ],
+      "trace_sha256": "1c2c347d5ec17e4bc5c23d3af923aab33571141362ab89c562e669ff23612cc8"
+    },
+    {
+      "step": 31,
+      "responses": 64,
+      "response_tokens": 255284,
+      "generation_identities": [
+        [
+          "initial_student",
+          "/mnt/tidalfs-bdsz01/dataset/llm_dataset/zkn_data/fht_data/models/DeepSeek-R1-Distill-Qwen-1.5B",
+          "2fc42a962d3f6f5281e99686ab9a5ae32c8cb9529c8e3fd07709c5c056613f48"
+        ]
+      ],
+      "trace_sha256": "8b897bdb4d4d0bc7252e4301aaac31211524fa83be53b46af4f8a0900db13819"
+    },
+    {
+      "step": 32,
+      "responses": 64,
+      "response_tokens": 247756,
+      "generation_identities": [
+        [
+          "initial_student",
+          "/mnt/tidalfs-bdsz01/dataset/llm_dataset/zkn_data/fht_data/models/DeepSeek-R1-Distill-Qwen-1.5B",
+          "2fc42a962d3f6f5281e99686ab9a5ae32c8cb9529c8e3fd07709c5c056613f48"
+        ]
+      ],
+      "trace_sha256": "2778798f75700f44f87eb66629fdef67c783e57d178cd86bba66c86effa79031"
+    },
+    {
+      "step": 33,
+      "responses": 64,
+      "response_tokens": 254648,
+      "generation_identities": [
+        [
+          "initial_student",
+          "/mnt/tidalfs-bdsz01/dataset/llm_dataset/zkn_data/fht_data/models/DeepSeek-R1-Distill-Qwen-1.5B",
+          "2fc42a962d3f6f5281e99686ab9a5ae32c8cb9529c8e3fd07709c5c056613f48"
+        ]
+      ],
+      "trace_sha256": "c02f2995c95e862f1ce4716fa7e577dbf0a4d841aafceb2e4457110cfa1e7e90"
+    },
+    {
+      "step": 34,
+      "responses": 64,
+      "response_tokens": 250992,
+      "generation_identities": [
+        [
+          "initial_student",
+          "/mnt/tidalfs-bdsz01/dataset/llm_dataset/zkn_data/fht_data/models/DeepSeek-R1-Distill-Qwen-1.5B",
+          "2fc42a962d3f6f5281e99686ab9a5ae32c8cb9529c8e3fd07709c5c056613f48"
+        ]
+      ],
+      "trace_sha256": "44da360725a7126458c55722aec5305213db34cd8359293e3563175c27af9c8b"
+    },
+    {
+      "step": 35,
+      "responses": 64,
+      "response_tokens": 249318,
+      "generation_identities": [
+        [
+          "initial_student",
+          "/mnt/tidalfs-bdsz01/dataset/llm_dataset/zkn_data/fht_data/models/DeepSeek-R1-Distill-Qwen-1.5B",
+          "2fc42a962d3f6f5281e99686ab9a5ae32c8cb9529c8e3fd07709c5c056613f48"
+        ]
+      ],
+      "trace_sha256": "fb7d8049726cba5f3aa9c200bf9df5d19c8de8637627fae711d5bbd664821ccf"
+    },
+    {
+      "step": 36,
+      "responses": 64,
+      "response_tokens": 255658,
+      "generation_identities": [
+        [
+          "initial_student",
+          "/mnt/tidalfs-bdsz01/dataset/llm_dataset/zkn_data/fht_data/models/DeepSeek-R1-Distill-Qwen-1.5B",
+          "2fc42a962d3f6f5281e99686ab9a5ae32c8cb9529c8e3fd07709c5c056613f48"
+        ]
+      ],
+      "trace_sha256": "8db0ad4848b2e6db2d0e629e5999faf7e51a44dfdac5c38b88e264f2e219f5eb"
+    },
+    {
+      "step": 37,
+      "responses": 64,
+      "response_tokens": 247638,
+      "generation_identities": [
+        [
+          "initial_student",
+          "/mnt/tidalfs-bdsz01/dataset/llm_dataset/zkn_data/fht_data/models/DeepSeek-R1-Distill-Qwen-1.5B",
+          "2fc42a962d3f6f5281e99686ab9a5ae32c8cb9529c8e3fd07709c5c056613f48"
+        ]
+      ],
+      "trace_sha256": "0c1f3ce6ba0cf9e2f676ee9cad860ebf594bd38469482d9ef89e3e09ddcf652c"
+    },
+    {
+      "step": 38,
+      "responses": 64,
+      "response_tokens": 254010,
+      "generation_identities": [
+        [
+          "initial_student",
+          "/mnt/tidalfs-bdsz01/dataset/llm_dataset/zkn_data/fht_data/models/DeepSeek-R1-Distill-Qwen-1.5B",
+          "2fc42a962d3f6f5281e99686ab9a5ae32c8cb9529c8e3fd07709c5c056613f48"
+        ]
+      ],
+      "trace_sha256": "a3887cb1b927ecda3f8e54b7ee6e181a7c6cdf7f2284f46ed4d9b2acb2ffa6c5"
+    },
+    {
+      "step": 39,
+      "responses": 64,
+      "response_tokens": 246350,
+      "generation_identities": [
+        [
+          "initial_student",
+          "/mnt/tidalfs-bdsz01/dataset/llm_dataset/zkn_data/fht_data/models/DeepSeek-R1-Distill-Qwen-1.5B",
+          "2fc42a962d3f6f5281e99686ab9a5ae32c8cb9529c8e3fd07709c5c056613f48"
+        ]
+      ],
+      "trace_sha256": "23f34b1e65a4882d89bed701f190ed6a9866cdbe10921e71563c93c3e0a5c2ff"
+    },
+    {
+      "step": 40,
+      "responses": 64,
+      "response_tokens": 249341,
+      "generation_identities": [
+        [
+          "initial_student",
+          "/mnt/tidalfs-bdsz01/dataset/llm_dataset/zkn_data/fht_data/models/DeepSeek-R1-Distill-Qwen-1.5B",
+          "2fc42a962d3f6f5281e99686ab9a5ae32c8cb9529c8e3fd07709c5c056613f48"
+        ]
+      ],
+      "trace_sha256": "93d8580c5487d7130c44db368038ab6413aeb88905a84dfef0bcf8968e0911c5"
+    },
+    {
+      "step": 41,
+      "responses": 64,
+      "response_tokens": 246636,
+      "generation_identities": [
+        [
+          "initial_student",
+          "/mnt/tidalfs-bdsz01/dataset/llm_dataset/zkn_data/fht_data/models/DeepSeek-R1-Distill-Qwen-1.5B",
+          "2fc42a962d3f6f5281e99686ab9a5ae32c8cb9529c8e3fd07709c5c056613f48"
+        ]
+      ],
+      "trace_sha256": "9ad83ea6a3b0af5073ada0c9410ae6e0530cbf047d30be0bbccdbd37760cf974"
+    },
+    {
+      "step": 42,
+      "responses": 64,
+      "response_tokens": 258534,
+      "generation_identities": [
+        [
+          "initial_student",
+          "/mnt/tidalfs-bdsz01/dataset/llm_dataset/zkn_data/fht_data/models/DeepSeek-R1-Distill-Qwen-1.5B",
+          "2fc42a962d3f6f5281e99686ab9a5ae32c8cb9529c8e3fd07709c5c056613f48"
+        ]
+      ],
+      "trace_sha256": "4d31f317ef3057e3276391969616e5fcffe9a37fc6540787f5930cdae97c7f66"
+    },
+    {
+      "step": 43,
+      "responses": 64,
+      "response_tokens": 244488,
+      "generation_identities": [
+        [
+          "initial_student",
+          "/mnt/tidalfs-bdsz01/dataset/llm_dataset/zkn_data/fht_data/models/DeepSeek-R1-Distill-Qwen-1.5B",
+          "2fc42a962d3f6f5281e99686ab9a5ae32c8cb9529c8e3fd07709c5c056613f48"
+        ]
+      ],
+      "trace_sha256": "43fb7d399725e2c110ef4eada5edd3c200c7fd64d76614e0e9dc31cbb921f232"
+    },
+    {
+      "step": 44,
+      "responses": 64,
+      "response_tokens": 252349,
+      "generation_identities": [
+        [
+          "initial_student",
+          "/mnt/tidalfs-bdsz01/dataset/llm_dataset/zkn_data/fht_data/models/DeepSeek-R1-Distill-Qwen-1.5B",
+          "2fc42a962d3f6f5281e99686ab9a5ae32c8cb9529c8e3fd07709c5c056613f48"
+        ]
+      ],
+      "trace_sha256": "7ce6242062353739aecbce259c02b5fbe39c9c9d5993cfbed438eb55ea5b6b81"
+    },
+    {
+      "step": 45,
+      "responses": 64,
+      "response_tokens": 254046,
+      "generation_identities": [
+        [
+          "initial_student",
+          "/mnt/tidalfs-bdsz01/dataset/llm_dataset/zkn_data/fht_data/models/DeepSeek-R1-Distill-Qwen-1.5B",
+          "2fc42a962d3f6f5281e99686ab9a5ae32c8cb9529c8e3fd07709c5c056613f48"
+        ]
+      ],
+      "trace_sha256": "e86fcde852d076fc74fb1c7c1fc8191301b6ad6d863c7280370eaf1f1625ac62"
+    },
+    {
+      "step": 46,
+      "responses": 64,
+      "response_tokens": 248869,
+      "generation_identities": [
+        [
+          "initial_student",
+          "/mnt/tidalfs-bdsz01/dataset/llm_dataset/zkn_data/fht_data/models/DeepSeek-R1-Distill-Qwen-1.5B",
+          "2fc42a962d3f6f5281e99686ab9a5ae32c8cb9529c8e3fd07709c5c056613f48"
+        ]
+      ],
+      "trace_sha256": "fa5641f360f11cead3cdcd11fee7f799fa0a6cbf46a7c2dc5277524098409aa4"
+    },
+    {
+      "step": 47,
+      "responses": 64,
+      "response_tokens": 246531,
+      "generation_identities": [
+        [
+          "initial_student",
+          "/mnt/tidalfs-bdsz01/dataset/llm_dataset/zkn_data/fht_data/models/DeepSeek-R1-Distill-Qwen-1.5B",
+          "2fc42a962d3f6f5281e99686ab9a5ae32c8cb9529c8e3fd07709c5c056613f48"
+        ]
+      ],
+      "trace_sha256": "dfa48f3fcb7918cb8f4935fe2b5a7ae9046b91d6b16e830cee4fd17356cb4777"
+    },
+    {
+      "step": 48,
+      "responses": 64,
+      "response_tokens": 247296,
+      "generation_identities": [
+        [
+          "initial_student",
+          "/mnt/tidalfs-bdsz01/dataset/llm_dataset/zkn_data/fht_data/models/DeepSeek-R1-Distill-Qwen-1.5B",
+          "2fc42a962d3f6f5281e99686ab9a5ae32c8cb9529c8e3fd07709c5c056613f48"
+        ]
+      ],
+      "trace_sha256": "93310fb667123f6a19b372a85ac27c103c88bdd06d4aee9e457b03b1e9315189"
+    },
+    {
+      "step": 49,
+      "responses": 64,
+      "response_tokens": 248055,
+      "generation_identities": [
+        [
+          "initial_student",
+          "/mnt/tidalfs-bdsz01/dataset/llm_dataset/zkn_data/fht_data/models/DeepSeek-R1-Distill-Qwen-1.5B",
+          "2fc42a962d3f6f5281e99686ab9a5ae32c8cb9529c8e3fd07709c5c056613f48"
+        ]
+      ],
+      "trace_sha256": "9ad64be6cd48ef6b8ba3977b9031a41d65260dec2844a91014dcfb90a1c8cf16"
+    },
+    {
+      "step": 50,
+      "responses": 64,
+      "response_tokens": 249456,
+      "generation_identities": [
+        [
+          "initial_student",
+          "/mnt/tidalfs-bdsz01/dataset/llm_dataset/zkn_data/fht_data/models/DeepSeek-R1-Distill-Qwen-1.5B",
+          "2fc42a962d3f6f5281e99686ab9a5ae32c8cb9529c8e3fd07709c5c056613f48"
+        ]
+      ],
+      "trace_sha256": "af735b5d9db7f44d8e43153441e31a68e907d432e32161fce234b86db7b51a6e"
+    }
+  ],
+  "evaluation_responses": 9120,
+  "final_student_version": 50,
+  "evaluation_model_identities": [
+    [
+      "current_student",
+      "/mnt/tidalfs-bdsz01/dataset/llm_dataset/zkn_data/fht_data/models/DeepSeek-R1-Distill-Qwen-1.5B",
+      50
+    ]
+  ],
+  "whole_card_peak_mib": {
+    "0": 54037,
+    "1": 54109,
+    "2": 54059,
+    "3": 54071
+  },
+  "status": {
+    "state": "finished",
+    "exit_code": 0,
+    "elapsed_s": 5360.762792825699,
+    "gpu_after": [
+      [0, 1, 0],
+      [1, 1, 0],
+      [2, 1, 0],
+      [3, 1, 0]
+    ],
+    "source_manifest": "/mnt/tidalfs-bdsz01/dataset/llm_dataset/zkn_data/fht_data/OPD-State/runs/native-formal-suite-20261018/initial_student_fresh/source-manifest.json"
+  },
+  "native_manifest_sha256": "0ef27736d4241b353de7d02faa92af1d69deb450424825bd5658c0bdea6933f1",
+  "math_summary": {
+    "run_name": "initial_student_fresh",
+    "run_directory": "/mnt/tidalfs-bdsz01/dataset/llm_dataset/zkn_data/fht_data/OPD-State/runs/native-formal-suite-20261018/initial_student_fresh",
+    "source_commit": "d59a7c3463244ef7533ca4acf73855e988043848",
+    "source_manifest_sha256": "dda265c9626c89ea19018c50b535a9c789d5701be6e400381c19bd5db7fde9fc",
+    "source_identity": "runtime_snapshot",
+    "training_steps": 50,
+    "samples_per_question": 16,
+    "full_benchmarks": true,
+    "checkpoints_saved": false,
+    "wandb_url": "https://wandb.ai/wncfht/OPD-State/runs/pl0yl6nt",
+    "training_log_sha256": "467db68b8d85fac5dc571047a7f378ef8585ea60c78425dc07eef06a4146db21",
+    "training_log_observed_bytes": 405466,
+    "collection_scope": "final_validation",
+    "final_validation_marker_verified": true,
+    "collector_source_sha256": "d55fdb5753b7557a445c8584830f41fdbb3ca450ae53fa888791f2cdf81899fb",
+    "validation_steps": [50]
+  },
+  "collector_source_sha256": "3280385139f4dcb918863be06cdc23f96ad6cc59e1882568d0817a995c73f5cf"
+}

@@ -27,6 +27,25 @@ def verify(directory, api, *, snapshot=False):
         raise ValueError("Expected an OPD-State W&B run URL")
     run = api.run("/".join((parts[0], parts[1], parts[3])))
     trainer, rollout = run.config["trainer"], run.config["actor_rollout_ref"]["rollout"]
+    native_policy = rollout.get("policy")
+    native_binding = None
+    if native_policy is not None:
+        acceptance_path = directory / "native-acceptance.json"
+        if not acceptance_path.is_file() or not local.get("run_directory"):
+            raise ValueError("Native W&B verification requires the local native acceptance evidence")
+        manifests = list(Path(local["run_directory"]).glob("checkpoints/**/native-trajectories/manifest.json"))
+        if len(manifests) != 1:
+            raise ValueError("Native W&B verification requires one generation manifest")
+        manifest_path = manifests[0]
+        manifest_sha = hashlib.sha256(manifest_path.read_bytes()).hexdigest()
+        acceptance = json.loads(acceptance_path.read_text())
+        manifest = json.loads(manifest_path.read_text())
+        if manifest_sha != acceptance["native_manifest_sha256"] or manifest["policy"] != native_policy:
+            raise ValueError("W&B native rollout policy disagrees with the audited generation manifest")
+        if rollout.get("generation_backend") != "vllm_native":
+            raise ValueError("W&B native rollout policy does not use the audited native backend")
+        evidence_paths.extend([acceptance_path, manifest_path])
+        native_binding = {"policy": native_policy, "manifest_sha256": manifest_sha}
     observed_steps = list(
         run.scan_history(keys=["training/global_step", "actor/loss", "actor/grad_norm"], page_size=100)
     )
@@ -135,10 +154,15 @@ def verify(directory, api, *, snapshot=False):
         "observed_remote_validation_steps": [int(row["training/global_step"]) for row in observed_validations],
         "validation_metrics_by_step": metrics_by_step,
         "local_evidence_sha256": {p.name: hashlib.sha256(p.read_bytes()).hexdigest() for p in evidence_paths},
+        "native_policy_verification": native_binding,
         "settings": {
             "student_model": run.config["actor_rollout_ref"]["model"]["path"],
             "teacher_model": run.config["distillation"]["fsdp_teacher"]["model_path"],
-            "rollout_source": trainer.get("rollout_source", "student_online"),
+            "rollout_source": "native_policy"
+            if native_policy is not None
+            else trainer.get("rollout_source", "student_online"),
+            "rollout_policy": native_policy,
+            "generation_backend": rollout.get("generation_backend"),
             "train_files": run.config["data"]["train_files"],
             "val_files": run.config["data"]["val_files"],
             "seed": run.config["data"]["seed"],

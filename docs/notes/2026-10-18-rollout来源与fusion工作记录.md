@@ -247,3 +247,7 @@ CUDA Graph 连续解码随后通过：λ=0.5、两条 prompt 各八步，实际�
 验证指标核心提交为 a0eb8d3。随后接通可选的完整 KL 评分 worker 和 `_validate` hook，整轮保留有效原始 token，推理池休眠后读取同卡当前 actor 与冻结 teacher，不再额外生成 student 响应。原 colocated worker factory 补齐已有 fused-peer API；评分复用正常 FSDP forward，通过临时 head hook 避免整段词表张量，再按位置计算两个 head，主权重需要转换时每个快照/响应只做一次。保存输入哈希、student 版本、模型绑定的固定 bank、逐响应/分层统计及调用计时。
 
 七十七项原生 CPU 与四十二项训练环境运行检查通过，新增小型 Qwen2 直接前向对照、DP 补齐、原采集器兼容性和异常恢复。两进程 Gloo/FSDP 实验在各 rank 不同长度下完成评分、真实 SGD 更新及再次评分，teacher 本地参数逐项保持，student 结果随更新改变；这不是真实 checkpoint 或 GPU 证明。原准确率采集器将顶层 JSONL stem 解析为 step，故新增诊断归 validation/kl，已用真实 producer/collector 组合回归。GPU 与完整 bank 生成仍待完成，全部正式实验继续使用原冻结源码。
+
+完整 KL 可选评分链路提交为 f1bcea0，所有 CPU、两进程 CPU FSDP、隔离 CI 和 hooks 通过。第二组 initial_student_fresh 也完成正式训练/评测：macro mean@16 为 64.16597%，与在线 student 的差为 −0.13056 个百分点；5,000 次分层配对题目 bootstrap 的 95% 区间为 [−1.69516, 1.33616] 个百分点，不能覆盖训练 seed 不确定性。两组原生生成吞吐分别为 14,978.74/14,977.73 token/s；训练 step 净差 161.73 s，权重发布差 121.30 s，约占 75%，其余评分/更新差异仍待归因。
+
+远端 W&B 核验 pl0yl6nt 与 0hbo3l5t 均 finished、五十条训练记录、仅 step50 验证。原通用 verifier 在缺少 legacy rollout_source 时将原生来源标成 student_online；现改为显式保存原生 policy/backend，并校验远端 policy 与已审计的本地 native manifest 哈希，相关匹配及篡改反例通过。它只修正核验元数据，训练源码仍固定 d59a7c3。第三组 teacher_fresh 已运行，现有调度进程保持原序列。

@@ -1,0 +1,206 @@
+{
+  "scope": "Exact normalized user-question overlap only; no semantic or pretraining exposure claim",
+  "definition_sha256": "e4b3d5275229470b38b76aab9794681f3d5090156713838fe45672fba04de19c",
+  "native_manifest_sha256": "0ef27736d4241b353de7d02faa92af1d69deb450424825bd5658c0bdea6933f1",
+  "question_csv_sha256": "33ae01807bb8719880ebc1ddea609216a2de628f5108747bdc7d1b9b251e9846",
+  "actual_training_row_ids": 3200,
+  "pool_overlap_questions": 9,
+  "consumed_overlap_questions": 3,
+  "overlaps": [
+    {
+      "benchmark": "MATH-500",
+      "evaluation_row_index": 80,
+      "question_sha256": "1efbe2147a840a37545b52a54983f6870834a8eca48afc8f370f4b29940ea6e4",
+      "training_row_ids": [
+        "69362ead4b138fc509d5698106cdf5ea2785dd50646389bd32e492ef1c12660e"
+      ],
+      "consumed_in_this_run": true
+    },
+    {
+      "benchmark": "MATH-500",
+      "evaluation_row_index": 276,
+      "question_sha256": "dc49b7d11c0c8509c88f31ac4b2a2c795a26d66a32b993a7e72f618b6cce2012",
+      "training_row_ids": [
+        "b097710204d4c7f0e591bbda5c46459e3d4c0b7c077197a3f4817e48be7150c9"
+      ],
+      "consumed_in_this_run": false
+    },
+    {
+      "benchmark": "MATH-500",
+      "evaluation_row_index": 285,
+      "question_sha256": "baf28af372606de1607ea65bbf7d96a0179d4c863cec1feb97b6dcfc44e017c0",
+      "training_row_ids": [
+        "c856e4677bf9c8e7b59c20d68717260d548a33b7224ca5cbbf54fb3deacc70f4"
+      ],
+      "consumed_in_this_run": true
+    },
+    {
+      "benchmark": "MATH-500",
+      "evaluation_row_index": 412,
+      "question_sha256": "7ca005f918268e5c71d0b013cc9556ae8599a7bfc62773f73b581ce01ccc552a",
+      "training_row_ids": [
+        "b7da493557bd39452490ec5e06215cf385efd3723be005afddc662fc15c8780c"
+      ],
+      "consumed_in_this_run": true
+    },
+    {
+      "benchmark": "AMC23",
+      "evaluation_row_index": 3,
+      "question_sha256": "ef4eafa69354815c0d2accf5e40f379ceb5a91bce35321b38f781ea769010de7",
+      "training_row_ids": [
+        "3d84a58568d48bb038f47fb1fc8b25f60a2fd6ae13edaea289e2477ca5aa192c"
+      ],
+      "consumed_in_this_run": false
+    },
+    {
+      "benchmark": "AMC23",
+      "evaluation_row_index": 13,
+      "question_sha256": "412949cc6cbb353ce8f8c2df9110a2a5b0302aaf001d20a80dc7a760b0f5644b",
+      "training_row_ids": [
+        "a87cac97778c981ef84d2edc862841c4eb9db31f90de2ccad483780d271ac652"
+      ],
+      "consumed_in_this_run": false
+    },
+    {
+      "benchmark": "AMC23",
+      "evaluation_row_index": 17,
+      "question_sha256": "763be1f735a2c5154789eeae6bb136877fbb587e39429a03971f2c0fd36a1faa",
+      "training_row_ids": [
+        "ea573a4b3724f5ede3384e1a8b0c441570ed002a7832d73717eca37ce522844c"
+      ],
+      "consumed_in_this_run": false
+    },
+    {
+      "benchmark": "AMC23",
+      "evaluation_row_index": 27,
+      "question_sha256": "082309fea76cbf80b9b4f5dd80f6121ff42a8c68a73181dafe23fcb7b0752311",
+      "training_row_ids": [
+        "86e98010eb3a7e15789cb95fa52dfe373b98cbc5cc631a27a7c6473a2cdff684"
+      ],
+      "consumed_in_this_run": false
+    },
+    {
+      "benchmark": "AMC23",
+      "evaluation_row_index": 28,
+      "question_sha256": "191db01623fc28d68d04c803ed9fa45808d3f3950be01489794f2ed7263b39c3",
+      "training_row_ids": [
+        "37edfa9bab805a5bbc31fefead67ce96429f044ea6d5cc81d40075118f6a7c58"
+      ],
+      "consumed_in_this_run": false
+    }
+  ],
+  "views": {
+    "full": {
+      "MATH-500": {
+        "questions": 500,
+        "mean@16": 0.866125,
+        "pass@1": 0.866125,
+        "pass@2": 0.9094666666666666,
+        "pass@4": 0.9337538461538459,
+        "pass@8": 0.9507165501165498,
+        "pass@16": 0.964
+      },
+      "AMC23": {
+        "questions": 40,
+        "mean@16": 0.7796875,
+        "pass@1": 0.7796875,
+        "pass@2": 0.871875,
+        "pass@4": 0.9306456043956043,
+        "pass@8": 0.9604720279720279,
+        "pass@16": 0.975
+      },
+      "AIME25": {
+        "questions": 30,
+        "mean@16": 0.2791666666666667,
+        "pass@1": 0.2791666666666667,
+        "pass@2": 0.33416666666666667,
+        "pass@4": 0.3812820512820513,
+        "pass@8": 0.42982646982646977,
+        "pass@16": 0.4666666666666667
+      },
+      "macro": {
+        "mean@16": 0.6416597222222222,
+        "pass@1": 0.6416597222222222,
+        "pass@2": 0.7051694444444444,
+        "pass@4": 0.7485605006105005,
+        "pass@8": 0.7803383493050159,
+        "pass@16": 0.801888888888889
+      }
+    },
+    "exclude_consumed": {
+      "MATH-500": {
+        "questions": 497,
+        "mean@16": 0.8672032193158954,
+        "pass@1": 0.8672032193158954,
+        "pass@2": 0.9095405767940978,
+        "pass@4": 0.9334092466889247,
+        "pass@8": 0.9504190645035713,
+        "pass@16": 0.9637826961770624
+      },
+      "AMC23": {
+        "questions": 40,
+        "mean@16": 0.7796875,
+        "pass@1": 0.7796875,
+        "pass@2": 0.871875,
+        "pass@4": 0.9306456043956043,
+        "pass@8": 0.9604720279720279,
+        "pass@16": 0.975
+      },
+      "AIME25": {
+        "questions": 30,
+        "mean@16": 0.2791666666666667,
+        "pass@1": 0.2791666666666667,
+        "pass@2": 0.33416666666666667,
+        "pass@4": 0.3812820512820513,
+        "pass@8": 0.42982646982646977,
+        "pass@16": 0.4666666666666667
+      },
+      "macro": {
+        "mean@16": 0.642019128660854,
+        "pass@1": 0.642019128660854,
+        "pass@2": 0.7051940811535881,
+        "pass@4": 0.7484456341221933,
+        "pass@8": 0.7802391874340229,
+        "pass@16": 0.801816454281243
+      }
+    },
+    "exclude_training_pool": {
+      "MATH-500": {
+        "questions": 496,
+        "mean@16": 0.8669354838709677,
+        "pass@1": 0.8669354838709677,
+        "pass@2": 0.9093581989247311,
+        "pass@4": 0.9332749911378942,
+        "pass@8": 0.9503191029400704,
+        "pass@16": 0.9637096774193549
+      },
+      "AMC23": {
+        "questions": 35,
+        "mean@16": 0.7785714285714286,
+        "pass@1": 0.7785714285714286,
+        "pass@2": 0.8690476190476188,
+        "pass@4": 0.9259968602825744,
+        "pass@8": 0.9551914751914751,
+        "pass@16": 0.9714285714285714
+      },
+      "AIME25": {
+        "questions": 30,
+        "mean@16": 0.2791666666666667,
+        "pass@1": 0.2791666666666667,
+        "pass@2": 0.33416666666666667,
+        "pass@4": 0.3812820512820513,
+        "pass@8": 0.42982646982646977,
+        "pass@16": 0.4666666666666667
+      },
+      "macro": {
+        "mean@16": 0.641557859703021,
+        "pass@1": 0.641557859703021,
+        "pass@2": 0.7041908282130055,
+        "pass@4": 0.7468513009008401,
+        "pass@8": 0.7784456826526718,
+        "pass@16": 0.8006016385048643
+      }
+    }
+  },
+  "analysis_source_sha256": "073e9823ade056cf26547cad96b86af76a83843b06a2109f4086ba724defb642"
+}

@@ -1,6 +1,7 @@
 """Verify historical checkpoints independently of a run's mutable summary."""
 
 import csv
+import hashlib
 import json
 import runpy
 import tempfile
@@ -78,6 +79,71 @@ def fixture(directory, *, snapshot=True):
 
 
 class WandbSnapshotTests(unittest.TestCase):
+    def native_fixture(self, directory):
+        run, api, rows, metrics = fixture(directory)
+        policy = {"kind": "single", "model": "initial_student"}
+        run.config["actor_rollout_ref"]["rollout"].update(
+            policy=policy, generation_backend="vllm_native"
+        )
+        summary_path = directory / "summary.json"
+        summary = json.loads(summary_path.read_text())
+        summary["run_directory"] = str(directory / "run")
+        summary_path.write_text(json.dumps(summary))
+        manifest = directory / "run/checkpoints/actor/native-trajectories/manifest.json"
+        manifest.parent.mkdir(parents=True)
+        manifest.write_text(json.dumps({"policy": policy}))
+        (directory / "native-acceptance.json").write_text(
+            json.dumps(
+                {
+                    "native_manifest_sha256": hashlib.sha256(
+                        manifest.read_bytes()
+                    ).hexdigest()
+                }
+            )
+        )
+        return run, api, manifest
+
+    def test_native_policy_is_verified_and_not_mislabeled_as_legacy_student_online(
+        self,
+    ):
+        with tempfile.TemporaryDirectory() as temporary:
+            directory = Path(temporary)
+            run, api, manifest = self.native_fixture(directory)
+            report = VERIFY(directory, api, snapshot=True)
+            self.assertEqual(report["settings"]["rollout_source"], "native_policy")
+            self.assertEqual(
+                report["settings"]["rollout_policy"]["model"], "initial_student"
+            )
+            self.assertEqual(
+                report["native_policy_verification"]["manifest_sha256"],
+                hashlib.sha256(manifest.read_bytes()).hexdigest(),
+            )
+
+    def test_remote_native_policy_or_local_generation_tampering_is_rejected(self):
+        with tempfile.TemporaryDirectory() as temporary:
+            directory = Path(temporary)
+            run, api, manifest = self.native_fixture(directory)
+            run.config["actor_rollout_ref"]["rollout"]["policy"] = {
+                "kind": "single",
+                "model": "teacher",
+            }
+            with self.assertRaisesRegex(ValueError, "policy"):
+                VERIFY(directory, api, snapshot=True)
+            run.config["actor_rollout_ref"]["rollout"]["policy"] = {
+                "kind": "single",
+                "model": "initial_student",
+            }
+            manifest.write_text(
+                json.dumps(
+                    {
+                        "policy": run.config["actor_rollout_ref"]["rollout"]["policy"],
+                        "changed": True,
+                    }
+                )
+            )
+            with self.assertRaisesRegex(ValueError, "policy"):
+                VERIFY(directory, api, snapshot=True)
+
     def test_snapshot_uses_exact_history_not_future_summary(self):
         with tempfile.TemporaryDirectory() as temporary:
             directory = Path(temporary)

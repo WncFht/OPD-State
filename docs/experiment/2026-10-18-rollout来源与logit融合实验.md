@@ -717,7 +717,7 @@ $$
 
 这项重构仍是方案，没有改变现已停止的固定缓存长时实验。已有结果保留为“固定 states 上持续学习”的对照；fresh 变体应另行记录，不能替换其数据后沿用原实验身份。
 
-按源码执行链梳理后的[统一 fresh rollout 架构方案](../../.agents/notes/proposed/architecture/2026-10-18-可组合rollout与原生vLLM推理.md)集中定义当前 student、初始 student、teacher、两种 fusion，以及双向分段切换与 batch 混合；所有设置继续只更新当前 student。新 pipeline 优先使用原生 vLLM：单模型、分段与 batch 混合复用原生生成，精确 fusion 优先验证双原生模型扩展，现有 HF 实现保留作数值参考。模型引用、组合规则、执行后端和复用策略分别配置；方案详细定义切换 token/比例、全局配额、EOS/mask、跨权重重新 prefill、模型驻留与吞吐基准。固定初始 student 的实时采样名为 `initial_student_fresh`，与历史 Semi-OPD replay 区分；这些新模式尚未实现为正式运行。
+按源码执行链梳理后的[统一 fresh rollout 架构方案](../../.agents/notes/proposed/architecture/2026-10-18-可组合rollout与原生vLLM推理.md)集中定义当前 student、初始 student、teacher、两种 fusion，以及双向分段切换与 batch 混合；所有设置继续只更新当前 student。新 pipeline 优先使用原生 vLLM：单模型、分段与 batch 混合复用原生生成，精确 fusion 优先验证双原生模型扩展，现有 HF 实现保留作数值参考。模型引用、组合规则、执行后端和复用策略分别配置；方案详细定义切换 token/比例、全局配额、EOS/mask、跨权重重新 prefill、模型驻留与吞吐基准。固定初始 student 的实时采样名为 `initial_student_fresh`，与历史 Semi-OPD replay 区分；这些模式已完成短训练接入，完整质量矩阵仍在运行。
 
 ## 原生 rollout 重构验收
 
@@ -786,16 +786,32 @@ $$
 
 正式矩阵已固定 d59a7c3 源码和 17,235 题清单启动，使用 `overlap` 布局，首组为 `student_fresh`。工作区后续布局修改不会进入该矩阵；待所有 run 结束、逐题结果与 W&B 核对后再形成质量结论。[同清单两步长响应验收](results/native-rollout/trainer-manifest-long/native-acceptance.json)此前以 B64、4K 响应和 CUDA Graph 完成，两步各生成 246,709/246,491 token，最终仅验证六题×16，整卡采样峰值为 50,897/50,679/49,751/50,679 MiB；该短验证不提供正式准确率结论。
 
-[首组正式 student_fresh](results/native-rollout/formal/student_fresh/native-acceptance.json)已完成五十次更新、完整 570 题×16 最终评测，无 checkpoint；[W&B 核验](results/native-rollout/formal/student_fresh/wandb-verification.json)确认 finished、五十条训练记录和唯一的 step50 验证。它消费 3,200 道不同题，生成 12,370,198 个有效训练响应 token，574 条响应以 EOS 结束，最终仅使用 student 版本 50。其余正式变体尚未全部完成，当前不作来源优劣结论。
+前两组正式运行均完成五十次更新、完整 570 题×16 最终评测和独立重评分，没有保存 checkpoint；分别见[当前来源验收](results/native-rollout/formal/student_fresh/native-acceptance.json)与[固定初始来源验收](results/native-rollout/formal/initial_student_fresh/native-acceptance.json)。两组都训练并验证最终 student50，训练生成来源分别为更新中的 student 与固定 $p_0$，各消费 3,200 道不同题。两份 [当前来源 W&B 核验](results/native-rollout/formal/student_fresh/wandb-verification.json)和[初始来源 W&B 核验](results/native-rollout/formal/initial_student_fresh/wandb-verification.json)确认 finished、五十条有限 loss/grad 记录及唯一的 step50 验证，并把远端原生 policy 与本地生成 manifest 逐项绑定；其余正式组仍未全部完成。
 
-| 基准     |       题数 | Mean@16 | Pass@16 |
-| -------- | ---------: | ------: | ------: |
-| MATH-500 |        500 |  86.59% |  96.40% |
-| AMC23    |         40 |  78.59% |  95.00% |
-| AIME25   |         30 |  27.71% |  53.33% |
-| Macro    | 三基准等权 |  64.30% |  81.58% |
+| 基准     |       题数 | 当前来源 Mean@16 | 初始来源 Mean@16 | 当前来源 Pass@16 | 初始来源 Pass@16 |
+| -------- | ---------: | ---------------: | ---------------: | ---------------: | ---------------: |
+| MATH-500 |        500 |           86.59% |           86.61% |           96.40% |           96.40% |
+| AMC23    |         40 |           78.59% |           77.97% |           95.00% |           97.50% |
+| AIME25   |         30 |           27.71% |           27.92% |           53.33% |           46.67% |
+| Macro    | 三基准等权 |           64.30% |           64.17% |           81.58% |           80.19% |
 
-五十个训练 step timer 合计 24.65 min，其中 native generate 为 13.76 min；最终评测 timer 为 63.74 min，不能再次计入训练时间。运行计时合计 92.16 min，另有 3.76 min 未归入上述两个 timer；源码归档复制在该计时之外。GPU 0/1/2/3 的整卡采样峰值为 50,369/50,759/48,905/50,759 MiB。具体条件和原始步骤见同目录附件，不能与历史不同题目清单或计时范围直接计算架构加速比。
+[逐题配对比较](results/native-rollout/formal/comparison/analysis.json)按 benchmark 分层、对同题成组 bootstrap 5,000 次。初始来源减当前来源的 macro mean@16 差为 −0.131 个百分点，95% 题目 bootstrap 区间为 [−1.695, 1.336] 个百分点。这只描述题目选择不确定性，不覆盖训练 seed 变化；当前不据此给来源排序，也不把五十步当作收敛证明。
+
+| 计量项                      |                    当前来源 |                固定初始来源 |
+| --------------------------- | --------------------------: | --------------------------: |
+| 有效训练响应 token          |                  12,370,198 |                  12,484,215 |
+| Native generate / s         |                      825.85 |                      833.52 |
+| Native 生成吞吐 / token·s⁻¹ |                   14,978.74 |                   14,977.73 |
+| Student 重新评分 / s        |                      106.87 |                       86.62 |
+| Teacher 评分 / s            |                       99.54 |                       96.95 |
+| Actor 更新 / s              |                      256.28 |                      222.68 |
+| 训练侧权重发布 / s          |                     121.304 |                    0.000605 |
+| 五十步训练 timer / min      |                       24.65 |                       21.96 |
+| 最终验证 timer / min        |                       63.74 |                       63.58 |
+| 运行计时 / min              |                       92.16 |                       89.35 |
+| GPU 0/1/2/3 整卡峰值 / MiB  | 50,369/50,759/48,905/50,759 | 54,037/54,109/54,059/54,071 |
+
+两组使用相同 d59a7c3、数据清单、四卡/B64、4K cap、训练采样与显存预算，原生生成吞吐在这两次运行中接近。训练 step 净差 161.73 s，其中权重发布差 121.30 s，约占 75%；固定初始来源仍在每步实时生成，未减少 rollout 次数。其余差异包含 student 评分和 actor 更新，尚未做因果归因。Native generate 嵌套于生成计时，不能重复相加；训练 step 与最终验证 timer 独立，两组各约 3.8 min 的运行残差尚未细分，源码归档复制在运行计时之外。整卡峰值也不等于 KV 容量，不能与历史不同题库/采样/预算的运行直接计算架构加速比。
 
 [训练与评测题面核验](results/native-rollout/formal/student_fresh/train-test-overlap.json)确认全训练池与评测集存在九道规范化 user 题面精确重合：MATH-500 四道、AMC23 五道、AIME25 零道。首组实际训练消费其中三道 MATH 题；排除后共 567 题，macro mean@16 为 64.2989%。保守排除全部九道后共 561 题，macro mean@16 为 64.1634%。完整 570 题结果继续保留，后续每组按实际消费记录附加这两种敏感性分析；这些检查不覆盖语义近重复或预训练数据暴露。
 

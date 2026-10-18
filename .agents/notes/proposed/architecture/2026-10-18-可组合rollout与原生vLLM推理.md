@@ -24,7 +24,7 @@ Status: proposed
 
 ### 实施进展
 
-正式矩阵首组 student_fresh 已完成 50 步和完整 570×16 最终评测，独立路由/版本审计及 W&B finished 核验通过，未保存 checkpoint；见[完整验收](../../../../docs/experiment/results/native-rollout/formal/student_fresh/native-acceptance.json)。实际消费 3,200 道不同题，最终仅使用 student50。题面核验同时识别训练池与评测集九道精确重合，首组实际消费三道；完整基准与排除重合的敏感性结果分别保留。其余矩阵、新布局 GPU 验收、参数扫描和后续探针仍未全部完成，Status 保持 proposed。
+正式矩阵的 student_fresh 与 initial_student_fresh 均完成五十步、完整 570×16 最终评测、独立路由/版本审计与 W&B finished 核验，没有保存 checkpoint；两组 macro mean@16 为 64.30%/64.17%，配对题目 bootstrap 区间跨零，不据此给来源排序。同设置的原生生成吞吐均约 14.98k token/s，训练侧权重发布差约 121.30 s；详见[统一实验报告](../../../../docs/experiment/2026-10-18-rollout来源与logit融合实验.md)。题面核验和敏感性分析保留完整基准与排除重合两种口径。其余矩阵、新布局 GPU 验收、参数扫描与后续探针仍未完成，Status 保持 proposed。
 
 原生单模型、四个分段方向、两种 batch 混合与两种 fusion 已完成四卡短训练；连续解码、graph 热更新和原生排空也已有下文的独立证据。正式十五组 50 步/570 题×16 矩阵已使用 d59a7c3 冻结源码启动，质量比较尚未完成。新增 `generation_layout=split` 的生产副本映射仍在验收：默认 `overlap`，不改变已启动矩阵；[CPU 路由证据](../../../../docs/experiment/results/native-rollout/placement-cpu.json)覆盖小组集中、分卡、响应顺序、冻结恢复和 current 写入前置条件，真实四卡新布局训练尚待验证。下文早期检查按其实际覆盖范围保留，不代表所有后续验收均已完成。
 

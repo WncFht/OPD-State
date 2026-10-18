@@ -57,13 +57,27 @@
   "validation_metrics_by_step": {},
   "local_evidence_sha256": {
     "summary.json": "b465bfd33afc86d4a459fa6e5acc459e6731fbcfc4c829c1158a577c456310fb",
+    "native-acceptance.json": "389556d34edf0617bceb383c12453c79a59fc2f5296a6e37051058006c5b7e50",
+    "manifest.json": "4002ecd2493056bd230d8536d714c5cddce55d2115307e97c208fddf43f588ff",
     "training-1-50.csv": "dc9e3f2453bb0290e077f125a82cc57e81682a87ef539baf353d6159c40bd4f4",
     "validation-step50.json": "4169edab036fa5e6114ca61cb2e69b2fcd619e5eb8ad345e82e98b6e930c0d33"
+  },
+  "native_policy_verification": {
+    "policy": {
+      "kind": "single",
+      "model": "current_student"
+    },
+    "manifest_sha256": "4002ecd2493056bd230d8536d714c5cddce55d2115307e97c208fddf43f588ff"
   },
   "settings": {
     "student_model": "/mnt/tidalfs-bdsz01/dataset/llm_dataset/zkn_data/fht_data/models/DeepSeek-R1-Distill-Qwen-1.5B",
     "teacher_model": "/mnt/tidalfs-bdsz01/dataset/llm_dataset/zkn_data/fht_data/models/JustRL-DeepSeek-1.5B",
-    "rollout_source": "student_online",
+    "rollout_source": "native_policy",
+    "rollout_policy": {
+      "kind": "single",
+      "model": "current_student"
+    },
+    "generation_backend": "vllm_native",
     "train_files": [
       "/mnt/tidalfs-bdsz01/dataset/llm_dataset/zkn_data/fht_data/OPD-State/runs/native-rollout-implementation/fresh-math-data-v2/ordered.parquet"
     ],
@@ -86,5 +100,5 @@
       "temperature": 0.7
     }
   },
-  "verifier_source_sha256": "bb29a09d76d12ff38f1226a963e749bb9036b15f499f39f82c37ab50214e3d60"
+  "verifier_source_sha256": "e576350130c76fe7ad8ae14d74c366369d7d4115bdb4c95631284d3dd412d4c3"
 }
