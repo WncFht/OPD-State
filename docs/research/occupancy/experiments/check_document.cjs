@@ -20,6 +20,18 @@ function checkTheorems(raw) {
             issues.push(`${heading[0]}: statement must precede proof`);
         }
     }
+    const numbers = headings.map((h) =>
+        Number(h[0].match(/(?:定理|命题) (\d+)/)[1]),
+    );
+    if (numbers.some((number, index) => number !== index + 1)) {
+        issues.push("theorem numbers must be consecutive in reading order");
+    }
+    const known = new Set(numbers);
+    for (const reference of raw.matchAll(/(?:定理|命题) (\d+)/g)) {
+        if (!known.has(Number(reference[1]))) {
+            issues.push(`unknown theorem reference: ${reference[0]}`);
+        }
+    }
     return { count: headings.length, issues };
 }
 
@@ -29,13 +41,36 @@ function checkDocument(raw, root) {
     let mathCount = 0;
     let links = 0;
     const prose = raw.replace(/```[\s\S]*?```/g, "");
+    const mermaids = [...raw.matchAll(/```mermaid\n([\s\S]*?)```/g)].map(
+        (m) => m[1],
+    );
+    const mermaidMath = mermaids.flatMap((diagram) =>
+        [...diagram.matchAll(/\$\$([\s\S]*?)\$\$/g)].map((m) => m[1]),
+    );
+    const anchors = new Set(
+        [...prose.matchAll(/^#{1,6} ([^\n]+)$/gm)].map((m) =>
+            m[1]
+                .toLowerCase()
+                .replace(/[^\p{L}\p{N}\p{M} _-]/gu, "")
+                .replace(/ /g, "-"),
+        ),
+    );
     for (const match of prose.matchAll(/!?\[[^\]]*\]\(([^)]+)\)/g)) {
         const target = match[1];
-        if (/^(https?:|#)/.test(target)) continue;
+        if (target.startsWith("#")) {
+            if (!anchors.has(decodeURIComponent(target.slice(1))))
+                issues.push(`missing anchor: ${target}`);
+            continue;
+        }
+        if (/^https?:/.test(target)) continue;
         links++;
         const resolved = path.resolve(root, target.split("#")[0]);
         if (!fs.existsSync(resolved)) {
-            const external = ["Awesome-OPD-Paper", "MirrorOPD"].some((repo) =>
+            const external = [
+                "Awesome-OPD-Paper",
+                "Awesome-Paper",
+                "MirrorOPD",
+            ].some((repo) =>
                 resolved.startsWith(
                     path.resolve(root, "../../../..", repo) + path.sep,
                 ),
@@ -62,6 +97,7 @@ function checkDocument(raw, root) {
     for (const [expressions, displayMode] of [
         [displays, true],
         [inlines, false],
+        [mermaidMath, true],
     ]) {
         for (const math of expressions) {
             mathCount++;
@@ -99,6 +135,8 @@ function checkDocument(raw, root) {
     issues.push(...theorems.issues);
     return {
         math_expressions: mathCount,
+        mermaid_diagrams: mermaids.length,
+        mermaid_math_expressions: mermaidMath.length,
         theorem_statements: theorems.count,
         local_links: links,
         footnotes: definitions.size,

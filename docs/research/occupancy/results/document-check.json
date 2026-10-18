@@ -1,8 +1,10 @@
 {
-  "math_expressions": 465,
-  "theorem_statements": 17,
-  "local_links": 11,
-  "footnotes": 10,
+  "math_expressions": 789,
+  "mermaid_diagrams": 3,
+  "mermaid_math_expressions": 19,
+  "theorem_statements": 29,
+  "local_links": 12,
+  "footnotes": 14,
   "unavailable_external_links": [],
   "issues": []
 }

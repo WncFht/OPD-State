@@ -57,7 +57,7 @@ CUDA_VISIBLE_DEVICES='' .venv/bin/python docs/research/occupancy/experiments/exa
 node docs/research/occupancy/experiments/check_document.cjs
 ```
 
-既有数值程序只作代数与梯度回归核验，不作为真实 LLM 的收敛或失败机制证据；研究正文以一般证明和真实实验来源支撑结论。数学核验只依赖 NumPy；公式语法检查使用本仓锁定的 KaTeX。研究正文的外部本地链接需要相邻 `Awesome-OPD-Paper/` 与 `MirrorOPD/`，检查结果单独列出缺少的外部材料，不将外部缺失视为内部断链。
+既有数值程序只作代数与梯度回归核验，不作为真实 LLM 的收敛或失败机制证据；研究正文以一般证明和真实实验来源支撑结论。数学核验只依赖 NumPy；公式语法检查使用本仓锁定的 KaTeX，覆盖正文和 Mermaid 标签中的数学公式；同时检查定理编号、先陈述后证明的顺序、定理引用与本页目录锚点。Mermaid 语法及实际布局另用 CLI 渲染核验，不能把 KaTeX 检查当作完整图语法检查。研究正文的外部本地链接使用相邻 `Awesome-Paper/` 与 `MirrorOPD/`，并保留历史名称 `Awesome-OPD-Paper/` 的来源识别，检查结果单独列出缺少的外部材料，不将外部缺失视为内部断链。
 
 绘图额外使用工作区 figure-viz 技能的 `assets/mpl`，其资源不随训练代码导入。默认定位当前工作区 `.agents/skills/figure-viz`；跨机器用 `FIGURE_VIZ_HOME` 指定技能根目录。缺少该资源时先准备资源，再运行：
 

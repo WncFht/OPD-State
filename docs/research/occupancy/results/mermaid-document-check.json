@@ -1,0 +1,42 @@
+{
+  "checked_on": "2026-10-18",
+  "document": "2026-10-17-OPD访问测度与收敛机制研究.md",
+  "document_sha256": "9991708cbc83ba70c3f0ce007d7e4f173d53bab363d0a5528cbc6841762447b5",
+  "renderer": "@mermaid-js/mermaid-cli",
+  "renderer_version": "12.0.0",
+  "browser": "existing Chromium, GPU disabled",
+  "scope": "Actual Mermaid parsing and PNG rendering; formula correctness is checked separately by KaTeX.",
+  "command": "mmdc -i <document.md> -o <preview.md> -a <render-dir> -e png -p <puppeteer-config.json> --size 1800 -j 1",
+  "diagrams": [
+    {
+      "diagram": 1,
+      "mermaid_sha256": "ba5bedd40a198edafaf681eae72e32a10413fb6ab30ceab7eb2f6120e126ecbf",
+      "rendered_png": "runs/occupancy-rewrite/rendered/preview-1.png",
+      "png_sha256": "4640bb989066e51193bfb19bc78ba035af34f518c39eb782f67c321140d7e3ae",
+      "width": 1800,
+      "height": 1362,
+      "render_exit_code": 0,
+      "visually_checked": true
+    },
+    {
+      "diagram": 2,
+      "mermaid_sha256": "cc363e82f4945fe3230d3ad6d937799390bd831c9d855e49484d4663a07f68fe",
+      "rendered_png": "runs/occupancy-rewrite/rendered/preview-2.png",
+      "png_sha256": "e981b3d2d536863be48f983dda7cb92b5b81658eecdbad2de9c7965b4f7ff23f",
+      "width": 1086,
+      "height": 1800,
+      "render_exit_code": 0,
+      "visually_checked": true
+    },
+    {
+      "diagram": 3,
+      "mermaid_sha256": "e3329d0afe8cd252d9913648c55d854d105a946ce70064e1eab947a29b91d7e5",
+      "rendered_png": "runs/occupancy-rewrite/rendered/preview-3.png",
+      "png_sha256": "94dd5ead2d6ce831809a8e032d474b28bf2325cf88a65aa3f3050e77b2d84d01",
+      "width": 963,
+      "height": 1800,
+      "render_exit_code": 0,
+      "visually_checked": true
+    }
+  ]
+}
