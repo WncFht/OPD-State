@@ -201,7 +201,7 @@ $$
 
 尾部 log-mass 使用补集的 logsumexp，避免以 FP32 的 $1-\sum_Sp$ 相减产生灾难性消减；head 与 action 使用相同有效词表、相同温度和完整归一化。KL 单次无偏估计可以为负，不做逐 token 截零。EOS 和预算末 action 都参与监督，padding 在概率算术之前排除。
 
-MirrorOPD 的相关依据为[分组 KL](../../../../MirrorOPD/src/mirroropd/core/distributions.py)、[诊断与中心](../../../../MirrorOPD/src/mirroropd/core/diagnostics.py)及[KL 恒等式核验](../../../../MirrorOPD/tests/reference/test_kl_theory.py)。本文采用其已区分的“桶 KL”和“采样尾部补偿”语义，不将生产 `topj_tail` 配置误称为已经训练了完整 KL。
+MirrorOPD 的相关依据为[分组 KL](https://github.com/WncFht/MirrorOPD/blob/91567a023b019b2596822d93a0d1603283539ed6/src/mirroropd/core/distributions.py)、[诊断与中心](https://github.com/WncFht/MirrorOPD/blob/91567a023b019b2596822d93a0d1603283539ed6/src/mirroropd/core/diagnostics.py)及[KL 恒等式核验](https://github.com/WncFht/MirrorOPD/blob/107c218f1fe04f2d40d08795215c600e6eaaa6ca/tests/reference/test_kl_theory.py)。本文采用其已区分的“桶 KL”和“采样尾部补偿”语义，不将生产 `topj_tail` 配置误称为已经训练了完整 KL。
 
 ## 延伸阅读
 

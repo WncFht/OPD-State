@@ -8,7 +8,7 @@ One-Shot-OPD[^one-shot] 以本仓根目录为开发根目录，直接维护原�
 
 ## 维护规则与工具
 
-agent-maintenance[^maintenance] 的来源提交为 `f2b7cdfe4c6ab96ed779f42c878e84b7042edf43`。[来源元数据](provenance/agent-maintenance.json)记录采用范围；其许可全文见[MIT 许可](#mit-许可全文)。采用三个维护技能及其共享引用、模板、Notes 规则、检查调度器和两阶段 hooks；目标路径、检查集合、扫描范围与依赖按 OPD-State 调整。原包过程记录与可选 MPE 资源未纳入。
+agent-maintenance[^maintenance] 的来源提交为 `78f4c630c71f22f4464ec718b7a7803f3d00418a`。[来源元数据](provenance/agent-maintenance.json)记录采用范围；其许可全文见[MIT 许可](#mit-许可全文)。采用三个维护技能及其共享引用、模板、Notes 规则、检查调度器和两阶段 hooks；目标路径、检查集合、扫描范围与依赖按 OPD-State 调整。原包过程记录与可选 MPE 资源未纳入。
 
 AutoCorrect 2.16.3 与 gitleaks 8.30.1 沿用维护包的版本基线；Linux 安装器固定发布包 SHA-256，安装到项目虚拟环境。工具链行为测试归 `scripts/tests/`。
 

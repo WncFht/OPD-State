@@ -12,3 +12,5 @@
 - 预算只用于常驻入口和实际超大的检索单元；先归位、压缩重复，再按证据调整预算。中文不照搬英文词数。
 
 Agent Notes 不套普通文档章节，遵循[记录规则](../.agents/notes/README.md)。
+
+本项目实际布局：architecture.md 负责当前组件关系，development.md 负责运行与开发；research/occupancy 负责推导与方法；experiment 的轨迹来源报告是研究问题主入口，support 是独立支撑验证，既有 results/figures 保留原始身份。新证据更新所属报告，CPU/GPU 不决定主次。docs/notes 是历史过程，新执行流水进入 runs。导航见 [README](README.md)，交付遵循[生命周期](../.agents/references/document-lifecycle.md)和[实验规范](../.agents/references/experiment-reports.md)。篇幅清单为 scripts/doc-policy.json，不做重复检测。
