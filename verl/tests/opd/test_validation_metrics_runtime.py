@@ -117,6 +117,54 @@ class FullVocabularyTests(unittest.TestCase):
 
 
 class ValidationTrainerTests(unittest.TestCase):
+    def test_math_exact_mode_retains_all_exact_task_metrics_without_bootstrap_auxiliaries(self):
+        trainer = object.__new__(RayPPOTrainer)
+        trainer.config = OmegaConf.create({"trainer": {"math_eval_samples": 16, "math_eval_require_full": False}})
+        sources, uids, accuracy = [], [], []
+        for source in ("MATH-500", "AMC23", "AIME25"):
+            for question, correct in enumerate((3, 12)):
+                sources.extend([source] * 16)
+                uids.extend([f"{source}-{question}"] * 16)
+                accuracy.extend([1.0] * correct + [0.0] * (16 - correct))
+        extras = {"acc": accuracy, "reward": accuracy}
+        normal = trainer._val_metrics_update(np.array(sources), uids, extras, [])
+        trainer.config.trainer.validation_metrics_mode = "math_exact"
+        with patch(
+            "verl.trainer.ppo.ray_trainer.process_validation_metrics", side_effect=AssertionError("unneeded bootstrap")
+        ):
+            exact = trainer._val_metrics_update(np.array(sources), uids, extras, [])
+        self.assertEqual(exact, {key: value for key, value in normal.items() if key.startswith("eval/")})
+        trainer.config.trainer.validation_metrics_mode = "bad"
+        with self.assertRaises(ValueError):
+            trainer._val_metrics_update(np.array(sources), uids, extras, [])
+
+    def test_effective_decoding_matches_fast_tokenizer_for_left_padding_and_eos_equals_pad(self):
+        from tokenizers import Tokenizer
+        from tokenizers.models import WordLevel
+        from transformers import PreTrainedTokenizerFast
+
+        from verl.trainer.ppo.validation_rollout import decode_effective_tokens
+
+        tokenizer = PreTrainedTokenizerFast(
+            tokenizer_object=Tokenizer(
+                WordLevel({"[UNK]": 0, "unused": 1, "[PAD]": 2, "a": 3, "b": 4}, unk_token="[UNK]")
+            ),
+            pad_token="[PAD]",
+            eos_token="[PAD]",
+            unk_token="[UNK]",
+        )
+        for ids, mask in (
+            ([[3, 4, 2, 2, 2], [3, 2, 2, 2, 2]], [[1, 1, 1, 0, 0], [1, 1, 0, 0, 0]]),
+            ([[2, 2, 3, 4], [2, 2, 2, 3]], [[0, 0, 1, 1], [0, 0, 0, 1]]),
+            ([[2, 2], [2, 2]], [[0, 0], [1, 0]]),
+        ):
+            ids, mask = torch.tensor(ids), torch.tensor(mask)
+            self.assertEqual(
+                decode_effective_tokens(tokenizer, ids, mask), tokenizer.batch_decode(ids, skip_special_tokens=True)
+            )
+        with self.assertRaises(ValueError):
+            decode_effective_tokens(tokenizer, torch.tensor([[3, 2]]), torch.tensor([[1]]))
+
     def fixture(self):
         trainer = object.__new__(RayPPOTrainer)
         trainer.validation_enabled = True
@@ -188,6 +236,8 @@ class ValidationTrainerTests(unittest.TestCase):
         self.assertEqual(metrics["validation_rollout/micro/responses"], 6)
         self.assertEqual(metrics["validation_rollout/micro/questions"], 3)
         self.assertAlmostEqual(metrics["validation_rollout/micro/response_length/mean"], 20 / 6)
+        self.assertGreater(metrics["validation_performance/total_seconds"], 0)
+        self.assertIn("validation_performance/decode_seconds", metrics)
         self.assertEqual(metrics["validation_rollout/macro/response_length/mean"], 4)
         columns = dumped[0]["reward_extra_infos_dict"]
         self.assertEqual(columns["rollout_response_length"], [2, 2, 6, 6, 2, 2])
@@ -216,6 +266,7 @@ class ValidationTrainerTests(unittest.TestCase):
         metrics = trainer._merge_validation_results(raw, None)
         self.assertEqual(metrics["validation_rollout/micro/responses"], 6)
         self.assertEqual(metrics["original_accuracy_metric"], 0.5)
+        self.assertIn("validation_performance/total_seconds", metrics)
 
 
 if __name__ == "__main__":

@@ -157,7 +157,7 @@ $$
 | 固定初始 student 前缀 |                 0.107984 |                 0.105910 |                397.703 |
 | 固定 teacher 前缀     |                 0.101650 |                 0.090255 |                369.004 |
 
-Token KL 单位为 nat/token，累计量为 nat/response；后两行使用分层权重。原始统计见[KL 摘要](results/native-rollout/validation-kl-full/kl-summary.json)。评分 wall time 为 **2,742.18 s（45.70 min）**，四卡阶段采样峰值为 **10,911/10,931/10,909/10,911 MiB**，每卡 1,242 次采样；完整阶段分解与负载问题归[速度与显存](2026-10-19-rollout速度与显存.md#完整验证-kl-的成本与瓶颈)。正确性通过不代表效率已优化，也不替代五十步研究对照。
+Token KL 单位为 nat/token，累计量为 nat/response；后两行使用分层权重。原始统计见[KL 摘要](results/native-rollout/validation-kl-full/kl-summary.json)。评分 wall time 为 **2,742.18 s（45.70 min）**，四卡阶段采样峰值为 **10,911/10,931/10,909/10,911 MiB**，每卡 1,242 次采样；完整阶段分解与负载问题归[速度与显存](速度与显存.md#完整验证-kl-的成本与瓶颈)。正确性通过不代表效率已优化，也不替代五十步研究对照。
 
 ## 已有 state 诊断与限制
 

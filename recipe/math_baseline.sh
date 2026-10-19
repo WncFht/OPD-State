@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# Four-GPU sampled-token math baseline; three-benchmark avg@16, final-only by default.
+# Sampled-token math baseline; four GPUs and final eval16 by default.
 set -euo pipefail
 ROOT=$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)
 WORKSPACE=$(dirname "$ROOT")
@@ -9,7 +9,26 @@ if [[ ! -x "$TRAIN_PYTHON" ]]; then
     echo "Training Python does not exist: $TRAIN_PYTHON" >&2
     exit 2
 fi
-export CUDA_VISIBLE_DEVICES=0,1,2,3
+export N_GPUS_PER_NODE=${N_GPUS_PER_NODE:-4}
+export CUDA_VISIBLE_DEVICES=${CUDA_VISIBLE_DEVICES:-0,1,2,3}
+if [[ ! $N_GPUS_PER_NODE =~ ^[1-9][0-9]*$ ]]; then
+    echo "N_GPUS_PER_NODE must be a positive integer" >&2; exit 2
+fi
+IFS=',' read -r -a MATH_VISIBLE_GPUS <<< "$CUDA_VISIBLE_DEVICES"
+if ((${#MATH_VISIBLE_GPUS[@]} != N_GPUS_PER_NODE)); then
+    echo "CUDA_VISIBLE_DEVICES count must equal N_GPUS_PER_NODE" >&2; exit 2
+fi
+declare -A MATH_GPU_IDS=()
+for MATH_GPU_ID in "${MATH_VISIBLE_GPUS[@]}"; do
+    if [[ ! $MATH_GPU_ID =~ ^(0|[1-9][0-9]*)$ ]]; then
+        echo "CUDA_VISIBLE_DEVICES must contain distinct numeric CUDA ordinals" >&2; exit 2
+    fi
+    if [[ ${MATH_GPU_IDS[$MATH_GPU_ID]+set} ]]; then
+        echo "CUDA_VISIBLE_DEVICES must contain distinct numeric CUDA ordinals" >&2; exit 2
+    fi
+    MATH_GPU_IDS[$MATH_GPU_ID]=1
+done
+export CUDA_DEVICE_ORDER=${CUDA_DEVICE_ORDER:-PCI_BUS_ID}
 export CONDA_ENV_BIN
 CONDA_ENV_BIN=$(dirname "$TRAIN_PYTHON")
 export MODEL_BASE=${MODEL_BASE:-${WORKSPACE}/models}
@@ -36,7 +55,7 @@ export VERL_USE_EXTERNAL_PLUGINS=none
 export VLLM_USE_V1=1 VLLM_WORKER_MULTIPROC_METHOD=spawn
 SOURCE_COMMIT=$(git rev-parse --verify "${OPD_SOURCE_COMMIT:-HEAD}^{commit}")
 STEPS=${STEPS:-50}
-export N_GPUS_PER_NODE=4 NNODES=1 DOMAIN=math MODE=full
+export NNODES=1 DOMAIN=math MODE=full
 export SAVE_FREQ=-1 TEST_FREQ=$STEPS VAL_BEFORE_TRAIN=False
 export MAX_PROMPT_LENGTH=${MAX_PROMPT_LENGTH:-1024}
 export MAX_RESP_LENGTH=${MAX_RESP_LENGTH:-4096}

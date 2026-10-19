@@ -23,6 +23,35 @@ class PrefixSample:
         return self.end - self.begin
 
 
+def balanced_record_indices(records, world_size):
+    """Put similar causal-forward lengths in the same collective round.
+
+    Input is already DP-padded. Each rank receives the same number of rows;
+    alternating the within-round rank assignment avoids always assigning the
+    largest row to rank zero. Callers must invert this permutation before
+    removing DP padding or checking original response identities.
+    """
+    if type(world_size) is not int or world_size < 1 or len(records) == 0 or len(records) % world_size:
+        raise ValueError("KL balancing requires nonempty padded records and a positive world size")
+    if world_size == 1:
+        return tuple(range(len(records)))
+
+    def cost(index):
+        record = records[index]
+        positions = record.get("positions")
+        last = positions[-1] if positions else len(record["response_ids"]) - 1
+        projected = len(positions) if positions else len(record["response_ids"])
+        return -(len(record["prompt_ids"]) + last), -projected, index
+
+    ordered = sorted(range(len(records)), key=cost)
+    ranks = [[] for _ in range(world_size)]
+    for round_id, begin in enumerate(range(0, len(records), world_size)):
+        for rank in range(world_size):
+            offset = rank if round_id % 2 == 0 else world_size - rank - 1
+            ranks[rank].append(ordered[begin + offset])
+    return tuple(index for rank in ranks for index in rank)
+
+
 def sample_prefix_positions(length, *, max_positions=8, seed=0):
     """Always include action zero, then sample uniformly within disjoint strata.
 
@@ -95,6 +124,27 @@ def full_vocab_divergences(student_logits, teacher_logits, *, vocab_size=None, c
     if type(chunk_size) is not int or chunk_size < 1:
         raise ValueError("KL vocabulary chunk size must be positive")
     with torch.no_grad():
+        if chunk_size >= size:
+            # Native full-block reductions avoid Python vocabulary launches.
+            # logsumexp retains the existing FP32 normalization accuracy on
+            # the large effective vocabulary (including the CPU reference).
+            p_logits, q_logits = student_logits[:, :size], teacher_logits[:, :size]
+            finite = torch.isfinite(p_logits).all() & torch.isfinite(q_logits).all()
+            p, q = p_logits.float(), q_logits.float()
+            logp = p - torch.logsumexp(p, dim=-1, keepdim=True)
+            logq = q - torch.logsumexp(q, dim=-1, keepdim=True)
+            probp, probq = logp.exp(), logq.exp()
+            difference = logp - logq
+            result = {
+                "student_teacher_kl": (probp * difference).sum(-1),
+                "teacher_student_kl": -(probq * difference).sum(-1),
+                "student_entropy": -(probp * logp).sum(-1),
+                "teacher_entropy": -(probq * logq).sum(-1),
+            }
+            finite.logical_and_(torch.stack([torch.isfinite(value).all() for value in result.values()]).all())
+            if not finite:
+                raise ValueError("KL logits and reduction must be finite on the effective vocabulary")
+            return result
 
         def chunks():
             for begin in range(0, size, chunk_size):

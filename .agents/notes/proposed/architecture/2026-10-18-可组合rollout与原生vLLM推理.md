@@ -77,6 +77,8 @@ current 与 initial 的 λ=0.5 原生 fusion 均完成两步四卡更新和九�
 
 [独立验证并发的 CPU 验收](../../../../docs/experiment/results/native-rollout/eval-concurrency-cpu.json)覆盖默认继承、配置副本、重复解析、四类训练策略和 worker 参数读取；三组四卡短验收将对照 current 继承值、current 验证上限 64 和 initial-fusion 验证上限 64。它们共享 B8、两步和六题×16，额外核对默认完整数据清单及实际引擎回执。GPU 接入尚未验收，计时不作质量或吞吐结论；旧冻结任务保持原配置。
 
+Validation 优化使用独立的 seq/token/显存预算与 Graph 参数副本，保持训练配置；KL 输入在 DP 补齐后按相近前缀长度分配，每 rank 行数一致，RPC 返回后先逆排再去掉补齐。整块词表归约保持 FP32 与原数值门槛，完整词表太大时仍可显式缩小词表块。有效 token 解码避免扫描 padding，并按验证阶段记录 API 耗时。候选 profile、头部/权重/KV 容量估算及四/八卡参数由[速度与显存](../../../../docs/experiment/速度与显存.md)维护；真实性能、分块选择与周期验证 GPU 恢复以各自验收结果为准，不用 CPU 检查声称加速。
+
 ### 完整 prompt 池与访问次数
 
 [完整题库生成器](../../../../data/prep/build_fresh_math_data.py)按实际 token IDs 去重，剔除所有答案冲突题，独立于训练步数和 batch 大小。DAPO 的 17,917 行在 1,024 token 上限下过滤 8 行，去重 662 条额外记录，再移除 12 个答案冲突的唯一 prompt，得到 17,235 题。真实 RLHFDataset 和随机 sampler 已核对该行数，batch 64 时每 epoch 269 批、末尾 19 行按现有 drop-last 规则省略；前五十批恰好消费 3,200 道不同题，后续 epoch 重新打乱全题库。
@@ -636,7 +638,7 @@ env OMP_NUM_THREADS=2 TOKENIZERS_PARALLELISM=false ../envs/opd-state/bin/python 
 
 换权重候选已加入独立基准，尚未进入 trainer 默认路径。`eval/run_native_residency_controls.py` 先做驻留/换权重两个单卡 B4 短测，再按驻留串行、换权重串行、驻留并发及其逆序做六组四卡控制；共同 B64、联合预算 0.4、graph、固定 128 token 和自然 EOS 上限 4,096，五种单模型/双向分段/batch 混合策略各预热一次、计量三次。驻留引擎各占每卡 0.2，单个可写容器占 0.4；固定 checkpoint 从锁页 CPU 缓存经生产 CUDA IPC 完整写入，不修改只读 worker。每次先排空、写完、清理 KV 并提交版本，物理容器版本与逻辑冻结来源分别记录。测量前后均保存两个来源的完整词表 logits，由独立审计重算相对驻留参考的误差和总变差距离；权重激活、设备传输、生成、CPU 缓存准备与冷启动分别记录。[CPU 证据](../../../../docs/experiment/results/native-rollout/weight-residency-cpu.json)覆盖八十四项原生检查、十二项基准检查与历史二十八条件回归，真实 GPU 数值/吞吐/显存对照仍待执行。这项基准不包含 FSDP 导出或训练，不能直接替代训练全流程的速度结论。
 
-当前 Qwen2 配对每模型 BF16 权重约 3.31 GiB，双模型权重约 6.62 GiB；单模型 KV 每序列每 token 为 28 KiB。以每卡 16 条、每条总上下文上限 5,120 计算，一套完整 KV 为 2.1875 GiB，两套为 4.375 GiB。这只是有效 KV 的容量估计，未包含 graph、临时张量、分页浪费、引擎预留与训练对象；不能用约 11 GiB 的权重加 KV 之和承诺整卡峰值。实测历史显存与预算差异见[速度与显存专题](../../../../docs/experiment/2026-10-19-rollout速度与显存.md)。
+当前 Qwen2 配对每模型 BF16 权重约 3.31 GiB，双模型权重约 6.62 GiB；单模型 KV 每序列每 token 为 28 KiB。以每卡 16 条、每条总上下文上限 5,120 计算，一套完整 KV 为 2.1875 GiB，两套为 4.375 GiB。这只是有效 KV 的容量估计，未包含 graph、临时张量、分页浪费、引擎预留与训练对象；不能用约 11 GiB 的权重加 KV 之和承诺整卡峰值。实测历史显存与预算差异见[速度与显存专题](../../../../docs/experiment/速度与显存.md)。
 
 batch 路由按来源聚合后，在其可用副本内做负载均衡；小分组优先集中到较少副本，避免全局 64 条再按四卡、两来源拆成每来源每卡约 8 条。副本映射必须显式实现，保留四卡各分组的布局作基线。分段请求先用按阶段归组的简单实现验证，再考虑完成一条第一段就送入第二段的有界队列；后一方案仅在两套引擎都可驻留且实测提高吞吐时启用。同 GPU 两引擎同时跑可能竞争带宽，不能把流水化本身视为加速证据。
 
@@ -683,7 +685,7 @@ prompt 池由 `data.train_files`、清洗、去重与 sampler 决定，训练步
 
 ### 验证 KL 与 rollout 诊断提案
 
-开发源码已用 `trainer.validation_kl.enabled=True` 接入完整条件 KL 的可选验证 hook，默认关闭以保留原实验协议。输入校验对整个调用复用一次有效词表大小；本环境 tokenizer 的长度查询存在实测开销，不能放在逐响应循环内重复执行。缓存值同时用于记录支持集、worker metadata 和报告，保持词表解释一致。[CPU 对照](../../../../docs/experiment/results/native-rollout/tokenizer-vocab-cache-cpu.json)在相同 180 条真实 bank 记录上验证位置/权重输出逐值一致，只描述校验成本，不作为神经网络评分加速证据。它复用整轮准确率响应，在原生引擎休眠后使用同卡的最终 student 和冻结 teacher 评分，保存逐响应累计量、均值、分层统计及原始 token。开发版长度/EOS/解析/多样性指标和 KL 链路已通过真实 Torch/DataProto、实际 trainer 方法与小型 Qwen2 的 CPU 检查；两进程 CPU FSDP 还验证优化器更新后读取新 student、teacher 参数不变。真实四卡短响应、固定 bank 与长响应评分已通过下文验收；完整 570×16 评分已覆盖 56,737,088 个有效位置，wall time 45.70 min；资源与负载分解见[速度专题](../../../../docs/experiment/2026-10-19-rollout速度与显存.md#完整验证-kl-的成本与瓶颈)，尚未据此宣称吞吐已优化。冻结的 d59a7c3 矩阵不含新增指标，已结束且未保存最终权重的运行不能仅凭响应文本补算最终 KL。
+开发源码已用 `trainer.validation_kl.enabled=True` 接入完整条件 KL 的可选验证 hook，默认关闭以保留原实验协议。输入校验对整个调用复用一次有效词表大小；本环境 tokenizer 的长度查询存在实测开销，不能放在逐响应循环内重复执行。缓存值同时用于记录支持集、worker metadata 和报告，保持词表解释一致。[CPU 对照](../../../../docs/experiment/results/native-rollout/tokenizer-vocab-cache-cpu.json)在相同 180 条真实 bank 记录上验证位置/权重输出逐值一致，只描述校验成本，不作为神经网络评分加速证据。它复用整轮准确率响应，在原生引擎休眠后使用同卡的最终 student 和冻结 teacher 评分，保存逐响应累计量、均值、分层统计及原始 token。开发版长度/EOS/解析/多样性指标和 KL 链路已通过真实 Torch/DataProto、实际 trainer 方法与小型 Qwen2 的 CPU 检查；两进程 CPU FSDP 还验证优化器更新后读取新 student、teacher 参数不变。真实四卡短响应、固定 bank 与长响应评分已通过下文验收；完整 570×16 评分已覆盖 56,737,088 个有效位置，wall time 45.70 min；资源与负载分解见[速度专题](../../../../docs/experiment/速度与显存.md#完整验证-kl-的成本与瓶颈)，尚未据此宣称吞吐已优化。冻结的 d59a7c3 矩阵不含新增指标，已结束且未保存最终权重的运行不能仅凭响应文本补算最终 KL。
 
 KL hook 服务每次 `_validate()` 调用，读取当前 `global_steps` 的实时 student；末步是验证版本等于训练总步数的特例。中间验证结束通过 `end_eval(..., resume_training=True)` 恢复训练，末步不恢复；按 step 分别写出原始 token 与报告，共同 bank 跨验证保持不变。真实小 Qwen2 的 step0/2/4 连续验证、两段 SGD 更新、版本/输出隔离和恢复标志已通过 [CPU 回归](../../../../docs/experiment/results/native-rollout/periodic-validation-cpu.json)；该证据模拟 DP RPC，同一四卡训练中的中间 KL 与训练恢复仍待实际验收。配置和语义归 [KL 专题](../../../../docs/experiment/2026-10-19-rollout验证KL与状态诊断.md#每个验证点的版本与训练恢复)。
 

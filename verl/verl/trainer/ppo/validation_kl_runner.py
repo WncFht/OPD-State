@@ -14,6 +14,7 @@ import torch
 
 from verl import DataProto
 from verl.protocol import pad_dataproto_to_divisor, unpad_dataproto
+from verl.trainer.ppo.validation_kl import balanced_record_indices
 from verl.workers.validation_kl import STATISTICS, record_fingerprint, validate_record
 
 
@@ -29,10 +30,12 @@ def validate_settings(config, *, native_enabled):
         raise ValueError("Validation KL requires unfused causal-model forwards")
     if not config.trainer.get("validation_data_dir"):
         raise ValueError("Validation KL requires validation_data_dir for token and score evidence")
-    for name in ("position_chunk_size", "vocab_chunk_size"):
-        value = settings.get(name)
+    for name in ("position_chunk_size", "vocab_chunk_size", "forward_batch_size"):
+        value = settings.get(name, 1 if name == "forward_batch_size" else None)
         if type(value) is not int or value < 1:
             raise ValueError(f"Validation KL {name} must be a positive integer")
+    if type(settings.get("balance_records", True)) is not bool:
+        raise ValueError("Validation KL balance_records must be a boolean")
 
 
 def collect_records(batch, *, student_version):
@@ -180,9 +183,19 @@ def run_validation_kl(trainer, records):
             "vocab_size": vocab_size,
             "position_chunk_size": int(settings.position_chunk_size),
             "vocab_chunk_size": int(settings.vocab_chunk_size),
+            "forward_batch_size": int(settings.get("forward_batch_size", 1)),
         },
     )
-    padded, pad = pad_dataproto_to_divisor(data, int(trainer.opd_teacher_wg.world_size))
+    world_size = int(trainer.opd_teacher_wg.world_size)
+    padded, pad = pad_dataproto_to_divisor(data, world_size)
+    balance = settings.get("balance_records", True)
+    inverse = None
+    if balance:
+        order = np.asarray(balanced_record_indices(padded.non_tensor_batch["validation_kl_records"], world_size))
+        inverse = np.argsort(order)
+        # select_idxs creates a new batch; mutating padded in-place would also
+        # reorder data when no DP padding was needed.
+        padded = padded.select_idxs(order)
     tick = time.perf_counter()
     trainer.rollout_coordinator.sleep_replicas()
     sleep_seconds = time.perf_counter() - tick
@@ -191,6 +204,8 @@ def run_validation_kl(trainer, records):
     output = trainer.opd_teacher_wg.compute_validation_kl(padded)
     elapsed = time.perf_counter() - tick
     score_finished = time.time()
+    if inverse is not None:
+        output = output.select_idxs(inverse)
     output = unpad_dataproto(output, pad)
     if not torch.equal(output.batch["validation_row_id"].cpu(), data.batch["validation_row_id"]):
         raise ValueError("Validation KL worker changed response order or cardinality")
@@ -229,6 +244,9 @@ def run_validation_kl(trainer, records):
         "fixed_bank_sha256": bank_sha,
         "position_chunk_size": int(settings.position_chunk_size),
         "vocab_chunk_size": int(settings.vocab_chunk_size),
+        "forward_batch_size": int(settings.get("forward_batch_size", 1)),
+        "record_sharding": "length_balanced" if balance else "input_order",
+        "dispatch_world_size": world_size,
         "worker_timings": output.meta_info.get("metrics", {}),
         "metrics": metrics,
         "rows": rows,

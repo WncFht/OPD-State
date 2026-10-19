@@ -20,6 +20,7 @@ This trainer supports model-agonistic model initialization with huggingface
 
 import json
 import os
+import time
 import uuid
 from collections import defaultdict
 from concurrent.futures import ThreadPoolExecutor
@@ -701,8 +702,12 @@ class RayPPOTrainer(OPDTrainerMixin):
         if not getattr(self, "validation_enabled", True):
             return {} if not merged else None
 
+        validation_started = time.perf_counter()
+        validation_timings = defaultdict(float)
+        tick = time.perf_counter()
         if self.rollout_coordinator is not None:
             self.rollout_coordinator.begin_eval(self.global_steps)
+        validation_timings["prepare_seconds"] = time.perf_counter() - tick
 
         data_source_lst = []
         reward_extra_infos_dict: dict[str, list] = defaultdict(list)
@@ -750,7 +755,9 @@ class RayPPOTrainer(OPDTrainerMixin):
             # pad to be divisible by dp_size
             size_divisor = self.config.actor_rollout_ref.rollout.agent.num_workers
             test_gen_batch_padded, pad_size = pad_dataproto_to_divisor(test_gen_batch, size_divisor)
+            tick = time.perf_counter()
             test_output_gen_batch_padded = self.async_rollout_manager.generate_sequences(test_gen_batch_padded)
+            validation_timings["generate_sequences_seconds"] += time.perf_counter() - tick
 
             if self.use_rm and "rm_scores" not in test_output_gen_batch_padded.batch.keys():
                 # for colocate reward models, we need to sleep rollout model
@@ -768,8 +775,16 @@ class RayPPOTrainer(OPDTrainerMixin):
             print("validation generation end")
 
             # Store generated outputs
+            tick = time.perf_counter()
             output_ids = test_output_gen_batch.batch["responses"]
-            output_texts = [self.tokenizer.decode(ids, skip_special_tokens=True) for ids in output_ids]
+            if self.rollout_coordinator is not None:
+                from verl.trainer.ppo.validation_rollout import decode_effective_tokens
+
+                output_texts = decode_effective_tokens(
+                    self.tokenizer, output_ids, test_output_gen_batch.batch["response_mask"]
+                )
+            else:
+                output_texts = [self.tokenizer.decode(ids, skip_special_tokens=True) for ids in output_ids]
             sample_outputs.extend(output_texts)
 
             test_batch = test_batch.union(test_output_gen_batch)
@@ -778,16 +793,25 @@ class RayPPOTrainer(OPDTrainerMixin):
             # Store original inputs
             input_ids = test_batch.batch["prompts"]
             # TODO: Can we keep special tokens except for padding tokens?
-            input_texts = [self.tokenizer.decode(ids, skip_special_tokens=True) for ids in input_ids]
+            if self.rollout_coordinator is not None:
+                input_texts = decode_effective_tokens(
+                    self.tokenizer, input_ids, test_batch.batch["attention_mask"][:, :input_ids.shape[-1]]
+                )
+            else:
+                input_texts = [self.tokenizer.decode(ids, skip_special_tokens=True) for ids in input_ids]
+            validation_timings["decode_seconds"] += time.perf_counter() - tick
             sample_inputs.extend(input_texts)
             sample_uids.extend(test_batch.non_tensor_batch["uid"])
 
             # evaluate using reward_function
+            tick = time.perf_counter()
             reward_tensor, reward_extra_info = extract_reward(test_batch)
 
             scores = reward_tensor.sum(-1).cpu().tolist()
             sample_scores.extend(scores)
+            validation_timings["score_extract_seconds"] += time.perf_counter() - tick
 
+            tick = time.perf_counter()
             if self.rollout_coordinator is not None:
                 from verl.trainer.ppo.validation_rollout import rows_from_batch
 
@@ -796,6 +820,7 @@ class RayPPOTrainer(OPDTrainerMixin):
                     from verl.trainer.ppo.validation_kl_runner import collect_records
 
                     kl_records.extend(collect_records(test_batch, student_version=self.global_steps))
+            validation_timings["record_collection_seconds"] += time.perf_counter() - tick
 
             reward_extra_infos_dict["reward"].extend(scores)
             for key, values in reward_extra_info.items():
@@ -816,11 +841,15 @@ class RayPPOTrainer(OPDTrainerMixin):
         if kl_enabled:
             from verl.trainer.ppo.validation_kl_runner import run_validation_kl
 
+            tick = time.perf_counter()
             kl_rows, kl_metrics = run_validation_kl(self, kl_records)
+            validation_timings["kl_total_seconds"] = time.perf_counter() - tick
+        tick = time.perf_counter()
         if self.rollout_coordinator is not None:
             self.rollout_coordinator.end_eval(
                 self.global_steps, resume_training=self.global_steps < self.total_training_steps
             )
+        validation_timings["resume_seconds"] = time.perf_counter() - tick
         self._maybe_log_val_generations(inputs=sample_inputs, outputs=sample_outputs, scores=sample_scores)
 
         # dump generations
@@ -828,6 +857,7 @@ class RayPPOTrainer(OPDTrainerMixin):
         if val_data_dir:
             from verl.trainer.ppo.validation_rollout import dump_columns
 
+            tick = time.perf_counter()
             self._dump_generations(
                 inputs=sample_inputs,
                 outputs=sample_outputs,
@@ -841,12 +871,14 @@ class RayPPOTrainer(OPDTrainerMixin):
                 },
                 dump_path=val_data_dir,
             )
+            validation_timings["dump_call_seconds"] = time.perf_counter() - tick
 
         for key_info, lst in reward_extra_infos_dict.items():
             assert len(lst) == 0 or len(lst) == len(sample_scores), f"{key_info}: {len(lst)=}, {len(sample_scores)=}"
 
         if merged:
             print("_merge_validation_results validate result will be merged")
+            validation_timings["total_seconds"] = time.perf_counter() - validation_started
             return {
                 "data_sources": data_source_lst,
                 "sample_uids": sample_uids,
@@ -855,6 +887,7 @@ class RayPPOTrainer(OPDTrainerMixin):
                 "rollout_rows": rollout_rows,
                 "kl_rows": kl_rows,
                 "kl_metrics": kl_metrics,
+                "validation_timings": dict(validation_timings),
             }
         data_sources = np.concatenate(data_source_lst, axis=0)
         metrics = self._val_metrics_update(data_sources, sample_uids, reward_extra_infos_dict, sample_turns)
@@ -867,11 +900,16 @@ class RayPPOTrainer(OPDTrainerMixin):
                     rollout_rows, samples_per_question=int(self.config.actor_rollout_ref.rollout.val_kwargs.n)
                 )
             )
+        validation_timings["total_seconds"] = time.perf_counter() - validation_started
+        metrics.update({"validation_performance/" + key: value for key, value in validation_timings.items()})
         return metrics
 
     def _val_metrics_update(self, data_sources, sample_uids, reward_extra_infos_dict, sample_turns):
         metric_dict = {}
         expected_samples = self.config.trainer.get("math_eval_samples")
+        mode = self.config.trainer.get("validation_metrics_mode", "all")
+        if mode not in {"all", "math_exact"} or (mode == "math_exact" and expected_samples is None):
+            raise ValueError("validation_metrics_mode must be all, or math_exact with math_eval_samples")
         if expected_samples is not None:
             from verl.trainer.ppo.math_eval import MATH_BENCHMARK_COUNTS, exact_math_metrics
 
@@ -888,6 +926,8 @@ class RayPPOTrainer(OPDTrainerMixin):
                 else None,
             )
             metric_dict.update(exact)
+        if mode == "math_exact":
+            return metric_dict
         data_src2var2metric2val = process_validation_metrics(data_sources, sample_uids, reward_extra_infos_dict)
         for data_source, var2metric2val in data_src2var2metric2val.items():
             core_var = "acc" if "acc" in var2metric2val else "reward"
@@ -950,6 +990,10 @@ class RayPPOTrainer(OPDTrainerMixin):
                            if key.startswith("validation_kl/performance/") and key.endswith("_seconds")}
             for key in performance:
                 metrics[key] = sum(result.get("kl_metrics", {}).get(key, 0) for result in (result_a, result_b))
+        for result in (result_a, result_b):
+            for key, value in result.get("validation_timings", {}).items():
+                name = "validation_performance/" + key
+                metrics[name] = metrics.get(name, 0.0) + value
         return metrics
 
     def init_workers(self):

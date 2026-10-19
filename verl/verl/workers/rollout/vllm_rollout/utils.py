@@ -263,6 +263,8 @@ class vLLMColocateWorkerExtension:
             "max_num_seqs": int(worker_config.scheduler_config.max_num_seqs),
             "max_num_batched_tokens": int(worker_config.scheduler_config.max_num_batched_tokens),
             "max_model_len": int(worker_config.model_config.max_model_len),
+            "gpu_memory_utilization": float(worker_config.cache_config.gpu_memory_utilization),
+            "cuda_graph_enabled": bool(self.model_runner.use_cuda_graph),
         }
         return source
 

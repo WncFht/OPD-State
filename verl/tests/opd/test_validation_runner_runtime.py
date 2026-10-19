@@ -140,6 +140,24 @@ class ScoringRunnerTests(unittest.TestCase):
         with self.assertRaisesRegex(ValueError, "exactly one"):
             run_validation_kl(trainer, rows)
 
+    def test_balanced_dispatch_and_input_order_have_identical_restored_scores_and_padding(self):
+        reports = []
+        for balanced in (False, True):
+            trainer, _, _ = self.trainer()
+            trainer.config.trainer.validation_data_dir = str(self.directory / str(balanced))
+            trainer.config.trainer.validation_kl.balance_records = balanced
+            reward = fixtures.ValidationTrainerTests().reward
+            with patch("verl.trainer.ppo.ray_trainer.extract_reward", side_effect=reward):
+                trainer._validate()
+            path = self.directory / str(balanced) / "kl/kl-step-50.json"
+            report = json.loads(path.read_text())
+            self.assertEqual(report["record_sharding"], "length_balanced" if balanced else "input_order")
+            self.assertEqual(report["dispatch_world_size"], 4)
+            self.assertEqual(len(report["rows"]), 6)
+            reports.append(report)
+        self.assertEqual(reports[0]["rows"], reports[1]["rows"])
+        self.assertEqual(reports[0]["tokens_sha256"], reports[1]["tokens_sha256"])
+
     def test_periodic_validation_uses_each_live_version_and_resumes_until_final_step(self):
         trainer, events, dumped = self.trainer()
         trainer.total_training_steps = 4

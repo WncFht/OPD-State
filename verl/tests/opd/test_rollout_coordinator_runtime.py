@@ -91,6 +91,21 @@ class CoordinatorTests(unittest.TestCase):
     def prepare(self):
         return prepare_native_config(self.config, self.tokenizer, None)
 
+    def test_validation_fast_hydra_profile_composes_without_changing_learning_batch(self):
+        with initialize_config_dir(config_dir=str(ROOT / "verl/trainer/config"), version_base=None):
+            baseline = compose(config_name="ppo_trainer")
+            profile = compose(config_name="ppo_trainer", overrides=["+experiment=validation_fast"])
+        r = profile.actor_rollout_ref.rollout
+        self.assertEqual(r.generation_eval_max_num_seqs, 64)
+        self.assertEqual(r.generation_eval_memory_utilization, 0.65)
+        self.assertFalse(r.generation_eval_enforce_eager)
+        self.assertTrue(profile.trainer.validation_kl.enabled)
+        self.assertEqual(profile.trainer.validation_metrics_mode, "math_exact")
+        self.assertEqual(profile.data.train_batch_size, baseline.data.train_batch_size)
+        self.assertEqual(profile.actor_rollout_ref.actor.optim.lr, baseline.actor_rollout_ref.actor.optim.lr)
+        self.assertEqual(r.gpu_memory_utilization, baseline.actor_rollout_ref.rollout.gpu_memory_utilization)
+        self.assertEqual(r.enforce_eager, baseline.actor_rollout_ref.rollout.enforce_eager)
+
     def batch(self, n=1, *, validate=False, step=1):
         raw = np.empty(n, dtype=object)
         for i in range(n):
@@ -172,6 +187,54 @@ class CoordinatorTests(unittest.TestCase):
         with self.assertRaisesRegex(ValueError, "engine_kwargs"):
             self.prepare()
 
+    def test_eval_token_and_memory_overrides_leave_training_configuration_unchanged(self):
+        r = self.config.actor_rollout_ref.rollout
+        r.max_num_seqs, r.max_num_batched_tokens = 8, 512
+        r.generation_eval_max_num_seqs = 64
+        r.generation_eval_max_num_batched_tokens = 8192
+        r.generation_eval_memory_utilization = 0.7
+        r.generation_eval_enforce_eager = False
+        r.generation_eval_engine_kwargs = {
+            "compilation_config": {"custom_ops": ["all"], "cudagraph_capture_sizes": [1, 2, 4, 8, 16, 32, 64]}
+        }
+        original_eager = r.enforce_eager
+        self.prepare()
+        evaluation = native_evaluation_config(self.config).actor_rollout_ref.rollout
+        self.assertEqual((evaluation.max_num_seqs, evaluation.max_num_batched_tokens), (64, 8192))
+        self.assertEqual(evaluation.gpu_memory_utilization, 0.7)
+        self.assertFalse(evaluation.enforce_eager)
+        self.assertEqual(list(evaluation.cudagraph_capture_sizes), [1, 2, 4, 8, 16, 32, 64])
+        self.assertEqual(r.enforce_eager, original_eager)
+        self.assertNotIn("compilation_config", r.engine_kwargs.get("vllm", {}))
+        self.assertEqual((r.max_num_seqs, r.max_num_batched_tokens, r.gpu_memory_utilization), (8, 512, 0.2))
+        self.assertEqual(self.config.trainer.native_generation_memory_budget, 0.2)
+        self.prepare()
+        self.assertEqual(r.gpu_memory_utilization, 0.2)
+
+    def test_eval_token_memory_types_budgets_and_conflicts_fail_before_ray(self):
+        r = self.config.actor_rollout_ref.rollout
+        r.max_num_seqs = 8
+        for key, values in (
+            ("generation_eval_max_num_batched_tokens", (0, -1, True, 3.5, "8192", 4)),
+            ("generation_eval_memory_utilization", (0, 1, -0.1, True, "0.7", float("nan"))),
+            ("generation_eval_enforce_eager", (0, 1, "false")),
+            ("generation_eval_engine_kwargs", (True, "bad", {"max_num_seqs": 64}, {"compilation_config": "bad"})),
+        ):
+            for value in values:
+                r[key] = value
+                with self.subTest(key=key, value=value), self.assertRaises(ValueError):
+                    self.prepare()
+            r[key] = None
+        for field, engine_key, value in (
+            ("generation_eval_max_num_batched_tokens", "max_num_batched_tokens", 8192),
+            ("generation_eval_memory_utilization", "gpu_memory_utilization", 0.7),
+        ):
+            r[field] = value
+            r.engine_kwargs = {"vllm": {engine_key: value}}
+            with self.assertRaisesRegex(ValueError, "engine_kwargs"):
+                self.prepare()
+            r[field], r.engine_kwargs = None, {}
+
     def test_actual_pool_creation_separates_eval_and_all_training_policy_limits(self):
         class Replica:
             def __init__(self, replica_rank, config, model_config, gpus_per_node=4, **kwargs):
@@ -205,6 +268,7 @@ class CoordinatorTests(unittest.TestCase):
         for policy in policies:
             r = self.config.actor_rollout_ref.rollout
             r.policy, r.max_num_seqs, r.generation_eval_max_num_seqs = policy, 8, 64
+            r.generation_eval_max_num_batched_tokens, r.generation_eval_memory_utilization = 8192, 0.7
             self.prepare()
             evaluation = native_evaluation_config(self.config)
             mains = [
@@ -218,6 +282,8 @@ class CoordinatorTests(unittest.TestCase):
             ):
                 asyncio.run(pool.initialize())
                 self.assertEqual(pool.describe()[pool.eval_slot]["max_num_seqs"], 64)
+                self.assertEqual(pool.describe()[pool.eval_slot]["max_num_batched_tokens"], 8192)
+                self.assertEqual(pool.describe()[pool.eval_slot]["gpu_memory_utilization"], 0.7)
                 for slot, replicas in pool.replicas.items():
                     if slot == pool.eval_slot:
                         continue
@@ -226,17 +292,21 @@ class CoordinatorTests(unittest.TestCase):
                         self.assertEqual(replica.config.max_num_seqs, 8)
                         self.assertEqual(replica.config.generation_purpose, "training")
                         self.assertEqual(replica.config.max_model_len, 8)
+                        self.assertNotEqual(replica.config.gpu_memory_utilization, 0.7)
                 self.assertEqual(r.max_num_seqs, 8)
+                self.assertEqual(r.gpu_memory_utilization, 0.2)
 
     def test_worker_receipt_reads_the_actual_engine_scheduler_configuration(self):
         from verl.workers.rollout.vllm_rollout.utils import vLLMColocateWorkerExtension
 
         worker = NS(
             model_runner=NS(
+                use_cuda_graph=True,
                 vllm_config=NS(
                     scheduler_config=NS(max_num_seqs=64, max_num_batched_tokens=8192),
                     model_config=NS(max_model_len=32768),
-                )
+                    cache_config=NS(gpu_memory_utilization=0.7),
+                ),
             )
         )
         with (
@@ -249,6 +319,8 @@ class CoordinatorTests(unittest.TestCase):
         self.assertEqual(execution["max_num_seqs"], 64)
         self.assertEqual(execution["max_num_batched_tokens"], 8192)
         self.assertEqual(execution["max_model_len"], 32768)
+        self.assertEqual(execution["gpu_memory_utilization"], 0.7)
+        self.assertTrue(execution["cuda_graph_enabled"])
         self.assertFalse(torch.cuda.is_initialized())
 
     def test_prompt_visits_and_eval_samples_have_independent_counters(self):

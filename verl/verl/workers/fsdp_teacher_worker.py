@@ -323,6 +323,7 @@ class TeacherWorker(Worker):
                 position_chunk_size=int(data.meta_info["position_chunk_size"]),
                 vocab_chunk_size=int(data.meta_info["vocab_chunk_size"]),
                 dtype=PrecisionType.to_dtype(self.teacher_config.dtype),
+                forward_batch_size=int(data.meta_info.get("forward_batch_size", 1)),
             )
             release_started = time.perf_counter()
         if device.type == "cuda":

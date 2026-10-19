@@ -167,9 +167,14 @@ trainer:
   # Enable explicitly in a new protocol; frozen experiments retain their config.
   validation_kl:
     enabled: false
+    balance_records: true
+    forward_batch_size: 1
     position_chunk_size: 128
     vocab_chunk_size: 8192
     fixed_prefix_bank: null
+
+  # math_exact retains exact eval/* metrics, skipping duplicate bootstrap auxiliaries.
+  validation_metrics_mode: all
 
   # Number of nodes used in the training
   nnodes: 1

@@ -3,6 +3,7 @@
 import importlib.util
 import itertools
 import math
+import random
 import sys
 import unittest
 from dataclasses import replace
@@ -21,6 +22,46 @@ def load(name):
 
 rollout = load("validation_rollout")
 kl = load("validation_kl")
+
+
+class ValidationDispatchTests(unittest.TestCase):
+    def test_equal_collective_counts_and_inverse_order_for_four_and_eight_ranks(self):
+        generator = random.Random(17)
+        for world_size in (1, 2, 4, 8):
+            for rounds in (1, 3, 29):
+                records = [
+                    {"prompt_ids": [1, 2], "response_ids": [5] * generator.randrange(1, 128)}
+                    for _ in range(world_size * rounds)
+                ]
+                before = [len(r["response_ids"]) for r in records]
+                order = kl.balanced_record_indices(records, world_size)
+                self.assertEqual(sorted(order), list(range(len(records))))
+                inverse = sorted(range(len(order)), key=order.__getitem__)
+                self.assertEqual([order[i] for i in inverse], list(range(len(records))))
+                self.assertEqual(before, [len(r["response_ids"]) for r in records])
+                if world_size == 1:
+                    self.assertEqual(order, tuple(range(len(records))))
+                lengths = [len(r["prompt_ids"]) + len(r["response_ids"]) - 1 for r in records]
+                old = sum(max(lengths[rank * rounds + step] for rank in range(world_size)) for step in range(rounds))
+                new = sum(
+                    max(lengths[order[rank * rounds + step]] for rank in range(world_size)) for step in range(rounds)
+                )
+                self.assertLessEqual(new, old)
+
+    def test_bank_forward_length_uses_the_last_selected_prefix(self):
+        records = [
+            {"prompt_ids": [1], "response_ids": [5] * 100, "positions": [0, 1]},
+            {"prompt_ids": [1], "response_ids": [5] * 8},
+            {"prompt_ids": [1], "response_ids": [5] * 6},
+            {"prompt_ids": [1], "response_ids": [5] * 3},
+        ]
+        self.assertEqual(kl.balanced_record_indices(records, 2), (1, 0, 2, 3))
+
+    def test_invalid_shards_or_missing_padding_are_rejected(self):
+        row = {"prompt_ids": [1], "response_ids": [2]}
+        for records, world in (([], 4), ([row], 4), ([row], 0), ([row], True)):
+            with self.subTest(world=world, count=len(records)), self.assertRaises(ValueError):
+                kl.balanced_record_indices(records, world)
 
 
 class ValidationAggregationTests(unittest.TestCase):

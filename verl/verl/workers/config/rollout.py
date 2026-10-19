@@ -215,6 +215,10 @@ class RolloutConfig(BaseConfig):
     generation_layout: str = "overlap"
     # Native eval engine only; None inherits the original rollout concurrency.
     generation_eval_max_num_seqs: Optional[int] = None
+    generation_eval_max_num_batched_tokens: Optional[int] = None
+    generation_eval_memory_utilization: Optional[float] = None
+    generation_eval_enforce_eager: Optional[bool] = None
+    generation_eval_engine_kwargs: Optional[dict] = None
     generation_state_metrics: bool = True
     preserve_source_weights: bool = False
 

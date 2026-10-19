@@ -1,0 +1,52 @@
+{
+  "scope": "CPU semantic/numerical/config/launcher checks; no GPU throughput claim",
+  "passed": true,
+  "tests": [
+    {
+      "log": "all-runtime-final3.log",
+      "tests": 67,
+      "elapsed_s": 10.312,
+      "sha256": "7cf4d839d7715d88c38c01168a3d557c8a28abe11abc218eb76fd6a755c51de8"
+    },
+    {
+      "log": "maintenance-final.log",
+      "tests": 26,
+      "elapsed_s": 1.654,
+      "sha256": "340584e539766d434e527a4acc78034c741a02c7b7b1e76f7c09e1affb9f209b"
+    },
+    {
+      "log": "device-final.log",
+      "tests": 2,
+      "elapsed_s": 3.062,
+      "sha256": "c3b41c24daff76cc04435440dadb997e46c208a0346f61df7a2bb778cd149afb"
+    },
+    {
+      "log": "native-pure-final.log",
+      "tests": 90,
+      "elapsed_s": 0.156,
+      "sha256": "fb6288dc63478026460d51f8c0de33efe80636a51316fd14b5dda12922fe2c4b"
+    }
+  ],
+  "baseline_commit": "fc33dad616689fb6e87ece2a59d01c0accad901a",
+  "verified": [
+    "full-vocab FP32 error bounds against FP64",
+    "length balancing/inverse order/DP padding",
+    "batched causal scoring with padding/EOS/weighted bank",
+    "periodic validation with intervening SGD updates",
+    "independent eval scheduler/memory/Graph settings",
+    "four/eight-GPU command forwarding without CUDA",
+    "checkpoint header and KV/head capacity arithmetic"
+  ],
+  "gpu_acceptance": "pending",
+  "source_sha256": {
+    "verl/verl/workers/validation_kl.py": "9e70811a69ac862f83c1cdde5cb17f516c3f94ab699ca63e5a7bade439f9ee06",
+    "verl/verl/trainer/ppo/validation_kl.py": "69fdfa70f907e142e6d1884e1fe7413a0bce446ca1db7af98fd0c83d7223d25f",
+    "verl/verl/trainer/ppo/validation_kl_runner.py": "f607ff3145b40a3d5f712f5cb3e0bf11b83129ddabd3146d5f212f3a8245cdea",
+    "verl/verl/trainer/ppo/validation_rollout.py": "800877a0cd2aad3626b5759e0cefa008baa8eceff3cbedfd3f5acd8fce7472e4",
+    "verl/verl/trainer/ppo/rollout_coordinator.py": "08e2d554f0dcc69c4b304add1c4660e755606f21ee684af704e835d75b28dc6d",
+    "verl/verl/trainer/ppo/ray_trainer.py": "5796087acb93d00ee4f84a9e45b9226f2c16d9574ef3bdd0290ffa775d4ba560",
+    "verl/verl/workers/fsdp_teacher_worker.py": "3a118c8523573e47220d8af526d6b532c8160cfc928c127ec6b4b626ef06cd60",
+    "recipe/math_baseline.sh": "b53b9f75d99269ba780b4bee8c5501da12b7594e864bc86c32afac6cf0bd3162",
+    "eval/estimate_validation_memory.py": "dd81c5d96dc50a45bf6237f1bded372c941a3daba59f632f9f1291e2c4f0f16d"
+  }
+}

@@ -9,6 +9,7 @@ import math
 import time
 import uuid
 from collections import defaultdict
+from collections.abc import Mapping
 from dataclasses import asdict
 from pathlib import Path
 
@@ -30,13 +31,47 @@ def prepare_native_config(config, tokenizer, processor):
     if rollout.get("generation_layout", "overlap") not in {"overlap", "split"}:
         raise ValueError("Native generation layout must be overlap or split")
     eval_sequences = rollout.get("generation_eval_max_num_seqs")
+    eval_tokens = rollout.get("generation_eval_max_num_batched_tokens")
+    eval_memory = rollout.get("generation_eval_memory_utilization")
+    eval_eager = rollout.get("generation_eval_enforce_eager")
+    eval_engine = rollout.get("generation_eval_engine_kwargs")
+    if eval_eager is not None and type(eval_eager) is not bool:
+        raise ValueError("Native evaluation enforce_eager must be a boolean")
+    if eval_engine is not None:
+        if not isinstance(eval_engine, Mapping):
+            raise ValueError("Native evaluation engine kwargs must be a mapping")
+        reserved = {
+            "max_num_seqs",
+            "max_num_batched_tokens",
+            "gpu_memory_utilization",
+            "enforce_eager",
+            "max_model_len",
+        }
+        if reserved.intersection(eval_engine):
+            raise ValueError("Use the typed native evaluation limits instead of engine kwargs")
+        compilation = eval_engine.get("compilation_config")
+        if compilation is not None and not isinstance(compilation, Mapping):
+            raise ValueError("Native evaluation compilation_config must be a mapping")
+    if eval_tokens is not None and (type(eval_tokens) is not int or eval_tokens < 1):
+        raise ValueError("Native evaluation max_num_batched_tokens must be a positive integer")
+    if eval_memory is not None and (
+        type(eval_memory) not in (float, int) or not math.isfinite(eval_memory) or not 0 < eval_memory < 1
+    ):
+        raise ValueError("Native evaluation memory utilization must be between zero and one")
     if eval_sequences is not None:
         if type(eval_sequences) is not int or eval_sequences < 1:
             raise ValueError("Native evaluation max_num_seqs must be a positive integer")
-        if eval_sequences > int(rollout.max_num_batched_tokens):
+        if eval_sequences > int(eval_tokens if eval_tokens is not None else rollout.max_num_batched_tokens):
             raise ValueError("Native evaluation max_num_seqs exceeds its batched-token budget")
-        if "max_num_seqs" in (rollout.get("engine_kwargs", {}).get("vllm") or {}):
-            raise ValueError("Native evaluation max_num_seqs conflicts with the engine_kwargs override")
+    elif eval_tokens is not None and int(rollout.max_num_seqs) > eval_tokens:
+        raise ValueError("Native evaluation max_num_seqs exceeds its batched-token budget")
+    for value, key in (
+        (eval_sequences, "max_num_seqs"),
+        (eval_tokens, "max_num_batched_tokens"),
+        (eval_memory, "gpu_memory_utilization"),
+    ):
+        if value is not None and key in (rollout.get("engine_kwargs", {}).get("vllm") or {}):
+            raise ValueError(f"Native evaluation {key} conflicts with the engine_kwargs override")
     policy = OmegaConf.to_container(rollout.policy, resolve=True)
     parsed = parse_policy(policy, int(rollout.response_length))
     plan = compile_policy(
@@ -162,12 +197,30 @@ def native_evaluation_config(config):
     from omegaconf import open_dict
 
     rollout = config.actor_rollout_ref.rollout
-    limit = rollout.get("generation_eval_max_num_seqs")
-    if limit is None or rollout.get("policy") is None:
+    overrides = {
+        "max_num_seqs": rollout.get("generation_eval_max_num_seqs"),
+        "max_num_batched_tokens": rollout.get("generation_eval_max_num_batched_tokens"),
+        "gpu_memory_utilization": rollout.get("generation_eval_memory_utilization"),
+        "enforce_eager": rollout.get("generation_eval_enforce_eager"),
+    }
+    engine = rollout.get("generation_eval_engine_kwargs")
+    if (all(value is None for value in overrides.values()) and engine is None) or rollout.get("policy") is None:
         return config
     evaluation = copy.deepcopy(config)
     with open_dict(evaluation):
-        evaluation.actor_rollout_ref.rollout.max_num_seqs = limit
+        for key, value in overrides.items():
+            if value is not None:
+                evaluation.actor_rollout_ref.rollout[key] = value
+        if engine is not None:
+            from omegaconf import OmegaConf
+
+            target = evaluation.actor_rollout_ref.rollout
+            target.engine_kwargs = OmegaConf.merge(target.get("engine_kwargs") or {}, {"vllm": engine})
+            sizes = (engine.get("compilation_config") or {}).get("cudagraph_capture_sizes")
+            if sizes is not None:
+                # The adapter also accepts this top-level spelling. Keep both
+                # representations consistent within the eval-only clone.
+                target.cudagraph_capture_sizes = copy.deepcopy(sizes)
     return evaluation
 
 

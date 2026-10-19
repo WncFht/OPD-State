@@ -23,6 +23,10 @@ generation_purpose: evaluation
 generation_layout: overlap
 # Native eval engine concurrency; null preserves the inherited setting.
 generation_eval_max_num_seqs: null
+generation_eval_max_num_batched_tokens: null
+generation_eval_memory_utilization: null
+generation_eval_enforce_eager: null
+generation_eval_engine_kwargs: null
 generation_state_metrics: true
 preserve_source_weights: false
 

@@ -80,6 +80,42 @@ class CausalScoringTests(unittest.TestCase):
         self.assertEqual(timing["head_snapshot_bytes"], self.student.lm_head.weight.numel() * 4)
         self.assertGreater(timing["seconds"], 0)
 
+    def test_batched_forwards_match_single_rows_with_right_padding_eos_and_sparse_bank(self):
+        records = [self.record((2,), "one"), self.record(), self.record([7] * 31 + [2], "long")]
+        bank = self.record((5, 6, 7, 2), "bank")
+        bank.update(state_source="on_teacher_states", positions=[0, 2], weights=[1, 3])
+        records.append(bank)
+        expected, _ = self.score(records)
+        before = copy.deepcopy(self.student.state_dict())
+        frozen = copy.deepcopy(self.teacher.state_dict())
+        flags = [(m, m.training) for root in (self.student, self.teacher) for m in root.modules()]
+        for size in (2, 3, 4):
+            rng = torch.random.get_rng_state().clone()
+            actual, timings = self.score(records, forward_batch_size=size)
+            self.assertEqual(timings["forward_batches"], (len(records) + size - 1) // size)
+            for reference, row in zip(expected, actual, strict=True):
+                for key in ("record_sha256", "response_length", "evaluated_positions"):
+                    self.assertEqual(reference[key], row[key])
+                for name, total in reference["sums"].items():
+                    self.assertAlmostEqual(total, row["sums"][name], delta=2e-5)
+                self.assertEqual(set(reference["depths"]), set(row["depths"]))
+            self.assertTrue(torch.equal(rng, torch.random.get_rng_state()))
+            self.assertEqual(flags, [(m, m.training) for m, _ in flags])
+            self.assertTrue(all(torch.equal(v, before[k]) for k, v in self.student.state_dict().items()))
+            self.assertTrue(all(torch.equal(v, frozen[k]) for k, v in self.teacher.state_dict().items()))
+
+    def test_batched_failure_cleans_hooks_and_rejects_invalid_group_size(self):
+        for size in (0, -1, True):
+            with self.assertRaises(ValueError):
+                self.score([self.record()], forward_batch_size=size)
+        flags = [(m, m.training) for root in (self.student, self.teacher) for m in root.modules()]
+        with patch("verl.workers.validation_kl.full_vocab_divergences", side_effect=RuntimeError("injected")):
+            with self.assertRaisesRegex(RuntimeError, "injected"):
+                self.score([self.record(), self.record(uid="two")], forward_batch_size=2)
+        self.assertEqual(flags, [(m, m.training) for m, _ in flags])
+        self.assertEqual(len(self.student.lm_head._forward_pre_hooks), 0)
+        self.assertEqual(len(self.teacher.lm_head._forward_pre_hooks), 0)
+
     def test_readonly_scoring_restores_each_training_flag_hooks_rng_and_weights(self):
         self.student.train()
         self.student.model.layers[0].self_attn.eval()

@@ -63,15 +63,15 @@ def _output_head(module):
 
 
 @contextmanager
-def _head_capture(module, callback):
+def _head_capture(module, callback, *, batch_size=1, keep_batch=False):
     head = _output_head(module)
     calls = []
 
     def before_head(layer, inputs):
-        if len(inputs) != 1 or inputs[0].ndim != 3 or inputs[0].shape[0] != 1:
-            raise ValueError("Validation KL scores one unpadded response per model forward")
+        if len(inputs) != 1 or inputs[0].ndim != 3 or inputs[0].shape[0] != batch_size:
+            raise ValueError("Validation KL output-head batch differs from its causal inputs")
         calls.append(1)
-        callback(layer, inputs[0][0].detach())
+        callback(layer, (inputs[0] if keep_batch else inputs[0][0]).detach())
         # The backbone has already run. A zero-length head input suppresses the
         # ordinary [full sequence, vocabulary] projection without replacing any
         # parameters or model-forward implementation.
@@ -94,6 +94,7 @@ def score_causal_records(
     position_chunk_size=128,
     vocab_chunk_size=8192,
     dtype=torch.bfloat16,
+    forward_batch_size=1,
 ):
     """Score identical raw prefixes, including EOS actions, without backward.
 
@@ -106,9 +107,23 @@ def score_causal_records(
         raise ValueError("Validation KL requires a positive vocabulary and nonempty local records")
     if any(type(size) is not int or size < 1 for size in (position_chunk_size, vocab_chunk_size)):
         raise ValueError("Validation KL block sizes must be positive integers")
+    if type(forward_batch_size) is not int or forward_batch_size < 1:
+        raise ValueError("Validation KL forward batch size must be a positive integer")
     for module in (student, teacher):
         if module.config.model_type != "qwen2":
             raise ValueError("Validation KL head capture currently supports the native Qwen2 pair")
+    if forward_batch_size > 1:
+        return _score_causal_batches(
+            student,
+            teacher,
+            records,
+            vocab_size=vocab_size,
+            device=device,
+            dtype=dtype,
+            position_chunk_size=position_chunk_size,
+            vocab_chunk_size=vocab_chunk_size,
+            forward_batch_size=forward_batch_size,
+        )
     specifications = [validate_record(record, vocab_size) for record in records]
     device = torch.device(device)
     flags = [(module, module.training) for root in (student, teacher) for module in root.modules()]
@@ -226,4 +241,155 @@ def score_causal_records(
             module.training = training
     timings["seconds"] = time.perf_counter() - started
     timings["head_snapshot_bytes"] = sum(v.numel() * v.element_size() for v in snapshot.values() if v is not None)
+    return output, timings
+
+
+def _score_causal_batches(
+    student,
+    teacher,
+    records,
+    *,
+    vocab_size,
+    device,
+    dtype,
+    position_chunk_size,
+    vocab_chunk_size,
+    forward_batch_size,
+):
+    """Amortize FSDP gathers over equal-count groups; project valid states only."""
+    device = torch.device(device)
+    specifications = [validate_record(record, vocab_size) for record in records]
+    flags = [(module, module.training) for root in (student, teacher) for module in root.modules()]
+    if device.type == "cuda" and any(
+        module.config._attn_implementation != "flash_attention_2" for module in (student, teacher)
+    ):
+        raise ValueError("Batched CUDA validation KL currently requires FlashAttention2")
+    snapshot, output = {}, []
+    timings = {
+        "student_forward_seconds": 0.0,
+        "teacher_forward_seconds": 0.0,
+        "head_kl_seconds": 0.0,
+        "forward_batches": 0,
+    }
+    started = time.perf_counter()
+
+    def sync():
+        if device.type == "cuda":
+            torch.cuda.synchronize(device)
+
+    try:
+        student.eval()
+        teacher.eval()
+        with torch.no_grad(), torch.autocast(device_type=device.type, dtype=dtype, enabled=device.type == "cuda"):
+            for begin in range(0, len(records), forward_batch_size):
+                group = records[begin : begin + forward_batch_size]
+                selected = specifications[begin : begin + forward_batch_size]
+                sequences = [
+                    row["prompt_ids"] + row["response_ids"][: positions[-1]]
+                    for row, (positions, _) in zip(group, selected, strict=True)
+                ]
+                width = max(map(len, sequences))
+                input_ids = torch.zeros((len(group), width), dtype=torch.long, device=device)
+                mask = torch.zeros_like(input_ids)
+                for index, sequence in enumerate(sequences):
+                    input_ids[index, : len(sequence)] = torch.tensor(sequence, device=device)
+                    mask[index, : len(sequence)] = 1
+                head_indices = [
+                    torch.tensor(positions, device=device) + len(row["prompt_ids"]) - 1
+                    for row, (positions, _) in zip(group, selected, strict=True)
+                ]
+                kwargs = {
+                    "input_ids": input_ids,
+                    "attention_mask": mask,
+                    "position_ids": (mask.cumsum(-1) - 1).clamp_min(0),
+                    "use_cache": False,
+                    "logits_to_keep": 0,
+                }
+                capture, parts = {}, {name: [] for name in STATISTICS}
+
+                def pick(hidden, indices_by_row=head_indices):
+                    return torch.cat([hidden[i, indices] for i, indices in enumerate(indices_by_row)])
+
+                def capture_student(head, hidden, captured=capture, select=pick):
+                    if head.weight.shape[0] < vocab_size:
+                        raise ValueError("Batched student head has the wrong effective vocabulary")
+                    if not snapshot:
+                        projection_dtype = dtype if device.type == "cuda" else head.weight.dtype
+                        snapshot["weight"] = head.weight.detach().to(dtype=projection_dtype, copy=True)
+                        snapshot["bias"] = (
+                            None if head.bias is None else head.bias.detach().to(dtype=projection_dtype, copy=True)
+                        )
+                    captured["student"] = select(hidden)
+
+                def score_teacher(head, hidden, captured=capture, selected_parts=parts, select=pick):
+                    if head.weight.shape[0] < vocab_size:
+                        raise ValueError("Batched teacher head has the wrong effective vocabulary")
+                    sync()
+                    tick = time.perf_counter()
+                    q_hidden = select(hidden)
+                    projection_dtype = dtype if device.type == "cuda" else head.weight.dtype
+                    weight = head.weight.to(dtype=projection_dtype)
+                    bias = None if head.bias is None else head.bias.to(dtype=projection_dtype)
+                    for offset in range(0, len(q_hidden), position_chunk_size):
+                        end = offset + position_chunk_size
+                        p = F.linear(captured["student"][offset:end], snapshot["weight"], snapshot["bias"])
+                        q = F.linear(q_hidden[offset:end], weight, bias)
+                        values = full_vocab_divergences(p, q, vocab_size=vocab_size, chunk_size=vocab_chunk_size)
+                        for name in STATISTICS:
+                            selected_parts[name].append(values[name])
+                    sync()
+                    timings["head_kl_seconds"] += time.perf_counter() - tick
+
+                sync()
+                tick = time.perf_counter()
+                with _head_capture(student, capture_student, batch_size=len(group), keep_batch=True) as calls:
+                    result = student(**kwargs)
+                    if len(calls) != 1 or result.logits.numel():
+                        raise RuntimeError("Batched student head capture did not suppress the full projection")
+                sync()
+                timings["student_forward_seconds"] += time.perf_counter() - tick
+                tick, before = time.perf_counter(), timings["head_kl_seconds"]
+                with _head_capture(teacher, score_teacher, batch_size=len(group), keep_batch=True) as calls:
+                    result = teacher(**kwargs)
+                    if len(calls) != 1 or result.logits.numel():
+                        raise RuntimeError("Batched teacher head capture did not suppress the full projection")
+                sync()
+                timings["teacher_forward_seconds"] += time.perf_counter() - tick - (timings["head_kl_seconds"] - before)
+                timings["forward_batches"] += 1
+                values = {name: torch.cat(chunks).double().cpu() for name, chunks in parts.items()}
+                cursor = 0
+                for record, (positions, weights) in zip(group, selected, strict=True):
+                    count = len(positions)
+                    local = {name: value[cursor : cursor + count] for name, value in values.items()}
+                    row = {key: record[key] for key in ("state_source", "source", "uid", "sample")}
+                    weight_tensor = torch.tensor(weights, dtype=torch.float64)
+                    row.update(
+                        record_sha256=record_fingerprint(record),
+                        response_length=len(record["response_ids"]),
+                        evaluated_positions=count,
+                        sums={key: float((value * weight_tensor).sum()) for key, value in local.items()},
+                        depths={},
+                    )
+                    if record["state_source"] == "on_validation_states":
+                        for name, lower, upper in (
+                            ("0_255", 0, 256),
+                            ("256_1023", 256, 1024),
+                            ("1024_2047", 1024, 2048),
+                            ("2048_plus", 2048, count),
+                        ):
+                            upper = min(upper, count)
+                            if lower < upper:
+                                row["depths"][name] = {
+                                    "tokens": upper - lower,
+                                    "sums": {key: float(value[lower:upper].sum()) for key, value in local.items()},
+                                }
+                    output.append(row)
+                    cursor += count
+    finally:
+        for module, training in flags:
+            module.training = training
+    timings["seconds"] = time.perf_counter() - started
+    timings["head_snapshot_bytes"] = sum(
+        value.numel() * value.element_size() for value in snapshot.values() if value is not None
+    )
     return output, timings

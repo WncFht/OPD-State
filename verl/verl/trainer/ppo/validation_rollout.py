@@ -6,6 +6,17 @@ import math
 from collections import Counter, defaultdict
 
 
+def decode_effective_tokens(tokenizer, ids, mask):
+    """Decode actual prompt/response positions instead of full padded widths."""
+    if ids.ndim != 2 or mask.shape != ids.shape:
+        raise ValueError("Validation decoding requires matching token and mask matrices")
+    ids, mask = ids.detach().cpu(), mask.detach().cpu().bool()
+    rows = [row[selected] for row, selected in zip(ids, mask, strict=True)]
+    if callable(getattr(tokenizer, "batch_decode", None)):
+        return tokenizer.batch_decode(rows, skip_special_tokens=True)
+    return [tokenizer.decode(row, skip_special_tokens=True) for row in rows]
+
+
 def rollout_record(
     *,
     source,
