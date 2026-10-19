@@ -50,7 +50,11 @@ def resource_profile(report, status, gpu_path):
     whole, scoring = defaultdict(list), defaultdict(list)
     with Path(gpu_path).open() as stream:
         for row in csv.DictReader(stream):
-            gpu, used, elapsed = int(row["gpu"]), int(row["used_mib"]), float(row["elapsed_s"])
+            gpu, used, elapsed = (
+                int(row["gpu"]),
+                int(row["used_mib"]),
+                float(row["elapsed_s"]),
+            )
             if gpu not in range(4) or used < 0 or not math.isfinite(elapsed) or elapsed < 0:
                 raise ValueError("KL resource telemetry contains an invalid physical GPU, memory or time")
             whole[gpu].append(used)
@@ -76,11 +80,27 @@ def resource_profile(report, status, gpu_path):
     }
 
 
-def collect(run, output, *, bank=None, full=False, replicates=5000):
+def collect(
+    run,
+    output,
+    *,
+    bank=None,
+    full=False,
+    replicates=5000,
+    validation_step=None,
+    native_result=None,
+):
     run, output = Path(run).resolve(), Path(output).resolve()
-    native_path = output / "native-acceptance.json"
+    output.mkdir(parents=True, exist_ok=True)
+    native_path = (Path(native_result).resolve() if native_result is not None else output) / "native-acceptance.json"
     native = json.loads(native_path.read_text())
-    step = native["final_student_version"]
+    step = native["final_student_version"] if validation_step is None else validation_step
+    if type(step) is not int or (
+        step != native["final_student_version"] and str(step) not in native.get("validations_by_step", {})
+    ):
+        raise ValueError("Requested KL step is not bound to a completed native validation")
+    if step not in native["math_summary"].get("validation_steps", [native["final_student_version"]]):
+        raise ValueError("Requested KL step is absent from completed accuracy evidence")
     if native["math_summary"]["full_benchmarks"] is not full or native["math_summary"]["samples_per_question"] != 16:
         raise ValueError("KL collection scope must match native full/engineering eval16 acceptance")
     report_path = run / "validation/kl" / f"kl-step-{step}.json"
@@ -99,7 +119,10 @@ def collect(run, output, *, bank=None, full=False, replicates=5000):
         replicates=replicates,
     )
     main = [row for row in report["rows"] if row["state_source"] == "on_validation_states"]
-    if len(main) != native["evaluation_responses"] or (full and len(main) != 9120):
+    expected_responses = (
+        native.get("validations_by_step", {}).get(str(step), {}).get("responses", native["evaluation_responses"])
+    )
+    if len(main) != expected_responses or (full and len(main) != 9120):
         raise ValueError("KL response coverage differs from the completed accuracy evaluation")
     status_path, gpu_path = run / "status.json", run / "gpu.csv"
     status = json.loads(status_path.read_text())
@@ -165,13 +188,28 @@ def main():
     parser.add_argument("--bank", type=Path)
     parser.add_argument("--full", action="store_true")
     parser.add_argument("--replicates", type=int, default=5000)
+    parser.add_argument("--validation-step", type=int)
+    parser.add_argument("--native-result", type=Path)
     args = parser.parse_args()
-    result = collect(args.run, args.output, bank=args.bank, full=args.full, replicates=args.replicates)
+    result = collect(
+        args.run,
+        args.output,
+        bank=args.bank,
+        full=args.full,
+        replicates=args.replicates,
+        validation_step=args.validation_step,
+        native_result=args.native_result,
+    )
     print(
         json.dumps(
             {
                 key: result[key]
-                for key in ("student_version", "full_benchmarks", "responses", "all_validation_positions")
+                for key in (
+                    "student_version",
+                    "full_benchmarks",
+                    "responses",
+                    "all_validation_positions",
+                )
             }
         )
     )

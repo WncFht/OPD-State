@@ -23,7 +23,15 @@ def load_policy(path):
     return module
 
 
-def audit(run, output, steps, *, require_full=False, resource_note=None):
+def audit(
+    run,
+    output,
+    steps,
+    *,
+    require_full=False,
+    resource_note=None,
+    validation_interval=None,
+):
     run, output = Path(run).resolve(), Path(output).resolve()
     status = json.loads((run / "status.json").read_text())
     if status.get("exit_code") != 0 or status["state"] != "finished":
@@ -38,12 +46,14 @@ def audit(run, output, steps, *, require_full=False, resource_note=None):
 
     def override(name, default):
         return next(
-            (arg.split("=", 1)[1] for arg in reversed(command["command"]) if arg.startswith(name + "=")), default
+            (arg.split("=", 1)[1] for arg in reversed(command["command"]) if arg.startswith(name + "=")),
+            default,
         )
 
     gpu_count = int(manifest.get("trainer_gpu_count", override("trainer.n_gpus_per_node", "4")))
     verify_frozen = manifest.get(
-        "verify_frozen_parameters", override("actor_rollout_ref.rollout.generation_verify_frozen", "False") == "True"
+        "verify_frozen_parameters",
+        override("actor_rollout_ref.rollout.generation_verify_frozen", "False") == "True",
     )
     cap = int(manifest.get("response_cap", env["MAX_RESP_LENGTH"]))
     seed = int(manifest.get("seed", 42))
@@ -111,7 +121,11 @@ def audit(run, output, steps, *, require_full=False, resource_note=None):
         expected_frozen = set().union(
             *(
                 policy.compile_policy(
-                    manifest["policy"], cap=cap, batch_size=r["responses"], seed=seed, batch_id=r["step"]
+                    manifest["policy"],
+                    cap=cap,
+                    batch_size=r["responses"],
+                    seed=seed,
+                    batch_id=r["step"],
                 ).models
                 for r in reports
             )
@@ -120,11 +134,20 @@ def audit(run, output, steps, *, require_full=False, resource_note=None):
             not b.get("frozen_verifications") for b in batches if not b["validate"] and expected_frozen
         ):
             raise ValueError("The requested complete frozen-parameter verification is missing")
-    if not evaluations or any(b["step"] != steps for b in evaluations):
-        raise ValueError("Native acceptance requires final-only evaluation")
-    if any(any(i[0] != "current_student" or i[2] != steps for i in b["identities"]) for b in evaluations):
-        raise ValueError("Evaluation did not use the final current student exclusively")
-    summary = collect(run, output, steps=steps, interval=steps, require_full=require_full)
+    interval = steps if validation_interval is None else validation_interval
+    if type(interval) is not int or interval < 1:
+        raise ValueError("Validation interval must be a positive integer")
+    expected_steps = set(range(interval, steps + 1, interval)) | {steps}
+    if not evaluations or {b["step"] for b in evaluations} != expected_steps:
+        if validation_interval is None:
+            raise ValueError("Native acceptance requires final-only evaluation")
+        raise ValueError("Native evaluation steps differ from the configured validation interval")
+    if any(
+        not b["identities"] or any(i[0] != "current_student" or i[2] != b["step"] for i in b["identities"])
+        for b in evaluations
+    ):
+        raise ValueError("Evaluation did not use the matching current student exclusively")
+    summary = collect(run, output, steps=steps, interval=interval, require_full=require_full)
     if require_full and manifest.get("prepared_data_manifest_sha256") is not None:
         from audit_native_train_overlap import apply_definition
 
@@ -144,15 +167,27 @@ def audit(run, output, steps, *, require_full=False, resource_note=None):
         "resource_note": resource_note,
         "frozen_parameter_digests": {role: next(iter(values)) for role, values in frozen.items()},
         "training": reports,
-        "evaluation_responses": sum(b["metrics"]["source/response_count"] for b in evaluations),
+        "evaluation_responses": sum(b["metrics"]["source/response_count"] for b in evaluations if b["step"] == steps),
         "final_student_version": steps,
-        "evaluation_model_identities": sorted({tuple(i) for b in evaluations for i in b["identities"]}),
+        "evaluation_model_identities": sorted(
+            {tuple(i) for b in evaluations if b["step"] == steps for i in b["identities"]}
+        ),
         "whole_card_peak_mib": peaks,
         "status": status,
         "native_manifest_sha256": hashlib.sha256(locations[0].read_bytes()).hexdigest(),
         "math_summary": summary,
         "collector_source_sha256": hashlib.sha256(Path(__file__).read_bytes()).hexdigest(),
     }
+    if validation_interval is not None:
+        result["validations_by_step"] = {
+            str(step): {
+                "responses": sum(b["metrics"]["source/response_count"] for b in evaluations if b["step"] == step),
+                "model_identities": sorted(
+                    {tuple(i) for b in evaluations if b["step"] == step for i in b["identities"]}
+                ),
+            }
+            for step in sorted(expected_steps)
+        }
     (output / "native-acceptance.json").write_text(json.dumps(result, indent=2) + "\n")
     return result
 
@@ -162,10 +197,21 @@ def main():
     parser.add_argument("--run", type=Path, required=True)
     parser.add_argument("--output", type=Path, required=True)
     parser.add_argument("--steps", type=int, default=2)
+    parser.add_argument("--validation-interval", type=int)
     parser.add_argument("--full", action="store_true")
-    parser.add_argument("--resource-note", help="Describe known concurrent GPU load without attributing it to this run")
+    parser.add_argument(
+        "--resource-note",
+        help="Describe known concurrent GPU load without attributing it to this run",
+    )
     args = parser.parse_args()
-    result = audit(args.run, args.output, args.steps, require_full=args.full, resource_note=args.resource_note)
+    result = audit(
+        args.run,
+        args.output,
+        args.steps,
+        require_full=args.full,
+        resource_note=args.resource_note,
+        validation_interval=args.validation_interval,
+    )
     print(
         json.dumps(
             {

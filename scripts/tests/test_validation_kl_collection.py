@@ -82,6 +82,48 @@ def input_manifest(root):
 
 
 class KlCollectionTests(unittest.TestCase):
+    def test_intermediate_report_binds_to_a_completed_periodic_run_without_relabeling_final_weights(
+        self,
+    ):
+        with tempfile.TemporaryDirectory() as temporary:
+            run, result, _, _ = setup_run(Path(temporary))
+            native_path = result / "native-acceptance.json"
+            native = json.loads(native_path.read_text())
+            native["final_student_version"] = 4
+            native["validations_by_step"] = {
+                "2": {"responses": 64},
+                "4": {"responses": 64},
+            }
+            native["math_summary"]["validation_steps"] = [2, 4]
+            native_path.write_text(json.dumps(native))
+            output = result / "step-2"
+            receipt = COLLECT.collect(
+                run, output, validation_step=2, native_result=result, replicates=100
+            )
+            self.assertEqual(receipt["student_version"], 2)
+            self.assertEqual(receipt["responses"], 64)
+            self.assertEqual(
+                json.loads(native_path.read_text())["final_student_version"], 4
+            )
+            with self.assertRaisesRegex(ValueError, "bound"):
+                COLLECT.collect(
+                    run,
+                    result / "bad-step",
+                    validation_step=3,
+                    native_result=result,
+                    replicates=100,
+                )
+            native["math_summary"]["validation_steps"] = [4]
+            native_path.write_text(json.dumps(native))
+            with self.assertRaisesRegex(ValueError, "accuracy evidence"):
+                COLLECT.collect(
+                    run,
+                    result / "missing-accuracy",
+                    validation_step=2,
+                    native_result=result,
+                    replicates=100,
+                )
+
     def test_full_synthetic_9120_responses_and_180_bank_records_pass_without_claiming_gpu_scores(
         self,
     ):
