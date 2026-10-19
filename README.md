@@ -66,7 +66,7 @@ Student 可以对任意来源生成的 token 计算概率和梯度，无需另�
 
 ### 原生推理与资源调度
 
-[策略编译器](verl/verl/workers/rollout/policy.py)生成路由和长度预算，[模型池](verl/verl/workers/rollout/native_pool.py)管理副本，[协调器](verl/verl/trainer/ppo/rollout_coordinator.py)连接生成、评分、权重发布和验证。
+[策略编译器](src/opd_state/core/policy.py)生成路由和长度预算，[模型池](verl/verl/workers/rollout/native_pool.py)管理副本，[协调器](verl/verl/trainer/ppo/rollout_coordinator.py)连接生成、评分、权重发布和验证。
 
 生成使用原生 vLLM：fusion 在同一采样循环内执行双模型；分段和 batch 混合通过 token-in/token-out 请求路由实现，不回退到 HF。当前 student 以训练版本标识，固定 $p_0/q$ 以资产指纹标识；只向需要当前 student 的副本发布权重。Teacher 和初始 student 生成权重保持冻结。
 

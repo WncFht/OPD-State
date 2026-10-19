@@ -131,9 +131,11 @@ def main():
         ["git", "rev-parse", "--verify", args.source_commit + "^{commit}"], cwd=ROOT, text=True
     ).strip()
     if not args.plan_only:
-        code = subprocess.check_output(
-            ["git", "show", source + ":verl/verl/workers/rollout/policy.py"], cwd=ROOT, text=True
-        )
+        path = "src/opd_state/core/policy.py"
+        if subprocess.run(["git", "cat-file", "-e", source + ":" + path], cwd=ROOT,
+                          stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL).returncode:
+            path = "verl/verl/workers/rollout/policy.py"
+        code = subprocess.check_output(["git", "show", source + ":" + path], cwd=ROOT, text=True)
         if "keep_request_boundary" not in code:
             raise ValueError("Selected source predates the same-model request-boundary control")
     prepared, full_files = input_bindings(args.bank_input)

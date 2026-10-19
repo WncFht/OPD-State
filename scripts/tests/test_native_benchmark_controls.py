@@ -187,10 +187,13 @@ class NativeBenchmarkControlTests(unittest.TestCase):
             (root / "verl").mkdir()
             module = root / "verl/model.py"
             module.write_text("VALUE = 1\n")
+            package = root / "src/opd_state"
+            package.mkdir(parents=True)
+            (package / "__init__.py").write_text("VALUE = 1\n")
             driver = root / "probe.py"
             driver.write_text("# driver identity\n")
             subprocess.run(["git", "init", "-q"], cwd=root, check=True)
-            subprocess.run(["git", "add", "verl/model.py"], cwd=root, check=True)
+            subprocess.run(["git", "add", "verl/model.py", "src"], cwd=root, check=True)
             subprocess.run(
                 [
                     "git",
@@ -209,6 +212,7 @@ class NativeBenchmarkControlTests(unittest.TestCase):
                 check=True,
             )
             module.write_text("VALUE = 2\n")
+            (package / "__init__.py").write_text("VALUE = 2\n")
             committed, working = root / "committed", root / "working"
             committed.mkdir()
             working.mkdir()
@@ -216,6 +220,16 @@ class NativeBenchmarkControlTests(unittest.TestCase):
             live = snapshot.freeze(root, working, driver)
             self.assertEqual((frozen / "model.py").read_text(), "VALUE = 1\n")
             self.assertEqual((live / "model.py").read_text(), "VALUE = 2\n")
+            self.assertEqual(
+                (frozen.parent / "src/opd_state/__init__.py").read_text(), "VALUE = 1\n"
+            )
+            self.assertEqual(
+                (live.parent / "src/opd_state/__init__.py").read_text(), "VALUE = 2\n"
+            )
+            self.assertIn(
+                "src/opd_state/__init__.py",
+                json.loads((committed / "source-manifest.json").read_text())["files"],
+            )
             self.assertEqual(
                 json.loads((committed / "source-manifest.json").read_text())[
                     "source_kind"

@@ -1,29 +1,11 @@
 """Adversarial token/provenance and cancellation checks for production execution."""
 
 import asyncio
-import importlib.util
-import sys
-import types
 import unittest
 from dataclasses import replace
-from pathlib import Path
 
-ROOT = Path(__file__).resolve().parents[2] / "verl/workers/rollout"
-PACKAGE = "native_executor_contract"
-package = types.ModuleType(PACKAGE)
-package.__path__ = [str(ROOT)]
-sys.modules[PACKAGE] = package
-
-
-def load(name):
-    spec = importlib.util.spec_from_file_location(f"{PACKAGE}.{name}", ROOT / f"{name}.py")
-    module = importlib.util.module_from_spec(spec)
-    sys.modules[spec.name] = module
-    spec.loader.exec_module(module)
-    return module
-
-
-P, E = load("policy"), load("native_executor")
+import opd_state.core.policy as P
+import opd_state.rollout.executor as E
 
 
 class Backend:
@@ -92,13 +74,17 @@ class NativeExecutorTests(unittest.TestCase):
             for first, second in [(base, "teacher"), ("teacher", base)]:
                 (rows, _), backend = self.run_case(self.switch(first, second))
                 first_tokens = (2 if first == "teacher" else 3,) * 3
-                self.assertEqual(backend.calls[1][1][0].prompt_ids, (1, 5) + first_tokens)
+                self.assertEqual(
+                    backend.calls[1][1][0].prompt_ids, (1, 5) + first_tokens
+                )
                 self.assertEqual(backend.calls[1][1][0].max_tokens, 5)
                 for row in rows:
                     self.assertEqual(row.request.prompt_ids, (1, 5))
                     self.assertEqual(row.token_ids[:3], first_tokens)
                     self.assertEqual(row.response_mask, (1,) * 8)
-                    self.assertEqual([(s.start, s.end) for s in row.segments], [(0, 3), (3, 8)])
+                    self.assertEqual(
+                        [(s.start, s.end) for s in row.segments], [(0, 3), (3, 8)]
+                    )
                     self.assertEqual(row.behavior_log_probs, (-0.25,) * 8)
 
     def test_eos_at_length_boundary_prevents_second_model_and_remains_valid(self):
@@ -110,20 +96,36 @@ class NativeExecutorTests(unittest.TestCase):
             self.assertEqual(row.termination, "eos")
             self.assertEqual(row.segments[0].finish_reason, "length")
 
-    def test_same_model_control_issues_two_raw_prefix_calls_with_one_immutable_version(self):
+    def test_same_model_control_issues_two_raw_prefix_calls_with_one_immutable_version(
+        self,
+    ):
         for role in P.MODEL_ROLES:
             config = {**self.switch(role, role, 3), "keep_request_boundary": True}
             (rows, timing), backend = self.run_case(config)
             self.assertEqual(len(backend.calls), 2)
             self.assertEqual([row["phase"] for row in timing["groups"]], [0, 1])
             self.assertEqual(backend.calls[0][2], backend.calls[1][2])
-            self.assertEqual(backend.calls[1][1][0].prompt_ids, (1, 5) + rows[0].token_ids[:3])
-            self.assertNotEqual(backend.calls[0][1][0].seed, backend.calls[1][1][0].seed)
-            self.assertTrue(all(row.segments[0].identities == row.segments[1].identities for row in rows))
+            self.assertEqual(
+                backend.calls[1][1][0].prompt_ids, (1, 5) + rows[0].token_ids[:3]
+            )
+            self.assertNotEqual(
+                backend.calls[0][1][0].seed, backend.calls[1][1][0].seed
+            )
+            self.assertTrue(
+                all(
+                    row.segments[0].identities == row.segments[1].identities
+                    for row in rows
+                )
+            )
             self.assertTrue(all(row.response_mask == (1,) * 8 for row in rows))
             (stopped, _), early = self.run_case(config, Backend(stop_at=3))
             self.assertEqual(len(early.calls), 1)
-            self.assertTrue(all(len(row.token_ids) == 3 and row.termination == "eos" for row in stopped))
+            self.assertTrue(
+                all(
+                    len(row.token_ids) == 3 and row.termination == "eos"
+                    for row in stopped
+                )
+            )
 
     def test_early_eos_prevents_unused_second_stage(self):
         (rows, _), backend = self.run_case(self.switch(k=4), Backend(stop_at=2))
@@ -135,19 +137,28 @@ class NativeExecutorTests(unittest.TestCase):
             "kind": "batch_mix",
             "components": [
                 {"policy": {"kind": "single", "model": "teacher"}, "weight": 0.25},
-                {"policy": {"kind": "single", "model": "current_student"}, "weight": 0.75},
+                {
+                    "policy": {"kind": "single", "model": "current_student"},
+                    "weight": 0.75,
+                },
             ],
         }
         (rows, timing), backend = self.run_case(config, concurrent_groups=True)
-        self.assertEqual([r.request.prompt_id for r in rows], [str(i) for i in range(8)])
+        self.assertEqual(
+            [r.request.prompt_id for r in rows], [str(i) for i in range(8)]
+        )
         self.assertEqual(sum(r.token_ids[0] == 2 for r in rows), 2)
         self.assertEqual(sorted(t["requests"] for t in timing["groups"]), [2, 6])
         self.assertEqual(len(backend.calls), 2)
 
     def test_fusion_preserves_both_identities_and_coefficient(self):
-        (rows, _), _ = self.run_case({"kind": "logit_fusion", "base": "initial_student", "teacher_weight": 0.4})
+        (rows, _), _ = self.run_case(
+            {"kind": "logit_fusion", "base": "initial_student", "teacher_weight": 0.4}
+        )
         segment = rows[0].segments[0]
-        self.assertEqual([i[0] for i in segment.identities], ["initial_student", "teacher"])
+        self.assertEqual(
+            [i[0] for i in segment.identities], ["initial_student", "teacher"]
+        )
         self.assertEqual(segment.teacher_weight, 0.4)
 
     def test_wrong_actor_version_source_prefix_and_order_are_rejected_and_drained(self):
@@ -171,19 +182,36 @@ class NativeExecutorTests(unittest.TestCase):
 
     def test_failed_drain_is_not_treated_as_completed_generation(self):
         with self.assertRaisesRegex(RuntimeError, "unsafe"):
-            self.run_case(self.switch(), Backend(corrupt=lambda r: replace(r, finish_reason="abort"), drain=False))
+            self.run_case(
+                self.switch(),
+                Backend(
+                    corrupt=lambda r: replace(r, finish_reason="abort"), drain=False
+                ),
+            )
 
     def test_backend_must_acknowledge_the_actual_fusion_coefficient(self):
-        config = {"kind": "logit_fusion", "base": "initial_student", "teacher_weight": 0.5}
+        config = {
+            "kind": "logit_fusion",
+            "base": "initial_student",
+            "teacher_weight": 0.5,
+        }
         with self.assertRaisesRegex(RuntimeError, "coefficient"):
-            self.run_case(config, Backend(corrupt=lambda row: replace(row, teacher_weight=0.6)))
+            self.run_case(
+                config, Backend(corrupt=lambda row: replace(row, teacher_weight=0.6))
+            )
 
     def test_context_limits_are_checked_per_source_before_any_native_call(self):
         backend = Backend()
         with self.assertRaises(ValueError):
-            self.run_case(self.switch(), backend, context_limits={"teacher": 5, "current_student": 9})
+            self.run_case(
+                self.switch(),
+                backend,
+                context_limits={"teacher": 5, "current_student": 9},
+            )
         self.assertEqual(backend.calls, [])
-        (rows, _), _ = self.run_case(self.switch(), context_limits={"teacher": 5, "current_student": 10})
+        (rows, _), _ = self.run_case(
+            self.switch(), context_limits={"teacher": 5, "current_student": 10}
+        )
         self.assertEqual(len(rows), 8)
 
     def test_empty_batch_has_no_native_requests_or_model_activation(self):

@@ -62,15 +62,14 @@ def main():
     physical = query_devices()
     args.output = args.output.resolve()
     args.output.mkdir(parents=True, exist_ok=False)
-    from native_source_snapshot import freeze
+    from native_source_snapshot import activate, freeze
 
     source = freeze(ROOT, args.output, Path(__file__), commit=args.source_commit)
     if not (source / "verl/trainer/ppo/prefix_bank.py").is_file():
         raise ValueError("Select a committed native source containing the bank assembler")
     (args.output / "input.json").write_bytes(raw)
-    sys.path.insert(0, str(source))
+    activate(source)
     os.environ.update(
-        PYTHONPATH=str(source) + os.pathsep + os.environ.get("PYTHONPATH", ""),
         CUDA_VISIBLE_DEVICES=",".join(str(physical[gpu]["cuda_ordinal"]) for gpu in range(4)),
         CUDA_DEVICE_ORDER="PCI_BUS_ID",
         VLLM_USE_V1="1",

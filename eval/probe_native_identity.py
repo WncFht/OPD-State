@@ -57,6 +57,7 @@ def child_body(role, gpu, output):
         OMP_NUM_THREADS="2",
     )
     sys.path.insert(0, str(ROOT / "verl"))
+    sys.path.insert(0, str(ROOT / "src"))
     from vllm import LLM, SamplingParams
 
     from verl.trainer.ppo.fixed_rollout import digest_json, model_signature

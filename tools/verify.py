@@ -14,8 +14,8 @@ from omegaconf import OmegaConf
 
 from opd_state.artifacts import content_id, file_digest
 from opd_state.core.evaluation import due_suites, parse_evaluation
+from opd_state.core.policy import compile_policy
 from opd_state.integrations.verl.configuration import validate_config
-from opd_state.integrations.verl.modules import backend_module
 from recipes.inputs import verify_inputs
 from recipes.snapshots import verify_snapshot
 
@@ -149,7 +149,6 @@ def verify_training(root, config, inputs):
         raise ValueError("Observed training prompt pool differs from preparation")
     selection = json.loads((root / "data/selection.json").read_text())
     expected = {row["row_id"]: row for row in selection["train"]}
-    native = backend_module(config.run.backend, "workers/rollout/policy.py")
     seen_visits = Counter()
     traces = []
     batch_size = config.data.train_batch_size
@@ -166,7 +165,7 @@ def verify_training(root, config, inputs):
             raise ValueError(
                 "A training update did not consume its complete global batch"
             )
-        plan = native.compile_policy(
+        plan = compile_policy(
             policy,
             cap=cap,
             batch_size=batch_size,

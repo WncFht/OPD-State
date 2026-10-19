@@ -19,9 +19,9 @@ class PeriodicNativeCollectionTests(unittest.TestCase):
         output.mkdir()
         trajectory = run / "checkpoints/native-trajectories"
         trajectory.mkdir(parents=True)
-        source = run / "source/verl/verl/workers/rollout/policy.py"
+        source = run / "source/src/opd_state/core/policy.py"
         source.parent.mkdir(parents=True)
-        shutil.copyfile(ROOT / "verl/verl/workers/rollout/policy.py", source)
+        shutil.copyfile(ROOT / "src/opd_state/core/policy.py", source)
         policy = COLLECT.load_policy(source)
         manifest = {
             "policy": {"kind": "single", "model": "current_student"},

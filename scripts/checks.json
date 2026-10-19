@@ -80,13 +80,16 @@
       "command": [
         "python3",
         "-m",
-        "unittest",
-        "discover",
-        "-s",
-        "verl/tests/opd",
-        "-p",
-        "test_native_*_on_cpu.py",
-        "-v"
+        "pytest",
+        "tests/rollout",
+        "verl/tests/opd/test_native_mask_on_cpu.py",
+        "verl/tests/opd/test_native_placement_on_cpu.py",
+        "verl/tests/opd/test_native_pool_on_cpu.py",
+        "verl/tests/opd/test_native_routing_on_cpu.py",
+        "verl/tests/opd/test_native_server_on_cpu.py",
+        "verl/tests/opd/test_native_staged_on_cpu.py",
+        "verl/tests/opd/test_native_validation_on_cpu.py",
+        "-q"
       ],
       "modes": ["test", "ci"],
       "needs": [],

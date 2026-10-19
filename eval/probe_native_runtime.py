@@ -67,11 +67,10 @@ def main():
     parser.add_argument("--graph", action="store_true")
     args = parser.parse_args()
     args.output.mkdir(parents=True, exist_ok=False)
-    from native_source_snapshot import freeze
+    from native_source_snapshot import activate, freeze
 
     source = freeze(ROOT, args.output, Path(__file__))
-    sys.path.insert(0, str(source))
-    os.environ["PYTHONPATH"] = str(source) + os.pathsep + os.environ.get("PYTHONPATH", "")
+    activate(source)
     os.environ.update(
         CUDA_VISIBLE_DEVICES=str(args.gpu),
         VLLM_USE_V1="1",

@@ -51,19 +51,24 @@ def main():
     ).strip()
     if args.source_commit:
         source.mkdir()
-        archive = subprocess.Popen(["git", "archive", commit, "verl"], cwd=root, stdout=subprocess.PIPE)
+        components = ["verl"]
+        if subprocess.run(["git", "cat-file", "-e", commit + ":src/opd_state"], cwd=root,
+                          stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL).returncode == 0:
+            components.append("src/opd_state")
+        archive = subprocess.Popen(["git", "archive", commit, *components], cwd=root, stdout=subprocess.PIPE)
         subprocess.run(["tar", "-x", "-C", str(source)], stdin=archive.stdout, check=True)
         archive.stdout.close()
         if archive.wait() != 0:
             raise RuntimeError("Could not freeze the selected source commit")
     else:
         shutil.copytree(root / "verl", source / "verl", ignore=shutil.ignore_patterns("__pycache__", "*.pyc"))
+        shutil.copytree(root / "src/opd_state", source / "src/opd_state", ignore=shutil.ignore_patterns("__pycache__", "*.pyc"))
     manifest = {
         "base_commit": commit,
         "source_kind": "git_archive" if args.source_commit else "worktree_copy",
         "files": {
             str(p.relative_to(source)): hashlib.sha256(p.read_bytes()).hexdigest()
-            for p in sorted((source / "verl").rglob("*"))
+            for p in sorted(source.rglob("*"))
             if p.is_file()
         },
     }
@@ -84,6 +89,7 @@ def main():
         "EXPERIMENT_NAME": run.name,
         "RAY_TMPDIR": str(ray_dir),
         "VERL_ROOT": str(source / "verl"),
+        "OPD_PACKAGE_ROOT": str(source / "src"),
         "WANDB_RUN_GROUP": "math-native-rollout-sources",
         "OPD_SOURCE_COMMIT": commit,
     }

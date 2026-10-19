@@ -13,6 +13,8 @@
 | `verl/scripts/` | 原框架的模型与运行辅助脚本                                             |
 | `scripts/`      | 我们接入的维护检查、工具安装与 hooks                                   |
 
+配置与前台已迁入根 `configs/`、`recipes/`，独立审计位于 `tools/verify.py`。纯策略编译在 `src/opd_state/core/policy.py`，轨迹执行与权重发布状态机在 `src/opd_state/rollout/`，这些模块不导入 Torch、Ray、verl 或 vLLM。后端旧路径暂时只导出相同对象；修改算法时编辑包内实现。完整迁移与验收范围由 [MirrorOPD 对齐 Agent Note](../.agents/notes/proposed/architecture/2026-10-19-MirrorOPD配置与架构对齐.md)维护。
+
 `verl/` 内部的 `setup.py`、`pyproject.toml` 和 `verl/` 包目录是上游原有结构。保留这一层可继续使用原安装入口和 recipe 的 PYTHONPATH 解析；日常改训练代码直接进入 `verl/verl/`。
 
 ## 研究与开发资料

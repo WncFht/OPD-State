@@ -1,0 +1,1711 @@
+{
+  "baseline_commit": "2eec618f5f62545cd265c6231f18a05132b828d7",
+  "cases": [
+    {
+      "policy": {
+        "kind": "single",
+        "model": "current_student"
+      },
+      "arguments": {
+        "cap": 1,
+        "batch_size": 0,
+        "seed": 0,
+        "batch_id": 0
+      },
+      "plan_sha256": "d87f5c771e40be525e125167fbdcae244bbde7fd00e09b19d7bd23d511dbfd91"
+    },
+    {
+      "policy": {
+        "kind": "single",
+        "model": "current_student"
+      },
+      "arguments": {
+        "cap": 8,
+        "batch_size": 7,
+        "seed": 42,
+        "batch_id": 1
+      },
+      "plan_sha256": "4530146de21c778dc63941a7b9ea69a25c5ea7f1b273ca5dd81b9efbba23651b"
+    },
+    {
+      "policy": {
+        "kind": "single",
+        "model": "current_student"
+      },
+      "arguments": {
+        "cap": 4096,
+        "batch_size": 64,
+        "seed": 99,
+        "batch_id": 50
+      },
+      "plan_sha256": "3e5c50513ed2f00a2f5ca5b5603d7bd08b51bdcc545019516eb6e1bc2864b2b1"
+    },
+    {
+      "policy": {
+        "kind": "single",
+        "model": "initial_student"
+      },
+      "arguments": {
+        "cap": 1,
+        "batch_size": 0,
+        "seed": 0,
+        "batch_id": 0
+      },
+      "plan_sha256": "d87f5c771e40be525e125167fbdcae244bbde7fd00e09b19d7bd23d511dbfd91"
+    },
+    {
+      "policy": {
+        "kind": "single",
+        "model": "initial_student"
+      },
+      "arguments": {
+        "cap": 8,
+        "batch_size": 7,
+        "seed": 42,
+        "batch_id": 1
+      },
+      "plan_sha256": "3971a73aadff5400fb9451afb20eef33a53f3676c7e239af183771341b3d0cef"
+    },
+    {
+      "policy": {
+        "kind": "single",
+        "model": "initial_student"
+      },
+      "arguments": {
+        "cap": 4096,
+        "batch_size": 64,
+        "seed": 99,
+        "batch_id": 50
+      },
+      "plan_sha256": "c72ec1b46675f5fcaf1ebd3b260f1ff942c73d49d1aa6d101e5efc670a5a5d64"
+    },
+    {
+      "policy": {
+        "kind": "single",
+        "model": "teacher"
+      },
+      "arguments": {
+        "cap": 1,
+        "batch_size": 0,
+        "seed": 0,
+        "batch_id": 0
+      },
+      "plan_sha256": "d87f5c771e40be525e125167fbdcae244bbde7fd00e09b19d7bd23d511dbfd91"
+    },
+    {
+      "policy": {
+        "kind": "single",
+        "model": "teacher"
+      },
+      "arguments": {
+        "cap": 8,
+        "batch_size": 7,
+        "seed": 42,
+        "batch_id": 1
+      },
+      "plan_sha256": "4b87d002548fb46a543d6f7e399c2c1b8e71af8aa423999679a1ed764da6c15f"
+    },
+    {
+      "policy": {
+        "kind": "single",
+        "model": "teacher"
+      },
+      "arguments": {
+        "cap": 4096,
+        "batch_size": 64,
+        "seed": 99,
+        "batch_id": 50
+      },
+      "plan_sha256": "208246d7d85ee6ace513809d5d19277e1f9dbdfd337bce830e873d87cae6c557"
+    },
+    {
+      "policy": {
+        "kind": "logit_fusion",
+        "base": "current_student",
+        "teacher_weight": 0
+      },
+      "arguments": {
+        "cap": 1,
+        "batch_size": 0,
+        "seed": 0,
+        "batch_id": 0
+      },
+      "plan_sha256": "d87f5c771e40be525e125167fbdcae244bbde7fd00e09b19d7bd23d511dbfd91"
+    },
+    {
+      "policy": {
+        "kind": "logit_fusion",
+        "base": "current_student",
+        "teacher_weight": 0
+      },
+      "arguments": {
+        "cap": 8,
+        "batch_size": 7,
+        "seed": 42,
+        "batch_id": 1
+      },
+      "plan_sha256": "4530146de21c778dc63941a7b9ea69a25c5ea7f1b273ca5dd81b9efbba23651b"
+    },
+    {
+      "policy": {
+        "kind": "logit_fusion",
+        "base": "current_student",
+        "teacher_weight": 0
+      },
+      "arguments": {
+        "cap": 4096,
+        "batch_size": 64,
+        "seed": 99,
+        "batch_id": 50
+      },
+      "plan_sha256": "3e5c50513ed2f00a2f5ca5b5603d7bd08b51bdcc545019516eb6e1bc2864b2b1"
+    },
+    {
+      "policy": {
+        "kind": "logit_fusion",
+        "base": "current_student",
+        "teacher_weight": 0.5
+      },
+      "arguments": {
+        "cap": 1,
+        "batch_size": 0,
+        "seed": 0,
+        "batch_id": 0
+      },
+      "plan_sha256": "d87f5c771e40be525e125167fbdcae244bbde7fd00e09b19d7bd23d511dbfd91"
+    },
+    {
+      "policy": {
+        "kind": "logit_fusion",
+        "base": "current_student",
+        "teacher_weight": 0.5
+      },
+      "arguments": {
+        "cap": 8,
+        "batch_size": 7,
+        "seed": 42,
+        "batch_id": 1
+      },
+      "plan_sha256": "31b75ed26b985ee93d96c40bd9f9e9cf3935de042172d2222ce27493c6b61574"
+    },
+    {
+      "policy": {
+        "kind": "logit_fusion",
+        "base": "current_student",
+        "teacher_weight": 0.5
+      },
+      "arguments": {
+        "cap": 4096,
+        "batch_size": 64,
+        "seed": 99,
+        "batch_id": 50
+      },
+      "plan_sha256": "aaa49fda4cf6dd0c0cd401295dd107e700dc08761f2ec4ab63e12def5d31b8c4"
+    },
+    {
+      "policy": {
+        "kind": "logit_fusion",
+        "base": "current_student",
+        "teacher_weight": 1
+      },
+      "arguments": {
+        "cap": 1,
+        "batch_size": 0,
+        "seed": 0,
+        "batch_id": 0
+      },
+      "plan_sha256": "d87f5c771e40be525e125167fbdcae244bbde7fd00e09b19d7bd23d511dbfd91"
+    },
+    {
+      "policy": {
+        "kind": "logit_fusion",
+        "base": "current_student",
+        "teacher_weight": 1
+      },
+      "arguments": {
+        "cap": 8,
+        "batch_size": 7,
+        "seed": 42,
+        "batch_id": 1
+      },
+      "plan_sha256": "4b87d002548fb46a543d6f7e399c2c1b8e71af8aa423999679a1ed764da6c15f"
+    },
+    {
+      "policy": {
+        "kind": "logit_fusion",
+        "base": "current_student",
+        "teacher_weight": 1
+      },
+      "arguments": {
+        "cap": 4096,
+        "batch_size": 64,
+        "seed": 99,
+        "batch_id": 50
+      },
+      "plan_sha256": "208246d7d85ee6ace513809d5d19277e1f9dbdfd337bce830e873d87cae6c557"
+    },
+    {
+      "policy": {
+        "kind": "logit_fusion",
+        "base": "initial_student",
+        "teacher_weight": 0
+      },
+      "arguments": {
+        "cap": 1,
+        "batch_size": 0,
+        "seed": 0,
+        "batch_id": 0
+      },
+      "plan_sha256": "d87f5c771e40be525e125167fbdcae244bbde7fd00e09b19d7bd23d511dbfd91"
+    },
+    {
+      "policy": {
+        "kind": "logit_fusion",
+        "base": "initial_student",
+        "teacher_weight": 0
+      },
+      "arguments": {
+        "cap": 8,
+        "batch_size": 7,
+        "seed": 42,
+        "batch_id": 1
+      },
+      "plan_sha256": "3971a73aadff5400fb9451afb20eef33a53f3676c7e239af183771341b3d0cef"
+    },
+    {
+      "policy": {
+        "kind": "logit_fusion",
+        "base": "initial_student",
+        "teacher_weight": 0
+      },
+      "arguments": {
+        "cap": 4096,
+        "batch_size": 64,
+        "seed": 99,
+        "batch_id": 50
+      },
+      "plan_sha256": "c72ec1b46675f5fcaf1ebd3b260f1ff942c73d49d1aa6d101e5efc670a5a5d64"
+    },
+    {
+      "policy": {
+        "kind": "logit_fusion",
+        "base": "initial_student",
+        "teacher_weight": 0.5
+      },
+      "arguments": {
+        "cap": 1,
+        "batch_size": 0,
+        "seed": 0,
+        "batch_id": 0
+      },
+      "plan_sha256": "d87f5c771e40be525e125167fbdcae244bbde7fd00e09b19d7bd23d511dbfd91"
+    },
+    {
+      "policy": {
+        "kind": "logit_fusion",
+        "base": "initial_student",
+        "teacher_weight": 0.5
+      },
+      "arguments": {
+        "cap": 8,
+        "batch_size": 7,
+        "seed": 42,
+        "batch_id": 1
+      },
+      "plan_sha256": "3c49b8a8be0497aab11f869a43bd76cde6652e9c59467f48a7deea333bcda122"
+    },
+    {
+      "policy": {
+        "kind": "logit_fusion",
+        "base": "initial_student",
+        "teacher_weight": 0.5
+      },
+      "arguments": {
+        "cap": 4096,
+        "batch_size": 64,
+        "seed": 99,
+        "batch_id": 50
+      },
+      "plan_sha256": "762bd3108833b8ed6079ff934e485d7f6a5a77bf0583221c834302f89ff06d22"
+    },
+    {
+      "policy": {
+        "kind": "logit_fusion",
+        "base": "initial_student",
+        "teacher_weight": 1
+      },
+      "arguments": {
+        "cap": 1,
+        "batch_size": 0,
+        "seed": 0,
+        "batch_id": 0
+      },
+      "plan_sha256": "d87f5c771e40be525e125167fbdcae244bbde7fd00e09b19d7bd23d511dbfd91"
+    },
+    {
+      "policy": {
+        "kind": "logit_fusion",
+        "base": "initial_student",
+        "teacher_weight": 1
+      },
+      "arguments": {
+        "cap": 8,
+        "batch_size": 7,
+        "seed": 42,
+        "batch_id": 1
+      },
+      "plan_sha256": "4b87d002548fb46a543d6f7e399c2c1b8e71af8aa423999679a1ed764da6c15f"
+    },
+    {
+      "policy": {
+        "kind": "logit_fusion",
+        "base": "initial_student",
+        "teacher_weight": 1
+      },
+      "arguments": {
+        "cap": 4096,
+        "batch_size": 64,
+        "seed": 99,
+        "batch_id": 50
+      },
+      "plan_sha256": "208246d7d85ee6ace513809d5d19277e1f9dbdfd337bce830e873d87cae6c557"
+    },
+    {
+      "policy": {
+        "kind": "sequence_switch",
+        "first": "teacher",
+        "second": "current_student",
+        "boundary": {
+          "kind": "response_tokens",
+          "value": 0
+        }
+      },
+      "arguments": {
+        "cap": 1,
+        "batch_size": 0,
+        "seed": 0,
+        "batch_id": 0
+      },
+      "plan_sha256": "d87f5c771e40be525e125167fbdcae244bbde7fd00e09b19d7bd23d511dbfd91"
+    },
+    {
+      "policy": {
+        "kind": "sequence_switch",
+        "first": "teacher",
+        "second": "current_student",
+        "boundary": {
+          "kind": "response_tokens",
+          "value": 0
+        }
+      },
+      "arguments": {
+        "cap": 8,
+        "batch_size": 7,
+        "seed": 42,
+        "batch_id": 1
+      },
+      "plan_sha256": "4530146de21c778dc63941a7b9ea69a25c5ea7f1b273ca5dd81b9efbba23651b"
+    },
+    {
+      "policy": {
+        "kind": "sequence_switch",
+        "first": "teacher",
+        "second": "current_student",
+        "boundary": {
+          "kind": "response_tokens",
+          "value": 0
+        }
+      },
+      "arguments": {
+        "cap": 4096,
+        "batch_size": 64,
+        "seed": 99,
+        "batch_id": 50
+      },
+      "plan_sha256": "3e5c50513ed2f00a2f5ca5b5603d7bd08b51bdcc545019516eb6e1bc2864b2b1"
+    },
+    {
+      "policy": {
+        "kind": "sequence_switch",
+        "first": "teacher",
+        "second": "current_student",
+        "boundary": {
+          "kind": "response_tokens",
+          "value": 3
+        }
+      },
+      "arguments": {
+        "cap": 1,
+        "batch_size": 0,
+        "seed": 0,
+        "batch_id": 0
+      },
+      "plan_sha256": "d87f5c771e40be525e125167fbdcae244bbde7fd00e09b19d7bd23d511dbfd91"
+    },
+    {
+      "policy": {
+        "kind": "sequence_switch",
+        "first": "teacher",
+        "second": "current_student",
+        "boundary": {
+          "kind": "response_tokens",
+          "value": 3
+        }
+      },
+      "arguments": {
+        "cap": 8,
+        "batch_size": 7,
+        "seed": 42,
+        "batch_id": 1
+      },
+      "plan_sha256": "0424060f75418babcf54ae64dd19666a297275c6e49ddeb5a8e6c4f629c26a79"
+    },
+    {
+      "policy": {
+        "kind": "sequence_switch",
+        "first": "teacher",
+        "second": "current_student",
+        "boundary": {
+          "kind": "response_tokens",
+          "value": 3
+        }
+      },
+      "arguments": {
+        "cap": 4096,
+        "batch_size": 64,
+        "seed": 99,
+        "batch_id": 50
+      },
+      "plan_sha256": "594dbbf8352dd5d921b6d1750fc6c9fba0460de2c4e7a453b25359762d23ebe0"
+    },
+    {
+      "policy": {
+        "kind": "sequence_switch",
+        "first": "teacher",
+        "second": "current_student",
+        "boundary": {
+          "kind": "response_tokens",
+          "value": 2048
+        }
+      },
+      "arguments": {
+        "cap": 1,
+        "batch_size": 0,
+        "seed": 0,
+        "batch_id": 0
+      },
+      "plan_sha256": "d87f5c771e40be525e125167fbdcae244bbde7fd00e09b19d7bd23d511dbfd91"
+    },
+    {
+      "policy": {
+        "kind": "sequence_switch",
+        "first": "teacher",
+        "second": "current_student",
+        "boundary": {
+          "kind": "response_tokens",
+          "value": 2048
+        }
+      },
+      "arguments": {
+        "cap": 8,
+        "batch_size": 7,
+        "seed": 42,
+        "batch_id": 1
+      },
+      "plan_sha256": "4b87d002548fb46a543d6f7e399c2c1b8e71af8aa423999679a1ed764da6c15f"
+    },
+    {
+      "policy": {
+        "kind": "sequence_switch",
+        "first": "teacher",
+        "second": "current_student",
+        "boundary": {
+          "kind": "response_tokens",
+          "value": 2048
+        }
+      },
+      "arguments": {
+        "cap": 4096,
+        "batch_size": 64,
+        "seed": 99,
+        "batch_id": 50
+      },
+      "plan_sha256": "27679cae4e50ece711bfb73e6feca089fa8256a9c5f9d0a478194d4ef2a0f077"
+    },
+    {
+      "policy": {
+        "kind": "sequence_switch",
+        "first": "current_student",
+        "second": "teacher",
+        "boundary": {
+          "kind": "response_tokens",
+          "value": 0
+        }
+      },
+      "arguments": {
+        "cap": 1,
+        "batch_size": 0,
+        "seed": 0,
+        "batch_id": 0
+      },
+      "plan_sha256": "d87f5c771e40be525e125167fbdcae244bbde7fd00e09b19d7bd23d511dbfd91"
+    },
+    {
+      "policy": {
+        "kind": "sequence_switch",
+        "first": "current_student",
+        "second": "teacher",
+        "boundary": {
+          "kind": "response_tokens",
+          "value": 0
+        }
+      },
+      "arguments": {
+        "cap": 8,
+        "batch_size": 7,
+        "seed": 42,
+        "batch_id": 1
+      },
+      "plan_sha256": "4b87d002548fb46a543d6f7e399c2c1b8e71af8aa423999679a1ed764da6c15f"
+    },
+    {
+      "policy": {
+        "kind": "sequence_switch",
+        "first": "current_student",
+        "second": "teacher",
+        "boundary": {
+          "kind": "response_tokens",
+          "value": 0
+        }
+      },
+      "arguments": {
+        "cap": 4096,
+        "batch_size": 64,
+        "seed": 99,
+        "batch_id": 50
+      },
+      "plan_sha256": "208246d7d85ee6ace513809d5d19277e1f9dbdfd337bce830e873d87cae6c557"
+    },
+    {
+      "policy": {
+        "kind": "sequence_switch",
+        "first": "current_student",
+        "second": "teacher",
+        "boundary": {
+          "kind": "response_tokens",
+          "value": 3
+        }
+      },
+      "arguments": {
+        "cap": 1,
+        "batch_size": 0,
+        "seed": 0,
+        "batch_id": 0
+      },
+      "plan_sha256": "d87f5c771e40be525e125167fbdcae244bbde7fd00e09b19d7bd23d511dbfd91"
+    },
+    {
+      "policy": {
+        "kind": "sequence_switch",
+        "first": "current_student",
+        "second": "teacher",
+        "boundary": {
+          "kind": "response_tokens",
+          "value": 3
+        }
+      },
+      "arguments": {
+        "cap": 8,
+        "batch_size": 7,
+        "seed": 42,
+        "batch_id": 1
+      },
+      "plan_sha256": "accfcb4b4bbc71ace3f5f623bea40daf38301afbd655d4f5ad11ee9963fbbd7c"
+    },
+    {
+      "policy": {
+        "kind": "sequence_switch",
+        "first": "current_student",
+        "second": "teacher",
+        "boundary": {
+          "kind": "response_tokens",
+          "value": 3
+        }
+      },
+      "arguments": {
+        "cap": 4096,
+        "batch_size": 64,
+        "seed": 99,
+        "batch_id": 50
+      },
+      "plan_sha256": "2b99d13bc00fd9ca4117cf5974769fc3792b662dd4786f28562e9ac10e594b9c"
+    },
+    {
+      "policy": {
+        "kind": "sequence_switch",
+        "first": "current_student",
+        "second": "teacher",
+        "boundary": {
+          "kind": "response_tokens",
+          "value": 2048
+        }
+      },
+      "arguments": {
+        "cap": 1,
+        "batch_size": 0,
+        "seed": 0,
+        "batch_id": 0
+      },
+      "plan_sha256": "d87f5c771e40be525e125167fbdcae244bbde7fd00e09b19d7bd23d511dbfd91"
+    },
+    {
+      "policy": {
+        "kind": "sequence_switch",
+        "first": "current_student",
+        "second": "teacher",
+        "boundary": {
+          "kind": "response_tokens",
+          "value": 2048
+        }
+      },
+      "arguments": {
+        "cap": 8,
+        "batch_size": 7,
+        "seed": 42,
+        "batch_id": 1
+      },
+      "plan_sha256": "4530146de21c778dc63941a7b9ea69a25c5ea7f1b273ca5dd81b9efbba23651b"
+    },
+    {
+      "policy": {
+        "kind": "sequence_switch",
+        "first": "current_student",
+        "second": "teacher",
+        "boundary": {
+          "kind": "response_tokens",
+          "value": 2048
+        }
+      },
+      "arguments": {
+        "cap": 4096,
+        "batch_size": 64,
+        "seed": 99,
+        "batch_id": 50
+      },
+      "plan_sha256": "a247f5a3a6be797b97657bfe44038349778f503a7be4f3d91e74e685bad6d663"
+    },
+    {
+      "policy": {
+        "kind": "sequence_switch",
+        "first": "teacher",
+        "second": "initial_student",
+        "boundary": {
+          "kind": "response_tokens",
+          "value": 0
+        }
+      },
+      "arguments": {
+        "cap": 1,
+        "batch_size": 0,
+        "seed": 0,
+        "batch_id": 0
+      },
+      "plan_sha256": "d87f5c771e40be525e125167fbdcae244bbde7fd00e09b19d7bd23d511dbfd91"
+    },
+    {
+      "policy": {
+        "kind": "sequence_switch",
+        "first": "teacher",
+        "second": "initial_student",
+        "boundary": {
+          "kind": "response_tokens",
+          "value": 0
+        }
+      },
+      "arguments": {
+        "cap": 8,
+        "batch_size": 7,
+        "seed": 42,
+        "batch_id": 1
+      },
+      "plan_sha256": "3971a73aadff5400fb9451afb20eef33a53f3676c7e239af183771341b3d0cef"
+    },
+    {
+      "policy": {
+        "kind": "sequence_switch",
+        "first": "teacher",
+        "second": "initial_student",
+        "boundary": {
+          "kind": "response_tokens",
+          "value": 0
+        }
+      },
+      "arguments": {
+        "cap": 4096,
+        "batch_size": 64,
+        "seed": 99,
+        "batch_id": 50
+      },
+      "plan_sha256": "c72ec1b46675f5fcaf1ebd3b260f1ff942c73d49d1aa6d101e5efc670a5a5d64"
+    },
+    {
+      "policy": {
+        "kind": "sequence_switch",
+        "first": "teacher",
+        "second": "initial_student",
+        "boundary": {
+          "kind": "response_tokens",
+          "value": 3
+        }
+      },
+      "arguments": {
+        "cap": 1,
+        "batch_size": 0,
+        "seed": 0,
+        "batch_id": 0
+      },
+      "plan_sha256": "d87f5c771e40be525e125167fbdcae244bbde7fd00e09b19d7bd23d511dbfd91"
+    },
+    {
+      "policy": {
+        "kind": "sequence_switch",
+        "first": "teacher",
+        "second": "initial_student",
+        "boundary": {
+          "kind": "response_tokens",
+          "value": 3
+        }
+      },
+      "arguments": {
+        "cap": 8,
+        "batch_size": 7,
+        "seed": 42,
+        "batch_id": 1
+      },
+      "plan_sha256": "5e5b6f5f7475712c6c4aa0d7da6f8fd34091ecc25c32aef9a916c9e1e1be320a"
+    },
+    {
+      "policy": {
+        "kind": "sequence_switch",
+        "first": "teacher",
+        "second": "initial_student",
+        "boundary": {
+          "kind": "response_tokens",
+          "value": 3
+        }
+      },
+      "arguments": {
+        "cap": 4096,
+        "batch_size": 64,
+        "seed": 99,
+        "batch_id": 50
+      },
+      "plan_sha256": "1e037f02be1114e6572f8774d5d9d71c88ad002d771c0eafcb1304f278f390e2"
+    },
+    {
+      "policy": {
+        "kind": "sequence_switch",
+        "first": "teacher",
+        "second": "initial_student",
+        "boundary": {
+          "kind": "response_tokens",
+          "value": 2048
+        }
+      },
+      "arguments": {
+        "cap": 1,
+        "batch_size": 0,
+        "seed": 0,
+        "batch_id": 0
+      },
+      "plan_sha256": "d87f5c771e40be525e125167fbdcae244bbde7fd00e09b19d7bd23d511dbfd91"
+    },
+    {
+      "policy": {
+        "kind": "sequence_switch",
+        "first": "teacher",
+        "second": "initial_student",
+        "boundary": {
+          "kind": "response_tokens",
+          "value": 2048
+        }
+      },
+      "arguments": {
+        "cap": 8,
+        "batch_size": 7,
+        "seed": 42,
+        "batch_id": 1
+      },
+      "plan_sha256": "4b87d002548fb46a543d6f7e399c2c1b8e71af8aa423999679a1ed764da6c15f"
+    },
+    {
+      "policy": {
+        "kind": "sequence_switch",
+        "first": "teacher",
+        "second": "initial_student",
+        "boundary": {
+          "kind": "response_tokens",
+          "value": 2048
+        }
+      },
+      "arguments": {
+        "cap": 4096,
+        "batch_size": 64,
+        "seed": 99,
+        "batch_id": 50
+      },
+      "plan_sha256": "fa3fae9b171429233158d32bf17c76cf0aadd71fb05bec087e19ccbf00cb9db3"
+    },
+    {
+      "policy": {
+        "kind": "sequence_switch",
+        "first": "initial_student",
+        "second": "teacher",
+        "boundary": {
+          "kind": "response_tokens",
+          "value": 0
+        }
+      },
+      "arguments": {
+        "cap": 1,
+        "batch_size": 0,
+        "seed": 0,
+        "batch_id": 0
+      },
+      "plan_sha256": "d87f5c771e40be525e125167fbdcae244bbde7fd00e09b19d7bd23d511dbfd91"
+    },
+    {
+      "policy": {
+        "kind": "sequence_switch",
+        "first": "initial_student",
+        "second": "teacher",
+        "boundary": {
+          "kind": "response_tokens",
+          "value": 0
+        }
+      },
+      "arguments": {
+        "cap": 8,
+        "batch_size": 7,
+        "seed": 42,
+        "batch_id": 1
+      },
+      "plan_sha256": "4b87d002548fb46a543d6f7e399c2c1b8e71af8aa423999679a1ed764da6c15f"
+    },
+    {
+      "policy": {
+        "kind": "sequence_switch",
+        "first": "initial_student",
+        "second": "teacher",
+        "boundary": {
+          "kind": "response_tokens",
+          "value": 0
+        }
+      },
+      "arguments": {
+        "cap": 4096,
+        "batch_size": 64,
+        "seed": 99,
+        "batch_id": 50
+      },
+      "plan_sha256": "208246d7d85ee6ace513809d5d19277e1f9dbdfd337bce830e873d87cae6c557"
+    },
+    {
+      "policy": {
+        "kind": "sequence_switch",
+        "first": "initial_student",
+        "second": "teacher",
+        "boundary": {
+          "kind": "response_tokens",
+          "value": 3
+        }
+      },
+      "arguments": {
+        "cap": 1,
+        "batch_size": 0,
+        "seed": 0,
+        "batch_id": 0
+      },
+      "plan_sha256": "d87f5c771e40be525e125167fbdcae244bbde7fd00e09b19d7bd23d511dbfd91"
+    },
+    {
+      "policy": {
+        "kind": "sequence_switch",
+        "first": "initial_student",
+        "second": "teacher",
+        "boundary": {
+          "kind": "response_tokens",
+          "value": 3
+        }
+      },
+      "arguments": {
+        "cap": 8,
+        "batch_size": 7,
+        "seed": 42,
+        "batch_id": 1
+      },
+      "plan_sha256": "586f13221f2c933ae2fa7ee95987c70403f89aa971fb5b614ff29fd651d3e401"
+    },
+    {
+      "policy": {
+        "kind": "sequence_switch",
+        "first": "initial_student",
+        "second": "teacher",
+        "boundary": {
+          "kind": "response_tokens",
+          "value": 3
+        }
+      },
+      "arguments": {
+        "cap": 4096,
+        "batch_size": 64,
+        "seed": 99,
+        "batch_id": 50
+      },
+      "plan_sha256": "df64343d7427d6e49cd01057be4e7df713e4d8b95633a8fb4f9b774c5eb75c42"
+    },
+    {
+      "policy": {
+        "kind": "sequence_switch",
+        "first": "initial_student",
+        "second": "teacher",
+        "boundary": {
+          "kind": "response_tokens",
+          "value": 2048
+        }
+      },
+      "arguments": {
+        "cap": 1,
+        "batch_size": 0,
+        "seed": 0,
+        "batch_id": 0
+      },
+      "plan_sha256": "d87f5c771e40be525e125167fbdcae244bbde7fd00e09b19d7bd23d511dbfd91"
+    },
+    {
+      "policy": {
+        "kind": "sequence_switch",
+        "first": "initial_student",
+        "second": "teacher",
+        "boundary": {
+          "kind": "response_tokens",
+          "value": 2048
+        }
+      },
+      "arguments": {
+        "cap": 8,
+        "batch_size": 7,
+        "seed": 42,
+        "batch_id": 1
+      },
+      "plan_sha256": "3971a73aadff5400fb9451afb20eef33a53f3676c7e239af183771341b3d0cef"
+    },
+    {
+      "policy": {
+        "kind": "sequence_switch",
+        "first": "initial_student",
+        "second": "teacher",
+        "boundary": {
+          "kind": "response_tokens",
+          "value": 2048
+        }
+      },
+      "arguments": {
+        "cap": 4096,
+        "batch_size": 64,
+        "seed": 99,
+        "batch_id": 50
+      },
+      "plan_sha256": "4358aa21f9aeda3c40c4f04d03db4482ffdb7302498c6c191c593e603e3624f4"
+    },
+    {
+      "policy": {
+        "kind": "batch_mix",
+        "components": [
+          {
+            "policy": {
+              "kind": "single",
+              "model": "teacher"
+            },
+            "weight": 0
+          },
+          {
+            "policy": {
+              "kind": "single",
+              "model": "current_student"
+            },
+            "weight": 1
+          }
+        ]
+      },
+      "arguments": {
+        "cap": 1,
+        "batch_size": 0,
+        "seed": 0,
+        "batch_id": 0
+      },
+      "plan_sha256": "d87f5c771e40be525e125167fbdcae244bbde7fd00e09b19d7bd23d511dbfd91"
+    },
+    {
+      "policy": {
+        "kind": "batch_mix",
+        "components": [
+          {
+            "policy": {
+              "kind": "single",
+              "model": "teacher"
+            },
+            "weight": 0
+          },
+          {
+            "policy": {
+              "kind": "single",
+              "model": "current_student"
+            },
+            "weight": 1
+          }
+        ]
+      },
+      "arguments": {
+        "cap": 8,
+        "batch_size": 7,
+        "seed": 42,
+        "batch_id": 1
+      },
+      "plan_sha256": "4530146de21c778dc63941a7b9ea69a25c5ea7f1b273ca5dd81b9efbba23651b"
+    },
+    {
+      "policy": {
+        "kind": "batch_mix",
+        "components": [
+          {
+            "policy": {
+              "kind": "single",
+              "model": "teacher"
+            },
+            "weight": 0
+          },
+          {
+            "policy": {
+              "kind": "single",
+              "model": "current_student"
+            },
+            "weight": 1
+          }
+        ]
+      },
+      "arguments": {
+        "cap": 4096,
+        "batch_size": 64,
+        "seed": 99,
+        "batch_id": 50
+      },
+      "plan_sha256": "3e5c50513ed2f00a2f5ca5b5603d7bd08b51bdcc545019516eb6e1bc2864b2b1"
+    },
+    {
+      "policy": {
+        "kind": "batch_mix",
+        "components": [
+          {
+            "policy": {
+              "kind": "single",
+              "model": "teacher"
+            },
+            "weight": 0.25
+          },
+          {
+            "policy": {
+              "kind": "single",
+              "model": "current_student"
+            },
+            "weight": 0.75
+          }
+        ]
+      },
+      "arguments": {
+        "cap": 1,
+        "batch_size": 0,
+        "seed": 0,
+        "batch_id": 0
+      },
+      "plan_sha256": "d87f5c771e40be525e125167fbdcae244bbde7fd00e09b19d7bd23d511dbfd91"
+    },
+    {
+      "policy": {
+        "kind": "batch_mix",
+        "components": [
+          {
+            "policy": {
+              "kind": "single",
+              "model": "teacher"
+            },
+            "weight": 0.25
+          },
+          {
+            "policy": {
+              "kind": "single",
+              "model": "current_student"
+            },
+            "weight": 0.75
+          }
+        ]
+      },
+      "arguments": {
+        "cap": 8,
+        "batch_size": 7,
+        "seed": 42,
+        "batch_id": 1
+      },
+      "plan_sha256": "f234c78709bab46372c0f403ee805d6d07e97e5010e629306a0bc9d5d76cc6af"
+    },
+    {
+      "policy": {
+        "kind": "batch_mix",
+        "components": [
+          {
+            "policy": {
+              "kind": "single",
+              "model": "teacher"
+            },
+            "weight": 0.25
+          },
+          {
+            "policy": {
+              "kind": "single",
+              "model": "current_student"
+            },
+            "weight": 0.75
+          }
+        ]
+      },
+      "arguments": {
+        "cap": 4096,
+        "batch_size": 64,
+        "seed": 99,
+        "batch_id": 50
+      },
+      "plan_sha256": "f6cf59558bcb2d3a1bc1086812302c7f87623b10df8afc0d7cb639bd6ad16812"
+    },
+    {
+      "policy": {
+        "kind": "batch_mix",
+        "components": [
+          {
+            "policy": {
+              "kind": "single",
+              "model": "teacher"
+            },
+            "weight": 0.5
+          },
+          {
+            "policy": {
+              "kind": "single",
+              "model": "current_student"
+            },
+            "weight": 0.5
+          }
+        ]
+      },
+      "arguments": {
+        "cap": 1,
+        "batch_size": 0,
+        "seed": 0,
+        "batch_id": 0
+      },
+      "plan_sha256": "d87f5c771e40be525e125167fbdcae244bbde7fd00e09b19d7bd23d511dbfd91"
+    },
+    {
+      "policy": {
+        "kind": "batch_mix",
+        "components": [
+          {
+            "policy": {
+              "kind": "single",
+              "model": "teacher"
+            },
+            "weight": 0.5
+          },
+          {
+            "policy": {
+              "kind": "single",
+              "model": "current_student"
+            },
+            "weight": 0.5
+          }
+        ]
+      },
+      "arguments": {
+        "cap": 8,
+        "batch_size": 7,
+        "seed": 42,
+        "batch_id": 1
+      },
+      "plan_sha256": "b58fd31e6873dd89f422de281ee561419f5217e6f01ede7005c5859859ac6147"
+    },
+    {
+      "policy": {
+        "kind": "batch_mix",
+        "components": [
+          {
+            "policy": {
+              "kind": "single",
+              "model": "teacher"
+            },
+            "weight": 0.5
+          },
+          {
+            "policy": {
+              "kind": "single",
+              "model": "current_student"
+            },
+            "weight": 0.5
+          }
+        ]
+      },
+      "arguments": {
+        "cap": 4096,
+        "batch_size": 64,
+        "seed": 99,
+        "batch_id": 50
+      },
+      "plan_sha256": "a1931656620a250478fdbaae7da653492720b8253f50e355c20ee3c87e49feba"
+    },
+    {
+      "policy": {
+        "kind": "batch_mix",
+        "components": [
+          {
+            "policy": {
+              "kind": "single",
+              "model": "teacher"
+            },
+            "weight": 1
+          },
+          {
+            "policy": {
+              "kind": "single",
+              "model": "current_student"
+            },
+            "weight": 0
+          }
+        ]
+      },
+      "arguments": {
+        "cap": 1,
+        "batch_size": 0,
+        "seed": 0,
+        "batch_id": 0
+      },
+      "plan_sha256": "d87f5c771e40be525e125167fbdcae244bbde7fd00e09b19d7bd23d511dbfd91"
+    },
+    {
+      "policy": {
+        "kind": "batch_mix",
+        "components": [
+          {
+            "policy": {
+              "kind": "single",
+              "model": "teacher"
+            },
+            "weight": 1
+          },
+          {
+            "policy": {
+              "kind": "single",
+              "model": "current_student"
+            },
+            "weight": 0
+          }
+        ]
+      },
+      "arguments": {
+        "cap": 8,
+        "batch_size": 7,
+        "seed": 42,
+        "batch_id": 1
+      },
+      "plan_sha256": "4b87d002548fb46a543d6f7e399c2c1b8e71af8aa423999679a1ed764da6c15f"
+    },
+    {
+      "policy": {
+        "kind": "batch_mix",
+        "components": [
+          {
+            "policy": {
+              "kind": "single",
+              "model": "teacher"
+            },
+            "weight": 1
+          },
+          {
+            "policy": {
+              "kind": "single",
+              "model": "current_student"
+            },
+            "weight": 0
+          }
+        ]
+      },
+      "arguments": {
+        "cap": 4096,
+        "batch_size": 64,
+        "seed": 99,
+        "batch_id": 50
+      },
+      "plan_sha256": "208246d7d85ee6ace513809d5d19277e1f9dbdfd337bce830e873d87cae6c557"
+    },
+    {
+      "policy": {
+        "kind": "batch_mix",
+        "components": [
+          {
+            "policy": {
+              "kind": "single",
+              "model": "teacher"
+            },
+            "weight": 0
+          },
+          {
+            "policy": {
+              "kind": "single",
+              "model": "initial_student"
+            },
+            "weight": 1
+          }
+        ]
+      },
+      "arguments": {
+        "cap": 1,
+        "batch_size": 0,
+        "seed": 0,
+        "batch_id": 0
+      },
+      "plan_sha256": "d87f5c771e40be525e125167fbdcae244bbde7fd00e09b19d7bd23d511dbfd91"
+    },
+    {
+      "policy": {
+        "kind": "batch_mix",
+        "components": [
+          {
+            "policy": {
+              "kind": "single",
+              "model": "teacher"
+            },
+            "weight": 0
+          },
+          {
+            "policy": {
+              "kind": "single",
+              "model": "initial_student"
+            },
+            "weight": 1
+          }
+        ]
+      },
+      "arguments": {
+        "cap": 8,
+        "batch_size": 7,
+        "seed": 42,
+        "batch_id": 1
+      },
+      "plan_sha256": "3971a73aadff5400fb9451afb20eef33a53f3676c7e239af183771341b3d0cef"
+    },
+    {
+      "policy": {
+        "kind": "batch_mix",
+        "components": [
+          {
+            "policy": {
+              "kind": "single",
+              "model": "teacher"
+            },
+            "weight": 0
+          },
+          {
+            "policy": {
+              "kind": "single",
+              "model": "initial_student"
+            },
+            "weight": 1
+          }
+        ]
+      },
+      "arguments": {
+        "cap": 4096,
+        "batch_size": 64,
+        "seed": 99,
+        "batch_id": 50
+      },
+      "plan_sha256": "c72ec1b46675f5fcaf1ebd3b260f1ff942c73d49d1aa6d101e5efc670a5a5d64"
+    },
+    {
+      "policy": {
+        "kind": "batch_mix",
+        "components": [
+          {
+            "policy": {
+              "kind": "single",
+              "model": "teacher"
+            },
+            "weight": 0.25
+          },
+          {
+            "policy": {
+              "kind": "single",
+              "model": "initial_student"
+            },
+            "weight": 0.75
+          }
+        ]
+      },
+      "arguments": {
+        "cap": 1,
+        "batch_size": 0,
+        "seed": 0,
+        "batch_id": 0
+      },
+      "plan_sha256": "d87f5c771e40be525e125167fbdcae244bbde7fd00e09b19d7bd23d511dbfd91"
+    },
+    {
+      "policy": {
+        "kind": "batch_mix",
+        "components": [
+          {
+            "policy": {
+              "kind": "single",
+              "model": "teacher"
+            },
+            "weight": 0.25
+          },
+          {
+            "policy": {
+              "kind": "single",
+              "model": "initial_student"
+            },
+            "weight": 0.75
+          }
+        ]
+      },
+      "arguments": {
+        "cap": 8,
+        "batch_size": 7,
+        "seed": 42,
+        "batch_id": 1
+      },
+      "plan_sha256": "249871ad2bda67d9817a969f842f4bfc264718cda7ca4664126ee39fbbf92aaa"
+    },
+    {
+      "policy": {
+        "kind": "batch_mix",
+        "components": [
+          {
+            "policy": {
+              "kind": "single",
+              "model": "teacher"
+            },
+            "weight": 0.25
+          },
+          {
+            "policy": {
+              "kind": "single",
+              "model": "initial_student"
+            },
+            "weight": 0.75
+          }
+        ]
+      },
+      "arguments": {
+        "cap": 4096,
+        "batch_size": 64,
+        "seed": 99,
+        "batch_id": 50
+      },
+      "plan_sha256": "bd678c4d8f9656931d41ffc4181a91f6c8b5904bf5fb20933a4a37261e49eb0b"
+    },
+    {
+      "policy": {
+        "kind": "batch_mix",
+        "components": [
+          {
+            "policy": {
+              "kind": "single",
+              "model": "teacher"
+            },
+            "weight": 0.5
+          },
+          {
+            "policy": {
+              "kind": "single",
+              "model": "initial_student"
+            },
+            "weight": 0.5
+          }
+        ]
+      },
+      "arguments": {
+        "cap": 1,
+        "batch_size": 0,
+        "seed": 0,
+        "batch_id": 0
+      },
+      "plan_sha256": "d87f5c771e40be525e125167fbdcae244bbde7fd00e09b19d7bd23d511dbfd91"
+    },
+    {
+      "policy": {
+        "kind": "batch_mix",
+        "components": [
+          {
+            "policy": {
+              "kind": "single",
+              "model": "teacher"
+            },
+            "weight": 0.5
+          },
+          {
+            "policy": {
+              "kind": "single",
+              "model": "initial_student"
+            },
+            "weight": 0.5
+          }
+        ]
+      },
+      "arguments": {
+        "cap": 8,
+        "batch_size": 7,
+        "seed": 42,
+        "batch_id": 1
+      },
+      "plan_sha256": "5afdd36def628bc933cfd411f01b5eab288dc9e8e6df809c0b7050aaaf413b53"
+    },
+    {
+      "policy": {
+        "kind": "batch_mix",
+        "components": [
+          {
+            "policy": {
+              "kind": "single",
+              "model": "teacher"
+            },
+            "weight": 0.5
+          },
+          {
+            "policy": {
+              "kind": "single",
+              "model": "initial_student"
+            },
+            "weight": 0.5
+          }
+        ]
+      },
+      "arguments": {
+        "cap": 4096,
+        "batch_size": 64,
+        "seed": 99,
+        "batch_id": 50
+      },
+      "plan_sha256": "c79bd745ce85db9c1909e4fc8ed97d0534be46b808c883f5ec30e1e90f8f5e64"
+    },
+    {
+      "policy": {
+        "kind": "batch_mix",
+        "components": [
+          {
+            "policy": {
+              "kind": "single",
+              "model": "teacher"
+            },
+            "weight": 1
+          },
+          {
+            "policy": {
+              "kind": "single",
+              "model": "initial_student"
+            },
+            "weight": 0
+          }
+        ]
+      },
+      "arguments": {
+        "cap": 1,
+        "batch_size": 0,
+        "seed": 0,
+        "batch_id": 0
+      },
+      "plan_sha256": "d87f5c771e40be525e125167fbdcae244bbde7fd00e09b19d7bd23d511dbfd91"
+    },
+    {
+      "policy": {
+        "kind": "batch_mix",
+        "components": [
+          {
+            "policy": {
+              "kind": "single",
+              "model": "teacher"
+            },
+            "weight": 1
+          },
+          {
+            "policy": {
+              "kind": "single",
+              "model": "initial_student"
+            },
+            "weight": 0
+          }
+        ]
+      },
+      "arguments": {
+        "cap": 8,
+        "batch_size": 7,
+        "seed": 42,
+        "batch_id": 1
+      },
+      "plan_sha256": "4b87d002548fb46a543d6f7e399c2c1b8e71af8aa423999679a1ed764da6c15f"
+    },
+    {
+      "policy": {
+        "kind": "batch_mix",
+        "components": [
+          {
+            "policy": {
+              "kind": "single",
+              "model": "teacher"
+            },
+            "weight": 1
+          },
+          {
+            "policy": {
+              "kind": "single",
+              "model": "initial_student"
+            },
+            "weight": 0
+          }
+        ]
+      },
+      "arguments": {
+        "cap": 4096,
+        "batch_size": 64,
+        "seed": 99,
+        "batch_id": 50
+      },
+      "plan_sha256": "208246d7d85ee6ace513809d5d19277e1f9dbdfd337bce830e873d87cae6c557"
+    }
+  ],
+  "modules": {
+    "src/opd_state/core/policy.py": {
+      "original": "verl/verl/workers/rollout/policy.py",
+      "source_sha256": "7ea1b7b103c80052e8db30e7a02bec6aa7c1f56b0b24a321a9eb19f9e6889885",
+      "body_ast_sha256": "d0414f0741689e2cccefc41d21f3c56fe6d0a7481ba42e972f680a4162a571ba"
+    },
+    "src/opd_state/rollout/executor.py": {
+      "original": "verl/verl/workers/rollout/native_executor.py",
+      "source_sha256": "ed12a121cf47c3d5c9fb6b49eee0387ec388ab6a57bf90efea6e8080a247098f",
+      "body_ast_sha256": "c37f634785c4687aaf5ea2f08da536e0b97338585928feb2cbf79cd45d61c01a"
+    },
+    "src/opd_state/rollout/lifecycle.py": {
+      "original": "verl/verl/workers/rollout/lifecycle.py",
+      "source_sha256": "b4af0d1b1f6314322cdfcdaa53ee269f945520b09f82ca44ac706eb405987edf",
+      "body_ast_sha256": "590192f39877046a9234afbd6e848d497035915dab43a9b9b0732bd2cb3286d5"
+    }
+  }
+}

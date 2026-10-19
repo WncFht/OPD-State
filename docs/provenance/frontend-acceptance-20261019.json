@@ -1,0 +1,122 @@
+{
+  "schema_version": 1,
+  "scope": "Frozen frontend engineering acceptance; not accuracy or full-scale throughput evidence",
+  "implementation_commit": "2eec618f5f62545cd265c6231f18a05132b828d7",
+  "run_directory": "runs/config-refactor-20261019/canary-student-v4",
+  "run_id": "d0b55923f9eb4c55bc5591756c8f0990",
+  "source_id": "8ca4d325aa84f231194bbe2ef240f1cf2cb0fa74694fda782ea0cac4fe57a497",
+  "config_id": "7a43ded77a0816dbe6162b03801eb6fb84119e5efbb2ebe2fc8214de92d39463",
+  "inputs_id": "b371f1f199d1a592350889eafda71324b7942ccaff51810df523c86bbb9f1571",
+  "runtime_source_changes_after_canary_snapshot": ["configs/train.yaml"],
+  "settings": {
+    "physical_gpus": [0, 1, 2, 3],
+    "updates": 2,
+    "global_train_batch": 4,
+    "train_prompt_pool": 17235,
+    "response_cap": 128,
+    "validation_questions": {
+      "MATH-500": 1,
+      "AMC23": 1,
+      "AIME25": 1
+    },
+    "validation_samples_per_question": 2,
+    "validation_steps": [1, 2],
+    "full_vocab_kl": true,
+    "fixed_prefix_bank": false,
+    "checkpoint_saving": false,
+    "wandb_mode": "disabled"
+  },
+  "verification_sha256": "2aac2c7f06dbd5dbc8bfdf8714cad9304977adcc3c8b42f69544813b6f19a13d",
+  "offline_reverification_sha256": "2aac2c7f06dbd5dbc8bfdf8714cad9304977adcc3c8b42f69544813b6f19a13d",
+  "runtime": {
+    "python": "3.12.15",
+    "torch": "2.7.1+cu126",
+    "transformers": "4.57.6",
+    "vllm": "0.10.0+cu126",
+    "ray": "2.59.0",
+    "tensordict": "0.10.0",
+    "numpy": "1.26.4",
+    "pyarrow": "21.0.0",
+    "datasets": "4.8.5",
+    "hydra-core": "1.3.7",
+    "omegaconf": "2.3.1"
+  },
+  "frozen_file_count": 599,
+  "result": {
+    "run": "/mnt/tidalfs-bdsz01/dataset/llm_dataset/zkn_data/fht_data/OPD-State/runs/config-refactor-20261019/canary-student-v4",
+    "independent_reverification": "passed",
+    "peak_device_memory_mib": {
+      "0": 28563,
+      "1": 28563,
+      "2": 30353,
+      "3": 30353
+    },
+    "updates": [
+      {
+        "step": 1,
+        "loss": 0.046434443444013596,
+        "grad_norm": 4.76279878616333,
+        "validation_s": 13.462441369891167,
+        "kl_scoring_s": 1.491792544722557,
+        "kl_metrics": {
+          "validation_kl/on_validation_states/micro/student_teacher_kl/token_weighted": 0.057739940400373946,
+          "validation_kl/on_validation_states/micro/student_teacher_kl/question_mean": 0.057739940400373946,
+          "validation_kl/on_validation_states/micro/student_teacher_kl/cumulative_on_states": 7.390712371247865,
+          "validation_kl/on_validation_states/micro/teacher_student_kl/token_weighted": 0.055626608064218826,
+          "validation_kl/on_validation_states/micro/teacher_student_kl/question_mean": 0.05562660806421884,
+          "validation_kl/on_validation_states/micro/teacher_student_kl/cumulative_on_states": 7.1202058322200115,
+          "validation_kl/on_validation_states/micro/depth/0_255/student_teacher_kl/token_weighted": 0.057739940400373946,
+          "validation_kl/on_validation_states/micro/depth/0_255/teacher_student_kl/token_weighted": 0.055626608064218826
+        }
+      },
+      {
+        "step": 2,
+        "loss": 0.18406882882118225,
+        "grad_norm": 7.501755237579346,
+        "validation_s": 5.951080918312073,
+        "kl_scoring_s": 1.3373102098703384,
+        "kl_metrics": {
+          "validation_kl/on_validation_states/micro/student_teacher_kl/token_weighted": 0.05403425700708097,
+          "validation_kl/on_validation_states/micro/student_teacher_kl/question_mean": 0.05403425700708097,
+          "validation_kl/on_validation_states/micro/student_teacher_kl/cumulative_on_states": 6.916384896906364,
+          "validation_kl/on_validation_states/micro/teacher_student_kl/token_weighted": 0.05340970518784008,
+          "validation_kl/on_validation_states/micro/teacher_student_kl/question_mean": 0.05340970518784008,
+          "validation_kl/on_validation_states/micro/teacher_student_kl/cumulative_on_states": 6.83644226404353,
+          "validation_kl/on_validation_states/micro/depth/0_255/student_teacher_kl/token_weighted": 0.05403425700708097,
+          "validation_kl/on_validation_states/micro/depth/0_255/teacher_student_kl/token_weighted": 0.05340970518784008
+        }
+      }
+    ]
+  },
+  "status": {
+    "schema_version": 1,
+    "run_id": "d0b55923f9eb4c55bc5591756c8f0990",
+    "state": "completed",
+    "updated_epoch_s": 1792402972.1929529,
+    "verification_sha256": "2aac2c7f06dbd5dbc8bfdf8714cad9304977adcc3c8b42f69544813b6f19a13d",
+    "cleanup_complete": true
+  },
+  "validation_coverage": {
+    "1": {
+      "responses": 6,
+      "effective_positions": 768
+    },
+    "2": {
+      "responses": 6,
+      "effective_positions": 768
+    }
+  },
+  "tests": {
+    "maintenance_configuration_and_application": 80,
+    "torch_layout_tests": 4,
+    "maintenance_integration": 11,
+    "isolated_ci": "passed"
+  },
+  "remaining": [
+    "all rollout source policies via this frontend",
+    "real-model parameter-gradient parity before kernel extraction",
+    "unified suite runner and module extraction",
+    "head-tail/checkpoint consumers",
+    "full 570x16 validation and matched-workload performance comparison"
+  ]
+}

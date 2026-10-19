@@ -79,10 +79,15 @@ if [[ ${OPD_FREEZE_SOURCE:-0} == 1 ]]; then
         }
     else
         mkdir -p "$SNAPSHOT"
-        git archive "$SOURCE_COMMIT" verl | tar -x -C "$SNAPSHOT"
+        SOURCE_COMPONENTS=(verl)
+        if git cat-file -e "$SOURCE_COMMIT:src/opd_state" 2>/dev/null; then
+            SOURCE_COMPONENTS+=(src/opd_state)
+        fi
+        git archive "$SOURCE_COMMIT" "${SOURCE_COMPONENTS[@]}" | tar -x -C "$SNAPSHOT"
         printf '%s\n' "$SOURCE_COMMIT" > "$SNAPSHOT/COMMIT"
     fi
     export VERL_ROOT="$SNAPSHOT/verl"
+    export OPD_PACKAGE_ROOT="$SNAPSHOT/src"
 fi
 exec bash -o pipefail recipe/opd.sh \
     trainer.total_training_steps="$STEPS" \

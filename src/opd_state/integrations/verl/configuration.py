@@ -6,18 +6,14 @@ derived stock fields are checked against the suite that owns their meaning.
 
 from __future__ import annotations
 
-import hashlib
-import importlib.util
 import math
-import sys
 from dataclasses import asdict
-from functools import lru_cache
-from pathlib import Path
 
 from omegaconf import OmegaConf
 
 from opd_state.core.config import Objective, decode, positive
 from opd_state.core.evaluation import KL, parse_evaluation
+from opd_state.core.policy import parse_policy
 
 FULL_MATH_COUNTS = {"MATH-500": 500, "AMC23": 40, "AIME25": 30}
 
@@ -76,17 +72,6 @@ def evaluation_field(value, field, total_steps=None):
         "context": benchmark.budget.context_tokens,
     }
     return fields[field]
-
-
-@lru_cache(maxsize=8)
-def _policy_module(path, digest):
-    """Use the selected backend's existing pure policy parser during extraction."""
-    name = "_opd_backend_policy_" + digest
-    spec = importlib.util.spec_from_file_location(name, path)
-    module = importlib.util.module_from_spec(spec)
-    sys.modules[name] = module
-    spec.loader.exec_module(module)
-    return module
 
 
 def validate_config(config, *, backend):
@@ -191,11 +176,7 @@ def validate_config(config, *, backend):
             raise ValueError(
                 "sampled_opd requires the original scalar token reward and vanilla surrogate"
             )
-        path = Path(backend).resolve() / "verl/verl/workers/rollout/policy.py"
-        module = _policy_module(
-            str(path), hashlib.sha256(path.read_bytes()).hexdigest()
-        )
-        module.parse_policy(plain(rollout.policy), config.data.max_response_length)
+        parse_policy(plain(rollout.policy), config.data.max_response_length)
     elif (
         not teacher.unbiased_topk_tail
         or rollout.policy is not None

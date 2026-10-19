@@ -1,20 +1,8 @@
 """Admission, frozen-source and atomic actor-publication contract checks."""
 
-import importlib.util
-import sys
-import types
 import unittest
-from pathlib import Path
 
-ROOT = Path(__file__).resolve().parents[2] / "verl/workers/rollout"
-PACKAGE = "native_lifecycle_contract"
-pkg = types.ModuleType(PACKAGE)
-pkg.__path__ = [str(ROOT)]
-sys.modules[PACKAGE] = pkg
-spec = importlib.util.spec_from_file_location(f"{PACKAGE}.lifecycle", ROOT / "lifecycle.py")
-M = importlib.util.module_from_spec(spec)
-sys.modules[spec.name] = M
-spec.loader.exec_module(M)
+import opd_state.rollout.lifecycle as M
 
 
 class NativeLifecycleTests(unittest.TestCase):
@@ -86,7 +74,9 @@ class NativeLifecycleTests(unittest.TestCase):
         state.begin_update(3)  # Restoring the same actor after sleep is valid.
         state.commit_update(3, cache_reset=True)
 
-    def test_sleep_level_one_preserves_frozen_identity_level_two_requires_actor_reload(self):
+    def test_sleep_level_one_preserves_frozen_identity_level_two_requires_actor_reload(
+        self,
+    ):
         frozen = M.GenerationState("teacher", "/q", "q-sha")
         frozen.slept(discarded_weights=False)
         with self.assertRaises(RuntimeError):

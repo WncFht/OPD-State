@@ -221,15 +221,14 @@ def main():
         raise RuntimeError("Requested benchmark GPUs are occupied; wait for the existing job")
     gpu_identities = query_devices()
     args.output.mkdir(parents=True, exist_ok=False)
-    from native_source_snapshot import freeze
+    from native_source_snapshot import activate, freeze
 
     source = freeze(ROOT, args.output, Path(__file__), commit=args.source_commit)
     if args.weight_mode == "staged" and not (source / "verl/workers/rollout/native_staged.py").is_file():
         raise ValueError("Selected source commit does not contain the staged benchmark adapter")
     if "execution_audit" not in (source / "verl/workers/rollout/native_pool.py").read_text():
         raise ValueError("Benchmark requires a source with physical execution receipts")
-    sys.path.insert(0, str(source))
-    os.environ["PYTHONPATH"] = str(source) + os.pathsep + os.environ.get("PYTHONPATH", "")
+    activate(source)
     os.environ.update(
         CUDA_VISIBLE_DEVICES=",".join(str(gpu_identities[gpu]["cuda_ordinal"]) for gpu in range(4)),
         CUDA_DEVICE_ORDER="PCI_BUS_ID",

@@ -16,7 +16,8 @@ export VERL_ROOT=${VERL_ROOT:-$(cd "${_OPD_RECIPE_DIR}/../verl" && pwd)}
 # OPD_ROOT is where data/, logs/ and checkpoints/ live.
 OPD_ROOT=${OPD_ROOT:-$(cd "${_OPD_RECIPE_DIR}/.." && pwd)}
 export OPD_ROOT
-export PYTHONPATH=${VERL_ROOT}:${PYTHONPATH}
+export OPD_PACKAGE_ROOT=${OPD_PACKAGE_ROOT:-${_OPD_RECIPE_DIR}/../src}
+export PYTHONPATH=${VERL_ROOT}:${OPD_PACKAGE_ROOT}:${PYTHONPATH:-}
 
 export MODEL_BASE=${MODEL_BASE:-/path/to/models/opd/baselines}
 export DATA_BASE=${DATA_BASE:-${OPD_ROOT}/data}
