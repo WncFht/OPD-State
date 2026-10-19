@@ -24,7 +24,7 @@ Status: proposed
 
 ### 实施进展
 
-正式矩阵的三种单模型来源与两种 fusion 均完成五十步、完整 570×16 最终评测、独立路由/版本审计和 W&B finished 核验，无 checkpoint；current/initial/teacher/current-fusion/initial-fusion 的 macro mean@16 为 64.30%/64.17%/63.80%/63.89%/63.85%。相对 current 的四个题目 bootstrap 区间均跨零，不据此排序。三种单模型原生生成接近 15k token/s，两种 fusion 为 8.79k/8.55k；完整结果与五组图见[统一报告](../../../../docs/experiment/2026-10-19-rollout来源与logit融合实验.md)。Bank 首次 GPU 尝试未通过跨接口 UUID 校验；PCI 映射修复后，v2 已发布 180 条两来源轨迹，长响应 KL 已通过，完整 570×16 验证 KL 正在串行执行，独立 bank 证据继续归档。Bank 的独立 artifact 审计已核对 180 条轨迹、1,440 个抽样位置、八个 worker 与冻结源码，长响应验收覆盖九十六条准确率响应的全部 605,977 个位置。神经网络源码与 bank 输入保持原值。剩余质量、布局、参数扫描与探针未完成，Status 保持 proposed。
+正式矩阵的三种单模型来源与两种 fusion 均完成五十步、完整 570×16 最终评测、独立路由/版本审计和 W&B finished 核验，无 checkpoint；current/initial/teacher/current-fusion/initial-fusion 的 macro mean@16 为 64.30%/64.17%/63.80%/63.89%/63.85%。相对 current 的四个题目 bootstrap 区间均跨零，不据此排序。三种单模型原生生成接近 15k token/s，两种 fusion 为 8.79k/8.55k；完整结果与五组图见[准确率与训练指标](../../../../docs/experiment/2026-10-19-rollout准确率与训练指标.md)。Bank 首次 GPU 尝试未通过跨接口 UUID 校验；PCI 映射修复后，v2 已发布 180 条两来源轨迹，长响应 KL 已通过，完整 570×16 验证 KL 正在串行执行，独立 bank 证据继续归档。Bank 的独立 artifact 审计已核对 180 条轨迹、1,440 个抽样位置、八个 worker 与冻结源码，长响应验收覆盖九十六条准确率响应的全部 605,977 个位置。神经网络源码与 bank 输入保持原值。剩余质量、布局、参数扫描与探针未完成，Status 保持 proposed。
 
 原生单模型、四个分段方向、两种 batch 混合与两种 fusion 已完成四卡短训练；连续解码、graph 热更新和原生排空也已有下文的独立证据。正式十五组 50 步/570 题×16 矩阵已使用 d59a7c3 冻结源码启动，质量比较尚未完成。新增 `generation_layout=split` 的生产副本映射仍在验收：默认 `overlap`，不改变已启动矩阵；[CPU 路由证据](../../../../docs/experiment/results/native-rollout/placement-cpu.json)覆盖小组集中、分卡、响应顺序、冻结恢复和 current 写入前置条件，真实四卡新布局训练尚待验证。下文早期检查按其实际覆盖范围保留，不代表所有后续验收均已完成。
 
@@ -636,7 +636,7 @@ env OMP_NUM_THREADS=2 TOKENIZERS_PARALLELISM=false ../envs/opd-state/bin/python 
 
 换权重候选已加入独立基准，尚未进入 trainer 默认路径。`eval/run_native_residency_controls.py` 先做驻留/换权重两个单卡 B4 短测，再按驻留串行、换权重串行、驻留并发及其逆序做六组四卡控制；共同 B64、联合预算 0.4、graph、固定 128 token 和自然 EOS 上限 4,096，五种单模型/双向分段/batch 混合策略各预热一次、计量三次。驻留引擎各占每卡 0.2，单个可写容器占 0.4；固定 checkpoint 从锁页 CPU 缓存经生产 CUDA IPC 完整写入，不修改只读 worker。每次先排空、写完、清理 KV 并提交版本，物理容器版本与逻辑冻结来源分别记录。测量前后均保存两个来源的完整词表 logits，由独立审计重算相对驻留参考的误差和总变差距离；权重激活、设备传输、生成、CPU 缓存准备与冷启动分别记录。[CPU 证据](../../../../docs/experiment/results/native-rollout/weight-residency-cpu.json)覆盖八十四项原生检查、十二项基准检查与历史二十八条件回归，真实 GPU 数值/吞吐/显存对照仍待执行。这项基准不包含 FSDP 导出或训练，不能直接替代训练全流程的速度结论。
 
-当前 Qwen2 配对每模型 BF16 权重约 3.31 GiB，双模型权重约 6.62 GiB；单模型 KV 每序列每 token 为 28 KiB。以每卡 16 条、每条总上下文上限 5,120 计算，一套完整 KV 为 2.1875 GiB，两套为 4.375 GiB。这只是有效 KV 的容量估计，未包含 graph、临时张量、分页浪费、引擎预留与训练对象；不能用约 11 GiB 的权重加 KV 之和承诺整卡峰值。实测历史显存与预算差异见[统一实验报告](../../../../docs/experiment/2026-10-19-rollout来源与logit融合实验.md#显存速度与运行设置)。
+当前 Qwen2 配对每模型 BF16 权重约 3.31 GiB，双模型权重约 6.62 GiB；单模型 KV 每序列每 token 为 28 KiB。以每卡 16 条、每条总上下文上限 5,120 计算，一套完整 KV 为 2.1875 GiB，两套为 4.375 GiB。这只是有效 KV 的容量估计，未包含 graph、临时张量、分页浪费、引擎预留与训练对象；不能用约 11 GiB 的权重加 KV 之和承诺整卡峰值。实测历史显存与预算差异见[速度与显存专题](../../../../docs/experiment/2026-10-19-rollout速度与显存.md)。
 
 batch 路由按来源聚合后，在其可用副本内做负载均衡；小分组优先集中到较少副本，避免全局 64 条再按四卡、两来源拆成每来源每卡约 8 条。副本映射必须显式实现，保留四卡各分组的布局作基线。分段请求先用按阶段归组的简单实现验证，再考虑完成一条第一段就送入第二段的有界队列；后一方案仅在两套引擎都可驻留且实测提高吞吐时启用。同 GPU 两引擎同时跑可能竞争带宽，不能把流水化本身视为加速证据。
 

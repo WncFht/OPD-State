@@ -71,7 +71,7 @@ CUDA_VISIBLE_DEVICES='' .venv/bin/python docs/research/occupancy/experiments/plo
 
 上游声明的运行栈为 Python 3.12、vLLM 0.28、Torch 2.13 和 Transformers 5.x。本机 math 配方使用独立的 CUDA 12.6 环境：Torch 2.7.1+cu126、vLLM 0.10.0+cu126、Transformers 4.57.6，通过 PYTHONPATH 选择本仓源码。针对旧版 vLLM 的导入、CLI 与缓存生命周期做了兼容适配，已用本地 Qwen2 架构 student/teacher 完成四卡两步更新与最终评测。该验证不覆盖其他模型或全部上游功能，也不等于满足上游 setup.py 的全部新版本依赖声明。
 
-工作区 `envs/opd-state` 指向本机缓存中的独立环境；已核对 Torch 实际加载路径与四卡 CUDA 运算，并通过 229 个已安装包的依赖检查。共享 `envs/opd` 保持原样。正式 math 50 步配方为 `bash recipe/math_baseline.sh`，W&B project 固定为 OPD-State，中途不验证且不保存 checkpoint；最终在 MATH-500、AMC23、AIME25 各题采样 16 次。固定来源和 fusion 分别使用 `recipe/math_cached.sh` 与 `recipe/math_fusion.sh`，长时固定来源每 50 步验证；配置、缓存准备、GPU 验收和已完成结果见[统一实验协议](experiment/2026-10-19-rollout来源与logit融合实验.md)。
+工作区 `envs/opd-state` 指向本机缓存中的独立环境；已核对 Torch 实际加载路径与四卡 CUDA 运算，并通过 229 个已安装包的依赖检查。共享 `envs/opd` 保持原样。正式 math 50 步配方为 `bash recipe/math_baseline.sh`，W&B project 固定为 OPD-State，中途不验证且不保存 checkpoint；最终在 MATH-500、AMC23、AIME25 各题采样 16 次。固定来源和 fusion 分别使用 `recipe/math_cached.sh` 与 `recipe/math_fusion.sh`，长时固定来源每 50 步验证；配置、缓存准备、GPU 验收和已完成结果见[实验入口](experiment/2026-10-19-rollout来源与logit融合实验.md)。
 
 训练模型、数据准备与完整参数遵循 [README](../README.md) 和 [数据说明](../data/README.md)。准备完成后，从本仓根目录启动的形式为：
 
@@ -87,7 +87,7 @@ CUDA_VISIBLE_DEVICES=0,1,2,3 N_GPUS_PER_NODE=4 \
 
 GPU 验收至少记录初始模型身份、权重保存策略、数据哈希、随机种子、有效 token 数、采样配置、时间和峰值显存，先跑原算法小规模基线，再比较候选变体。GPU 限物理编号 0–3；覆盖率与准确率结论必须基于真实结果。三种轨迹来源和 λ=0.5 fusion 已完成四卡 50 步及完整三基准验证；这些单 seed、单预算结果不证明长时收敛。
 
-可选的原生策略入口是 `bash recipe/math_native.sh student_fresh`，默认仍为五十步、仅最终完整 eval16、不保存 checkpoint、W&B 项目 `OPD-State`。三种单模型、四种分段方向、两种 batch 混合与两种 native fusion 均已有四卡两步证据；具体源码快照、后续统一引擎布局与正式质量结果见统一实验报告。训练与纯 student 验证使用独立引擎，未指定数据参数时，默认绑定 `runs/native-data/math-full/manifest.json` 的完整去重题库；缺少清单时在训练启动前退出，准备命令见[data README](../data/README.md)。`NATIVE_DATA_MANIFEST` 可选择其他准备好的题库，显式 `TRAIN_FILES` 或 CLI `data.train_files` 保留工程数据覆盖；未绑定清单的覆盖不宣称完整去重。新路径要求单轮纯文本 Qwen2、每副本 TP=PP=DP=1、n=1 的 sampled-token OPD，暂不支持无偏 top-k tail；历史 `policy=null`、缓存与 HF fusion 继续使用原配方。原生验证引擎可用 `actor_rollout_ref.rollout.generation_eval_max_num_seqs=64` 独立设置序列并发上限；默认 `null` 继承原值。该参数不改变训练 batch 或训练引擎的 `max_num_seqs`，也不改变 KL 评分块大小；增大它可能增加 KV 压力，性能需单独测量。
+可选的原生策略入口是 `bash recipe/math_native.sh student_fresh`，默认仍为五十步、仅最终完整 eval16、不保存 checkpoint、W&B 项目 `OPD-State`。三种单模型、四种分段方向、两种 batch 混合与两种 native fusion 均已有四卡两步证据；具体源码快照、共同设置及专题结果见[实验入口](experiment/2026-10-19-rollout来源与logit融合实验.md)。训练与纯 student 验证使用独立引擎，未指定数据参数时，默认绑定 `runs/native-data/math-full/manifest.json` 的完整去重题库；缺少清单时在训练启动前退出，准备命令见[data README](../data/README.md)。`NATIVE_DATA_MANIFEST` 可选择其他准备好的题库，显式 `TRAIN_FILES` 或 CLI `data.train_files` 保留工程数据覆盖；未绑定清单的覆盖不宣称完整去重。新路径要求单轮纯文本 Qwen2、每副本 TP=PP=DP=1、n=1 的 sampled-token OPD，暂不支持无偏 top-k tail；历史 `policy=null`、缓存与 HF fusion 继续使用原配方。原生验证引擎可用 `actor_rollout_ref.rollout.generation_eval_max_num_seqs=64` 独立设置序列并发上限；默认 `null` 继承原值。该参数不改变训练 batch 或训练引擎的 `max_num_seqs`，也不改变 KL 评分块大小；增大它可能增加 KV 压力，性能需单独测量。
 
 桥接回归使用训练环境执行，覆盖实际 Hydra 默认值和无 tensor 的生成输入：
 
@@ -96,4 +96,4 @@ CUDA_VISIBLE_DEVICES='' PYTHONPATH=verl ../envs/opd-state/bin/python \
     -m unittest discover -s verl/tests/opd -p test_rollout_coordinator_runtime.py -v
 ```
 
-`eval/run_native_acceptance.py` 保存完整源码快照、参数、退出状态与四卡遥测，`eval/collect_native_acceptance.py` 独立核对轨迹和最终指标。它们的短响应结果仅作训练链验收，运行实例和证据见[统一实验报告](experiment/2026-10-19-rollout来源与logit融合实验.md)。
+`eval/run_native_acceptance.py` 保存完整源码快照、参数、退出状态与四卡遥测，`eval/collect_native_acceptance.py` 独立核对轨迹和最终指标。它们的短响应结果仅作训练链验收，运行实例和证据见[实验入口](experiment/2026-10-19-rollout来源与logit融合实验.md)。
