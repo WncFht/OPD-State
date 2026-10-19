@@ -1,0 +1,92 @@
+{
+  "4": {
+    "scope": "Tensor/capacity estimates, TP=1 replicas; not measured allocator or whole-card peaks",
+    "gpus": 4,
+    "parameters": 1777088000,
+    "inference_weights_bytes_per_replica": 3554176000,
+    "kv_bytes_per_sequence_position": 28672,
+    "generation": {
+      "responses_per_submission": 512,
+      "max_queued_responses_per_gpu": 128,
+      "max_active_responses_per_gpu": 64,
+      "instance_memory_budget_bytes": 47036445491,
+      "assumed_non_kv_margin_bytes": 4294967296,
+      "kv_capacity_bytes_after_assumed_margin": 39187302195,
+      "kv_capacity_positions_after_assumed_margin": 1366744,
+      "kv_bytes_at_assumed_mean_context": 11562385408,
+      "kv_bytes_if_all_active_reach_cap": 60129542144,
+      "max_simultaneous_at_context_cap": 41,
+      "all_active_fit_at_cap_under_assumptions": false,
+      "reservation_plus_other_process_bytes": 47036445491,
+      "reservation_and_other_processes_fit": true
+    },
+    "kl": {
+      "position_chunk": 1024,
+      "forward_batch_size": 1,
+      "vocabulary_chunk": 151665,
+      "two_bf16_or_fp32_logit_blocks_bytes": 622329856,
+      "fp32_reduction_workspace_upper_bytes": 4969758720,
+      "student_head_snapshot_bytes": 466747392,
+      "two_selected_hidden_upper_bytes": 201326592,
+      "two_full_inference_weight_copies_bytes": 7108352000,
+      "listed_components_bytes": 13368514560
+    },
+    "excluded_or_assumed": [
+      "Actual vLLM non-KV profiling, CUDA Graph pools and other-process allocations",
+      "KV page rounding, shared-prefix savings and preemption/recompute",
+      "FSDP sharding, parameter precision, transient gathers and offload transfers",
+      "Backbone activation/workspace and allocator fragmentation",
+      "No throughput or eight-GPU measurement is implied"
+    ],
+    "checkpoint": {
+      "parameters": 1777088000,
+      "checkpoint_stored_bytes": 3554176000,
+      "tensor_count": 339
+    }
+  },
+  "8": {
+    "scope": "Tensor/capacity estimates, TP=1 replicas; not measured allocator or whole-card peaks",
+    "gpus": 8,
+    "parameters": 1777088000,
+    "inference_weights_bytes_per_replica": 3554176000,
+    "kv_bytes_per_sequence_position": 28672,
+    "generation": {
+      "responses_per_submission": 1024,
+      "max_queued_responses_per_gpu": 128,
+      "max_active_responses_per_gpu": 64,
+      "instance_memory_budget_bytes": 47036445491,
+      "assumed_non_kv_margin_bytes": 4294967296,
+      "kv_capacity_bytes_after_assumed_margin": 39187302195,
+      "kv_capacity_positions_after_assumed_margin": 1366744,
+      "kv_bytes_at_assumed_mean_context": 11562385408,
+      "kv_bytes_if_all_active_reach_cap": 60129542144,
+      "max_simultaneous_at_context_cap": 41,
+      "all_active_fit_at_cap_under_assumptions": false,
+      "reservation_plus_other_process_bytes": 47036445491,
+      "reservation_and_other_processes_fit": true
+    },
+    "kl": {
+      "position_chunk": 1024,
+      "forward_batch_size": 1,
+      "vocabulary_chunk": 151665,
+      "two_bf16_or_fp32_logit_blocks_bytes": 622329856,
+      "fp32_reduction_workspace_upper_bytes": 4969758720,
+      "student_head_snapshot_bytes": 466747392,
+      "two_selected_hidden_upper_bytes": 201326592,
+      "two_full_inference_weight_copies_bytes": 7108352000,
+      "listed_components_bytes": 13368514560
+    },
+    "excluded_or_assumed": [
+      "Actual vLLM non-KV profiling, CUDA Graph pools and other-process allocations",
+      "KV page rounding, shared-prefix savings and preemption/recompute",
+      "FSDP sharding, parameter precision, transient gathers and offload transfers",
+      "Backbone activation/workspace and allocator fragmentation",
+      "No throughput or eight-GPU measurement is implied"
+    ],
+    "checkpoint": {
+      "parameters": 1777088000,
+      "checkpoint_stored_bytes": 3554176000,
+      "tensor_count": 339
+    }
+  }
+}

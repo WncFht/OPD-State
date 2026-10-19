@@ -347,3 +347,7 @@ CLI 数据覆盖兼容性提交为 b094d75，六项入口检查与完整 CI 通�
 核对周期验证语义：KL 已挂通用 _validate，并非 final-only；student 版本取 global_steps，中间验证后 end_eval 的 resume_training 为 true。将 KL 专题和流程图中的通用“最终 student”改为“当前验证版本”，保留已有末步实验的实际范围。新增真实小 Qwen2 的 step0/2/4 连续验证回归，使用实际 SGD 在验证间更新参数，检查独立文件、live 权重、bank/teacher 不变、全位置及 true/true/false 恢复标志；测试夹具的 student_version 改为读取当前 step。生产行为未改变，GPU 多验证点恢复仍列为待验收。
 
 按用户最新要求开始 validation 性能优化，长期 goal 当前为 paused；暂停原串行父队列，保留正在执行的 teacher_current_k2048，未恢复失效的后续 watcher。新实现按相近长度安排 FSDP 评分轮次并逆排后去除 padding，整块 FP32 词表归约减少小循环与同步；原 1e-5 数值门槛保留。验证 seq/token/预算/Graph 使用独立副本，math 启动卡数参数化，容量工具仅读配置与 safetensors 头。正文改为长期维护的速度与显存.md，并记录候选参数与 CPU/GPU 证据边界。实际 GPU 对照等待当前组结束，不并行占用前四卡。
+
+teacher_current_k2048 于 09:44（Asia/Shanghai）正常结束，五十步与完整 eval16 的来源审计、独立重评分和 W&B g7iyd2u6 核验通过；macro mean@16=64.5097%，无 checkpoint、无 validation KL。新增结果单独归档，前五组配对分析和图未改范围。原串行父队列在会话中断后已不存在，未自动重建或恢复其余正式训练。
+
+完成 104 条真实 token 的四卡 p0/q 评分对照：各基准按长度分位各 32 条，固定 bank 两来源各 4 条。三遍含预热，共二十七项；平衡与完整词表条件保持逐响应配对误差小于 1e-5，位置块 1,024 平均 11.335 s，对照 45.408 s。批量前向 2–16 的差约 0.001313，拒绝作为默认。新增按验证 step 绑定实时 student、准确率覆盖及 KL 报告的收集器，保留 final-only 默认。生成基准的 vLLM 0.10 函数 RPC 遥测失败后改为具名 RPC，并在 collective barrier 前检查子进程就绪；此前未产出有效测量的目录不计结果，继续串行测生成资源配置。

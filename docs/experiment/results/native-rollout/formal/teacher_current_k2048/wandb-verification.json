@@ -1,0 +1,116 @@
+{
+  "id": "g7iyd2u6",
+  "state": "finished",
+  "url": "https://wandb.ai/wncfht/OPD-State/runs/g7iyd2u6",
+  "source_commit": "d59a7c3463244ef7533ca4acf73855e988043848",
+  "history_training_rows": 50,
+  "steps": [
+    1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21,
+    22, 23, 24, 25, 26, 27, 28, 29, 30, 31, 32, 33, 34, 35, 36, 37, 38, 39, 40,
+    41, 42, 43, 44, 45, 46, 47, 48, 49, 50
+  ],
+  "finite_loss_and_grad": true,
+  "save_freq": -1,
+  "samples_per_question": 16,
+  "validation_steps": [50],
+  "metrics": {
+    "eval/MATH-500/questions": 500,
+    "eval/MATH-500/samples_per_question": 16,
+    "eval/MATH-500/mean@16": 0.862375,
+    "eval/MATH-500/pass@1": 0.862375,
+    "eval/MATH-500/pass@2": 0.9113166666666668,
+    "eval/MATH-500/pass@4": 0.9373846153846154,
+    "eval/MATH-500/pass@8": 0.9540337218337218,
+    "eval/MATH-500/pass@16": 0.964,
+    "eval/AMC23/questions": 40,
+    "eval/AMC23/samples_per_question": 16,
+    "eval/AMC23/mean@16": 0.79375,
+    "eval/AMC23/pass@1": 0.79375,
+    "eval/AMC23/pass@2": 0.8841666666666667,
+    "eval/AMC23/pass@4": 0.9382005494505494,
+    "eval/AMC23/pass@8": 0.9660042735042736,
+    "eval/AMC23/pass@16": 0.975,
+    "eval/AIME25/questions": 30,
+    "eval/AIME25/samples_per_question": 16,
+    "eval/AIME25/mean@16": 0.2791666666666667,
+    "eval/AIME25/pass@1": 0.2791666666666667,
+    "eval/AIME25/pass@2": 0.35444444444444445,
+    "eval/AIME25/pass@4": 0.42157509157509154,
+    "eval/AIME25/pass@8": 0.4940170940170941,
+    "eval/AIME25/pass@16": 0.5666666666666667,
+    "eval/macro/mean@16": 0.6450972222222222,
+    "eval/micro/mean@16": 0.8268640350877193,
+    "eval/macro/pass@1": 0.6450972222222222,
+    "eval/micro/pass@1": 0.8268640350877193,
+    "eval/macro/pass@2": 0.7166425925925927,
+    "eval/micro/pass@2": 0.8801023391812866,
+    "eval/macro/pass@4": 0.7657200854700855,
+    "eval/micro/pass@4": 0.9102940042413726,
+    "eval/macro/pass@8": 0.8046850297850298,
+    "eval/micro/pass@8": 0.9306623590834116,
+    "eval/macro/pass@16": 0.8352222222222222,
+    "eval/micro/pass@16": 0.9438596491228072
+  },
+  "verification_scope": "finished_run",
+  "observed_remote_training_rows": 50,
+  "observed_remote_validation_steps": [50],
+  "validation_metrics_by_step": {},
+  "local_evidence_sha256": {
+    "summary.json": "a1171c7920e0f0edd61a48e4c942df5d3c55b5094ec02ae6fda1a242b78d6bc7",
+    "native-acceptance.json": "d97f22d8352f3e2ee7ea9f33960f6114414c0f84a2632402bdab40b051035c53",
+    "manifest.json": "abbf5a5635cc48547685badaabf442af604888438e17e2250a8cdb6c2e277038",
+    "training-1-50.csv": "36bfe8b28e11956d027bed700969bac64195795a48207e32fc5b4417ecaf5ade",
+    "validation-step50.json": "394bc284e91b65cf19d7859cad5238ad07f13c8c2ea10272a9124d2e1a03cec9"
+  },
+  "native_policy_verification": {
+    "policy": {
+      "kind": "sequence_switch",
+      "first": "teacher",
+      "second": "current_student",
+      "boundary": {
+        "kind": "response_tokens",
+        "value": 2048
+      }
+    },
+    "manifest_sha256": "abbf5a5635cc48547685badaabf442af604888438e17e2250a8cdb6c2e277038"
+  },
+  "quality_scope": "full_three_benchmark_eval16",
+  "kl_verification": null,
+  "settings": {
+    "student_model": "/mnt/tidalfs-bdsz01/dataset/llm_dataset/zkn_data/fht_data/models/DeepSeek-R1-Distill-Qwen-1.5B",
+    "teacher_model": "/mnt/tidalfs-bdsz01/dataset/llm_dataset/zkn_data/fht_data/models/JustRL-DeepSeek-1.5B",
+    "rollout_source": "native_policy",
+    "rollout_policy": {
+      "kind": "sequence_switch",
+      "first": "teacher",
+      "second": "current_student",
+      "boundary": {
+        "kind": "response_tokens",
+        "value": 2048
+      }
+    },
+    "generation_backend": "vllm_native",
+    "train_files": [
+      "/mnt/tidalfs-bdsz01/dataset/llm_dataset/zkn_data/fht_data/OPD-State/runs/native-rollout-implementation/fresh-math-data-v2/ordered.parquet"
+    ],
+    "val_files": [
+      "/mnt/tidalfs-bdsz01/dataset/llm_dataset/zkn_data/fht_data/MD-OPD/data/math/MATH-500/test.parquet",
+      "/mnt/tidalfs-bdsz01/dataset/llm_dataset/zkn_data/fht_data/MD-OPD/data/math/AMC23/test.parquet",
+      "/mnt/tidalfs-bdsz01/dataset/llm_dataset/zkn_data/fht_data/MD-OPD/data/math/AIME25/test.parquet"
+    ],
+    "seed": 42,
+    "train_batch_size": 64,
+    "prompt_cap": 1024,
+    "training_response_cap": 4096,
+    "validation": {
+      "n": 16,
+      "top_k": -1,
+      "top_p": 0.9,
+      "_target_": "verl.workers.config.SamplingConfig",
+      "do_sample": true,
+      "max_tokens": 31744,
+      "temperature": 0.7
+    }
+  },
+  "verifier_source_sha256": "8b16b3a156dcc029d0c0b7ee630eda14ef26c618bcb7b806ef7745bb43ec88b4"
+}

@@ -1,0 +1,17 @@
+{
+  "inputs_sha256": {
+    "docs/experiment/results/native-rollout/validation-performance/scoring-gpu.json": "4dc98b53c228d090d0dc6eed1fc77f581153d8d18f44d0e0f13aeb8338720f7e"
+  },
+  "driver_sha256": "99eafd524a733251710f04c9cc8f1b74986772830d331324fb6edb102fc0e75f",
+  "style_sha256": "a9670b726e4890688bad9bec5cf5f39dcc6a1604ceebff8043c26cee95726581",
+  "outputs_sha256": {
+    "scoring.png": "e0421639beda960aec58ae489a49b99a531a79a34456ef47e63a2a668761dd28",
+    "scoring.pdf": "06595beaf34c72983454079912cb6134f796aaeb4589a24640ca18c51f3febfd",
+    "scoring.csv": "311607b79624fd4a0f1591dee4049ca2ae18d01bfc6dde09acbfab5d420412cc"
+  },
+  "matplotlib_version": "3.10.7",
+  "audits": {
+    "scoring": []
+  },
+  "scope": "Paired scoring and separate inference API benchmarks, not full trainer speedup"
+}

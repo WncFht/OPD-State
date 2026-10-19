@@ -1,0 +1,1504 @@
+{
+  "state": "completed_with_rejected_candidates",
+  "input": {
+    "scope": "Frozen real-response workload; benchmark of pretrained p0/q, not discarded student2 weights",
+    "baseline_commit": "b528c6d29425e368ff7add630bfc845f060cb8b8",
+    "input_path": "/mnt/tidalfs-bdsz01/dataset/llm_dataset/zkn_data/fht_data/OPD-State/runs/native-validation-kl-full-20261019-v2/validation/kl/kl-tokens-step-2.jsonl",
+    "input_sha256": "04ee67d570414ffe007b1ad0b59121908294adaab9b9b5fa974e497c9cb0b088",
+    "selected_sha256": "b5b47008e4c59073a802c5ebd87d53fca7bcb6b226dc007b6b7ea5f8c76eb8a1",
+    "responses": 104,
+    "effective_main_positions": 1019424,
+    "sampling": "Within each benchmark, deterministic response-length quantiles; four bank responses per source",
+    "baseline_sources_sha256": {
+      "core.py": "e660e1bfaa50d46cf2a2e916ce3caadf38c048a50f7dbcf75b453384e48b6968",
+      "worker.py": "cd04972a549662c042a27cd03c351916c5a0aaf55ff23c5d4e83ced1e3d1ed3b"
+    },
+    "models": {
+      "student": {
+        "path": "/mnt/tidalfs-bdsz01/dataset/llm_dataset/zkn_data/fht_data/models/DeepSeek-R1-Distill-Qwen-1.5B",
+        "fingerprint": "2fc42a962d3f6f5281e99686ab9a5ae32c8cb9529c8e3fd07709c5c056613f48"
+      },
+      "teacher": {
+        "path": "/mnt/tidalfs-bdsz01/dataset/llm_dataset/zkn_data/fht_data/models/JustRL-DeepSeek-1.5B",
+        "fingerprint": "2736b59eeb53f416088992a3d7ecb3376274c74e685c358214360072395631f0"
+      }
+    }
+  },
+  "scope": "BF16 pretrained pair; FSDP1 without optimizer/CPU offload; no generation",
+  "fp64_errors_by_rank": [
+    {
+      "baseline": {
+        "student_teacher_kl": 7.669931974692946e-7,
+        "teacher_student_kl": 7.670005840388915e-7,
+        "student_entropy": 3.8278362902749614e-7,
+        "teacher_entropy": 7.773140602806939e-7
+      },
+      "full_block": {
+        "student_teacher_kl": 7.669950164586981e-7,
+        "teacher_student_kl": 7.670024030282951e-7,
+        "student_entropy": 3.8278362902749614e-7,
+        "teacher_entropy": 7.773140602806939e-7
+      }
+    },
+    {
+      "baseline": {
+        "student_teacher_kl": 9.847431664193298e-7,
+        "teacher_student_kl": 1.0163707648627729e-6,
+        "student_entropy": 1.0065028805100984e-6,
+        "teacher_entropy": 5.034772918022234e-7
+      },
+      "full_block": {
+        "student_teacher_kl": 9.847431664193298e-7,
+        "teacher_student_kl": 1.1775138607506008e-6,
+        "student_entropy": 1.0064956045524842e-6,
+        "teacher_entropy": 5.098016693794172e-7
+      }
+    },
+    {
+      "baseline": {
+        "student_teacher_kl": 1.274476751578213e-6,
+        "teacher_student_kl": 1.7429505665411682e-6,
+        "student_entropy": 9.412391649981256e-7,
+        "teacher_entropy": 6.248767807637279e-7
+      },
+      "full_block": {
+        "student_teacher_kl": 1.3042790739659083e-6,
+        "teacher_student_kl": 1.623741276990387e-6,
+        "student_entropy": 9.412828207438107e-7,
+        "teacher_entropy": 6.248767807637279e-7
+      }
+    },
+    {
+      "baseline": {
+        "student_teacher_kl": 2.62276050663323e-6,
+        "teacher_student_kl": 2.6271249919510888e-6,
+        "student_entropy": 3.576123122579956e-7,
+        "teacher_entropy": 2.130451847201509e-6
+      },
+      "full_block": {
+        "student_teacher_kl": 1.1924024202790776e-6,
+        "teacher_student_kl": 1.195255684914489e-6,
+        "student_entropy": 3.5758320842753887e-7,
+        "teacher_entropy": 1.4942556132019336e-6
+      }
+    }
+  ],
+  "expected_devices": {
+    "0": {
+      "physical_index": 0,
+      "pci_bus_id": "0000:63:00.0",
+      "nvml_uuid": "GPU-cb48e54c-5152-b595-cd31-bde2562e143e",
+      "cuda_uuid": "GPU-62abd129-d043-0dca-91cb-373a0393b23d",
+      "cuda_uuid_v2": "GPU-62abd129-d043-0dca-91cb-373a0393b23d",
+      "cuda_ordinal": 0
+    },
+    "1": {
+      "physical_index": 1,
+      "pci_bus_id": "0000:67:00.0",
+      "nvml_uuid": "GPU-563e2493-6610-81f0-59fd-20324f42e71f",
+      "cuda_uuid": "GPU-d143e95d-02e2-0180-ce73-8e9689441720",
+      "cuda_uuid_v2": "GPU-d143e95d-02e2-0180-ce73-8e9689441720",
+      "cuda_ordinal": 1
+    },
+    "2": {
+      "physical_index": 2,
+      "pci_bus_id": "0000:6b:00.0",
+      "nvml_uuid": "GPU-ecc2a4cb-762d-1079-e78f-08790fec88ce",
+      "cuda_uuid": "GPU-0bbddb66-bde8-7568-e65d-7589c045ab2f",
+      "cuda_uuid_v2": "GPU-0bbddb66-bde8-7568-e65d-7589c045ab2f",
+      "cuda_ordinal": 2
+    },
+    "3": {
+      "physical_index": 3,
+      "pci_bus_id": "0000:6f:00.0",
+      "nvml_uuid": "GPU-8059084a-ff75-6775-1834-4f2c79cbfb7d",
+      "cuda_uuid": "GPU-7386c5ae-ab75-b0e2-2169-355435eef268",
+      "cuda_uuid_v2": "GPU-7386c5ae-ab75-b0e2-2169-355435eef268",
+      "cuda_ordinal": 3
+    }
+  },
+  "observed_devices": [
+    {
+      "rank": 0,
+      "uuid": "62abd129-d043-0dca-91cb-373a0393b23d",
+      "name": "NVIDIA H800",
+      "total_bytes": 84929216512
+    },
+    {
+      "rank": 1,
+      "uuid": "d143e95d-02e2-0180-ce73-8e9689441720",
+      "name": "NVIDIA H800",
+      "total_bytes": 84929216512
+    },
+    {
+      "rank": 2,
+      "uuid": "0bbddb66-bde8-7568-e65d-7589c045ab2f",
+      "name": "NVIDIA H800",
+      "total_bytes": 84929216512
+    },
+    {
+      "rank": 3,
+      "uuid": "7386c5ae-ab75-b0e2-2169-355435eef268",
+      "name": "NVIDIA H800",
+      "total_bytes": 84929216512
+    }
+  ],
+  "measurements": [
+    {
+      "case": "legacy-input-128-8192",
+      "repetition": -1,
+      "warmup": true,
+      "started_epoch_s": 1792374846.1587145,
+      "finished_epoch_s": 1792374892.1167488,
+      "seconds": 46.32559585571289,
+      "max_paired_mean_error": 0.0,
+      "allocated_bytes_by_rank": [
+        4756445184, 6452883968, 6457126912, 6467170304
+      ],
+      "reserved_bytes_by_rank": [
+        7239368704, 10907287552, 14820573184, 24098373632
+      ],
+      "rank_evaluated_positions": [69456, 186002, 347335, 416695],
+      "worker_timings": [
+        {
+          "student_forward_seconds": 34.589478850364685,
+          "teacher_forward_seconds": 7.295648895204067,
+          "head_kl_seconds": 4.012732706964016,
+          "seconds": 45.93388570100069,
+          "head_snapshot_bytes": 466747392
+        },
+        {
+          "student_forward_seconds": 27.683633357286453,
+          "teacher_forward_seconds": 7.296826310455799,
+          "head_kl_seconds": 10.953324444591999,
+          "seconds": 46.00048540532589,
+          "head_snapshot_bytes": 466747392
+        },
+        {
+          "student_forward_seconds": 19.408611468970776,
+          "teacher_forward_seconds": 7.3040977865457535,
+          "head_kl_seconds": 19.39753843843937,
+          "seconds": 46.21510377526283,
+          "head_snapshot_bytes": 466747392
+        },
+        {
+          "student_forward_seconds": 14.618849210441113,
+          "teacher_forward_seconds": 7.306974172592163,
+          "head_kl_seconds": 23.362456902861595,
+          "seconds": 45.41949962824583,
+          "head_snapshot_bytes": 466747392
+        }
+      ],
+      "passed": true,
+      "rejection": null
+    },
+    {
+      "case": "balanced-128-8192",
+      "repetition": -1,
+      "warmup": true,
+      "started_epoch_s": 1792374892.5589426,
+      "finished_epoch_s": 1792374915.9372025,
+      "seconds": 23.419296264648438,
+      "max_paired_mean_error": 0.0,
+      "allocated_bytes_by_rank": [
+        6468001280, 6459582464, 6459141632, 6458761216
+      ],
+      "reserved_bytes_by_rank": [
+        7119831040, 7111442432, 7111442432, 7111442432
+      ],
+      "rank_evaluated_positions": [255493, 255915, 256982, 251098],
+      "worker_timings": [
+        {
+          "student_forward_seconds": 5.172997020184994,
+          "teacher_forward_seconds": 3.6930366829037666,
+          "head_kl_seconds": 14.353931084275246,
+          "seconds": 23.300511986017227,
+          "head_snapshot_bytes": 466747392
+        },
+        {
+          "student_forward_seconds": 4.613920457661152,
+          "teacher_forward_seconds": 3.696915850043297,
+          "head_kl_seconds": 14.920923322439194,
+          "seconds": 23.315224952995777,
+          "head_snapshot_bytes": 466747392
+        },
+        {
+          "student_forward_seconds": 5.2672348618507385,
+          "teacher_forward_seconds": 3.7005128413438797,
+          "head_kl_seconds": 14.276483103632927,
+          "seconds": 23.32578144222498,
+          "head_snapshot_bytes": 466747392
+        },
+        {
+          "student_forward_seconds": 5.70682468265295,
+          "teacher_forward_seconds": 3.6943744122982025,
+          "head_kl_seconds": 13.861761890351772,
+          "seconds": 23.344310089945793,
+          "head_snapshot_bytes": 466747392
+        }
+      ],
+      "passed": true,
+      "rejection": null
+    },
+    {
+      "case": "balanced-512-full",
+      "repetition": -1,
+      "warmup": true,
+      "started_epoch_s": 1792374916.0291464,
+      "finished_epoch_s": 1792374927.3647757,
+      "seconds": 11.342992782592773,
+      "max_paired_mean_error": 8.451538633380551e-7,
+      "allocated_bytes_by_rank": [
+        7236966912, 7236739584, 7236805120, 7236877824
+      ],
+      "reserved_bytes_by_rank": [
+        8990490624, 8982102016, 8982102016, 8982102016
+      ],
+      "rank_evaluated_positions": [255493, 255915, 256982, 251098],
+      "worker_timings": [
+        {
+          "student_forward_seconds": 3.9745601937174797,
+          "teacher_forward_seconds": 3.7434907853603363,
+          "head_kl_seconds": 3.470733255147934,
+          "seconds": 11.262421369552612,
+          "head_snapshot_bytes": 466747392
+        },
+        {
+          "student_forward_seconds": 3.9786992743611336,
+          "teacher_forward_seconds": 3.7475439831614494,
+          "head_kl_seconds": 3.462030738592148,
+          "seconds": 11.262220524251461,
+          "head_snapshot_bytes": 466747392
+        },
+        {
+          "student_forward_seconds": 3.956758886575699,
+          "teacher_forward_seconds": 3.745742194354534,
+          "head_kl_seconds": 3.4864646941423416,
+          "seconds": 11.262407250702381,
+          "head_snapshot_bytes": 466747392
+        },
+        {
+          "student_forward_seconds": 4.038425110280514,
+          "teacher_forward_seconds": 3.7444633468985558,
+          "head_kl_seconds": 3.41079019010067,
+          "seconds": 11.269957639276981,
+          "head_snapshot_bytes": 466747392
+        }
+      ],
+      "passed": true,
+      "rejection": null
+    },
+    {
+      "case": "balanced-1024-full",
+      "repetition": -1,
+      "warmup": true,
+      "started_epoch_s": 1792374927.4249935,
+      "finished_epoch_s": 1792374938.5210252,
+      "seconds": 11.10577392578125,
+      "max_paired_mean_error": 8.451538633380551e-7,
+      "allocated_bytes_by_rank": [
+        10033005056, 10032777728, 10032843264, 10032915968
+      ],
+      "reserved_bytes_by_rank": [
+        12098469888, 12090081280, 12090081280, 12090081280
+      ],
+      "rank_evaluated_positions": [255493, 255915, 256982, 251098],
+      "worker_timings": [
+        {
+          "student_forward_seconds": 3.913036659359932,
+          "teacher_forward_seconds": 3.714168004691601,
+          "head_kl_seconds": 3.319457896053791,
+          "seconds": 11.022757820785046,
+          "head_snapshot_bytes": 466747392
+        },
+        {
+          "student_forward_seconds": 3.896657407283783,
+          "teacher_forward_seconds": 3.7164758816361427,
+          "head_kl_seconds": 3.335684932768345,
+          "seconds": 11.024340130388737,
+          "head_snapshot_bytes": 466747392
+        },
+        {
+          "student_forward_seconds": 3.8925060853362083,
+          "teacher_forward_seconds": 3.712173081934452,
+          "head_kl_seconds": 3.351803071796894,
+          "seconds": 11.028158091008663,
+          "head_snapshot_bytes": 466747392
+        },
+        {
+          "student_forward_seconds": 3.9738749340176582,
+          "teacher_forward_seconds": 3.713049590587616,
+          "head_kl_seconds": 3.2754780873656273,
+          "seconds": 11.032976984977722,
+          "head_snapshot_bytes": 466747392
+        }
+      ],
+      "passed": true,
+      "rejection": null
+    },
+    {
+      "case": "balanced-2048-full",
+      "repetition": -1,
+      "warmup": true,
+      "started_epoch_s": 1792374938.5935245,
+      "finished_epoch_s": 1792374949.5886388,
+      "seconds": 11.004776954650879,
+      "max_paired_mean_error": 8.451538633380551e-7,
+      "allocated_bytes_by_rank": [
+        15626125824, 15625898496, 15625964032, 15626036736
+      ],
+      "reserved_bytes_by_rank": [
+        18933088256, 18924699648, 18924699648, 18924699648
+      ],
+      "rank_evaluated_positions": [255493, 255915, 256982, 251098],
+      "worker_timings": [
+        {
+          "student_forward_seconds": 3.901439033448696,
+          "teacher_forward_seconds": 3.693294383585453,
+          "head_kl_seconds": 3.2590606957674026,
+          "seconds": 10.92266345769167,
+          "head_snapshot_bytes": 466747392
+        },
+        {
+          "student_forward_seconds": 3.892490193247795,
+          "teacher_forward_seconds": 3.6915520429611206,
+          "head_kl_seconds": 3.2692692056298256,
+          "seconds": 10.925613425672054,
+          "head_snapshot_bytes": 466747392
+        },
+        {
+          "student_forward_seconds": 3.8775640428066254,
+          "teacher_forward_seconds": 3.6919621527194977,
+          "head_kl_seconds": 3.287571005523205,
+          "seconds": 10.928559735417366,
+          "head_snapshot_bytes": 466747392
+        },
+        {
+          "student_forward_seconds": 3.963425286114216,
+          "teacher_forward_seconds": 3.692080043256283,
+          "head_kl_seconds": 3.20919032394886,
+          "seconds": 10.934122167527676,
+          "head_snapshot_bytes": 466747392
+        }
+      ],
+      "passed": true,
+      "rejection": null
+    },
+    {
+      "case": "balanced-1024-full-b2",
+      "repetition": -1,
+      "warmup": true,
+      "started_epoch_s": 1792374949.6697307,
+      "finished_epoch_s": 1792374960.4127362,
+      "seconds": 10.750349044799805,
+      "max_paired_mean_error": 0.0013131979010411877,
+      "allocated_bytes_by_rank": [
+        10326563328, 10325323776, 10325284864, 10325248512
+      ],
+      "reserved_bytes_by_rank": [
+        13832814592, 13581156352, 13581156352, 13581156352
+      ],
+      "rank_evaluated_positions": [255493, 255915, 256982, 251098],
+      "worker_timings": [
+        {
+          "student_forward_seconds": 3.726792559027672,
+          "teacher_forward_seconds": 3.502593941986561,
+          "head_kl_seconds": 3.320381224155426,
+          "forward_batches": 13,
+          "seconds": 10.672589339315891,
+          "head_snapshot_bytes": 466747392
+        },
+        {
+          "student_forward_seconds": 3.7259629666805267,
+          "teacher_forward_seconds": 3.50038506090641,
+          "head_kl_seconds": 3.326108440756798,
+          "forward_batches": 13,
+          "seconds": 10.672207817435265,
+          "head_snapshot_bytes": 466747392
+        },
+        {
+          "student_forward_seconds": 3.70912916213274,
+          "teacher_forward_seconds": 3.496516950428486,
+          "head_kl_seconds": 3.3531004264950752,
+          "forward_batches": 13,
+          "seconds": 10.674227498471737,
+          "head_snapshot_bytes": 466747392
+        },
+        {
+          "student_forward_seconds": 3.7959068194031715,
+          "teacher_forward_seconds": 3.496243216097355,
+          "head_kl_seconds": 3.26824027299881,
+          "forward_batches": 13,
+          "seconds": 10.678961671888828,
+          "head_snapshot_bytes": 466747392
+        }
+      ],
+      "passed": false,
+      "rejection": "Paired response-mean statistics differed by more than 1e-5"
+    },
+    {
+      "case": "balanced-2048-full-b4",
+      "repetition": -1,
+      "warmup": true,
+      "started_epoch_s": 1792374960.557169,
+      "finished_epoch_s": 1792374971.301738,
+      "seconds": 10.75119686126709,
+      "max_paired_mean_error": 0.0013131725954505632,
+      "allocated_bytes_by_rank": [
+        16428883456, 16427357184, 16429656064, 16435115520
+      ],
+      "reserved_bytes_by_rank": [
+        23620222976, 25081937920, 25081937920, 25081937920
+      ],
+      "rank_evaluated_positions": [255493, 255915, 256982, 251098],
+      "worker_timings": [
+        {
+          "student_forward_seconds": 3.643761195242405,
+          "teacher_forward_seconds": 3.552786707878113,
+          "head_kl_seconds": 3.3175188452005386,
+          "forward_batches": 7,
+          "seconds": 10.672811701893806,
+          "head_snapshot_bytes": 466747392
+        },
+        {
+          "student_forward_seconds": 3.7303559854626656,
+          "teacher_forward_seconds": 3.5567563995718956,
+          "head_kl_seconds": 3.260276570916176,
+          "forward_batches": 7,
+          "seconds": 10.67392385005951,
+          "head_snapshot_bytes": 466747392
+        },
+        {
+          "student_forward_seconds": 3.729095548391342,
+          "teacher_forward_seconds": 3.5551784932613373,
+          "head_kl_seconds": 3.2813251465559006,
+          "forward_batches": 7,
+          "seconds": 10.673743031919003,
+          "head_snapshot_bytes": 466747392
+        },
+        {
+          "student_forward_seconds": 3.8090574592351913,
+          "teacher_forward_seconds": 3.559107229113579,
+          "head_kl_seconds": 3.1974090337753296,
+          "forward_batches": 7,
+          "seconds": 10.681658118963242,
+          "head_snapshot_bytes": 466747392
+        }
+      ],
+      "passed": false,
+      "rejection": "Paired response-mean statistics differed by more than 1e-5"
+    },
+    {
+      "case": "balanced-2048-full-b8",
+      "repetition": -1,
+      "warmup": true,
+      "started_epoch_s": 1792374971.466714,
+      "finished_epoch_s": 1792374982.920257,
+      "seconds": 11.460943222045898,
+      "max_paired_mean_error": 0.0013131725954505632,
+      "allocated_bytes_by_rank": [
+        21843102720, 21775976448, 21766959616, 21770176000
+      ],
+      "reserved_bytes_by_rank": [
+        27877441536, 24792530944, 24792530944, 24786239488
+      ],
+      "rank_evaluated_positions": [255493, 255915, 256982, 251098],
+      "worker_timings": [
+        {
+          "student_forward_seconds": 4.035529501736164,
+          "teacher_forward_seconds": 3.978305257856846,
+          "head_kl_seconds": 3.246838331222534,
+          "forward_batches": 4,
+          "seconds": 11.384155243635178,
+          "head_snapshot_bytes": 466747392
+        },
+        {
+          "student_forward_seconds": 4.024290606379509,
+          "teacher_forward_seconds": 3.981160841882229,
+          "head_kl_seconds": 3.256650246679783,
+          "forward_batches": 4,
+          "seconds": 11.385828785598278,
+          "head_snapshot_bytes": 466747392
+        },
+        {
+          "student_forward_seconds": 4.0338985323905945,
+          "teacher_forward_seconds": 3.9808234795928,
+          "head_kl_seconds": 3.2758162915706635,
+          "forward_batches": 4,
+          "seconds": 11.38663136959076,
+          "head_snapshot_bytes": 466747392
+        },
+        {
+          "student_forward_seconds": 4.113041639328003,
+          "teacher_forward_seconds": 3.978740580379963,
+          "head_kl_seconds": 3.195471301674843,
+          "forward_batches": 4,
+          "seconds": 11.394446440041065,
+          "head_snapshot_bytes": 466747392
+        }
+      ],
+      "passed": false,
+      "rejection": "Paired response-mean statistics differed by more than 1e-5"
+    },
+    {
+      "case": "balanced-2048-full-b16",
+      "repetition": -1,
+      "warmup": true,
+      "started_epoch_s": 1792374983.0757487,
+      "finished_epoch_s": 1792374996.4788916,
+      "seconds": 13.457452774047852,
+      "max_paired_mean_error": 0.0013131725954505632,
+      "allocated_bytes_by_rank": [
+        39032344064, 38918111232, 38891773440, 38878542336
+      ],
+      "reserved_bytes_by_rank": [
+        45489324032, 42211475456, 45332037632, 45325746176
+      ],
+      "rank_evaluated_positions": [255493, 255915, 256982, 251098],
+      "worker_timings": [
+        {
+          "student_forward_seconds": 5.01209981739521,
+          "teacher_forward_seconds": 4.965650245547295,
+          "head_kl_seconds": 3.246220141649246,
+          "forward_batches": 2,
+          "seconds": 13.333050787448883,
+          "head_snapshot_bytes": 466747392
+        },
+        {
+          "student_forward_seconds": 4.9996995478868484,
+          "teacher_forward_seconds": 4.960147634148598,
+          "head_kl_seconds": 3.2504808455705643,
+          "forward_batches": 2,
+          "seconds": 13.297927990555763,
+          "head_snapshot_bytes": 466747392
+        },
+        {
+          "student_forward_seconds": 5.04117789119482,
+          "teacher_forward_seconds": 4.974170446395874,
+          "head_kl_seconds": 3.2759410217404366,
+          "forward_batches": 2,
+          "seconds": 13.386893175542355,
+          "head_snapshot_bytes": 466747392
+        },
+        {
+          "student_forward_seconds": 5.099827833473682,
+          "teacher_forward_seconds": 4.9711147248744965,
+          "head_kl_seconds": 3.1926235258579254,
+          "forward_batches": 2,
+          "seconds": 13.34789676964283,
+          "head_snapshot_bytes": 466747392
+        }
+      ],
+      "passed": false,
+      "rejection": "Paired response-mean statistics differed by more than 1e-5"
+    },
+    {
+      "case": "legacy-input-128-8192",
+      "repetition": 0,
+      "warmup": false,
+      "started_epoch_s": 1792374996.6603608,
+      "finished_epoch_s": 1792375041.8732674,
+      "seconds": 45.57515335083008,
+      "max_paired_mean_error": 0.0,
+      "allocated_bytes_by_rank": [
+        4756445696, 6452884480, 6457127424, 6467170816
+      ],
+      "reserved_bytes_by_rank": [
+        7239368704, 10907287552, 14820573184, 24098373632
+      ],
+      "rank_evaluated_positions": [69456, 186002, 347335, 416695],
+      "worker_timings": [
+        {
+          "student_forward_seconds": 33.74629095941782,
+          "teacher_forward_seconds": 7.446385055780411,
+          "head_kl_seconds": 3.962883859872818,
+          "seconds": 45.19174686819315,
+          "head_snapshot_bytes": 466747392
+        },
+        {
+          "student_forward_seconds": 26.765341095626354,
+          "teacher_forward_seconds": 7.451511815190315,
+          "head_kl_seconds": 10.975948564708233,
+          "seconds": 45.2587656378746,
+          "head_snapshot_bytes": 466747392
+        },
+        {
+          "student_forward_seconds": 19.004982605576515,
+          "teacher_forward_seconds": 7.45885357260704,
+          "head_kl_seconds": 18.90668287873268,
+          "seconds": 45.47545973956585,
+          "head_snapshot_bytes": 466747392
+        },
+        {
+          "student_forward_seconds": 14.357913345098495,
+          "teacher_forward_seconds": 7.462741211056709,
+          "head_kl_seconds": 22.75590445101261,
+          "seconds": 44.69571176916361,
+          "head_snapshot_bytes": 466747392
+        }
+      ],
+      "passed": true,
+      "rejection": null
+    },
+    {
+      "case": "balanced-128-8192",
+      "repetition": 0,
+      "warmup": false,
+      "started_epoch_s": 1792375042.3060706,
+      "finished_epoch_s": 1792375065.2071178,
+      "seconds": 22.94346809387207,
+      "max_paired_mean_error": 0.0,
+      "allocated_bytes_by_rank": [
+        6468001280, 6459582464, 6459141632, 6458761216
+      ],
+      "reserved_bytes_by_rank": [
+        7119831040, 7111442432, 7111442432, 7111442432
+      ],
+      "rank_evaluated_positions": [255493, 255915, 256982, 251098],
+      "worker_timings": [
+        {
+          "student_forward_seconds": 4.967300198972225,
+          "teacher_forward_seconds": 3.6955732479691505,
+          "head_kl_seconds": 14.08167364448309,
+          "seconds": 22.822172455489635,
+          "head_snapshot_bytes": 466747392
+        },
+        {
+          "student_forward_seconds": 4.22578926384449,
+          "teacher_forward_seconds": 3.6940994188189507,
+          "head_kl_seconds": 14.84217657148838,
+          "seconds": 22.841284818947315,
+          "head_snapshot_bytes": 466747392
+        },
+        {
+          "student_forward_seconds": 4.945243962109089,
+          "teacher_forward_seconds": 3.6992749348282814,
+          "head_kl_seconds": 14.123881258070469,
+          "seconds": 22.84922832995653,
+          "head_snapshot_bytes": 466747392
+        },
+        {
+          "student_forward_seconds": 5.443405196070671,
+          "teacher_forward_seconds": 3.696306586265564,
+          "head_kl_seconds": 13.653407856822014,
+          "seconds": 22.873030617833138,
+          "head_snapshot_bytes": 466747392
+        }
+      ],
+      "passed": true,
+      "rejection": null
+    },
+    {
+      "case": "balanced-512-full",
+      "repetition": 0,
+      "warmup": false,
+      "started_epoch_s": 1792375065.3053622,
+      "finished_epoch_s": 1792375076.554496,
+      "seconds": 11.25910758972168,
+      "max_paired_mean_error": 8.451538633380551e-7,
+      "allocated_bytes_by_rank": [
+        7236966912, 7236739584, 7236805120, 7236877824
+      ],
+      "reserved_bytes_by_rank": [
+        8990490624, 8982102016, 8982102016, 8982102016
+      ],
+      "rank_evaluated_positions": [255493, 255915, 256982, 251098],
+      "worker_timings": [
+        {
+          "student_forward_seconds": 3.9589270502328873,
+          "teacher_forward_seconds": 3.709903582930565,
+          "head_kl_seconds": 3.440754182636738,
+          "seconds": 11.179544046521187,
+          "head_snapshot_bytes": 466747392
+        },
+        {
+          "student_forward_seconds": 3.944399207830429,
+          "teacher_forward_seconds": 3.710311748087406,
+          "head_kl_seconds": 3.4518555477261543,
+          "seconds": 11.18074755370617,
+          "head_snapshot_bytes": 466747392
+        },
+        {
+          "student_forward_seconds": 3.931188553571701,
+          "teacher_forward_seconds": 3.7105259150266647,
+          "head_kl_seconds": 3.470222629606724,
+          "seconds": 11.182326510548592,
+          "head_snapshot_bytes": 466747392
+        },
+        {
+          "student_forward_seconds": 4.025981083512306,
+          "teacher_forward_seconds": 3.708600603044033,
+          "head_kl_seconds": 3.3862615302205086,
+          "seconds": 11.191590517759323,
+          "head_snapshot_bytes": 466747392
+        }
+      ],
+      "passed": true,
+      "rejection": null
+    },
+    {
+      "case": "balanced-1024-full",
+      "repetition": 0,
+      "warmup": false,
+      "started_epoch_s": 1792375076.6224964,
+      "finished_epoch_s": 1792375087.7686718,
+      "seconds": 11.155577659606934,
+      "max_paired_mean_error": 8.451538633380551e-7,
+      "allocated_bytes_by_rank": [
+        10033005056, 10032777728, 10032843264, 10032915968
+      ],
+      "reserved_bytes_by_rank": [
+        12098469888, 12090081280, 12090081280, 12090081280
+      ],
+      "rank_evaluated_positions": [255493, 255915, 256982, 251098],
+      "worker_timings": [
+        {
+          "student_forward_seconds": 3.917341522872448,
+          "teacher_forward_seconds": 3.7676220685243607,
+          "head_kl_seconds": 3.317669190466404,
+          "seconds": 11.073510311543941,
+          "head_snapshot_bytes": 466747392
+        },
+        {
+          "student_forward_seconds": 3.927682265639305,
+          "teacher_forward_seconds": 3.758222281932831,
+          "head_kl_seconds": 3.3208056539297104,
+          "seconds": 11.077185831964016,
+          "head_snapshot_bytes": 466747392
+        },
+        {
+          "student_forward_seconds": 3.893689103424549,
+          "teacher_forward_seconds": 3.7670789062976837,
+          "head_kl_seconds": 3.345096491277218,
+          "seconds": 11.076731599867344,
+          "head_snapshot_bytes": 466747392
+        },
+        {
+          "student_forward_seconds": 3.9860819056630135,
+          "teacher_forward_seconds": 3.7667266502976418,
+          "head_kl_seconds": 3.2607484236359596,
+          "seconds": 11.082489766180515,
+          "head_snapshot_bytes": 466747392
+        }
+      ],
+      "passed": true,
+      "rejection": null
+    },
+    {
+      "case": "balanced-2048-full",
+      "repetition": 0,
+      "warmup": false,
+      "started_epoch_s": 1792375087.8818555,
+      "finished_epoch_s": 1792375099.1042717,
+      "seconds": 11.231882095336914,
+      "max_paired_mean_error": 8.451538633380551e-7,
+      "allocated_bytes_by_rank": [
+        15626125824, 15625898496, 15625964032, 15626036736
+      ],
+      "reserved_bytes_by_rank": [
+        18933088256, 18924699648, 18924699648, 18924699648
+      ],
+      "rank_evaluated_positions": [255493, 255915, 256982, 251098],
+      "worker_timings": [
+        {
+          "student_forward_seconds": 4.1314855217933655,
+          "teacher_forward_seconds": 3.696870505809784,
+          "head_kl_seconds": 3.2554260715842247,
+          "seconds": 11.152974911034107,
+          "head_snapshot_bytes": 466747392
+        },
+        {
+          "student_forward_seconds": 4.125829331576824,
+          "teacher_forward_seconds": 3.6963314563035965,
+          "head_kl_seconds": 3.2642302811145782,
+          "seconds": 11.156066447496414,
+          "head_snapshot_bytes": 466747392
+        },
+        {
+          "student_forward_seconds": 4.109303399920464,
+          "teacher_forward_seconds": 3.6955107003450394,
+          "head_kl_seconds": 3.2823566421866417,
+          "seconds": 11.156680479645729,
+          "head_snapshot_bytes": 466747392
+        },
+        {
+          "student_forward_seconds": 4.19489511847496,
+          "teacher_forward_seconds": 3.6949737817049026,
+          "head_kl_seconds": 3.2036341577768326,
+          "seconds": 11.162348680198193,
+          "head_snapshot_bytes": 466747392
+        }
+      ],
+      "passed": true,
+      "rejection": null
+    },
+    {
+      "case": "balanced-1024-full-b2",
+      "repetition": 0,
+      "warmup": false,
+      "started_epoch_s": 1792375099.687397,
+      "finished_epoch_s": 1792375110.6552806,
+      "seconds": 10.97448444366455,
+      "max_paired_mean_error": 0.0013131979010411877,
+      "allocated_bytes_by_rank": [
+        10326563328, 10325323776, 10325284864, 10325248512
+      ],
+      "reserved_bytes_by_rank": [
+        13832814592, 13581156352, 13581156352, 13581156352
+      ],
+      "rank_evaluated_positions": [255493, 255915, 256982, 251098],
+      "worker_timings": [
+        {
+          "student_forward_seconds": 3.931541346013546,
+          "teacher_forward_seconds": 3.54180396348238,
+          "head_kl_seconds": 3.321516841650009,
+          "forward_batches": 13,
+          "seconds": 10.897751189768314,
+          "head_snapshot_bytes": 466747392
+        },
+        {
+          "student_forward_seconds": 3.9376884549856186,
+          "teacher_forward_seconds": 3.5290228351950645,
+          "head_kl_seconds": 3.328375443816185,
+          "forward_batches": 13,
+          "seconds": 10.899190329015255,
+          "head_snapshot_bytes": 466747392
+        },
+        {
+          "student_forward_seconds": 3.89491019397974,
+          "teacher_forward_seconds": 3.5399351939558983,
+          "head_kl_seconds": 3.342073619365692,
+          "forward_batches": 13,
+          "seconds": 10.897703237831593,
+          "head_snapshot_bytes": 466747392
+        },
+        {
+          "student_forward_seconds": 3.996815875172615,
+          "teacher_forward_seconds": 3.5403700545430183,
+          "head_kl_seconds": 3.264307975769043,
+          "forward_batches": 13,
+          "seconds": 10.903923571109772,
+          "head_snapshot_bytes": 466747392
+        }
+      ],
+      "passed": false,
+      "rejection": "Paired response-mean statistics differed by more than 1e-5"
+    },
+    {
+      "case": "balanced-2048-full-b4",
+      "repetition": 0,
+      "warmup": false,
+      "started_epoch_s": 1792375110.7307777,
+      "finished_epoch_s": 1792375121.4131067,
+      "seconds": 10.689735412597656,
+      "max_paired_mean_error": 0.0013131725954505632,
+      "allocated_bytes_by_rank": [
+        16428883456, 16427357184, 16429656064, 16435115520
+      ],
+      "reserved_bytes_by_rank": [
+        23620222976, 25081937920, 25081937920, 25081937920
+      ],
+      "rank_evaluated_positions": [255493, 255915, 256982, 251098],
+      "worker_timings": [
+        {
+          "student_forward_seconds": 3.6622442826628685,
+          "teacher_forward_seconds": 3.576071247458458,
+          "head_kl_seconds": 3.2505545020103455,
+          "forward_batches": 7,
+          "seconds": 10.610180966556072,
+          "head_snapshot_bytes": 466747392
+        },
+        {
+          "student_forward_seconds": 3.692094534635544,
+          "teacher_forward_seconds": 3.5690780356526375,
+          "head_kl_seconds": 3.2580546215176582,
+          "forward_batches": 7,
+          "seconds": 10.611311130225658,
+          "head_snapshot_bytes": 466747392
+        },
+        {
+          "student_forward_seconds": 3.6453268826007843,
+          "teacher_forward_seconds": 3.5692304223775864,
+          "head_kl_seconds": 3.2756550014019012,
+          "forward_batches": 7,
+          "seconds": 10.61690128594637,
+          "head_snapshot_bytes": 466747392
+        },
+        {
+          "student_forward_seconds": 3.720926597714424,
+          "teacher_forward_seconds": 3.573455922305584,
+          "head_kl_seconds": 3.1957663148641586,
+          "forward_batches": 7,
+          "seconds": 10.617145396769047,
+          "head_snapshot_bytes": 466747392
+        }
+      ],
+      "passed": false,
+      "rejection": "Paired response-mean statistics differed by more than 1e-5"
+    },
+    {
+      "case": "balanced-2048-full-b8",
+      "repetition": 0,
+      "warmup": false,
+      "started_epoch_s": 1792375121.5257375,
+      "finished_epoch_s": 1792375132.9312675,
+      "seconds": 11.41257381439209,
+      "max_paired_mean_error": 0.0013131725954505632,
+      "allocated_bytes_by_rank": [
+        21843102720, 21775976448, 21766959616, 21770176000
+      ],
+      "reserved_bytes_by_rank": [
+        27877441536, 24792530944, 24792530944, 24786239488
+      ],
+      "rank_evaluated_positions": [255493, 255915, 256982, 251098],
+      "worker_timings": [
+        {
+          "student_forward_seconds": 4.033304758369923,
+          "teacher_forward_seconds": 3.975139982998371,
+          "head_kl_seconds": 3.243416480720043,
+          "forward_batches": 4,
+          "seconds": 11.33615143597126,
+          "head_snapshot_bytes": 466747392
+        },
+        {
+          "student_forward_seconds": 4.021965958178043,
+          "teacher_forward_seconds": 3.9764247462153435,
+          "head_kl_seconds": 3.250999018549919,
+          "forward_batches": 4,
+          "seconds": 11.336976557970047,
+          "head_snapshot_bytes": 466747392
+        },
+        {
+          "student_forward_seconds": 4.0043701976537704,
+          "teacher_forward_seconds": 3.976687915623188,
+          "head_kl_seconds": 3.2737610414624214,
+          "forward_batches": 4,
+          "seconds": 11.340848438441753,
+          "head_snapshot_bytes": 466747392
+        },
+        {
+          "student_forward_seconds": 4.091254457831383,
+          "teacher_forward_seconds": 3.974777899682522,
+          "head_kl_seconds": 3.192658841609955,
+          "forward_batches": 4,
+          "seconds": 11.34306450933218,
+          "head_snapshot_bytes": 466747392
+        }
+      ],
+      "passed": false,
+      "rejection": "Paired response-mean statistics differed by more than 1e-5"
+    },
+    {
+      "case": "balanced-2048-full-b16",
+      "repetition": 0,
+      "warmup": false,
+      "started_epoch_s": 1792375133.0111382,
+      "finished_epoch_s": 1792375146.3633819,
+      "seconds": 13.407807350158691,
+      "max_paired_mean_error": 0.0013131725954505632,
+      "allocated_bytes_by_rank": [
+        39032344064, 38918111232, 38891773440, 38878542336
+      ],
+      "reserved_bytes_by_rank": [
+        45489324032, 42211475456, 45332037632, 45325746176
+      ],
+      "rank_evaluated_positions": [255493, 255915, 256982, 251098],
+      "worker_timings": [
+        {
+          "student_forward_seconds": 4.955941557884216,
+          "teacher_forward_seconds": 4.985039860010147,
+          "head_kl_seconds": 3.24569770693779,
+          "forward_batches": 2,
+          "seconds": 13.282286331057549,
+          "head_snapshot_bytes": 466747392
+        },
+        {
+          "student_forward_seconds": 4.921489007771015,
+          "teacher_forward_seconds": 4.9791111052036285,
+          "head_kl_seconds": 3.2508057802915573,
+          "forward_batches": 2,
+          "seconds": 13.249059431254864,
+          "head_snapshot_bytes": 466747392
+        },
+        {
+          "student_forward_seconds": 4.988452717661858,
+          "teacher_forward_seconds": 4.980407439172268,
+          "head_kl_seconds": 3.274812050163746,
+          "forward_batches": 2,
+          "seconds": 13.339798375964165,
+          "head_snapshot_bytes": 466747392
+        },
+        {
+          "student_forward_seconds": 5.027269214391708,
+          "teacher_forward_seconds": 4.9727466851472855,
+          "head_kl_seconds": 3.1917077600955963,
+          "forward_batches": 2,
+          "seconds": 13.295886546373367,
+          "head_snapshot_bytes": 466747392
+        }
+      ],
+      "passed": false,
+      "rejection": "Paired response-mean statistics differed by more than 1e-5"
+    },
+    {
+      "case": "balanced-2048-full-b16",
+      "repetition": 1,
+      "warmup": false,
+      "started_epoch_s": 1792375146.554498,
+      "finished_epoch_s": 1792375159.9366126,
+      "seconds": 13.43427562713623,
+      "max_paired_mean_error": 0.0013131725954505632,
+      "allocated_bytes_by_rank": [
+        39032344064, 38918111232, 38891773440, 38878542336
+      ],
+      "reserved_bytes_by_rank": [
+        45489324032, 42211475456, 45332037632, 45325746176
+      ],
+      "rank_evaluated_positions": [255493, 255915, 256982, 251098],
+      "worker_timings": [
+        {
+          "student_forward_seconds": 4.987866096198559,
+          "teacher_forward_seconds": 4.982070170342922,
+          "head_kl_seconds": 3.2431373298168182,
+          "forward_batches": 2,
+          "seconds": 13.308332033455372,
+          "head_snapshot_bytes": 466747392
+        },
+        {
+          "student_forward_seconds": 4.950739808380604,
+          "teacher_forward_seconds": 4.978046268224716,
+          "head_kl_seconds": 3.2511232122778893,
+          "forward_batches": 2,
+          "seconds": 13.276265427470207,
+          "head_snapshot_bytes": 466747392
+        },
+        {
+          "student_forward_seconds": 5.017833702266216,
+          "teacher_forward_seconds": 4.97382265329361,
+          "head_kl_seconds": 3.2738620936870575,
+          "forward_batches": 2,
+          "seconds": 13.36476431787014,
+          "head_snapshot_bytes": 466747392
+        },
+        {
+          "student_forward_seconds": 5.05777408182621,
+          "teacher_forward_seconds": 4.968972139060497,
+          "head_kl_seconds": 3.1931932792067528,
+          "forward_batches": 2,
+          "seconds": 13.31766926497221,
+          "head_snapshot_bytes": 466747392
+        }
+      ],
+      "passed": false,
+      "rejection": "Paired response-mean statistics differed by more than 1e-5"
+    },
+    {
+      "case": "balanced-2048-full-b8",
+      "repetition": 1,
+      "warmup": false,
+      "started_epoch_s": 1792375160.0965316,
+      "finished_epoch_s": 1792375171.6063762,
+      "seconds": 11.51648235321045,
+      "max_paired_mean_error": 0.0013131725954505632,
+      "allocated_bytes_by_rank": [
+        21843102720, 21775976448, 21766959616, 21770176000
+      ],
+      "reserved_bytes_by_rank": [
+        27877441536, 24792530944, 24792530944, 24786239488
+      ],
+      "rank_evaluated_positions": [255493, 255915, 256982, 251098],
+      "worker_timings": [
+        {
+          "student_forward_seconds": 4.122910484671593,
+          "teacher_forward_seconds": 3.9767145067453384,
+          "head_kl_seconds": 3.2436374723911285,
+          "forward_batches": 4,
+          "seconds": 11.439479023218155,
+          "head_snapshot_bytes": 466747392
+        },
+        {
+          "student_forward_seconds": 4.112829603254795,
+          "teacher_forward_seconds": 3.974536843597889,
+          "head_kl_seconds": 3.252428099513054,
+          "forward_batches": 4,
+          "seconds": 11.43954223394394,
+          "head_snapshot_bytes": 466747392
+        },
+        {
+          "student_forward_seconds": 4.097073219716549,
+          "teacher_forward_seconds": 3.9780217707157135,
+          "head_kl_seconds": 3.2738063260912895,
+          "forward_batches": 4,
+          "seconds": 11.444785058498383,
+          "head_snapshot_bytes": 466747392
+        },
+        {
+          "student_forward_seconds": 4.177684083580971,
+          "teacher_forward_seconds": 3.9812444001436234,
+          "head_kl_seconds": 3.192784048616886,
+          "forward_batches": 4,
+          "seconds": 11.44582313299179,
+          "head_snapshot_bytes": 466747392
+        }
+      ],
+      "passed": false,
+      "rejection": "Paired response-mean statistics differed by more than 1e-5"
+    },
+    {
+      "case": "balanced-2048-full-b4",
+      "repetition": 1,
+      "warmup": false,
+      "started_epoch_s": 1792375171.7040505,
+      "finished_epoch_s": 1792375182.5760334,
+      "seconds": 10.879680633544922,
+      "max_paired_mean_error": 0.0013131725954505632,
+      "allocated_bytes_by_rank": [
+        16428883456, 16427357184, 16429656064, 16435115520
+      ],
+      "reserved_bytes_by_rank": [
+        23620222976, 25081937920, 25081937920, 25081937920
+      ],
+      "rank_evaluated_positions": [255493, 255915, 256982, 251098],
+      "worker_timings": [
+        {
+          "student_forward_seconds": 3.7975148633122444,
+          "teacher_forward_seconds": 3.5616627261042595,
+          "head_kl_seconds": 3.3465053662657738,
+          "forward_batches": 7,
+          "seconds": 10.802790597081184,
+          "head_snapshot_bytes": 466747392
+        },
+        {
+          "student_forward_seconds": 3.87405626475811,
+          "teacher_forward_seconds": 3.5733505710959435,
+          "head_kl_seconds": 3.256984695792198,
+          "forward_batches": 7,
+          "seconds": 10.805311478674412,
+          "head_snapshot_bytes": 466747392
+        },
+        {
+          "student_forward_seconds": 3.8621139973402023,
+          "teacher_forward_seconds": 3.563911810517311,
+          "head_kl_seconds": 3.2782991752028465,
+          "forward_batches": 7,
+          "seconds": 10.805340282619,
+          "head_snapshot_bytes": 466747392
+        },
+        {
+          "student_forward_seconds": 3.7321326583623886,
+          "teacher_forward_seconds": 3.5703768357634544,
+          "head_kl_seconds": 3.4036631360650063,
+          "forward_batches": 7,
+          "seconds": 10.809789441525936,
+          "head_snapshot_bytes": 466747392
+        }
+      ],
+      "passed": false,
+      "rejection": "Paired response-mean statistics differed by more than 1e-5"
+    },
+    {
+      "case": "balanced-1024-full-b2",
+      "repetition": 1,
+      "warmup": false,
+      "started_epoch_s": 1792375182.7399118,
+      "finished_epoch_s": 1792375193.3284984,
+      "seconds": 10.595735549926758,
+      "max_paired_mean_error": 0.0013131979010411877,
+      "allocated_bytes_by_rank": [
+        10326563328, 10325323776, 10325284864, 10325248512
+      ],
+      "reserved_bytes_by_rank": [
+        13832814592, 13581156352, 13581156352, 13581156352
+      ],
+      "rank_evaluated_positions": [255493, 255915, 256982, 251098],
+      "worker_timings": [
+        {
+          "student_forward_seconds": 3.591656908392906,
+          "teacher_forward_seconds": 3.4956227466464043,
+          "head_kl_seconds": 3.3153553381562233,
+          "forward_batches": 13,
+          "seconds": 10.515507206320763,
+          "head_snapshot_bytes": 466747392
+        },
+        {
+          "student_forward_seconds": 3.5904840901494026,
+          "teacher_forward_seconds": 3.4951215237379074,
+          "head_kl_seconds": 3.322628617286682,
+          "forward_batches": 13,
+          "seconds": 10.51733399182558,
+          "head_snapshot_bytes": 466747392
+        },
+        {
+          "student_forward_seconds": 3.5738596990704536,
+          "teacher_forward_seconds": 3.496794395148754,
+          "head_kl_seconds": 3.3429715409874916,
+          "forward_batches": 13,
+          "seconds": 10.51931469887495,
+          "head_snapshot_bytes": 466747392
+        },
+        {
+          "student_forward_seconds": 3.6694862097501755,
+          "teacher_forward_seconds": 3.491832822561264,
+          "head_kl_seconds": 3.2551319152116776,
+          "forward_batches": 13,
+          "seconds": 10.52297830581665,
+          "head_snapshot_bytes": 466747392
+        }
+      ],
+      "passed": false,
+      "rejection": "Paired response-mean statistics differed by more than 1e-5"
+    },
+    {
+      "case": "balanced-2048-full",
+      "repetition": 1,
+      "warmup": false,
+      "started_epoch_s": 1792375193.4076211,
+      "finished_epoch_s": 1792375204.4040465,
+      "seconds": 11.005815505981445,
+      "max_paired_mean_error": 8.451538633380551e-7,
+      "allocated_bytes_by_rank": [
+        15626125824, 15625898496, 15625964032, 15626036736
+      ],
+      "reserved_bytes_by_rank": [
+        18933088256, 18924699648, 18924699648, 18924699648
+      ],
+      "rank_evaluated_positions": [255493, 255915, 256982, 251098],
+      "worker_timings": [
+        {
+          "student_forward_seconds": 3.9035091921687126,
+          "teacher_forward_seconds": 3.6955681145191193,
+          "head_kl_seconds": 3.255822516977787,
+          "seconds": 10.923640429973602,
+          "head_snapshot_bytes": 466747392
+        },
+        {
+          "student_forward_seconds": 3.895339198410511,
+          "teacher_forward_seconds": 3.6950506791472435,
+          "head_kl_seconds": 3.2649334371089935,
+          "seconds": 10.927453584969044,
+          "head_snapshot_bytes": 466747392
+        },
+        {
+          "student_forward_seconds": 3.8852010369300842,
+          "teacher_forward_seconds": 3.6939484998583794,
+          "head_kl_seconds": 3.280410848557949,
+          "seconds": 10.928451642394066,
+          "head_snapshot_bytes": 466747392
+        },
+        {
+          "student_forward_seconds": 3.9647673293948174,
+          "teacher_forward_seconds": 3.696009613573551,
+          "head_kl_seconds": 3.203574687242508,
+          "seconds": 10.934290707111359,
+          "head_snapshot_bytes": 466747392
+        }
+      ],
+      "passed": true,
+      "rejection": null
+    },
+    {
+      "case": "balanced-1024-full",
+      "repetition": 1,
+      "warmup": false,
+      "started_epoch_s": 1792375204.498529,
+      "finished_epoch_s": 1792375216.0042062,
+      "seconds": 11.514966011047363,
+      "max_paired_mean_error": 8.451538633380551e-7,
+      "allocated_bytes_by_rank": [
+        10033005056, 10032777728, 10032843264, 10032915968
+      ],
+      "reserved_bytes_by_rank": [
+        12098469888, 12090081280, 12090081280, 12090081280
+      ],
+      "rank_evaluated_positions": [255493, 255915, 256982, 251098],
+      "worker_timings": [
+        {
+          "student_forward_seconds": 4.302451066672802,
+          "teacher_forward_seconds": 3.7103017419576645,
+          "head_kl_seconds": 3.3522696793079376,
+          "seconds": 11.435878351330757,
+          "head_snapshot_bytes": 466747392
+        },
+        {
+          "student_forward_seconds": 4.296555034816265,
+          "teacher_forward_seconds": 3.7160301506519318,
+          "head_kl_seconds": 3.3550420105457306,
+          "seconds": 11.439183868467808,
+          "head_snapshot_bytes": 466747392
+        },
+        {
+          "student_forward_seconds": 4.281984843313694,
+          "teacher_forward_seconds": 3.7119432538747787,
+          "head_kl_seconds": 3.37196284532547,
+          "seconds": 11.440240003168583,
+          "head_snapshot_bytes": 466747392
+        },
+        {
+          "student_forward_seconds": 4.370802752673626,
+          "teacher_forward_seconds": 3.713734209537506,
+          "head_kl_seconds": 3.2917031794786453,
+          "seconds": 11.444512210786343,
+          "head_snapshot_bytes": 466747392
+        }
+      ],
+      "passed": true,
+      "rejection": null
+    },
+    {
+      "case": "balanced-512-full",
+      "repetition": 1,
+      "warmup": false,
+      "started_epoch_s": 1792375216.567543,
+      "finished_epoch_s": 1792375228.677263,
+      "seconds": 12.119418144226074,
+      "max_paired_mean_error": 8.451538633380551e-7,
+      "allocated_bytes_by_rank": [
+        7236966912, 7236739584, 7236805120, 7236877824
+      ],
+      "reserved_bytes_by_rank": [
+        8990490624, 8982102016, 8982102016, 8982102016
+      ],
+      "rank_evaluated_positions": [255493, 255915, 256982, 251098],
+      "worker_timings": [
+        {
+          "student_forward_seconds": 4.241926476359367,
+          "teacher_forward_seconds": 3.9703443124890327,
+          "head_kl_seconds": 3.7573321387171745,
+          "seconds": 12.038845278322697,
+          "head_snapshot_bytes": 466747392
+        },
+        {
+          "student_forward_seconds": 4.227460630238056,
+          "teacher_forward_seconds": 3.9714170023798943,
+          "head_kl_seconds": 3.762054204940796,
+          "seconds": 12.041553549468517,
+          "head_snapshot_bytes": 466747392
+        },
+        {
+          "student_forward_seconds": 4.082817554473877,
+          "teacher_forward_seconds": 3.9717420488595963,
+          "head_kl_seconds": 3.9058890268206596,
+          "seconds": 12.038970589637756,
+          "head_snapshot_bytes": 466747392
+        },
+        {
+          "student_forward_seconds": 4.313040241599083,
+          "teacher_forward_seconds": 3.9676908180117607,
+          "head_kl_seconds": 3.6950959488749504,
+          "seconds": 12.048557206988335,
+          "head_snapshot_bytes": 466747392
+        }
+      ],
+      "passed": true,
+      "rejection": null
+    },
+    {
+      "case": "balanced-128-8192",
+      "repetition": 1,
+      "warmup": false,
+      "started_epoch_s": 1792375228.7656248,
+      "finished_epoch_s": 1792375251.4517636,
+      "seconds": 22.727893829345703,
+      "max_paired_mean_error": 0.0,
+      "allocated_bytes_by_rank": [
+        6468001280, 6459582464, 6459141632, 6458761216
+      ],
+      "reserved_bytes_by_rank": [
+        7119831040, 7111442432, 7111442432, 7111442432
+      ],
+      "rank_evaluated_positions": [255493, 255915, 256982, 251098],
+      "worker_timings": [
+        {
+          "student_forward_seconds": 4.920855909585953,
+          "teacher_forward_seconds": 3.688608705997467,
+          "head_kl_seconds": 13.927572079002857,
+          "seconds": 22.616612389683723,
+          "head_snapshot_bytes": 466747392
+        },
+        {
+          "student_forward_seconds": 4.117368474602699,
+          "teacher_forward_seconds": 3.6918464601039886,
+          "head_kl_seconds": 14.735500551760197,
+          "seconds": 22.62940412014723,
+          "head_snapshot_bytes": 466747392
+        },
+        {
+          "student_forward_seconds": 4.733095049858093,
+          "teacher_forward_seconds": 3.6918046176433563,
+          "head_kl_seconds": 14.127432644367218,
+          "seconds": 22.63664036244154,
+          "head_snapshot_bytes": 466747392
+        },
+        {
+          "student_forward_seconds": 5.088899925351143,
+          "teacher_forward_seconds": 3.686585620045662,
+          "head_kl_seconds": 13.803342796862125,
+          "seconds": 22.65767101943493,
+          "head_snapshot_bytes": 466747392
+        }
+      ],
+      "passed": true,
+      "rejection": null
+    },
+    {
+      "case": "legacy-input-128-8192",
+      "repetition": 1,
+      "warmup": false,
+      "started_epoch_s": 1792375251.5549018,
+      "finished_epoch_s": 1792375296.4256265,
+      "seconds": 45.24136734008789,
+      "max_paired_mean_error": 0.0,
+      "allocated_bytes_by_rank": [
+        4756445696, 6452884480, 6457127424, 6467170816
+      ],
+      "reserved_bytes_by_rank": [
+        7239368704, 10907287552, 14820573184, 24098373632
+      ],
+      "rank_evaluated_positions": [69456, 186002, 347335, 416695],
+      "worker_timings": [
+        {
+          "student_forward_seconds": 33.577027671039104,
+          "teacher_forward_seconds": 7.302374117076397,
+          "head_kl_seconds": 3.9330255538225174,
+          "seconds": 44.84927749633789,
+          "head_snapshot_bytes": 466747392
+        },
+        {
+          "student_forward_seconds": 26.797656536102295,
+          "teacher_forward_seconds": 7.310787931084633,
+          "head_kl_seconds": 10.736946500837803,
+          "seconds": 44.914102755486965,
+          "head_snapshot_bytes": 466747392
+        },
+        {
+          "student_forward_seconds": 18.793001800775528,
+          "teacher_forward_seconds": 7.314525432884693,
+          "head_kl_seconds": 18.928818091750145,
+          "seconds": 45.14179527759552,
+          "head_snapshot_bytes": 466747392
+        },
+        {
+          "student_forward_seconds": 14.095134608447552,
+          "teacher_forward_seconds": 7.316253446042538,
+          "head_kl_seconds": 22.820812955498695,
+          "seconds": 44.35242100059986,
+          "head_snapshot_bytes": 466747392
+        }
+      ],
+      "passed": true,
+      "rejection": null
+    }
+  ],
+  "student_path": "/mnt/tidalfs-bdsz01/dataset/llm_dataset/zkn_data/fht_data/models/DeepSeek-R1-Distill-Qwen-1.5B",
+  "teacher_path": "/mnt/tidalfs-bdsz01/dataset/llm_dataset/zkn_data/fht_data/models/JustRL-DeepSeek-1.5B",
+  "implementation_sha256": {
+    "/mnt/tidalfs-bdsz01/dataset/llm_dataset/zkn_data/fht_data/OPD-State/runs/validation-optimization-20261019/scoring-v2/source/verl/verl/workers/validation_kl.py": "9e70811a69ac862f83c1cdde5cb17f516c3f94ab699ca63e5a7bade439f9ee06",
+    "/mnt/tidalfs-bdsz01/dataset/llm_dataset/zkn_data/fht_data/OPD-State/runs/validation-optimization-20261019/scoring-v2/source/verl/verl/trainer/ppo/validation_kl.py": "69fdfa70f907e142e6d1884e1fe7413a0bce446ca1db7af98fd0c83d7223d25f"
+  },
+  "rejected_cases": [
+    "balanced-1024-full-b2",
+    "balanced-2048-full-b16",
+    "balanced-2048-full-b4",
+    "balanced-2048-full-b8"
+  ]
+}

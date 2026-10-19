@@ -1,0 +1,18 @@
+{
+  "run_name": "teacher_current_k2048",
+  "run_directory": "/mnt/tidalfs-bdsz01/dataset/llm_dataset/zkn_data/fht_data/OPD-State/runs/native-formal-suite-20261018/teacher_current_k2048",
+  "source_commit": "d59a7c3463244ef7533ca4acf73855e988043848",
+  "source_manifest_sha256": "dda265c9626c89ea19018c50b535a9c789d5701be6e400381c19bd5db7fde9fc",
+  "source_identity": "runtime_snapshot",
+  "training_steps": 50,
+  "samples_per_question": 16,
+  "full_benchmarks": true,
+  "checkpoints_saved": false,
+  "wandb_url": "https://wandb.ai/wncfht/OPD-State/runs/g7iyd2u6",
+  "training_log_sha256": "c92b7cd6c267571742dede845c4d2e8742046958e00abef1db66062567782f29",
+  "training_log_observed_bytes": 419571,
+  "collection_scope": "final_validation",
+  "final_validation_marker_verified": true,
+  "collector_source_sha256": "d55fdb5753b7557a445c8584830f41fdbb3ca450ae53fa888791f2cdf81899fb",
+  "validation_steps": [50]
+}
