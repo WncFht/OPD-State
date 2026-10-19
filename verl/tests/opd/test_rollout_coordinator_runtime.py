@@ -96,8 +96,8 @@ class CoordinatorTests(unittest.TestCase):
             baseline = compose(config_name="ppo_trainer")
             profile = compose(config_name="ppo_trainer", overrides=["+experiment=validation_fast"])
         r = profile.actor_rollout_ref.rollout
-        self.assertEqual(r.generation_eval_max_num_seqs, 64)
-        self.assertEqual(r.generation_eval_memory_utilization, 0.65)
+        self.assertEqual(r.generation_eval_max_num_seqs, 128)
+        self.assertEqual(r.generation_eval_memory_utilization, 0.55)
         self.assertFalse(r.generation_eval_enforce_eager)
         self.assertTrue(profile.trainer.validation_kl.enabled)
         self.assertEqual(profile.trainer.validation_metrics_mode, "math_exact")
