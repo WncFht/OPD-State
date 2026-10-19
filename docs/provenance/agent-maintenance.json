@@ -1,7 +1,7 @@
 {
   "repository": "git@github.com:WncFht/agent-maintenance.git",
   "commit": "f2b7cdfe4c6ab96ed779f42c878e84b7042edf43",
-  "license": "docs/licenses/agent-maintenance-MIT.txt",
+  "license": "docs/provenance.md",
   "scope": [
     ".agents/skills",
     ".agents/references",
