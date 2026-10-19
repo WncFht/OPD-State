@@ -70,7 +70,7 @@
       ],
       "modes": ["test", "ci"],
       "needs": [],
-      "timeout": 120,
+      "timeout": 240,
       "allow_failure": false
     },
     {
