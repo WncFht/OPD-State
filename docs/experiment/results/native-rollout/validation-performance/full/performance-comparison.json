@@ -1,0 +1,98 @@
+{
+  "scope": "Observed complete gates; generated lengths differ; final checkpoints were not reused",
+  "runs": [
+    {
+      "label": "Baseline",
+      "responses": 9120,
+      "generated_positions": 56737088,
+      "phases_s": {
+        "native_validation_generation": 9626.769076511264,
+        "kl_scoring_rpc": 2742.180607624352,
+        "other_validation_residual": 389.6350085064769,
+        "outside_validation_including_gate": 331.52899868786335
+      },
+      "gate_elapsed_s": 13090.113691329956,
+      "validation_elapsed_s": 12758.584692642093,
+      "whole_card_peak_mib": {
+        "0": 51009,
+        "1": 47975,
+        "2": 47975,
+        "3": 47975
+      }
+    },
+    {
+      "label": "Fast",
+      "responses": 9120,
+      "generated_positions": 56451119,
+      "phases_s": {
+        "native_validation_generation": 3085.5749789997935,
+        "kl_scoring_rpc": 796.0634453818202,
+        "other_validation_residual": 138.18926402181387,
+        "outside_validation_including_gate": 333.6796005293727
+      },
+      "gate_elapsed_s": 4353.5072889328,
+      "validation_elapsed_s": 4019.8276884034276,
+      "whole_card_peak_mib": {
+        "0": 48839,
+        "1": 50797,
+        "2": 50797,
+        "3": 50797
+      },
+      "validation_batches": 9,
+      "generation_tokens_per_second": 18295.170068529318,
+      "main_positions_per_scoring_second": 70912.83908021181,
+      "validation_api_timings": {
+        "validation_performance/prepare_seconds": 6.588785603642464,
+        "validation_performance/generate_sequences_seconds": 3162.9590992107987,
+        "validation_performance/decode_seconds": 11.693186774849892,
+        "validation_performance/score_extract_seconds": 0.1571185663342476,
+        "validation_performance/record_collection_seconds": 16.79279798269272,
+        "validation_performance/kl_total_seconds": 819.8267152458429,
+        "validation_performance/resume_seconds": 0.005712501704692841,
+        "validation_performance/dump_call_seconds": 0.009354650974273682,
+        "validation_performance/total_seconds": 4018.9721893444657
+      }
+    }
+  ],
+  "training_controls": [
+    {
+      "step": 1,
+      "same_training_trace_sha256": true,
+      "loss_absolute_difference": 0.0,
+      "gradient_norm_absolute_difference": 0.0,
+      "learning_rate": 1e-6
+    },
+    {
+      "step": 2,
+      "same_training_trace_sha256": true,
+      "loss_absolute_difference": 0.0,
+      "gradient_norm_absolute_difference": 3.6716461181640625e-5,
+      "learning_rate": 1e-6
+    }
+  ],
+  "same_final_checkpoint_reused": false,
+  "fixed_bank_normalized_statistic_max_errors": {
+    "student_teacher_kl": 0.017358955508218227,
+    "teacher_student_kl": 0.015753345765591037,
+    "student_entropy": 0.01826966834050836,
+    "teacher_entropy": 9.971200016778425e-7
+  },
+  "observed_gate_wall_ratio": 3.0067972378516012,
+  "observed_validation_wall_ratio": 3.173913332018835,
+  "inputs_sha256": {
+    "docs/experiment/results/native-rollout/validation-kl-full/performance-audit.json": "60ea9e9f970e18c18350586ce7be2d687275206f66908721bad209236ab0b23e",
+    "docs/experiment/results/native-rollout/validation-kl-full/native-acceptance.json": "10e20718d552b9f00664f937229246a7ab7a9fb277ab280fd85efbce92d9987d",
+    "docs/experiment/results/native-rollout/validation-kl-full/kl-summary.json": "257ac38ec0b0ce4026364d0ae9fc6af2cd04553c92ce0bcc0f65020475e89363",
+    "docs/experiment/results/native-rollout/validation-kl-full/training-1-2.csv": "94e493d415e6a1c64b4d0742706695946f218bf661322a3918be2a44c00a0219",
+    "docs/experiment/results/native-rollout/validation-performance/full/native-acceptance.json": "ed5a91fa7b6daeba5d207c62d8d70ac3b730678ade24703d3a175d2522a14d4c",
+    "docs/experiment/results/native-rollout/validation-performance/full/kl-summary.json": "5790c8ecc99a3cd1658655c730268adfb6dd238dc36eca91e2dbbdc497e62195",
+    "docs/experiment/results/native-rollout/validation-performance/full/training-1-2.csv": "10f61d1ce3cc218f4cdc1ea65bfbce96768193c8565fe5120c71c11208e25aa0",
+    "/mnt/tidalfs-bdsz01/dataset/llm_dataset/zkn_data/fht_data/OPD-State/runs/validation-full-fast-20261019-v1/status.json": "4ebe14bf1553f02de2e2697f45de76c9ccb35bdfa92e44b49f0b6b317f087294",
+    "/mnt/tidalfs-bdsz01/dataset/llm_dataset/zkn_data/fht_data/OPD-State/runs/validation-full-fast-20261019-v1/checkpoints/native-trajectories/batches.jsonl": "f8ab4f84414bad79e9849485b222990c31188beb1cedfb3b9c59191aa7225e3e",
+    "runs/validation-optimization-20261019/full-controller.json": "2bbcd8a4a596f8016cd93d710c25f1ba259426678e53cc8c5b97320ebad289c8",
+    "runs/validation-optimization-20261019/full-archive.json": "3e384e00c26b625e116a4ee978f0fb474887c67f70a49a2c147cd57219ea6cf5",
+    "/mnt/tidalfs-bdsz01/dataset/llm_dataset/zkn_data/fht_data/OPD-State/runs/validation-full-fast-20261019-v1/validation/kl/kl-step-2.json": "469905009455cf9271e2ca2fde6183017a701931d3f2dfa381fa029e2d30f330",
+    "/mnt/tidalfs-bdsz01/dataset/llm_dataset/zkn_data/fht_data/OPD-State/runs/native-validation-kl-full-20261019-v2/validation/kl/kl-step-2.json": "8f67b89cfe5d81aebafa64c106cffbfcf3c9bdf20d4714274f3d0c421fa7f374"
+  },
+  "driver_sha256": "5070ce2bd50f6802b8e41dcad62e3d2265432d6670f20b164dfa6ae8c9415c8d"
+}

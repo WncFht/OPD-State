@@ -2,7 +2,7 @@
 # Evaluation-only settings, measured with native four-replica vLLM inference.
 # Keep the learner/rollout training budget.
 # The math launcher defaults val_batch_size to 32; override it explicitly for
-# larger submission windows (for example data.val_batch_size=64 on eight GPUs).
+# larger submission windows (64 on four GPUs; 128 on eight GPUs is unmeasured).
 actor_rollout_ref:
   rollout:
     generation_eval_max_num_seqs: 128

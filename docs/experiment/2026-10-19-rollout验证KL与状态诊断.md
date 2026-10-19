@@ -161,6 +161,8 @@ $$
 
 Token KL 单位为 nat/token，累计量为 nat/response；后两行使用分层权重。原始统计见[KL 摘要](results/native-rollout/validation-kl-full/kl-summary.json)。评分 wall time 为 **2,742.18 s（45.70 min）**，四卡阶段采样峰值为 **10,911/10,931/10,909/10,911 MiB**，每卡 1,242 次采样；完整阶段分解与负载问题归[速度与显存](速度与显存.md#完整验证-kl-的成本与瓶颈)。正确性通过不代表效率已优化，也不替代五十步研究对照。
 
+优化后的完整复测已[通过独立审计](results/native-rollout/validation-performance/full/kl-independent-audit.json)：9,120 条主响应、56,451,119 个有效位置，同一 bank 另含 1,440 个位置；[W&B k59jf84e](results/native-rollout/validation-performance/full/wandb-verification.json)核验通过。该轮主验证 macro student→teacher token KL=0.110645、反向 KL=0.146365，student→teacher 累计量=1,153.468 nat/response。KL RPC 为 796.06 s（13.27 min），整轮 validation 为 67.00 min。它同样是两次工程更新，未复用旧最终 checkpoint；两轮实际轨迹与共同 bank 上的 student 统计有差异，不将数值变化解释为优化提高或降低对齐。数值一致性由固定 p0/q、相同 token 的配对测试支撑，完整参数、资源和比较边界归速度专题。
+
 ## 已有 state 诊断与限制
 
 State 是下一 action 前的完整 prefix；响应长度、精确 prefix 重合、表示覆盖与 action 对齐属于不同量。固定缓存重复同一轨迹时，state 集固定，但 student 概率、熵和梯度仍会变化。

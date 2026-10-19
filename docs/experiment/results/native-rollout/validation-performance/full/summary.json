@@ -1,0 +1,18 @@
+{
+  "run_name": "validation-full-fast-20261019-v1",
+  "run_directory": "/mnt/tidalfs-bdsz01/dataset/llm_dataset/zkn_data/fht_data/OPD-State/runs/validation-full-fast-20261019-v1",
+  "source_commit": "83271d635579bcd20e370284af6ec4b908b4c8db",
+  "source_manifest_sha256": "e46d1dd2d38c041da31a344b56483cb32992af94dbfa24095139246c1ce02937",
+  "source_identity": "runtime_snapshot",
+  "training_steps": 2,
+  "samples_per_question": 16,
+  "full_benchmarks": true,
+  "checkpoints_saved": false,
+  "wandb_url": "https://wandb.ai/wncfht/OPD-State/runs/k59jf84e",
+  "training_log_sha256": "bc586141bc1cc203db4283a85a81b31952d186e5b4e84f948599caa1571a50cb",
+  "training_log_observed_bytes": 321739,
+  "collection_scope": "final_validation",
+  "final_validation_marker_verified": true,
+  "collector_source_sha256": "d55fdb5753b7557a445c8584830f41fdbb3ca450ae53fa888791f2cdf81899fb",
+  "validation_steps": [2]
+}

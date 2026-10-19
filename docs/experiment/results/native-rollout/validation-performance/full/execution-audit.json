@@ -1,0 +1,16 @@
+{
+  "passed": true,
+  "scope": "Actual full-validation device/scheduler/Graph receipts; no kernel timing attribution",
+  "batches": 9,
+  "responses": 9120,
+  "worker_receipts": 36,
+  "student_version": 2,
+  "max_num_seqs": 128,
+  "max_num_batched_tokens": 32768,
+  "context_cap": 32768,
+  "gpu_memory_utilization": 0.55,
+  "cuda_graph_enabled": true,
+  "eval_capture_to_128_log_verified": true,
+  "batch_trace_sha256": "f8ab4f84414bad79e9849485b222990c31188beb1cedfb3b9c59191aa7225e3e",
+  "launcher_log_sha256": "cec33e0206abfc11cf039f138b142fa2266a50432d778f14a375e0d947c12778"
+}

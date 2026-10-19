@@ -348,6 +348,30 @@ class IntegrationTests(unittest.TestCase):
                 ]
             )
         cases.append((f"{prefix}/step-3/kl-summary.json", "tokens_sha256", digest, 1))
+        prefix = "docs/experiment/results/native-rollout/validation-performance/full"
+        raw = "/fixture/runs/validation-full-fast-20261019-v1/validation/kl/kl-tokens-step-2.jsonl"
+        cases.extend(
+            [
+                (f"{prefix}/kl-summary.json", "tokens_sha256", digest, 0),
+                (f"{prefix}/kl-independent-audit.json", "tokens_sha256", digest, 0),
+                (f"{prefix}/kl-summary.json", "api_key", digest, 1),
+                (f"{prefix}/kl-summary.json", "tokens_sha256", digest.upper(), 1),
+                (f"{prefix}/other.json", "tokens_sha256", digest, 1),
+                (f"{prefix}/kl-collection.json", raw, digest, 0),
+                (
+                    f"{prefix}/kl-collection.json",
+                    raw.replace("step-2", "step-3"),
+                    digest,
+                    1,
+                ),
+                (
+                    f"{prefix}/kl-collection.json",
+                    raw.replace("validation-full-fast", "unrelated"),
+                    digest,
+                    1,
+                ),
+            ]
+        )
         command = [
             str(Path(sys.executable).parent / "gitleaks"),
             "git",

@@ -2,21 +2,25 @@
   "inputs_sha256": {
     "docs/experiment/results/native-rollout/validation-performance/scoring-gpu.json": "4dc98b53c228d090d0dc6eed1fc77f581153d8d18f44d0e0f13aeb8338720f7e",
     "docs/experiment/results/native-rollout/validation-performance/generation-gpu.json": "67f4db25b1646f0f5b28f7189df15ea6443d7657cbd30521465bb1eda8329441",
-    "docs/experiment/results/native-rollout/validation-performance/generation-gpu.csv": "9a67d362906a4f06c05d60f57a614d03104004839cc621780a56ae937d02ae8e"
+    "docs/experiment/results/native-rollout/validation-performance/generation-gpu.csv": "9a67d362906a4f06c05d60f57a614d03104004839cc621780a56ae937d02ae8e",
+    "docs/experiment/results/native-rollout/validation-performance/full/performance-comparison.json": "ff0b04fe7ff2bbab1831d5fb7b77b22bf645038dc39bb250cdc60b86aecbc240"
   },
-  "driver_sha256": "ad66637d5568b91c95e30cd311dabfe8ce5a13c4e8718e07bcf0d502c5017418",
+  "driver_sha256": "7d524a640f74fa669bd923319e74df6b990054841a76f9098c14a52ec712ad3c",
   "style_sha256": "a9670b726e4890688bad9bec5cf5f39dcc6a1604ceebff8043c26cee95726581",
   "outputs_sha256": {
     "scoring.png": "e0421639beda960aec58ae489a49b99a531a79a34456ef47e63a2a668761dd28",
-    "scoring.pdf": "ec3013dc4d5e92a3105f6c898c76d3b1d707d2855603edc5602b17f34fd17db8",
+    "scoring.pdf": "d310bc0ad52e600d75028d547e5875848c1f3ba6d7ecd06f085a6282fec9eca4",
     "generation.png": "623171763c91ed05a4bcc05af8e950fe749495fdb3c4bcee46129ea06d56d19d",
-    "generation.pdf": "2599160ba5c1f9165b308f1862315ae9a2f7b6a174e377e4749e010f44bb9681",
+    "generation.pdf": "294deb168e9e3b8b8b2a700e0b830f08dcea70b0092ce1f149febce0e6370749",
+    "pipeline.png": "9cdfa1c17fdbd275ea5aace164016aef710e7fd731689ae91a0704e9d00a1aaa",
+    "pipeline.pdf": "749baec6a37ac15cea87210eda4c451a2c5369b617530d2967aed7e1f992b29d",
     "scoring.csv": "311607b79624fd4a0f1591dee4049ca2ae18d01bfc6dde09acbfab5d420412cc"
   },
   "matplotlib_version": "3.10.7",
   "audits": {
     "scoring": [],
-    "generation": []
+    "generation": [],
+    "pipeline": []
   },
   "scope": "Paired scoring and separate inference API benchmarks, not full trainer speedup"
 }

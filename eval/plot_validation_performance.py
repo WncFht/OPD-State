@@ -29,6 +29,7 @@ def main():
     parser.add_argument("--scoring", type=Path, required=True)
     parser.add_argument("--generation", type=Path)
     parser.add_argument("--generation-gpu", type=Path)
+    parser.add_argument("--pipeline", type=Path, help="Completed full-gate phase comparison")
     parser.add_argument("--style", type=Path, required=True)
     parser.add_argument("--output", type=Path, required=True)
     args = parser.parse_args()
@@ -173,6 +174,60 @@ def main():
         audits["generation"] = fv.audit(fig, scoped_ignore=[("missing-axis-label", memory_ax)])
         for suffix in ("png", "pdf"):
             path = args.output / f"generation.{suffix}"
+            fig.savefig(path, dpi=180)
+            outputs.append(path)
+        plt.close(fig)
+    if args.pipeline:
+        fv.apply_rc("paper", fontsize=10)
+        comparison = json.loads(args.pipeline.read_text())
+        inputs[str(args.pipeline)] = digest(args.pipeline)
+        runs = comparison["runs"]
+        if len(runs) != 2 or any(run["responses"] != 9120 for run in runs):
+            raise ValueError("Pipeline figures require two completed 570x16 gates")
+        fig, panels = plt.subplots(1, 2, figsize=(10, 3.8))
+        phases = [
+            ("native_validation_generation", "Generation", fv.HUES["vteal"]),
+            ("kl_scoring_rpc", "KL RPC", fv.HUES["vorange"]),
+            ("other_validation_residual", "Other validation", fv.HUES["vviolet"]),
+            ("outside_validation_including_gate", "Outside validation", fv.NEUTRALS["baseline"]),
+        ]
+        offsets = [0.0, 0.0]
+        for key, label, color in phases:
+            values = [run["phases_s"][key] / 60 for run in runs]
+            panels[0].barh(range(2), values, left=offsets, height=0.55, label=label, color=color)
+            offsets = [offset + value for offset, value in zip(offsets, values, strict=True)]
+        for index, total in enumerate(offsets):
+            panels[0].text(total + 1.5, index, f"{total:.1f}", va="center")
+        panels[0].set_yticks(range(2), [run["label"] for run in runs])
+        panels[0].invert_yaxis()
+        panels[0].set_xlim(0, max(offsets) * 1.14)
+        panels[0].set_xlabel("Observed complete gate (minutes)")
+        panels[0].set_ylabel("Configuration")
+        for run, marker, style in zip(runs, ("o", "s"), ("--", "-"), strict=True):
+            peaks = [run["whole_card_peak_mib"][str(gpu)] / 1024 for gpu in range(4)]
+            panels[1].plot(range(4), peaks, marker=marker, ls=style, color=fv.NEUTRALS["vink"], label=run["label"])
+        fv.mark_neutral(panels[1].axhline(81559 / 1024, ls=":", color=fv.NEUTRALS["baseline"]))
+        panels[1].set_xticks(range(4))
+        panels[1].set_ylim(0, 85)
+        panels[1].set_xlabel("Physical GPU index")
+        panels[1].set_ylabel("Whole-run sampled peak (GiB)")
+        panels[1].legend(frameon=False, loc="lower left")
+        fig.legend(*panels[0].get_legend_handles_labels(), frameon=False, ncol=4, loc="upper center")
+        for panel in panels:
+            fv.apply_frame(panel, "open")
+            fv.apply_grid(panel, "y-only", axis="x" if panel is panels[0] else "y")
+        fig.subplots_adjust(left=0.12, right=0.97, bottom=0.22, top=0.87, wspace=0.25)
+        fig.text(
+            0.5,
+            0.025,
+            "Complete eval16; two engineering updates; one run each; generated lengths differ.",
+            ha="center",
+            color=fv.NEUTRALS["baseline"],
+            fontsize=10,
+        )
+        audits["pipeline"] = fv.audit(fig, scoped_ignore=[("facet-ylim-mismatch", ax) for ax in panels])
+        for suffix in ("png", "pdf"):
+            path = args.output / f"pipeline.{suffix}"
             fig.savefig(path, dpi=180)
             outputs.append(path)
         plt.close(fig)

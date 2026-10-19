@@ -1,0 +1,53 @@
+{
+  "scope": "Two-second sampled whole-card usage, not allocator/kernel peaks or KV capacity",
+  "run_started_epoch_s": 1792381846.9017549,
+  "scoring_epoch_s": [1792385309.6117425, 1792386105.675188],
+  "scoring_interval_elapsed_s": [3462.709987640381, 4258.773433208466],
+  "scoring_wall_seconds": 796.0634453818202,
+  "gpu_csv_sha256": "73d7817a42950b6ba82a9fb31421bc0ce74a064355af7a99ddc2ef0109f07ed2",
+  "whole_run_sampled_peak_mib": {
+    "0": 48839,
+    "1": 50797,
+    "2": 50797,
+    "3": 50797
+  },
+  "scoring_sample_counts": {
+    "0": 356,
+    "1": 356,
+    "2": 356,
+    "3": 356
+  },
+  "scoring_sampled_peak_mib": {
+    "0": 14691,
+    "1": 14693,
+    "2": 14693,
+    "3": 14693
+  },
+  "scoring_samples_cover_all_gpus": true,
+  "worker_timings": {
+    "student_forward_seconds": [
+      295.1395895704627, 294.5204099044204, 293.0206698104739, 293.6586165204644
+    ],
+    "teacher_forward_seconds": [
+      306.38314928114414, 306.45160836726427, 306.39203007519245,
+      306.3624447658658
+    ],
+    "head_kl_seconds": [
+      183.7220295071602, 183.87673573195934, 185.24371957033873,
+      184.28434094786644
+    ],
+    "seconds": [
+      789.7958022877574, 789.3720811232924, 789.174542017281, 788.8536355048418
+    ],
+    "head_snapshot_bytes": [466747392, 466747392, 466747392, 466747392],
+    "actor_prepare_seconds": [
+      0.5965443700551987, 0.7124424129724503, 0.5887847915291786,
+      0.5860989838838577
+    ],
+    "actor_release_seconds": [
+      0.13616672158241272, 0.14177660644054413, 0.14199889451265335,
+      0.14190106838941574
+    ]
+  },
+  "timing_scope": "Worker API wall times include management/communication; teacher forward excludes its head callback"
+}
