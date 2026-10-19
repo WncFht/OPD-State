@@ -79,6 +79,80 @@ def fixture(directory, *, snapshot=True):
 
 
 class WandbSnapshotTests(unittest.TestCase):
+    def test_multiple_kl_reports_bind_to_their_own_validation_history_rows(self):
+        with tempfile.TemporaryDirectory() as temporary:
+            directory = Path(temporary)
+            run, api, _ = self.native_fixture(directory)
+            summary_path = directory / "summary.json"
+            local = json.loads(summary_path.read_text())
+            local["validation_steps"] = [1, 2]
+            local["full_benchmarks"] = False
+            summary_path.write_text(json.dumps(local))
+            accuracy = {"eval/macro/mean@16": 0.4, "eval/AIME25/pass@16": 0.5}
+            (directory / "validation-step1.json").write_text(
+                json.dumps({"metrics": accuracy})
+            )
+            run.config["trainer"].update(
+                math_eval_require_full=False,
+                validation_kl={
+                    "enabled": True,
+                    "position_chunk_size": 32,
+                    "vocab_chunk_size": 8192,
+                },
+            )
+            original_scan = run.scan_history
+            coverage = "validation_kl/on_validation_states/micro/responses"
+            key = "validation_kl/on_validation_states/micro/student_teacher_kl/question_mean"
+            metrics = {1: {coverage: 96, key: 0.2}, 2: {coverage: 96, key: 0.1}}
+
+            def scan(*, keys, page_size):
+                for row in original_scan(keys=keys, page_size=page_size):
+                    step = row["training/global_step"]
+                    additions = (
+                        {**accuracy, **metrics.get(step, {})}
+                        if step == 1
+                        else metrics.get(step, {})
+                    )
+                    row.update({k: v for k, v in additions.items() if k in keys})
+                    yield row
+
+            run.scan_history = scan
+            paths = []
+            for step in (1, 2):
+                path = directory / f"kl-step-{step}.json"
+                path.write_text(
+                    json.dumps(
+                        {
+                            "student_version": step,
+                            "position_chunk_size": 32,
+                            "vocab_chunk_size": 8192,
+                            "metrics": metrics[step],
+                        }
+                    )
+                )
+                paths.append(path)
+            receipt = VERIFY(
+                directory, api, snapshot=True, engineering=True, kl_report=paths
+            )
+            self.assertEqual(set(receipt["kl_verifications_by_step"]), {"1", "2"})
+            self.assertEqual(
+                receipt["kl_verifications_by_step"]["1"]["metrics"][key], 0.2
+            )
+            self.assertEqual(receipt["kl_verification"]["student_version"], 2)
+            with self.assertRaisesRegex(ValueError, "Duplicate"):
+                VERIFY(
+                    directory,
+                    api,
+                    snapshot=True,
+                    engineering=True,
+                    kl_report=[paths[0], paths[0]],
+                )
+            bad = json.loads(paths[0].read_text())
+            bad["metrics"][key] = 0.1
+            paths[0].write_text(json.dumps(bad))
+            with self.assertRaisesRegex(ValueError, "KL metrics"):
+                VERIFY(directory, api, snapshot=True, engineering=True, kl_report=paths)
+
     def test_prefix_caching_controls_require_the_actual_remote_boolean(self):
         with tempfile.TemporaryDirectory() as temporary:
             directory = Path(temporary)

@@ -145,17 +145,22 @@ def verify(directory, api, *, snapshot=False, engineering=False, kl_report=None,
             raise ValueError(f"W&B summary disagrees with independently recomputed metric: {key}")
         remote[key] = actual
     kl_verification = None
-    if kl_report is not None:
+    kl_by_step = {}
+    kl_reports = [] if kl_report is None else kl_report if isinstance(kl_report, (tuple, list)) else [kl_report]
+    for kl_report in kl_reports:
         kl_report = Path(kl_report)
         kl = json.loads(kl_report.read_text())
         settings = trainer.get("validation_kl", {})
         if (
             not settings.get("enabled")
-            or kl["student_version"] != local["training_steps"]
+            or type(kl["student_version"]) is not int
+            or kl["student_version"] not in local["validation_steps"]
             or kl["position_chunk_size"] != settings.get("position_chunk_size")
             or kl["vocab_chunk_size"] != settings.get("vocab_chunk_size")
         ):
-            raise ValueError("W&B KL configuration or final student version differs from local scoring")
+            raise ValueError("W&B KL configuration or validation student version differs from local scoring")
+        if str(kl["student_version"]) in kl_by_step:
+            raise ValueError("Duplicate KL report for one validation step")
         coverage_key = "validation_kl/on_validation_states/micro/responses"
         history = [
             row
@@ -166,13 +171,15 @@ def verify(directory, api, *, snapshot=False, engineering=False, kl_report=None,
             not math.isfinite(float(history[0].get(key, float("nan")))) or abs(float(history[0][key]) - value) > 1e-8
             for key, value in kl["metrics"].items()
         ):
-            raise ValueError("W&B KL metrics disagree with the exact final validation history row")
+            raise ValueError("W&B KL metrics disagree with the exact validation history row")
         evidence_paths.append(kl_report)
-        kl_verification = {
+        kl_by_step[str(kl["student_version"])] = {
             "student_version": kl["student_version"],
             "metrics": kl["metrics"],
             "report_sha256": hashlib.sha256(kl_report.read_bytes()).hexdigest(),
         }
+        if kl["student_version"] == local["training_steps"]:
+            kl_verification = kl_by_step[str(kl["student_version"])]
     report = {
         "id": run.id,
         "state": run.state,
@@ -193,6 +200,7 @@ def verify(directory, api, *, snapshot=False, engineering=False, kl_report=None,
         "native_policy_verification": native_binding,
         "quality_scope": "engineering_only" if engineering else "full_three_benchmark_eval16",
         "kl_verification": kl_verification,
+        "kl_verifications_by_step": kl_by_step,
         "settings": {
             "student_model": run.config["actor_rollout_ref"]["model"]["path"],
             "teacher_model": run.config["distillation"]["fsdp_teacher"]["model_path"],
@@ -226,7 +234,10 @@ def main():
         "--engineering", action="store_true", help="Verify an explicitly partial native engineering run"
     )
     parser.add_argument(
-        "--kl-report", type=Path, help="Also verify KL metrics at the exact final validation history row"
+        "--kl-report",
+        type=Path,
+        action="append",
+        help="Verify this KL report at its exact validation step; repeat for multiple steps",
     )
     parser.add_argument(
         "--snapshot", action="store_true", help="Verify completed history without requiring a finished run"
