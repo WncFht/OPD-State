@@ -1,0 +1,131 @@
+{
+  "scope": "Real 4-GPU trainer acceptance; short caps do not establish math accuracy",
+  "trainer_gpu_count": 4,
+  "resource_note": null,
+  "frozen_parameter_digests": {},
+  "training": [
+    {
+      "step": 1,
+      "responses": 8,
+      "response_tokens": 512,
+      "generation_identities": [
+        [
+          "current_student",
+          "/mnt/tidalfs-bdsz01/dataset/llm_dataset/zkn_data/fht_data/models/DeepSeek-R1-Distill-Qwen-1.5B",
+          0
+        ]
+      ],
+      "trace_sha256": "528bebfdca60c9424f28696bacd667c840555b344ca2bd8add905361b239c1da"
+    },
+    {
+      "step": 2,
+      "responses": 8,
+      "response_tokens": 512,
+      "generation_identities": [
+        [
+          "current_student",
+          "/mnt/tidalfs-bdsz01/dataset/llm_dataset/zkn_data/fht_data/models/DeepSeek-R1-Distill-Qwen-1.5B",
+          1
+        ]
+      ],
+      "trace_sha256": "11afdba4f3fd8ed4bfe59a8cbce124dcacc28d666886b734c784e4995356364d"
+    },
+    {
+      "step": 3,
+      "responses": 8,
+      "response_tokens": 512,
+      "generation_identities": [
+        [
+          "current_student",
+          "/mnt/tidalfs-bdsz01/dataset/llm_dataset/zkn_data/fht_data/models/DeepSeek-R1-Distill-Qwen-1.5B",
+          2
+        ]
+      ],
+      "trace_sha256": "1af1f909f20aecb961c827ebe9b9ef24cdfe161b89f15bfdbddb3132858bb4f0"
+    },
+    {
+      "step": 4,
+      "responses": 8,
+      "response_tokens": 512,
+      "generation_identities": [
+        [
+          "current_student",
+          "/mnt/tidalfs-bdsz01/dataset/llm_dataset/zkn_data/fht_data/models/DeepSeek-R1-Distill-Qwen-1.5B",
+          3
+        ]
+      ],
+      "trace_sha256": "13f5531ebffad7fbd8bdb592b4ce1f827409e963f46f95314ce21712d76dbd90"
+    }
+  ],
+  "evaluation_responses": 96,
+  "final_student_version": 4,
+  "evaluation_model_identities": [
+    [
+      "current_student",
+      "/mnt/tidalfs-bdsz01/dataset/llm_dataset/zkn_data/fht_data/models/DeepSeek-R1-Distill-Qwen-1.5B",
+      4
+    ]
+  ],
+  "whole_card_peak_mib": {
+    "0": 51033,
+    "1": 50815,
+    "2": 50739,
+    "3": 50557
+  },
+  "status": {
+    "state": "finished",
+    "started": 1792381229.7911732,
+    "finished": 1792381798.6262574,
+    "exit_code": 0,
+    "elapsed_s": 568.8350846767426,
+    "gpu_after": [
+      [0, 1, 0],
+      [1, 1, 0],
+      [2, 1, 0],
+      [3, 1, 0]
+    ],
+    "source_manifest": "/mnt/tidalfs-bdsz01/dataset/llm_dataset/zkn_data/fht_data/OPD-State/runs/validation-periodic-fast-20261019-v1/source-manifest.json"
+  },
+  "native_manifest_sha256": "8bb986e07d1e300dfe26eb301d47c611ef644cbe97db73c5db7cad73be832652",
+  "math_summary": {
+    "run_name": "validation-periodic-fast-20261019-v1",
+    "run_directory": "/mnt/tidalfs-bdsz01/dataset/llm_dataset/zkn_data/fht_data/OPD-State/runs/validation-periodic-fast-20261019-v1",
+    "source_commit": "83271d635579bcd20e370284af6ec4b908b4c8db",
+    "source_manifest_sha256": "e46d1dd2d38c041da31a344b56483cb32992af94dbfa24095139246c1ce02937",
+    "source_identity": "runtime_snapshot",
+    "training_steps": 4,
+    "samples_per_question": 16,
+    "full_benchmarks": false,
+    "checkpoints_saved": false,
+    "wandb_url": "https://wandb.ai/wncfht/OPD-State/runs/i5rnp10g",
+    "training_log_sha256": "fb9d5886703be389314c49850a1e3208b8f8f300701d85b44756a794e40a8cb7",
+    "training_log_observed_bytes": 360640,
+    "collection_scope": "final_validation",
+    "final_validation_marker_verified": true,
+    "collector_source_sha256": "d55fdb5753b7557a445c8584830f41fdbb3ca450ae53fa888791f2cdf81899fb",
+    "validation_steps": [2, 4]
+  },
+  "collector_source_sha256": "087c8c811957a23c8a7902c617757f9c93936848b0da4bd38a5dfc2dde638644",
+  "validations_by_step": {
+    "2": {
+      "responses": 96,
+      "model_identities": [
+        [
+          "current_student",
+          "/mnt/tidalfs-bdsz01/dataset/llm_dataset/zkn_data/fht_data/models/DeepSeek-R1-Distill-Qwen-1.5B",
+          2
+        ]
+      ]
+    },
+    "4": {
+      "responses": 96,
+      "model_identities": [
+        [
+          "current_student",
+          "/mnt/tidalfs-bdsz01/dataset/llm_dataset/zkn_data/fht_data/models/DeepSeek-R1-Distill-Qwen-1.5B",
+          4
+        ]
+      ]
+    }
+  }
+}

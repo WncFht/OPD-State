@@ -1,0 +1,748 @@
+{
+  "schema": "validation-kl-audit-v1",
+  "scope": "artifact integrity, coverage and independent reductions; no model recomputation",
+  "report_sha256": "d6e5d3df8425b1eb9b0eeee4b14269b4466b839ba5c4a825a75a46057822818c",
+  "tokens_sha256": "f60dc12046e9e0c9c8f167c9d818c51a4db6361bcc9f28910db88cbd79cba601",
+  "accuracy_sha256": "d6e8e57eefac684b3ba6a09cb7a5f228f3dd0bf9fae2e799edc3a14b3517a518",
+  "bank_sha256": "a341443cd3a5802e4a35693a99f87cf53ef2510ae896657b9626da58d3292e69",
+  "student_version": 4,
+  "coverage": "bound_to_accuracy",
+  "questions": {
+    "MATH-500": 2,
+    "AMC23": 2,
+    "AIME25": 2
+  },
+  "responses": 96,
+  "effective_positions": 591509,
+  "worker_count": 4,
+  "bootstrap_replicates": 5000,
+  "bootstrap_seed": 42,
+  "interval_semantics": "benchmark-stratified question-cluster bootstrap; conditional on fitted models and fixed bank",
+  "excluded_uncertainty": [
+    "training seeds",
+    "fixed-bank construction and position sampling"
+  ],
+  "intervals": {
+    "validation_kl/on_initial_states/AIME25/student_teacher_kl/question_mean": {
+      "low": 0.11216503049763188,
+      "high": 0.17506138554503425
+    },
+    "validation_kl/on_initial_states/AIME25/student_teacher_kl/cumulative_on_states": {
+      "low": 449.60520217059644,
+      "high": 709.8316366971869
+    },
+    "validation_kl/on_initial_states/AIME25/student_teacher_kl/token_weighted": {
+      "low": 0.11271932352174509,
+      "high": 0.1762751241781377
+    },
+    "validation_kl/on_initial_states/AIME25/teacher_student_kl/question_mean": {
+      "low": 0.10964130971668846,
+      "high": 0.16564463144238262
+    },
+    "validation_kl/on_initial_states/AIME25/teacher_student_kl/cumulative_on_states": {
+      "low": 439.2420960171776,
+      "high": 662.8194559246474
+    },
+    "validation_kl/on_initial_states/AIME25/teacher_student_kl/token_weighted": {
+      "low": 0.11002657145580469,
+      "high": 0.1650673380878629
+    },
+    "validation_kl/on_initial_states/AIME25/student_entropy/question_mean": {
+      "low": 0.6779092901972085,
+      "high": 0.8984471231219776
+    },
+    "validation_kl/on_initial_states/AIME25/student_entropy/cumulative_on_states": {
+      "low": 2714.6589666115547,
+      "high": 3634.8646195730403
+    },
+    "validation_kl/on_initial_states/AIME25/student_entropy/token_weighted": {
+      "low": 0.6794427053589163,
+      "high": 0.9030567036712566
+    },
+    "validation_kl/on_initial_states/AIME25/teacher_entropy/question_mean": {
+      "low": 0.6573894361749039,
+      "high": 0.8757842416644397
+    },
+    "validation_kl/on_initial_states/AIME25/teacher_entropy/cumulative_on_states": {
+      "low": 2637.7015572753403,
+      "high": 3542.683622287454
+    },
+    "validation_kl/on_initial_states/AIME25/teacher_entropy/token_weighted": {
+      "low": 0.6595786004019536,
+      "high": 0.8779853271983077
+    },
+    "validation_kl/on_initial_states/AMC23/student_teacher_kl/question_mean": {
+      "low": 0.06422881540458078,
+      "high": 0.1137471650180786
+    },
+    "validation_kl/on_initial_states/AMC23/student_teacher_kl/cumulative_on_states": {
+      "low": 229.4210875870694,
+      "high": 412.50384435033425
+    },
+    "validation_kl/on_initial_states/AMC23/student_teacher_kl/token_weighted": {
+      "low": 0.06781382746505217,
+      "high": 0.11639316072402027
+    },
+    "validation_kl/on_initial_states/AMC23/teacher_student_kl/question_mean": {
+      "low": 0.06257038999381107,
+      "high": 0.10860091908446544
+    },
+    "validation_kl/on_initial_states/AMC23/teacher_student_kl/cumulative_on_states": {
+      "low": 223.84152833446316,
+      "high": 403.85538148762265
+    },
+    "validation_kl/on_initial_states/AMC23/teacher_student_kl/token_weighted": {
+      "low": 0.06632105957597831,
+      "high": 0.11293360746537309
+    },
+    "validation_kl/on_initial_states/AMC23/student_entropy/question_mean": {
+      "low": 0.5393582079002852,
+      "high": 0.8118739915381247
+    },
+    "validation_kl/on_initial_states/AMC23/student_entropy/cumulative_on_states": {
+      "low": 1885.7780283418426,
+      "high": 3103.430143859569
+    },
+    "validation_kl/on_initial_states/AMC23/student_entropy/token_weighted": {
+      "low": 0.5617791380315184,
+      "high": 0.8593737591219704
+    },
+    "validation_kl/on_initial_states/AMC23/teacher_entropy/question_mean": {
+      "low": 0.5164360240468489,
+      "high": 0.7795368853020923
+    },
+    "validation_kl/on_initial_states/AMC23/teacher_entropy/cumulative_on_states": {
+      "low": 1814.2267906545303,
+      "high": 2998.9719185785193
+    },
+    "validation_kl/on_initial_states/AMC23/teacher_entropy/token_weighted": {
+      "low": 0.5431931201374443,
+      "high": 0.8263950093578488
+    },
+    "validation_kl/on_initial_states/MATH-500/student_teacher_kl/question_mean": {
+      "low": 0.06652307821153192,
+      "high": 0.10621511657536552
+    },
+    "validation_kl/on_initial_states/MATH-500/student_teacher_kl/cumulative_on_states": {
+      "low": 210.38790076992677,
+      "high": 380.8206800325956
+    },
+    "validation_kl/on_initial_states/MATH-500/student_teacher_kl/token_weighted": {
+      "low": 0.06446509295997564,
+      "high": 0.11059533435597757
+    },
+    "validation_kl/on_initial_states/MATH-500/teacher_student_kl/question_mean": {
+      "low": 0.06852549464548019,
+      "high": 0.11067043354539567
+    },
+    "validation_kl/on_initial_states/MATH-500/teacher_student_kl/cumulative_on_states": {
+      "low": 218.58255956229527,
+      "high": 402.50054554696476
+    },
+    "validation_kl/on_initial_states/MATH-500/teacher_student_kl/token_weighted": {
+      "low": 0.06761661657904788,
+      "high": 0.11628843558368314
+    },
+    "validation_kl/on_initial_states/MATH-500/student_entropy/question_mean": {
+      "low": 0.48232318561730964,
+      "high": 0.7151993870989005
+    },
+    "validation_kl/on_initial_states/MATH-500/student_entropy/cumulative_on_states": {
+      "low": 1562.7218243542998,
+      "high": 2570.2816317513175
+    },
+    "validation_kl/on_initial_states/MATH-500/student_entropy/token_weighted": {
+      "low": 0.48014377327748875,
+      "high": 0.7407048156429575
+    },
+    "validation_kl/on_initial_states/MATH-500/teacher_entropy/question_mean": {
+      "low": 0.5012561785262807,
+      "high": 0.7356537903695182
+    },
+    "validation_kl/on_initial_states/MATH-500/teacher_entropy/cumulative_on_states": {
+      "low": 1618.855778733609,
+      "high": 2645.770483492061
+    },
+    "validation_kl/on_initial_states/MATH-500/teacher_entropy/token_weighted": {
+      "low": 0.4996717096038682,
+      "high": 0.7613116063590859
+    },
+    "validation_kl/on_initial_states/macro/student_teacher_kl/question_mean": {
+      "low": 0.0906951611415756,
+      "high": 0.11984976548503662
+    },
+    "validation_kl/on_initial_states/macro/student_teacher_kl/cumulative_on_states": {
+      "low": 336.1718566458237,
+      "high": 454.907429759799
+    },
+    "validation_kl/on_initial_states/macro/student_teacher_kl/token_weighted": {
+      "low": 0.09182846773391255,
+      "high": 0.12227482667512592
+    },
+    "validation_kl/on_initial_states/macro/teacher_student_kl/question_mean": {
+      "low": 0.08962279705844298,
+      "high": 0.11724909735932372
+    },
+    "validation_kl/on_initial_states/macro/teacher_student_kl/cumulative_on_states": {
+      "low": 332.961278258446,
+      "high": 445.40153343485696
+    },
+    "validation_kl/on_initial_states/macro/teacher_student_kl/token_weighted": {
+      "low": 0.09121611475008587,
+      "high": 0.12033917518798949
+    },
+    "validation_kl/on_initial_states/macro/student_entropy/question_mean": {
+      "low": 0.6159850126446579,
+      "high": 0.754926429078239
+    },
+    "validation_kl/on_initial_states/macro/student_entropy/cumulative_on_states": {
+      "low": 2265.3513945960253,
+      "high": 2864.6020963943834
+    },
+    "validation_kl/on_initial_states/macro/student_entropy/token_weighted": {
+      "low": 0.6288877433098486,
+      "high": 0.77720227711111
+    },
+    "validation_kl/on_initial_states/macro/teacher_entropy/question_mean": {
+      "low": 0.6093012446118633,
+      "high": 0.7459316351259402
+    },
+    "validation_kl/on_initial_states/macro/teacher_entropy/cumulative_on_states": {
+      "low": 2239.9025591340824,
+      "high": 2833.3943797389
+    },
+    "validation_kl/on_initial_states/macro/teacher_entropy/token_weighted": {
+      "low": 0.6225663295369124,
+      "high": 0.7689369508135574
+    },
+    "validation_kl/on_initial_states/micro/student_teacher_kl/question_mean": {
+      "low": 0.09069516114157558,
+      "high": 0.11984976548503662
+    },
+    "validation_kl/on_initial_states/micro/student_teacher_kl/cumulative_on_states": {
+      "low": 336.1718566458237,
+      "high": 454.907429759799
+    },
+    "validation_kl/on_initial_states/micro/student_teacher_kl/token_weighted": {
+      "low": 0.09359538368993885,
+      "high": 0.12481148734178468
+    },
+    "validation_kl/on_initial_states/micro/teacher_student_kl/question_mean": {
+      "low": 0.08962279705844298,
+      "high": 0.1172490973593237
+    },
+    "validation_kl/on_initial_states/micro/teacher_student_kl/cumulative_on_states": {
+      "low": 332.961278258446,
+      "high": 445.401533434857
+    },
+    "validation_kl/on_initial_states/micro/teacher_student_kl/token_weighted": {
+      "low": 0.09247837709467195,
+      "high": 0.12214647353866605
+    },
+    "validation_kl/on_initial_states/micro/student_entropy/question_mean": {
+      "low": 0.615985012644658,
+      "high": 0.754926429078239
+    },
+    "validation_kl/on_initial_states/micro/student_entropy/cumulative_on_states": {
+      "low": 2265.3513945960253,
+      "high": 2864.602096394384
+    },
+    "validation_kl/on_initial_states/micro/student_entropy/token_weighted": {
+      "low": 0.6349990009099917,
+      "high": 0.7824701143552043
+    },
+    "validation_kl/on_initial_states/micro/teacher_entropy/question_mean": {
+      "low": 0.6093012446118635,
+      "high": 0.7459316351259402
+    },
+    "validation_kl/on_initial_states/micro/teacher_entropy/cumulative_on_states": {
+      "low": 2239.9025591340824,
+      "high": 2833.3943797389
+    },
+    "validation_kl/on_initial_states/micro/teacher_entropy/token_weighted": {
+      "low": 0.6281476733325089,
+      "high": 0.7722046561786112
+    },
+    "validation_kl/on_teacher_states/AIME25/student_teacher_kl/question_mean": {
+      "low": 0.08891219396464589,
+      "high": 0.13990190653029042
+    },
+    "validation_kl/on_teacher_states/AIME25/student_teacher_kl/cumulative_on_states": {
+      "low": 363.4200421591423,
+      "high": 571.7753396604892
+    },
+    "validation_kl/on_teacher_states/AIME25/student_teacher_kl/token_weighted": {
+      "low": 0.08894292736486115,
+      "high": 0.13994497212636664
+    },
+    "validation_kl/on_teacher_states/AIME25/teacher_student_kl/question_mean": {
+      "low": 0.0761611847419664,
+      "high": 0.11333158691860414
+    },
+    "validation_kl/on_teacher_states/AIME25/teacher_student_kl/cumulative_on_states": {
+      "low": 311.00885000575647,
+      "high": 463.2045424796347
+    },
+    "validation_kl/on_teacher_states/AIME25/teacher_student_kl/token_weighted": {
+      "low": 0.07618252018964532,
+      "high": 0.11341472661688007
+    },
+    "validation_kl/on_teacher_states/AIME25/student_entropy/question_mean": {
+      "low": 0.6868526574954388,
+      "high": 0.9412320516350183
+    },
+    "validation_kl/on_teacher_states/AIME25/student_entropy/cumulative_on_states": {
+      "low": 2808.2798124802307,
+      "high": 3849.188699714341
+    },
+    "validation_kl/on_teacher_states/AIME25/student_entropy/token_weighted": {
+      "low": 0.6868464241400707,
+      "high": 0.9416933303341042
+    },
+    "validation_kl/on_teacher_states/AIME25/teacher_entropy/question_mean": {
+      "low": 0.6199678106463149,
+      "high": 0.8691157334032008
+    },
+    "validation_kl/on_teacher_states/AIME25/teacher_entropy/cumulative_on_states": {
+      "low": 2534.0790804061826,
+      "high": 3556.974914268753
+    },
+    "validation_kl/on_teacher_states/AIME25/teacher_entropy/token_weighted": {
+      "low": 0.6200873647988974,
+      "high": 0.8702842086190203
+    },
+    "validation_kl/on_teacher_states/AMC23/student_teacher_kl/question_mean": {
+      "low": 0.06292808701014956,
+      "high": 0.09707227170521844
+    },
+    "validation_kl/on_teacher_states/AMC23/student_teacher_kl/cumulative_on_states": {
+      "low": 232.49802129093194,
+      "high": 381.7203125652597
+    },
+    "validation_kl/on_teacher_states/AMC23/student_teacher_kl/token_weighted": {
+      "low": 0.06604233515137173,
+      "high": 0.10177490108632167
+    },
+    "validation_kl/on_teacher_states/AMC23/teacher_student_kl/question_mean": {
+      "low": 0.060480580735063724,
+      "high": 0.09329023370924411
+    },
+    "validation_kl/on_teacher_states/AMC23/teacher_student_kl/cumulative_on_states": {
+      "low": 222.68699653632058,
+      "high": 366.2726505415083
+    },
+    "validation_kl/on_teacher_states/AMC23/teacher_student_kl/token_weighted": {
+      "low": 0.06301561784201733,
+      "high": 0.09779805631703231
+    },
+    "validation_kl/on_teacher_states/AMC23/student_entropy/question_mean": {
+      "low": 0.63317984613763,
+      "high": 0.9114081639747171
+    },
+    "validation_kl/on_teacher_states/AMC23/student_entropy/cumulative_on_states": {
+      "low": 2281.177844175753,
+      "high": 3514.547135411172
+    },
+    "validation_kl/on_teacher_states/AMC23/student_entropy/token_weighted": {
+      "low": 0.6421244867423149,
+      "high": 0.9398157133568782
+    },
+    "validation_kl/on_teacher_states/AMC23/teacher_entropy/question_mean": {
+      "low": 0.6079384369713197,
+      "high": 0.8542951288834126
+    },
+    "validation_kl/on_teacher_states/AMC23/teacher_entropy/cumulative_on_states": {
+      "low": 2180.0051867754205,
+      "high": 3273.639280472424
+    },
+    "validation_kl/on_teacher_states/AMC23/teacher_entropy/token_weighted": {
+      "low": 0.6125220835683798,
+      "high": 0.8762610786256488
+    },
+    "validation_kl/on_teacher_states/MATH-500/student_teacher_kl/question_mean": {
+      "low": 0.07623498736681579,
+      "high": 0.14340645637447144
+    },
+    "validation_kl/on_teacher_states/MATH-500/student_teacher_kl/cumulative_on_states": {
+      "low": 237.02956873665696,
+      "high": 466.5867148651675
+    },
+    "validation_kl/on_teacher_states/MATH-500/student_teacher_kl/token_weighted": {
+      "low": 0.07899882207999467,
+      "high": 0.14554519942189745
+    },
+    "validation_kl/on_teacher_states/MATH-500/teacher_student_kl/question_mean": {
+      "low": 0.06828195227646816,
+      "high": 0.12683242409031467
+    },
+    "validation_kl/on_teacher_states/MATH-500/teacher_student_kl/cumulative_on_states": {
+      "low": 213.74738720497766,
+      "high": 412.8416428699783
+    },
+    "validation_kl/on_teacher_states/MATH-500/teacher_student_kl/token_weighted": {
+      "low": 0.07120839033759824,
+      "high": 0.12880159421880952
+    },
+    "validation_kl/on_teacher_states/MATH-500/student_entropy/question_mean": {
+      "low": 0.5487976405842587,
+      "high": 0.7902178884431028
+    },
+    "validation_kl/on_teacher_states/MATH-500/student_entropy/cumulative_on_states": {
+      "low": 1704.5446934600795,
+      "high": 2644.88218278461
+    },
+    "validation_kl/on_teacher_states/MATH-500/student_entropy/token_weighted": {
+      "low": 0.5696473780043104,
+      "high": 0.8093766692492833
+    },
+    "validation_kl/on_teacher_states/MATH-500/teacher_entropy/question_mean": {
+      "low": 0.5224390212255774,
+      "high": 0.7316144300751571
+    },
+    "validation_kl/on_teacher_states/MATH-500/teacher_entropy/cumulative_on_states": {
+      "low": 1636.338386654821,
+      "high": 2487.515219819666
+    },
+    "validation_kl/on_teacher_states/MATH-500/teacher_entropy/token_weighted": {
+      "low": 0.5520464886514425,
+      "high": 0.755103054958482
+    },
+    "validation_kl/on_teacher_states/macro/student_teacher_kl/question_mean": {
+      "low": 0.08511773647247466,
+      "high": 0.11518609226708416
+    },
+    "validation_kl/on_teacher_states/macro/student_teacher_kl/cumulative_on_states": {
+      "low": 315.7825904015257,
+      "high": 427.6418942322704
+    },
+    "validation_kl/on_teacher_states/macro/student_teacher_kl/token_weighted": {
+      "low": 0.08712479359029043,
+      "high": 0.11751456270489674
+    },
+    "validation_kl/on_teacher_states/macro/teacher_student_kl/question_mean": {
+      "low": 0.07580714318060304,
+      "high": 0.10142970490550442
+    },
+    "validation_kl/on_teacher_states/macro/teacher_student_kl/cumulative_on_states": {
+      "low": 279.7677098023464,
+      "high": 376.9329894058859
+    },
+    "validation_kl/on_teacher_states/macro/teacher_student_kl/token_weighted": {
+      "low": 0.07797865223352522,
+      "high": 0.10410580816961368
+    },
+    "validation_kl/on_teacher_states/macro/student_entropy/question_mean": {
+      "low": 0.6752331875968524,
+      "high": 0.8250469607469426
+    },
+    "validation_kl/on_teacher_states/macro/student_entropy/cumulative_on_states": {
+      "low": 2481.0165935203922,
+      "high": 3094.4215273113464
+    },
+    "validation_kl/on_teacher_states/macro/student_entropy/token_weighted": {
+      "low": 0.6863273539436298,
+      "high": 0.8399103292189468
+    },
+    "validation_kl/on_teacher_states/macro/teacher_entropy/question_mean": {
+      "low": 0.631759067117325,
+      "high": 0.7676817188172435
+    },
+    "validation_kl/on_teacher_states/macro/teacher_entropy/cumulative_on_states": {
+      "low": 2327.6043094525435,
+      "high": 2892.4415315040465
+    },
+    "validation_kl/on_teacher_states/macro/teacher_entropy/token_weighted": {
+      "low": 0.6430348861887388,
+      "high": 0.7813422252864793
+    },
+    "validation_kl/on_teacher_states/micro/student_teacher_kl/question_mean": {
+      "low": 0.08511773647247467,
+      "high": 0.11518609226708418
+    },
+    "validation_kl/on_teacher_states/micro/student_teacher_kl/cumulative_on_states": {
+      "low": 315.7825904015257,
+      "high": 427.6418942322704
+    },
+    "validation_kl/on_teacher_states/micro/student_teacher_kl/token_weighted": {
+      "low": 0.0876163904031587,
+      "high": 0.11732276414661738
+    },
+    "validation_kl/on_teacher_states/micro/teacher_student_kl/question_mean": {
+      "low": 0.07580714318060304,
+      "high": 0.10142970490550442
+    },
+    "validation_kl/on_teacher_states/micro/teacher_student_kl/cumulative_on_states": {
+      "low": 279.7677098023464,
+      "high": 376.93298940588585
+    },
+    "validation_kl/on_teacher_states/micro/teacher_student_kl/token_weighted": {
+      "low": 0.07822571521767435,
+      "high": 0.10323286179859703
+    },
+    "validation_kl/on_teacher_states/micro/student_entropy/question_mean": {
+      "low": 0.6752331875968524,
+      "high": 0.8250469607469425
+    },
+    "validation_kl/on_teacher_states/micro/student_entropy/cumulative_on_states": {
+      "low": 2481.016593520392,
+      "high": 3094.4215273113464
+    },
+    "validation_kl/on_teacher_states/micro/student_entropy/token_weighted": {
+      "low": 0.6907348898975574,
+      "high": 0.8464393050692753
+    },
+    "validation_kl/on_teacher_states/micro/teacher_entropy/question_mean": {
+      "low": 0.631759067117325,
+      "high": 0.7676817188172433
+    },
+    "validation_kl/on_teacher_states/micro/teacher_entropy/cumulative_on_states": {
+      "low": 2327.6043094525435,
+      "high": 2892.441531504046
+    },
+    "validation_kl/on_teacher_states/micro/teacher_entropy/token_weighted": {
+      "low": 0.6448491101893812,
+      "high": 0.7872369316384797
+    },
+    "validation_kl/on_validation_states/AIME25/student_teacher_kl/question_mean": {
+      "low": 0.08629234874483775,
+      "high": 0.11976136714793838
+    },
+    "validation_kl/on_validation_states/AIME25/student_teacher_kl/cumulative_on_states": {
+      "low": 450.4622584602537,
+      "high": 1792.610843183347
+    },
+    "validation_kl/on_validation_states/AIME25/student_teacher_kl/token_weighted": {
+      "low": 0.09174968029233097,
+      "high": 0.12268755316317356
+    },
+    "validation_kl/on_validation_states/AIME25/teacher_student_kl/question_mean": {
+      "low": 0.09367977412998854,
+      "high": 0.1205843737159027
+    },
+    "validation_kl/on_validation_states/AIME25/teacher_student_kl/cumulative_on_states": {
+      "low": 492.3366758928127,
+      "high": 1794.3246209930526
+    },
+    "validation_kl/on_validation_states/AIME25/teacher_student_kl/token_weighted": {
+      "low": 0.10027861771096688,
+      "high": 0.12280484532780464
+    },
+    "validation_kl/on_validation_states/AIME25/student_entropy/question_mean": {
+      "low": 0.3210967871418269,
+      "high": 0.4415636625089919
+    },
+    "validation_kl/on_validation_states/AIME25/student_entropy/cumulative_on_states": {
+      "low": 1714.4535619294888,
+      "high": 6531.907400196188
+    },
+    "validation_kl/on_validation_states/AIME25/student_entropy/token_weighted": {
+      "low": 0.3491981031235672,
+      "high": 0.4470483593613584
+    },
+    "validation_kl/on_validation_states/AIME25/teacher_entropy/question_mean": {
+      "low": 0.34183269455391074,
+      "high": 0.43472322450153095
+    },
+    "validation_kl/on_validation_states/AIME25/teacher_entropy/cumulative_on_states": {
+      "low": 1822.5420145425685,
+      "high": 6409.272104316502
+    },
+    "validation_kl/on_validation_states/AIME25/teacher_entropy/token_weighted": {
+      "low": 0.37121344577278464,
+      "high": 0.43865511303010124
+    },
+    "validation_kl/on_validation_states/AMC23/student_teacher_kl/question_mean": {
+      "low": 0.061444583604162224,
+      "high": 0.06986793518940984
+    },
+    "validation_kl/on_validation_states/AMC23/student_teacher_kl/cumulative_on_states": {
+      "low": 78.1805261029174,
+      "high": 177.05452099638495
+    },
+    "validation_kl/on_validation_states/AMC23/student_teacher_kl/token_weighted": {
+      "low": 0.0617265441720542,
+      "high": 0.07186018811684235
+    },
+    "validation_kl/on_validation_states/AMC23/teacher_student_kl/question_mean": {
+      "low": 0.0658135097529506,
+      "high": 0.07683619836018982
+    },
+    "validation_kl/on_validation_states/AMC23/teacher_student_kl/cumulative_on_states": {
+      "low": 83.8227104882433,
+      "high": 194.81205966839482
+    },
+    "validation_kl/on_validation_states/AMC23/teacher_student_kl/token_weighted": {
+      "low": 0.06618126660803814,
+      "high": 0.0790673470319699
+    },
+    "validation_kl/on_validation_states/AMC23/student_entropy/question_mean": {
+      "low": 0.3358029657097796,
+      "high": 0.37181463602974024
+    },
+    "validation_kl/on_validation_states/AMC23/student_entropy/cumulative_on_states": {
+      "low": 489.20136152067585,
+      "high": 870.6259795063586
+    },
+    "validation_kl/on_validation_states/AMC23/student_entropy/token_weighted": {
+      "low": 0.35335639166206023,
+      "high": 0.38624336463512526
+    },
+    "validation_kl/on_validation_states/AMC23/teacher_entropy/question_mean": {
+      "low": 0.3638481765329734,
+      "high": 0.38815660865541435
+    },
+    "validation_kl/on_validation_states/AMC23/teacher_entropy/cumulative_on_states": {
+      "low": 512.2526667952624,
+      "high": 944.0819100033996
+    },
+    "validation_kl/on_validation_states/AMC23/teacher_entropy/token_weighted": {
+      "low": 0.3831695642041092,
+      "high": 0.40444326023805566
+    },
+    "validation_kl/on_validation_states/MATH-500/student_teacher_kl/question_mean": {
+      "low": 0.07161086431071376,
+      "high": 0.07643155375304415
+    },
+    "validation_kl/on_validation_states/MATH-500/student_teacher_kl/cumulative_on_states": {
+      "low": 87.20969972172063,
+      "high": 882.1540615704666
+    },
+    "validation_kl/on_validation_states/MATH-500/student_teacher_kl/token_weighted": {
+      "low": 0.0705889133202676,
+      "high": 0.07142847174545841
+    },
+    "validation_kl/on_validation_states/MATH-500/teacher_student_kl/question_mean": {
+      "low": 0.07666841633698682,
+      "high": 0.08150596476823022
+    },
+    "validation_kl/on_validation_states/MATH-500/teacher_student_kl/cumulative_on_states": {
+      "low": 93.50858662722823,
+      "high": 944.1525517999794
+    },
+    "validation_kl/on_validation_states/MATH-500/teacher_student_kl/token_weighted": {
+      "low": 0.07554995838421864,
+      "high": 0.07658752935938835
+    },
+    "validation_kl/on_validation_states/MATH-500/student_entropy/question_mean": {
+      "low": 0.3662140612591117,
+      "high": 0.547213290001922
+    },
+    "validation_kl/on_validation_states/MATH-500/student_entropy/cumulative_on_states": {
+      "low": 672.8861163867374,
+      "high": 4091.9452007397526
+    },
+    "validation_kl/on_validation_states/MATH-500/student_entropy/token_weighted": {
+      "low": 0.3274325627114174,
+      "high": 0.5511224910257383
+    },
+    "validation_kl/on_validation_states/MATH-500/teacher_entropy/question_mean": {
+      "low": 0.37981599493702894,
+      "high": 0.5725675215898344
+    },
+    "validation_kl/on_validation_states/MATH-500/teacher_entropy/cumulative_on_states": {
+      "low": 704.787315582665,
+      "high": 4244.702668148564
+    },
+    "validation_kl/on_validation_states/MATH-500/teacher_entropy/token_weighted": {
+      "low": 0.33965603261955074,
+      "high": 0.577250936745464
+    },
+    "validation_kl/on_validation_states/macro/student_teacher_kl/question_mean": {
+      "low": 0.07391938046029298,
+      "high": 0.08788350378974237
+    },
+    "validation_kl/on_validation_states/macro/student_teacher_kl/cumulative_on_states": {
+      "low": 221.7631605772085,
+      "high": 934.1274761011549
+    },
+    "validation_kl/on_validation_states/macro/student_teacher_kl/token_weighted": {
+      "low": 0.07471328688571276,
+      "high": 0.088403792490923
+    },
+    "validation_kl/on_validation_states/macro/teacher_student_kl/question_mean": {
+      "low": 0.07952682481184922,
+      "high": 0.09216925420956701
+    },
+    "validation_kl/on_validation_states/macro/teacher_student_kl/cumulative_on_states": {
+      "low": 241.7208825327867,
+      "high": 959.2648526237837
+    },
+    "validation_kl/on_validation_states/macro/teacher_student_kl/token_weighted": {
+      "low": 0.08070072973502741,
+      "high": 0.09250483241528391
+    },
+    "validation_kl/on_validation_states/macro/student_entropy/question_mean": {
+      "low": 0.34703988309023287,
+      "high": 0.4475285844602246
+    },
+    "validation_kl/on_validation_states/macro/student_entropy/cumulative_on_states": {
+      "low": 1022.4177829432479,
+      "high": 3767.9220904831527
+    },
+    "validation_kl/on_validation_states/macro/student_entropy/token_weighted": {
+      "low": 0.34705096033265354,
+      "high": 0.45423102185002423
+    },
+    "validation_kl/on_validation_states/macro/teacher_entropy/question_mean": {
+      "low": 0.36588369402837784,
+      "high": 0.46109771289518636
+    },
+    "validation_kl/on_validation_states/macro/teacher_entropy/cumulative_on_states": {
+      "low": 1085.1655395081882,
+      "high": 3794.0473536214654
+    },
+    "validation_kl/on_validation_states/macro/teacher_entropy/token_weighted": {
+      "low": 0.3670873042459381,
+      "high": 0.4687661613736814
+    },
+    "validation_kl/on_validation_states/micro/student_teacher_kl/question_mean": {
+      "low": 0.07391938046029298,
+      "high": 0.08788350378974237
+    },
+    "validation_kl/on_validation_states/micro/student_teacher_kl/cumulative_on_states": {
+      "low": 221.7631605772085,
+      "high": 934.1274761011549
+    },
+    "validation_kl/on_validation_states/micro/student_teacher_kl/token_weighted": {
+      "low": 0.07576983247133853,
+      "high": 0.11343160277681326
+    },
+    "validation_kl/on_validation_states/micro/teacher_student_kl/question_mean": {
+      "low": 0.07952682481184922,
+      "high": 0.09216925420956701
+    },
+    "validation_kl/on_validation_states/micro/teacher_student_kl/cumulative_on_states": {
+      "low": 241.7208825327867,
+      "high": 959.2648526237837
+    },
+    "validation_kl/on_validation_states/micro/teacher_student_kl/token_weighted": {
+      "low": 0.08176676878282668,
+      "high": 0.11454547198353425
+    },
+    "validation_kl/on_validation_states/micro/student_entropy/question_mean": {
+      "low": 0.34703988309023287,
+      "high": 0.4475285844602246
+    },
+    "validation_kl/on_validation_states/micro/student_entropy/cumulative_on_states": {
+      "low": 1022.4177829432479,
+      "high": 3767.9220904831527
+    },
+    "validation_kl/on_validation_states/micro/student_entropy/token_weighted": {
+      "low": 0.33656719338457614,
+      "high": 0.445530543932416
+    },
+    "validation_kl/on_validation_states/micro/teacher_entropy/question_mean": {
+      "low": 0.36588369402837784,
+      "high": 0.46109771289518636
+    },
+    "validation_kl/on_validation_states/micro/teacher_entropy/cumulative_on_states": {
+      "low": 1085.1655395081882,
+      "high": 3794.0473536214654
+    },
+    "validation_kl/on_validation_states/micro/teacher_entropy/token_weighted": {
+      "low": 0.35260600819988686,
+      "high": 0.443130156654074
+    }
+  },
+  "audit_source_sha256": "c6492d2d47d508db88e90c5b1afcb3af65a0f066e109f97796eeec7bb596238d"
+}

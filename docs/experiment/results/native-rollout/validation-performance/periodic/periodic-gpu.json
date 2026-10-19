@@ -1,0 +1,27 @@
+{
+  "scope": "Four-GPU step2/4 validation, resumed updates, identical bank inputs and measured fixed-state teacher outputs; not a 50-step accuracy result",
+  "passed": true,
+  "validation_steps": [2, 4],
+  "main_effective_positions": {
+    "2": 577796,
+    "4": 591509
+  },
+  "fixed_bank_records": 180,
+  "fixed_bank_sha256": "a341443cd3a5802e4a35693a99f87cf53ef2510ae896657b9626da58d3292e69",
+  "teacher_bank_normalized_entropy_max_delta": 0,
+  "student_bank_normalized_kl_max_delta": 0.02419356860893007,
+  "execution_devices_and_limits_verified": true,
+  "training_and_validation_order": [
+    [1, false],
+    [2, false],
+    [2, true],
+    [3, false],
+    [4, false],
+    [4, true]
+  ],
+  "source_sha256": {
+    "runs/validation-periodic-fast-20261019-v1/checkpoints/native-trajectories/batches.jsonl": "a2c2f4c5922a99e450c4f3ec536b25e0fd10ea834a2d73c5d4a9c99ab82d1534",
+    "runs/validation-periodic-fast-20261019-v1/validation/kl/kl-step-2.json": "689ec08fd8b616916b3378ef4646486254007f614d8398be41922c18da9c34cc",
+    "runs/validation-periodic-fast-20261019-v1/validation/kl/kl-step-4.json": "d6e5d3df8425b1eb9b0eeee4b14269b4466b839ba5c4a825a75a46057822818c"
+  }
+}

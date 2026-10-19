@@ -33,7 +33,9 @@ trainer:
 
 原始 token 与报告分别写入 `validation/kl/kl-tokens-step-<v>.jsonl` 和 `kl-step-<v>.json`，均记录 `student_version=v`，acc、KL、长度等指标返回同一训练 step。固定前缀 bank 跨验证点不变，student 概率每次按实时权重重算，不沿用上次 head 快照或 KL。
 
-[连续验证 CPU 回归](results/native-rollout/periodic-validation-cpu.json)使用真实小型 Qwen2 与 SGD，在 step0/2/4 调用实际 trainer/teacher 评分方法：检查不同版本输出独立、更新后 KL 改变、bank 与 teacher 不变，以及恢复标志依次为 true/true/false。它模拟 DP RPC，不运行 GPU 引擎；同一四卡训练中的多验证点 KL 及恢复仍须独立验收，已有真实 GPU KL 证据仅覆盖各运行的末步。
+[连续验证 CPU 回归](results/native-rollout/periodic-validation-cpu.json)使用真实小型 Qwen2 与 SGD，在 step0/2/4 调用实际 trainer/teacher 评分方法，检查版本隔离、实时权重、固定 bank 与恢复标志。随后[真实四卡周期验收](results/native-rollout/validation-performance/periodic/periodic-gpu.json)完成四次工程更新：step2、step4 各评估六题×16，分别覆盖 577,796、591,509 个主响应位置，另各评估同一固定 bank。step2 评分后继续完成 step3/4 更新，teacher 在共同 bank 上的归一化熵逐响应差为零，student 的 bank KL 随更新改变；两轮来源、全位置和 W&B 精确 history 行均核对通过。这证明所测配置下的中间验证与恢复，不替代五十步质量对照或八卡测试。
+
+采集周期运行时，`collect_native_acceptance.py --validation-interval 2` 绑定每轮准确率和对应 student 版本；`collect_validation_kl.py --validation-step 2 --native-result <原生验收目录>` 可独立归档中间报告，不改写最终版本。`verify_wandb_math.py` 可重复提供 `--kl-report`，逐轮核对同一 step 的 history，避免用最终 summary 代替中间指标。
 
 ## 复用准确率响应的评分流程
 

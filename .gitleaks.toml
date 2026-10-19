@@ -56,6 +56,28 @@ regexTarget = "line"
 paths = ['''^docs/experiment/results/native-rollout/validation-kl-long/kl-collection\.json$''']
 regexes = ['''^\s*"[^"]*/runs/native-validation-kl-long-20261019-v2/validation/kl/kl-tokens-step-2\.jsonl"\s*:\s*"[a-f0-9]{64}"\s*,?\s*$''']
 
+# Independently checked against the original step2/4 token JSONL files.
+[[allowlists]]
+description = "Verified response checksums in periodic validation KL metadata"
+condition = "AND"
+regexTarget = "line"
+paths = ['''^docs/experiment/results/native-rollout/validation-performance/periodic/step-(2|4)/(kl-independent-audit|kl-summary)\.json$''']
+regexes = ['''^\s*"tokens_sha256"\s*:\s*"[a-f0-9]{64}"\s*,?\s*$''']
+
+[[allowlists]]
+description = "Verified original token checksum for periodic step2 collection"
+condition = "AND"
+regexTarget = "line"
+paths = ['''^docs/experiment/results/native-rollout/validation-performance/periodic/step-2/kl-collection\.json$''']
+regexes = ['''^\s*"[^" ]*/runs/validation-periodic-fast-20261019-v1/validation/kl/kl-tokens-step-2\.jsonl"\s*:\s*"[a-f0-9]{64}"\s*,?\s*$''']
+
+[[allowlists]]
+description = "Verified original token checksum for periodic step4 collection"
+condition = "AND"
+regexTarget = "line"
+paths = ['''^docs/experiment/results/native-rollout/validation-performance/periodic/step-4/kl-collection\.json$''']
+regexes = ['''^\s*"[^" ]*/runs/validation-periodic-fast-20261019-v1/validation/kl/kl-tokens-step-4\.jsonl"\s*:\s*"[a-f0-9]{64}"\s*,?\s*$''']
+
 # The complete gate independently verifies the same fields against raw bytes.
 [[allowlists]]
 description = "Verified raw-token SHA-256 in complete validation KL audit metadata"
