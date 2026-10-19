@@ -2,7 +2,7 @@
 
 ## 训练源码
 
-One-Shot-OPD[^one-shot] 以本仓根目录为开发根目录，直接维护原有源码。初始快照为 `6b6b1782cc3f04749dd077de19353f839f6bc048`，逐文件 SHA-256 和 Git 文件模式归 [导入清单](provenance/one-shot-opd.json)。[LICENSE](../LICENSE)、[NOTICE](../NOTICE) 保留原样，根 README 保留上游说明并补充本地开发入口；其中 vendored verl 的既有归属继续保留。
+One-Shot-OPD[^one-shot] 以本仓根目录为开发根目录，直接维护原有源码。初始快照为 `6b6b1782cc3f04749dd077de19353f839f6bc048`，逐文件 SHA-256 和 Git 文件模式归 [导入清单](provenance/one-shot-opd.json)。[LICENSE](../LICENSE)、[NOTICE](../NOTICE) 保留原样，根 [README](../README.md) 说明 OPD-State 的算法、实现范围、训练与验证流程；其中 vendored verl 的既有归属继续保留。
 
 初次导入已核验文件内容与模式。源码现在直接位于仓库根目录，后续修改直接提交到 OPD-State；清单只保存导入基线，不限制后续增删和重构。当前仓库保留已有研究和初始化提交历史。
 
