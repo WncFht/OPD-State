@@ -75,18 +75,23 @@ def compose_config(backend, overrides=(), *, repository=None, resolve=True):
     directory = configure(backend, repository=repository)
     with initialize_config_dir(config_dir=str(directory), version_base="1.3"):
         config = compose(config_name="train", overrides=list(overrides))
+    bind_sources(config, backend=backend, repository=directory.parent)
+    if resolve:
+        OmegaConf.resolve(config)
+        validate_config(config, backend=backend)
+    return config
+
+
+def bind_sources(config, *, backend, repository):
     # ConfigStore/resolver registration is process-global. Bind ownership now,
     # including for lazy configs, before another composition selects a backend.
     for key, path in (
         ("backend", Path(backend).resolve()),
-        ("repository", directory.parent),
+        ("repository", Path(repository).resolve()),
     ):
         if Path(config.run[key]).resolve() != path:
             raise ValueError(
                 f"run.{key} is derived from the selected configuration source"
             )
         config.run[key] = str(path)
-    if resolve:
-        OmegaConf.resolve(config)
-        validate_config(config, backend=backend)
     return config

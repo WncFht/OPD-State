@@ -9,6 +9,7 @@ import sys
 import tempfile
 import unittest
 from pathlib import Path
+from unittest.mock import patch
 
 import yaml
 
@@ -34,6 +35,31 @@ class IntegrationTests(unittest.TestCase):
     def git(self, *args, check=True):
         return subprocess.run(
             ["git", *args], cwd=self.root, capture_output=True, text=True, check=check
+        )
+
+    def test_document_scan_prunes_run_snapshots_before_filesystem_access(self):
+        for name in (
+            "docs/readme.md",
+            "runs/snapshot/readme.md",
+            "src/opd_state/integrations/verl/readme.md",
+        ):
+            path = self.root / name
+            path.parent.mkdir(parents=True, exist_ok=True)
+            path.write_text("# Example\n")
+        original = os.scandir
+
+        def scan(path):
+            if Path(path).is_relative_to(self.root / "runs"):
+                raise AssertionError("Ignored run snapshots must not be traversed")
+            return original(path)
+
+        with patch("check_docs.os.scandir", side_effect=scan):
+            paths = {
+                str(p.relative_to(self.root))
+                for p in check_docs.markdown_paths(self.root)
+            }
+        self.assertEqual(
+            paths, {"docs/readme.md", "src/opd_state/integrations/verl/readme.md"}
         )
 
     def run_script(self, name, *args):

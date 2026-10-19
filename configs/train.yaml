@@ -14,6 +14,7 @@ defaults:
   - experiment: math
   - algorithm: sampled_opd
   - training: opd50
+  - override hydra/job_logging: disabled
 hydra:
   searchpath:
     - file://${opd_backend_config:}
@@ -33,5 +34,7 @@ run:
   source_dir: ${run.dir}/source
   prepare_only: false
   wandb_mode: online
+  scratch_root: null
+  cleanup_timeout_seconds: 20
 recipe:
   prepared_manifest: null

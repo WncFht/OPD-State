@@ -34,6 +34,14 @@
       "allow_failure": false
     },
     {
+      "id": "application-tests",
+      "command": ["python3", "-m", "pytest", "tests/application", "-q"],
+      "modes": ["test", "ci"],
+      "needs": [],
+      "timeout": 120,
+      "allow_failure": false
+    },
+    {
       "id": "maintenance-tests",
       "command": [
         "python3",

@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import argparse
+import os
 from pathlib import Path
 from urllib.parse import unquote, urlsplit
 
@@ -24,6 +25,22 @@ IGNORED = {
     ".crossnote",
     "runs",
 }
+
+
+def markdown_paths(root: Path):
+    """Prune run snapshots before traversal, including on shared filesystems."""
+    for directory, children, files in os.walk(root):
+        relative = Path(directory).relative_to(root)
+        children[:] = [
+            name
+            for name in children
+            if name not in IGNORED
+            and not (relative == Path(".") and name in {"data", "eval", "verl"})
+            and not (relative == Path(".agents/notes") and name == "archived")
+        ]
+        for name in files:
+            if name.endswith(".md"):
+                yield Path(directory) / name
 
 
 def check(root: Path) -> list[str]:
@@ -62,7 +79,7 @@ def check(root: Path) -> list[str]:
     parser = MarkdownIt()
     files = 0
     links = 0
-    for path in sorted(root.rglob("*.md")):
+    for path in sorted(markdown_paths(root)):
         relative = path.relative_to(root)
         if relative.parts[0] in {"data", "eval", "verl"}:
             continue
