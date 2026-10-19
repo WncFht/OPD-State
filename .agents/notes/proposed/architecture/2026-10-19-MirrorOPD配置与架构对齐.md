@@ -26,6 +26,8 @@ OPD-State 的生成策略已经统一，但实验配置仍分散在 `math_native
 
 配置身份与源码身份分别计算。运行与审计 CLI 先验证冻结文件的哈希，再切换到对应快照的入口，由该版本解析自己的配置；工作区的新 schema 不先行解释历史 run。版本隔离回归通过 38 项应用测试，已完成的四卡 student run 通过新 CLI 重新审计，结果与原报告一致。
 
+[真实参数 CPU 基线](../../../../docs/provenance/parameter-gradient-cpu-20261019.json)已覆盖本地 1.5B student/teacher 和两条冻结训练轨迹的 15 个有效位置，响应长度分别为 8、7。原生 PPO 与共同 anchor 处的 score reference 在 339 个参数张量、1,777,088,000 个参数元素上得到逐元素相同的梯度；clip 后的一次 AdamW 更新参数与全部优化器状态也逐元素一致，clip 前梯度范数均为 2.602815866。该参照使用 CPU SDPA、FP32 主参数、BF16 前向和 FP32 log-prob 归一化，按普通 sampled 路径保留完整模型输出 head；它不代表生产 FlashAttention CE 或四卡 FSDP 已等价。[复现程序](../../../../benchmarks/parameter_gradient_reference.py)从指定 run 的冻结源码与真实 token 构造对照，保留模型身份、配置身份、评分和逐参数比较；不保存模型 checkpoint。
+
 ### 审计范围与版本
 
 参考 MirrorOPD 的 HEAD 为 `84f5039636ee77a73facc6fdc9a0802e6fecee0f`，工作区存在未提交重构。审计冻结了 242 个相关文件，对配置、前台、数学核心、后端接口、评测及测试中的 34 个关键文件记录了阅读范围与 SHA-256；这些关键文件在冻结后复核未变化。OPD-State 基线为 `cd562f1d896a2e38138e6a2118b19e3a6fa32245`。

@@ -42,6 +42,14 @@
       "allow_failure": false
     },
     {
+      "id": "parameter-reference-tests",
+      "command": ["python3", "-m", "pytest", "tests/benchmarks", "-q"],
+      "modes": ["test", "ci"],
+      "needs": [],
+      "timeout": 120,
+      "allow_failure": false
+    },
+    {
       "id": "maintenance-tests",
       "command": [
         "python3",
