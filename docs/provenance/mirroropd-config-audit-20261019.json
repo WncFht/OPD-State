@@ -1,0 +1,654 @@
+{
+  "schema_version": 1,
+  "scope": "Read-only architecture/configuration audit; CPU composition and anchor-gradient probes; no production migration or GPU run",
+  "opd_state_head": "cd562f1d896a2e38138e6a2118b19e3a6fa32245",
+  "mirroropd": {
+    "head": "84f5039636ee77a73facc6fdc9a0802e6fecee0f",
+    "working_tree_dirty": true,
+    "observed_utc": "2026-10-19T07:01:02.442657+00:00",
+    "snapshot_file_count": 242,
+    "snapshot_manifest_sha256": "75bcb3ae7dee4bc07761afb6dc74c4fd8e82865eaa7bc361894d16ff1ba0ff05",
+    "snapshot_changed_during_copy": [],
+    "reviewed_files_changed_after_snapshot": [],
+    "reviewed_files": {
+      "configs/train.yaml": {
+        "sha256": "21a34877a23b0c784941cd3aea6a10df5b9b89308a69a6f034db4d73d14169d4",
+        "bytes": 1071
+      },
+      "configs/backend/fsdp.yaml": {
+        "sha256": "934dec151591216d98642ba178c863fcbe77274f129bda8db15b07d6e3764898",
+        "bytes": 3787
+      },
+      "configs/training/normal-opd50.yaml": {
+        "sha256": "f6b37bca36f7ad70a362f22baf028690717db2a170c713ca8194d64654d2f94e",
+        "bytes": 1843
+      },
+      "configs/algorithm/on_policy.yaml": {
+        "sha256": "9f2e4986f101b16cb1bf32f25d7abf1176466e89a26c9d900b912061a5e2c160",
+        "bytes": 132
+      },
+      "configs/algorithm/mdpo.yaml": {
+        "sha256": "b0980fa3492e20dac60cdeb14f6fdda20ed68881a3f82b7232e19f1cafd8cdb7",
+        "bytes": 81
+      },
+      "configs/algorithm/bpo.yaml": {
+        "sha256": "89fbcdf02eb48bf051ed27a83a947d0ed6bad66745a8497ca798b36804d69b3d",
+        "bytes": 80
+      },
+      "configs/experiment/math.yaml": {
+        "sha256": "a44715c3826b7f0b991401535f96a4a78fc84ce378840c4782747374b76e1838",
+        "bytes": 47
+      },
+      "configs/experiment/code.yaml": {
+        "sha256": "d2023a34ea177a3552836b68cb0ac6a27958658af4605cb4565b29d56d1e368d",
+        "bytes": 186
+      },
+      "configs/evaluation/math-periodic.yaml": {
+        "sha256": "0b648b5d1a19b53d9af235d7c20065d6796ff4fdc3458e6fc02c56ab97f50b49",
+        "bytes": 225
+      },
+      "configs/evaluation/benchmarks/math.yaml": {
+        "sha256": "ab070f61b9a3595556498db994ac4de5bca41544b036072e039e2bdfcb268df9",
+        "bytes": 681
+      },
+      "configs/evaluation/none.yaml": {
+        "sha256": "71393bed5ba49e20628e2a350515c18b358405625acee45035703f81402c9bf0",
+        "bytes": 26
+      },
+      "recipes/train.py": {
+        "sha256": "a2c2782e379d3fa774a66091932b230663c4b5a945b5ca1987628626b57fd0ef",
+        "bytes": 2447
+      },
+      "recipes/configuration.py": {
+        "sha256": "3eae9b52a9197bbc5ee67bd65d53d6db6e807e677697fe998c46b01c2bdbe7dc",
+        "bytes": 3076
+      },
+      "recipes/application.py": {
+        "sha256": "649458d7f9c9c75e02b19aef676b2e50daca4511b3792a5cbc99c7b0dba41e87",
+        "bytes": 24058
+      },
+      "recipes/inputs.py": {
+        "sha256": "98e69c51ac305b444affaeb340227537e5c6c8e12a94688adbfba138de4ed2c2",
+        "bytes": 5239
+      },
+      "recipes/snapshots.py": {
+        "sha256": "e1dc94bae8322ba786a513721e1ae4248a77cea635c93f25988c599a29fd3599",
+        "bytes": 5017
+      },
+      "recipes/selection.py": {
+        "sha256": "8bb7f2f2fbdc663fb409cb0181425466ff2a38ef45b328792f347d7b29d3d939",
+        "bytes": 9676
+      },
+      "scripts/_training.sh": {
+        "sha256": "3f524ce6451805a56c7d601cd2b3e69e527a92e1d2c91669a1e2332c075903c4",
+        "bytes": 1989
+      },
+      "src/mirroropd/core/config.py": {
+        "sha256": "6abfa0706869bff5764794865ce18bef04e9e1ae58a58ea003b5836ff342b2ce",
+        "bytes": 5781
+      },
+      "src/mirroropd/core/signal.py": {
+        "sha256": "e70d3d82a20e43a71db1e9751ba4ffd0affe0097f5e8a64a06637c0b74342563",
+        "bytes": 631
+      },
+      "src/mirroropd/core/objectives.py": {
+        "sha256": "c57b5c65a4f431bee843dbcc67344e840d7cd03d0da699ed97c295bf2d0cebd5",
+        "bytes": 6639
+      },
+      "src/mirroropd/kernels/scoring.py": {
+        "sha256": "1785170869a5a755d71d70ac5ffefed158caf4d11e306fe5eb6f67ce8b5c85a6",
+        "bytes": 4486
+      },
+      "src/mirroropd/integrations/verl/config.py": {
+        "sha256": "9c4a38b1902869814eb7c9a9b707c121200902c9ee89a6c2817dab46e7a936c7",
+        "bytes": 11282
+      },
+      "src/mirroropd/integrations/verl/adapter.py": {
+        "sha256": "547ee06a28df28da34b815861ef2ab3e72e5531c103eed5ed79e73177dcfaa69",
+        "bytes": 7532
+      },
+      "src/mirroropd/integrations/verl/lifecycle.py": {
+        "sha256": "3fdaaab5c81fdd4aa1bcf80f2e6ba379f1e267e4d9127cd2ff30f2f2305d2a3f",
+        "bytes": 2485
+      },
+      "src/mirroropd/evaluation/config.py": {
+        "sha256": "af05148fa51a3571aae81391429fa3d54f14724e7d67bdd4baa1ba11493cdfc6",
+        "bytes": 17547
+      },
+      "tools/study.py": {
+        "sha256": "16c665bfcfa1b2ee5fdfc5a99d4b19f881e12fede5859923411a2a0e2ffa5ecb",
+        "bytes": 14564
+      },
+      "tools/prepare_backend.py": {
+        "sha256": "6de43b327a11c70a0523a7efc0f8b87f55b173a85dd5c7aae9a6146aeefb595a",
+        "bytes": 3520
+      },
+      "patches/verl/backend.json": {
+        "sha256": "c94fc8cac93ec9e82513235e7f88be780511a029f6c2067333c184b8a046caa7",
+        "bytes": 197
+      },
+      "patches/verl/backend.patch": {
+        "sha256": "30017745edb28759ccd70ffb3d5ad889a64bce91a186f71f852ef73d21ef37bc",
+        "bytes": 75368
+      },
+      "tests/integrations/test_experiment_config.py": {
+        "sha256": "bcd7a57aea93522522b4e7a57fc4e9b3f27401f3d068bb3552a8a624c985a84a",
+        "bytes": 3178
+      },
+      "tests/integrations/test_native_configuration.py": {
+        "sha256": "e50fa51e824600428fe13ff3dd0b00d410a0ce4cc8a7ffc46fb9ad9a66773ad2",
+        "bytes": 10143
+      },
+      "docs/架构.md": {
+        "sha256": "c4d3bdca5a6fb38c96fc61c3ee9f3689254dd76824e7eb00dac1057a3c537525",
+        "bytes": 31063
+      },
+      "docs/实验管理.md": {
+        "sha256": "a63062bec0278d7972628a72d473d9dee39df03459b00fabc7965a57824599c1",
+        "bytes": 16896
+      }
+    }
+  },
+  "composition": {
+    "scope": "CPU-only composition against frozen MirrorOPD working source and installed pinned backend; no model/data preparation or training",
+    "python": "3.12.15 (main, Oct  6 2026, 23:50:18) [GCC 15.3.0]",
+    "cuda_initialized": false,
+    "cases": [
+      {
+        "case": "default",
+        "accepted": true,
+        "objective": {
+          "algorithm": "bpo",
+          "signal": {
+            "kappa": 0.5,
+            "eta": 0.2
+          },
+          "estimator": {
+            "center": "topj_tail",
+            "integration": "sampled",
+            "topj": 16
+          },
+          "diagnostics": "full"
+        },
+        "epochs": 16,
+        "lr": 1e-6,
+        "weight_decay": 0.0,
+        "gradient_clip": 2.0,
+        "parameter_dtype": "fp32",
+        "prompt_cap": 2048,
+        "response_cap": 7168,
+        "context": 35840,
+        "student_path": "/models/DeepSeek-R1-Distill-Qwen-1.5B",
+        "suites": ["validation"],
+        "save_freq": 5,
+        "source_dir": "/audit/run/source"
+      },
+      {
+        "case": "on_policy_only",
+        "accepted": true,
+        "objective": {
+          "algorithm": "on_policy",
+          "signal": {
+            "kappa": 0.5,
+            "eta": 0.2
+          },
+          "estimator": {
+            "center": "topj_tail",
+            "integration": "sampled",
+            "topj": 16
+          },
+          "diagnostics": "full"
+        },
+        "epochs": 1,
+        "lr": 1e-6,
+        "weight_decay": 0.0,
+        "gradient_clip": 2.0,
+        "parameter_dtype": "fp32",
+        "prompt_cap": 2048,
+        "response_cap": 7168,
+        "context": 35840,
+        "student_path": "/models/DeepSeek-R1-Distill-Qwen-1.5B",
+        "suites": ["validation"],
+        "save_freq": 5,
+        "source_dir": "/audit/run/source"
+      },
+      {
+        "case": "normal_opd50",
+        "accepted": true,
+        "objective": {
+          "algorithm": "on_policy",
+          "signal": {
+            "kappa": 0.0,
+            "eta": 1.0
+          },
+          "estimator": {
+            "center": "topj_tail",
+            "integration": "sampled",
+            "topj": 0
+          },
+          "diagnostics": "none"
+        },
+        "epochs": 1,
+        "lr": 1e-6,
+        "weight_decay": 0.0,
+        "gradient_clip": 2.0,
+        "parameter_dtype": "fp32",
+        "prompt_cap": 2048,
+        "response_cap": 7168,
+        "context": 9216,
+        "student_path": "/models/DeepSeek-R1-Distill-Qwen-1.5B",
+        "suites": [],
+        "save_freq": 5,
+        "source_dir": "/audit/run/source"
+      },
+      {
+        "case": "code",
+        "accepted": true,
+        "objective": {
+          "algorithm": "bpo",
+          "signal": {
+            "kappa": 0.5,
+            "eta": 0.2
+          },
+          "estimator": {
+            "center": "topj_tail",
+            "integration": "sampled",
+            "topj": 16
+          },
+          "diagnostics": "full"
+        },
+        "epochs": 16,
+        "lr": 1e-6,
+        "weight_decay": 0.0,
+        "gradient_clip": 2.0,
+        "parameter_dtype": "fp32",
+        "prompt_cap": 4096,
+        "response_cap": 7168,
+        "context": 35840,
+        "student_path": "/models/DeepSeek-R1-Distill-Qwen-1.5B",
+        "suites": ["validation"],
+        "save_freq": 5,
+        "source_dir": "/audit/run/source"
+      },
+      {
+        "case": "if",
+        "accepted": true,
+        "objective": {
+          "algorithm": "bpo",
+          "signal": {
+            "kappa": 0.5,
+            "eta": 0.2
+          },
+          "estimator": {
+            "center": "topj_tail",
+            "integration": "sampled",
+            "topj": 16
+          },
+          "diagnostics": "full"
+        },
+        "epochs": 16,
+        "lr": 1e-6,
+        "weight_decay": 0.0,
+        "gradient_clip": 2.0,
+        "parameter_dtype": "fp32",
+        "prompt_cap": 4096,
+        "response_cap": 7168,
+        "context": 35840,
+        "student_path": "/models/DeepSeek-R1-Distill-Qwen-1.5B",
+        "suites": [],
+        "save_freq": 5,
+        "source_dir": "/audit/run/source"
+      },
+      {
+        "case": "override_lr",
+        "accepted": true,
+        "objective": {
+          "algorithm": "on_policy",
+          "signal": {
+            "kappa": 0.0,
+            "eta": 1.0
+          },
+          "estimator": {
+            "center": "topj_tail",
+            "integration": "sampled",
+            "topj": 0
+          },
+          "diagnostics": "none"
+        },
+        "epochs": 1,
+        "lr": 2e-6,
+        "weight_decay": 0.0,
+        "gradient_clip": 2.0,
+        "parameter_dtype": "fp32",
+        "prompt_cap": 2048,
+        "response_cap": 7168,
+        "context": 9216,
+        "student_path": "/models/DeepSeek-R1-Distill-Qwen-1.5B",
+        "suites": [],
+        "save_freq": 5,
+        "source_dir": "/audit/run/source"
+      },
+      {
+        "case": "path_with_spaces",
+        "accepted": true,
+        "objective": {
+          "algorithm": "bpo",
+          "signal": {
+            "kappa": 0.5,
+            "eta": 0.2
+          },
+          "estimator": {
+            "center": "topj_tail",
+            "integration": "sampled",
+            "topj": 16
+          },
+          "diagnostics": "full"
+        },
+        "epochs": 16,
+        "lr": 1e-6,
+        "weight_decay": 0.0,
+        "gradient_clip": 2.0,
+        "parameter_dtype": "fp32",
+        "prompt_cap": 2048,
+        "response_cap": 7168,
+        "context": 35840,
+        "student_path": "/models with spaces/DeepSeek-R1-Distill-Qwen-1.5B",
+        "suites": ["validation"],
+        "save_freq": 5,
+        "source_dir": "/audit/run/source"
+      },
+      {
+        "case": "live_evaluation",
+        "accepted": true,
+        "objective": {
+          "algorithm": "bpo",
+          "signal": {
+            "kappa": 0.5,
+            "eta": 0.2
+          },
+          "estimator": {
+            "center": "topj_tail",
+            "integration": "sampled",
+            "topj": 16
+          },
+          "diagnostics": "full"
+        },
+        "epochs": 16,
+        "lr": 1e-6,
+        "weight_decay": 0.0,
+        "gradient_clip": 2.0,
+        "parameter_dtype": "fp32",
+        "prompt_cap": 2048,
+        "response_cap": 7168,
+        "context": 35840,
+        "student_path": "/models/DeepSeek-R1-Distill-Qwen-1.5B",
+        "suites": ["validation"],
+        "save_freq": 5,
+        "source_dir": "/audit/run/source"
+      },
+      {
+        "case": "unknown_objective",
+        "rejected": true,
+        "error_type": "ValueError",
+        "reason": "Unknown Objective fields: ['typo']"
+      },
+      {
+        "case": "on_policy_multiple_updates",
+        "rejected": true,
+        "error_type": "ValueError",
+        "reason": "On-policy requires one full-batch update per fresh window"
+      },
+      {
+        "case": "truncated_train",
+        "rejected": true,
+        "error_type": "ValueError",
+        "reason": "Training rollout requires complete untruncated categorical support"
+      },
+      {
+        "case": "retired_final_task",
+        "rejected": true,
+        "error_type": "ValueError",
+        "reason": "Final evaluation is configured with checkpoint suites"
+      },
+      {
+        "case": "legacy_valid_freq",
+        "rejected": true,
+        "error_type": "ValueError",
+        "reason": "Mirror evaluation is configured through suites; native validation must be disabled"
+      },
+      {
+        "case": "unknown_native_field",
+        "rejected": true,
+        "error_type": "ConfigCompositionException",
+        "reason": "Could not override 'actor_rollout_ref.actor.optim.learning_rate'.\nTo append to your config use +actor_rollout_ref.actor.optim.learning_rate=1e-6"
+      }
+    ]
+  },
+  "cli_print": [
+    {
+      "case": "resolved_print",
+      "return_code": 0,
+      "printed_resolved_config": true,
+      "stderr_tail": ""
+    },
+    {
+      "case": "semantic_invalid_print",
+      "return_code": 0,
+      "printed_resolved_config": true,
+      "stderr_tail": ""
+    }
+  ],
+  "opd_composition": [
+    {
+      "case": "baseline",
+      "settings": {
+        "actor_rollout_ref.actor.optim": {
+          "_target_": "verl.workers.config.FSDPOptimizerConfig",
+          "optimizer": "AdamW",
+          "optimizer_impl": "torch.optim",
+          "lr": 1e-6,
+          "lr_warmup_steps_ratio": 0.0,
+          "total_training_steps": -1,
+          "weight_decay": 0.01,
+          "lr_warmup_steps": -1,
+          "betas": [0.9, 0.999],
+          "clip_grad": 1.0,
+          "min_lr_ratio": 0.0,
+          "num_cycles": 0.5,
+          "lr_scheduler_type": "constant",
+          "zero_indexed_step": true,
+          "warmup_style": null,
+          "override_optimizer_config": null
+        },
+        "actor_rollout_ref.actor.fsdp_config": {
+          "_target_": "verl.workers.config.FSDPEngineConfig",
+          "wrap_policy": {
+            "min_num_params": 0
+          },
+          "param_offload": true,
+          "optimizer_offload": true,
+          "offload_policy": false,
+          "reshard_after_forward": true,
+          "fsdp_size": -1,
+          "forward_prefetch": false,
+          "model_dtype": "fp32",
+          "use_orig_params": false,
+          "seed": 42,
+          "full_determinism": false,
+          "ulysses_sequence_parallel_size": 1,
+          "entropy_from_logits_with_chunking": false,
+          "entropy_from_logits_chunk_size": 2048,
+          "use_torch_compile": true,
+          "entropy_checkpointing": false,
+          "pad_to_length": false,
+          "pad_to_length_bucket": 1024,
+          "forward_only": false,
+          "strategy": "fsdp",
+          "dtype": "bfloat16",
+          "qat": {
+            "_target_": "verl.workers.config.QATEngineConfig",
+            "enable": false,
+            "mode": "w4a16",
+            "group_size": 16,
+            "ignore_patterns": ["lm_head", "embed_tokens", "re:.*mlp.gate$"],
+            "activation_observer": "static_minmax",
+            "quantization_config_path": null
+          }
+        },
+        "actor_rollout_ref.rollout.policy": {
+          "kind": "single",
+          "model": "current_student"
+        },
+        "actor_rollout_ref.rollout.generation_eval_max_num_seqs": null,
+        "trainer.validation_kl": {
+          "enabled": false,
+          "balance_records": true,
+          "forward_batch_size": 1,
+          "position_chunk_size": 128,
+          "vocab_chunk_size": 8192,
+          "fixed_prefix_bank": null
+        },
+        "trainer.test_freq": 50,
+        "trainer.save_freq": -1,
+        "data.max_prompt_length": 1024,
+        "data.max_response_length": 4096,
+        "data.train_batch_size": 64
+      }
+    },
+    {
+      "case": "validation_fast",
+      "settings": {
+        "actor_rollout_ref.actor.optim": {
+          "_target_": "verl.workers.config.FSDPOptimizerConfig",
+          "optimizer": "AdamW",
+          "optimizer_impl": "torch.optim",
+          "lr": 1e-6,
+          "lr_warmup_steps_ratio": 0.0,
+          "total_training_steps": -1,
+          "weight_decay": 0.01,
+          "lr_warmup_steps": -1,
+          "betas": [0.9, 0.999],
+          "clip_grad": 1.0,
+          "min_lr_ratio": 0.0,
+          "num_cycles": 0.5,
+          "lr_scheduler_type": "constant",
+          "zero_indexed_step": true,
+          "warmup_style": null,
+          "override_optimizer_config": null
+        },
+        "actor_rollout_ref.actor.fsdp_config": {
+          "_target_": "verl.workers.config.FSDPEngineConfig",
+          "wrap_policy": {
+            "min_num_params": 0
+          },
+          "param_offload": true,
+          "optimizer_offload": true,
+          "offload_policy": false,
+          "reshard_after_forward": true,
+          "fsdp_size": -1,
+          "forward_prefetch": false,
+          "model_dtype": "fp32",
+          "use_orig_params": false,
+          "seed": 42,
+          "full_determinism": false,
+          "ulysses_sequence_parallel_size": 1,
+          "entropy_from_logits_with_chunking": false,
+          "entropy_from_logits_chunk_size": 2048,
+          "use_torch_compile": true,
+          "entropy_checkpointing": false,
+          "pad_to_length": false,
+          "pad_to_length_bucket": 1024,
+          "forward_only": false,
+          "strategy": "fsdp",
+          "dtype": "bfloat16",
+          "qat": {
+            "_target_": "verl.workers.config.QATEngineConfig",
+            "enable": false,
+            "mode": "w4a16",
+            "group_size": 16,
+            "ignore_patterns": ["lm_head", "embed_tokens", "re:.*mlp.gate$"],
+            "activation_observer": "static_minmax",
+            "quantization_config_path": null
+          }
+        },
+        "actor_rollout_ref.rollout.policy": {
+          "kind": "single",
+          "model": "current_student"
+        },
+        "actor_rollout_ref.rollout.generation_eval_max_num_seqs": 128,
+        "trainer.validation_kl": {
+          "enabled": true,
+          "balance_records": true,
+          "forward_batch_size": 1,
+          "position_chunk_size": 1024,
+          "vocab_chunk_size": 151665,
+          "fixed_prefix_bank": null
+        },
+        "trainer.test_freq": 50,
+        "trainer.save_freq": -1,
+        "data.max_prompt_length": 1024,
+        "data.max_response_length": 4096,
+        "data.train_batch_size": 64
+      }
+    }
+  ],
+  "anchor_gradient": {
+    "scope": "Actual PPO and MirrorOPD scoring implementations, CPU FP64 fixed logits; gradient at the common anchor only, not a model/GPU/training equivalence claim",
+    "cuda_initialized": false,
+    "objective": {
+      "algorithm": "on_policy",
+      "signal": {
+        "kappa": 0,
+        "eta": 1
+      },
+      "estimator": {
+        "center": "topj_tail",
+        "integration": "sampled",
+        "topj": 0
+      },
+      "diagnostics": "none"
+    },
+    "cases": [
+      {
+        "seed": 0,
+        "prefix_slots": 6,
+        "valid_prefixes": 5,
+        "vocabulary": 17,
+        "max_logit_gradient_error": 5.551115123125783e-17,
+        "reward_center_abs_max": 0.0,
+        "ppo_surrogate_value": 0.9391749594366658,
+        "mirror_surrogate_value": -1.9870249868329353
+      },
+      {
+        "seed": 1,
+        "prefix_slots": 6,
+        "valid_prefixes": 5,
+        "vocabulary": 17,
+        "max_logit_gradient_error": 1.942890293094024e-16,
+        "reward_center_abs_max": 0.0,
+        "ppo_surrogate_value": 0.22099326459626933,
+        "mirror_surrogate_value": 0.4201690543764462
+      },
+      {
+        "seed": 2,
+        "prefix_slots": 6,
+        "valid_prefixes": 5,
+        "vocabulary": 17,
+        "max_logit_gradient_error": 8.326672684688674e-17,
+        "reward_center_abs_max": 0.0,
+        "ppo_surrogate_value": 0.884348234384921,
+        "mirror_surrogate_value": -1.7369958777093177
+      },
+      {
+        "seed": 3,
+        "prefix_slots": 6,
+        "valid_prefixes": 5,
+        "vocabulary": 17,
+        "max_logit_gradient_error": 1.942890293094024e-16,
+        "reward_center_abs_max": 0.0,
+        "ppo_surrogate_value": 2.037936739745599,
+        "mirror_surrogate_value": -3.7353259290458967
+      }
+    ]
+  }
+}
