@@ -1,0 +1,77 @@
+{
+  "args": {
+    "mode": "verify",
+    "student": "../models/DeepSeek-R1-Distill-Qwen-1.5B",
+    "teacher": "../models/JustRL-DeepSeek-1.5B",
+    "records": "runs/validation-full-fast-20261019-v1/validation/kl/kl-tokens-step-2.jsonl",
+    "length": 4096,
+    "vocab": 151665,
+    "chunk": 512,
+    "loss": "chunked",
+    "strict_bf16": false,
+    "steps": 3,
+    "accumulation": 1,
+    "output": "docs/research/full-vocab/results/verify-final.json"
+  },
+  "rank": 0,
+  "world": 1,
+  "torch": "2.7.1+cu126",
+  "gpu": "NVIDIA H800",
+  "source_sha256": "0c32578e4b05703320505ba4343807522b6c24bc81e0365cd6ce0a189bd5dbbb",
+  "checks": [
+    {
+      "dtype": "torch.float64",
+      "chunk": 1,
+      "loss_error": 2.220446049250313e-16,
+      "gradient_errors": [
+        2.0816681711721685e-17,
+        4.163336342344337e-17
+      ]
+    },
+    {
+      "dtype": "torch.float64",
+      "chunk": 8,
+      "loss_error": 2.220446049250313e-16,
+      "gradient_errors": [
+        6.938893903907228e-18,
+        1.734723475976807e-17
+      ]
+    },
+    {
+      "dtype": "torch.float64",
+      "chunk": 17,
+      "loss_error": 0.0,
+      "gradient_errors": [
+        1.734723475976807e-18,
+        6.938893903907228e-18
+      ]
+    },
+    {
+      "dtype": "torch.float32",
+      "chunk": 1,
+      "loss_error": 1.1920928955078125e-07,
+      "gradient_errors": [
+        9.313225746154785e-09,
+        5.587935447692871e-08
+      ]
+    },
+    {
+      "dtype": "torch.float32",
+      "chunk": 8,
+      "loss_error": 0.0,
+      "gradient_errors": [
+        1.30385160446167e-08,
+        2.9802322387695312e-08
+      ]
+    },
+    {
+      "dtype": "torch.float32",
+      "chunk": 17,
+      "loss_error": 0.0,
+      "gradient_errors": [
+        1.862645149230957e-09,
+        7.450580596923828e-09
+      ]
+    }
+  ]
+}

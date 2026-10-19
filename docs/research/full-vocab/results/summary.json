@@ -1,0 +1,430 @@
+{
+  "date": "2026-10-19",
+  "scope": "GPU training prototype and estimates; no verl or rollout integration",
+  "model_parameters_each": 1777088000,
+  "hidden": 1536,
+  "effective_vocab": 151665,
+  "teacher_bf16_head_gib": 0.4346923828125,
+  "teacher_bf16_weights_gib": 3.310084342956543,
+  "payload_estimates": {
+    "4096": {
+      "global_fp32_teacher_logprobs_gib": 148.1103515625,
+      "global_bf16_teacher_hidden_gib": 0.75,
+      "four_rank_bf16_hidden_gib": 0.1875,
+      "eight_rank_bf16_hidden_gib": 0.09375
+    },
+    "8192": {
+      "global_fp32_teacher_logprobs_gib": 296.220703125,
+      "global_bf16_teacher_hidden_gib": 1.5,
+      "four_rank_bf16_hidden_gib": 0.375,
+      "eight_rank_bf16_hidden_gib": 0.1875
+    }
+  },
+  "static_memory_estimates": {
+    "1.5B_1.5B": {
+      "replicated_static_gib": 29.790759086608887,
+      "ideal_fully_sharded_4_gib": 7.447689771652222,
+      "ideal_fully_sharded_8_gib": 3.723844885826111
+    },
+    "1.5B_7B": {
+      "replicated_static_gib": 39.51919078826904,
+      "ideal_fully_sharded_4_gib": 9.87979769706726,
+      "ideal_fully_sharded_8_gib": 4.93989884853363
+    },
+    "7B_7B": {
+      "replicated_static_gib": 117.3466444015503,
+      "ideal_fully_sharded_4_gib": 29.336661100387573,
+      "ideal_fully_sharded_8_gib": 14.668330550193787
+    },
+    "1.5B_32B": {
+      "replicated_static_gib": 86.08531951904297,
+      "ideal_fully_sharded_4_gib": 21.521329879760742,
+      "ideal_fully_sharded_8_gib": 10.760664939880371
+    }
+  },
+  "static_memory_formula": "(16 * student_params + 2 * teacher_params) / DP; excludes activation, gather, workspace, runtime, KV",
+  "training": {
+    "train-4gpu-b64-4096": {
+      "ranks": 4,
+      "input_sha256": "0bc2b70b04f744bbd829d269c33031c844c987a2b83ed7934d95092650978f70",
+      "response_tokens": 254101,
+      "steady_seconds": [
+        5.592779032886028,
+        5.7079546600580215
+      ],
+      "median_seconds": 5.650366846472025,
+      "response_tokens_per_second": 44970.70843438343,
+      "peak_allocated_gib": 42.782750606536865,
+      "peak_reserved_gib": 46.37109375,
+      "rank_parameter_sample_max_difference": 0.0,
+      "teacher_has_gradient": false,
+      "eight_gpu_seconds_model": [
+        2.8251834232360125,
+        3.76691123098135
+      ],
+      "eight_gpu_assumption": "same workload, 1.5x to 2x speedup; not measured"
+    },
+    "train-4gpu-b64-4096-dense": {
+      "ranks": 4,
+      "input_sha256": "0bc2b70b04f744bbd829d269c33031c844c987a2b83ed7934d95092650978f70",
+      "response_tokens": 254101,
+      "steady_seconds": [
+        5.3428681418299675,
+        5.493329726159573
+      ],
+      "median_seconds": 5.41809893399477,
+      "response_tokens_per_second": 46898.552997195104,
+      "peak_allocated_gib": 53.9812707901001,
+      "peak_reserved_gib": 64.107421875,
+      "rank_parameter_sample_max_difference": 0.0,
+      "teacher_has_gradient": false,
+      "eight_gpu_seconds_model": [
+        2.709049466997385,
+        3.6120659559965134
+      ],
+      "eight_gpu_assumption": "same workload, 1.5x to 2x speedup; not measured"
+    },
+    "train-4gpu-b64-8192": {
+      "ranks": 4,
+      "input_sha256": "92854010d2e8e6b2394c6615aa5bd207ac7ded1fe77320ed2cdccefacd4697ad",
+      "response_tokens": 516542,
+      "steady_seconds": [
+        10.78441932797432,
+        10.961451642215252
+      ],
+      "median_seconds": 10.872935485094786,
+      "response_tokens_per_second": 47507.133718222096,
+      "peak_allocated_gib": 43.55303335189819,
+      "peak_reserved_gib": 46.873046875,
+      "rank_parameter_sample_max_difference": 0.0,
+      "teacher_has_gradient": false,
+      "eight_gpu_seconds_model": [
+        5.436467742547393,
+        7.248623656729857
+      ],
+      "eight_gpu_assumption": "same workload, 1.5x to 2x speedup; not measured"
+    },
+    "train-4gpu-b64-8192-strict": {
+      "ranks": 4,
+      "input_sha256": "92854010d2e8e6b2394c6615aa5bd207ac7ded1fe77320ed2cdccefacd4697ad",
+      "response_tokens": 516542,
+      "steady_seconds": [
+        10.850969567894936,
+        10.998077318072319
+      ],
+      "median_seconds": 10.924523442983627,
+      "response_tokens_per_second": 47282.79477781282,
+      "peak_allocated_gib": 43.55650854110718,
+      "peak_reserved_gib": 46.791015625,
+      "rank_parameter_sample_max_difference": 0.0,
+      "teacher_has_gradient": false,
+      "eight_gpu_seconds_model": [
+        5.462261721491814,
+        7.283015628655751
+      ],
+      "eight_gpu_assumption": "same workload, 1.5x to 2x speedup; not measured"
+    }
+  },
+  "historical_sampled_training_steps_2_to_49_medians": {
+    "source/output_tokens": 247806.0,
+    "timing_s/native_generate": 16.547750413417816,
+    "timing_s/native_score_and_pack": 0.7444881722331047,
+    "timing_s/old_log_prob": 1.9193852245807648,
+    "timing_s/opd_teacher": 1.9575129970908165,
+    "timing_s/update_actor": 4.7643703036010265,
+    "timing_s/update_weights": 2.2867030575871468,
+    "timing_s/step": 28.531055588275194
+  },
+  "sources": [
+    {
+      "name": "nemo",
+      "repository": "NVIDIA-NeMo/RL",
+      "commit": "e12d18ba8e115fdcb957329740dae1f12864cb53",
+      "files": [
+        {
+          "path": "docs/about/algorithms/on-policy-distillation.md",
+          "sha256": "060aeb1cb6cb459c1aa73b377c5dd9e8e57e0da98b491a8b60c27b389288700a"
+        },
+        {
+          "path": "docs/guides/xtoken-off-policy-distillation.md",
+          "sha256": "6fbf39ad3c4a85842f038d2e2251d52d6d2f7b717d499dc06f5b90f6f3b6f843"
+        },
+        {
+          "path": "examples/configs/distillation_math.yaml",
+          "sha256": "3b714e1548ea919faa06154ef3e53e138729caa1d60ae8c063cfe823f698c675"
+        },
+        {
+          "path": "examples/configs/distillation_math_megatron.yaml",
+          "sha256": "3160abe3291438fed47039a8dcdf7890f23bdb56b63e4bc56de025fb0ec10e12"
+        },
+        {
+          "path": "examples/configs/recipes/llm/distillation-nano3-30ba3b-4n4g-megatron-qa-nvfp4-modelopt-spec.yaml",
+          "sha256": "579e71768049051f992c69c491974c57a42b2f7ebabf2410f06c2844ed8fa897"
+        },
+        {
+          "path": "examples/configs/recipes/llm/distillation-qwen3-1.7b-1n8g-megatron-qa-nvfp4.yaml",
+          "sha256": "0bb88838db3bef69369a5b7b9ea940fca04b590e88cfad2b782fa01f58f18a2c"
+        },
+        {
+          "path": "examples/configs/recipes/llm/distillation-qwen3-32b-to-1.7b-base-1n4g-automodel.v1.yaml",
+          "sha256": "df7c02387f49e8f4f27d1de3e30715991d0124b93a4122856ddf801d44e1d170"
+        },
+        {
+          "path": "examples/configs/recipes/llm/distillation-qwen3-32b-to-1.7b-base-1n4g-megatron-tp1pp2cp2-pack.yaml",
+          "sha256": "6794b6408c75d0d9f250e484ac880548979f1815a59c9c891a72c0b12bbd0e53"
+        },
+        {
+          "path": "examples/configs/recipes/llm/distillation-qwen3-32b-to-1.7b-base-1n8g-automodel.v1.yaml",
+          "sha256": "2aedb62c9295c7260cd3b0b99c3b28e265142bef8414b0f7496c4efbc03fe045"
+        },
+        {
+          "path": "examples/configs/recipes/llm/distillation-qwen3-32b-to-1.7b-base-1n8g-megatron-tp2pp2cp2-pack.yaml",
+          "sha256": "7977deeb8614d41e3429902f045600d18f1e768d3a66b1ff0ef17b354a9b229e"
+        },
+        {
+          "path": "examples/configs/recipes/llm/distillation-qwen3-32b-to-4b-base-1n8g-automodel-tp2-dynamicbatch.v1.yaml",
+          "sha256": "add17122635819f7de43f6433d93e8c2ebe0cf9fca84fd38c737036219d6f5de"
+        },
+        {
+          "path": "examples/configs/recipes/llm/distillation-qwen3-32b-to-4b-base-2n4g-automodel-tp2cp2-long.v1.yaml",
+          "sha256": "d6ec8f751b427e17d114d9138743dc11af0a34be6d2b2ac402068e42a0bf6244"
+        },
+        {
+          "path": "examples/configs/recipes/llm/distillation-qwen3-32b-to-4b-base-2n8g-automodel-tp2-seqpack.v1.yaml",
+          "sha256": "af6530411ffafd5b2bf673fcc04cc6e6f04b334a652f5b9d0b168dfbc1464ddf"
+        },
+        {
+          "path": "examples/configs/recipes/llm/distillation-qwen3-32b-to-4b-base-2n8g-automodel-tp2cp2-long.v1.yaml",
+          "sha256": "7f66e5f9ec61352247210a7574fdaccd991c5a45e68c276bc62c0058b4bca456"
+        },
+        {
+          "path": "examples/configs/recipes/llm/distillation-qwen3-32b-to-4b-base-2n8g-automodel-tp8-noncolocated.v1.yaml",
+          "sha256": "497d3a62991eae876a5aa7de37833c500277e86c35ddb8848fb050249a9ed62b"
+        },
+        {
+          "path": "examples/configs/recipes/llm/distillation-xtoken-off-policy-multiteacher-qwen3-4b-llama3.2-3b-to-llama3.2-1b-1n8g-automodel-tp4cp2.yaml",
+          "sha256": "e404a1911c878be2c560262cebaff86e0acddd60ff8b047987f4a6fc9a9990f7"
+        },
+        {
+          "path": "examples/configs/recipes/llm/distillation-xtoken-off-policy-qwen3-4b-to-llama3.2-1b-1n8g-automodel-tp4cp2.yaml",
+          "sha256": "a7c9155b7cbfbfaff30e304fd16178f801f506e41fd0ad60e373402f9903f21d"
+        },
+        {
+          "path": "examples/configs/recipes/llm/ppo-deepseek-r1-distill-qwen-7b-8n4g-megatron-noncolocated-async-single-controller.yaml",
+          "sha256": "228754144afe862e759d34a3b55a01de02ac234b2829371b75bcd3ea5ea9af5c"
+        },
+        {
+          "path": "examples/configs/xtoken_multiteacher_off_policy_distillation.yaml",
+          "sha256": "c0a05ba207f85a30c88955db0ef73194ccb00cc20b929782e91446808943b07c"
+        },
+        {
+          "path": "examples/configs/xtoken_off_policy_distillation.yaml",
+          "sha256": "9cd47c1702dfe122ea3d332dba712a0bc1332d466636cc4138f0dfe623b97923"
+        },
+        {
+          "path": "examples/modelopt/qa_distillation_math_megatron.yaml",
+          "sha256": "370456f63645e3c3a62f5de1922691f9e34e66b27f9b366fc0e54aa368322012"
+        },
+        {
+          "path": "examples/modelopt/qa_distillation_nano3_megatron.yaml",
+          "sha256": "aa86fbeb66574ee8abc68960e4db8951e533bc93dd6fa4e6557a070a0c6a486e"
+        },
+        {
+          "path": "examples/nemo_gym/distillation_qwen3_0_6b.yaml",
+          "sha256": "5e5c65b8b2cc150e49f09d217523f16e2ba79f024efd52e718d503936e117328"
+        },
+        {
+          "path": "examples/nemo_gym/run_distillation_nemo_gym.py",
+          "sha256": "0ef7227aac493c652ae0c695fe948025240cca0fcfb12faa2bcc8d81989898cb"
+        },
+        {
+          "path": "examples/run_distillation.py",
+          "sha256": "ea84e2982c3b2551570640ca36d7a183cbf49ed8a2621c8eeea131b3144141c4"
+        },
+        {
+          "path": "examples/run_xtoken_off_policy_distillation.py",
+          "sha256": "b6da23244fb3c9d51a034a5a17e954d11674c535e4eeedc4ffeecc32aadfd665"
+        },
+        {
+          "path": "nemo_rl/algorithms/distillation.py",
+          "sha256": "3e1dd730fbfe0a3ffa3c0399c788fb7b926804859381be7f62089facb6747d16"
+        },
+        {
+          "path": "nemo_rl/algorithms/loss/interfaces.py",
+          "sha256": "fddfbcf4ac6559b0e4cc0be2a16978096345581a8b1f575e6e4485b179325c8c"
+        },
+        {
+          "path": "nemo_rl/algorithms/loss/loss_functions.py",
+          "sha256": "fb89991e93d9dc0a4599b856881b8305c8111d3d3d465ae980d66a5ac8977722"
+        },
+        {
+          "path": "nemo_rl/algorithms/xtoken_off_policy_distillation.py",
+          "sha256": "d38784904a4238de5ebba78609b9c8dfecec35962344a70387761641a33f2da0"
+        },
+        {
+          "path": "nemo_rl/distributed/model_utils.py",
+          "sha256": "e13317ac176417bb20da15484c0fd38fd426f1f5f2c900d41ee535fbc143fecd"
+        },
+        {
+          "path": "tests/unit/algorithms/test_distillation.py",
+          "sha256": "40a840f57ce1372946d4c405b58940264b68e595620ff8db1183723d6adb0e89"
+        },
+        {
+          "path": "tests/unit/algorithms/x_token/test_xtoken_off_policy_distillation.py",
+          "sha256": "33887a9402d58f2207b0a37f1c335c157b0541b625a3b2e6b5a4358394886f0b"
+        },
+        {
+          "path": "tests/unit/reference_configs/distillation_math.yaml",
+          "sha256": "825f91c4e9cf1280fd9492f4e90544ea30a47430f9cd81d269e63aedc7b5c68e"
+        }
+      ]
+    },
+    {
+      "name": "trl",
+      "repository": "huggingface/trl",
+      "commit": "c9796414a125d88705c8fe573c290742a0801967",
+      "files": [
+        {
+          "path": "trl/kernels/chunked_divergence.py",
+          "sha256": "362fa783aeda8799582bfa88db8d24157b7f25084fe10cc88f170ffb3095706c"
+        }
+      ]
+    },
+    {
+      "name": "nitrobrew",
+      "repository": "tilde-research/nitrobrew-release",
+      "commit": "17f6f16b7451929209ac495c6b0ea0fcc4d0cedc",
+      "files": [
+        {
+          "path": "nitrobrew.py",
+          "sha256": "17297e0ac24c8f85a4448504bbdf0abb5951e12af509847ef7a07a2e9e003380"
+        }
+      ]
+    },
+    {
+      "name": "liger",
+      "repository": "linkedin/Liger-Kernel",
+      "commit": "ff8ce5857420cee06865f40ffa8a60309bf2b458",
+      "files": [
+        {
+          "path": "src/liger_kernel/chunked_loss/fused_linear_distillation.py",
+          "sha256": "47af4a1b775387fafd90c14542494a7376c14162f932efe1585a0db1f92069d8"
+        },
+        {
+          "path": "src/liger_kernel/chunked_loss/jsd_loss.py",
+          "sha256": "3492a627bebffa423cef96640b88507c2e2702f3cd0a3e19b0dc8336c7c3ef89"
+        }
+      ]
+    },
+    {
+      "name": "tilekernels",
+      "repository": "deepseek-ai/TileKernels",
+      "commit": "c1cf914a82e6901c679445f872051ce44ac2cc63",
+      "files": []
+    }
+  ],
+  "artifacts": [
+    {
+      "path": "docs/research/full-vocab/results/benchmark-source-cce7b5ba2490.py.gz",
+      "sha256": "b05b56a53bbccbf80c9675a5e647851fb993ce8e7898d20ae06799e2f3b087ea"
+    },
+    {
+      "path": "docs/research/full-vocab/results/head-4096-cache-disabled.json",
+      "sha256": "ccd1a307998661933f3632ba321d9477c451c875a88feea3ed5a6ab22e3a7a37"
+    },
+    {
+      "path": "docs/research/full-vocab/results/head-4096-strict-bf16.json",
+      "sha256": "c80ca27eaad3ce1be5eebfb93044cadfe9cace333010250749dcd77431a8bbdb"
+    },
+    {
+      "path": "docs/research/full-vocab/results/head-4096.json",
+      "sha256": "45ba425752f0cae730a4139fc34c2be30b64e610221cce126f944026ecaba187"
+    },
+    {
+      "path": "docs/research/full-vocab/results/train-1gpu-b4-4096.json",
+      "sha256": "269257f6123a8233092e6ac38c61dc9b5d020971b3244f519f9a77f5a438749d"
+    },
+    {
+      "path": "docs/research/full-vocab/results/train-4gpu-b64-4096-dense-rank0.json",
+      "sha256": "2605d7e1b99a4bf68c9e45c0f81c796c3980252db9e7d5c334706fd572647ad5"
+    },
+    {
+      "path": "docs/research/full-vocab/results/train-4gpu-b64-4096-dense-rank1.json",
+      "sha256": "a7161943a264acfd398415093698b06039a7286a181bae3d04170743c635db73"
+    },
+    {
+      "path": "docs/research/full-vocab/results/train-4gpu-b64-4096-dense-rank2.json",
+      "sha256": "065d14d1e5949d669bbc7ce56012d9b2d3c15376cc7d88a2e5e1b137f638e050"
+    },
+    {
+      "path": "docs/research/full-vocab/results/train-4gpu-b64-4096-dense-rank3.json",
+      "sha256": "8e902601652bae00326023278cceb312fa8cee6cdef9ce2361156af079d3fef7"
+    },
+    {
+      "path": "docs/research/full-vocab/results/train-4gpu-b64-4096-rank0.json",
+      "sha256": "b850974f03bf8a01f56decb7fe9b368b23c3d4632c1c2645b97c9707efe3488d"
+    },
+    {
+      "path": "docs/research/full-vocab/results/train-4gpu-b64-4096-rank1.json",
+      "sha256": "f267d56c838d9fd3530e61401230ec0c94ea8ff87813b2e83aaf24e0f7cc0f3b"
+    },
+    {
+      "path": "docs/research/full-vocab/results/train-4gpu-b64-4096-rank2.json",
+      "sha256": "6447c60659d852ae999f992515d82349d6e9091c7d78dacb47027834556d7334"
+    },
+    {
+      "path": "docs/research/full-vocab/results/train-4gpu-b64-4096-rank3.json",
+      "sha256": "000d83f73863968b686213286700dfdb0ee322aeefd67649a4e152c7bff50e98"
+    },
+    {
+      "path": "docs/research/full-vocab/results/train-4gpu-b64-8192-rank0.json",
+      "sha256": "f92d56d362a08dbc122d071ea2d5185160cabbc79ea4263a6fb38d7b1dff7a07"
+    },
+    {
+      "path": "docs/research/full-vocab/results/train-4gpu-b64-8192-rank1.json",
+      "sha256": "6d91025eae8eaff199c78c0ced9c3f765036b2ac11fe48b06874b9940ad2b4d1"
+    },
+    {
+      "path": "docs/research/full-vocab/results/train-4gpu-b64-8192-rank2.json",
+      "sha256": "574d95be8d489b3e9ecbe40eb59f5e883005e0475341fd2b17fda882b11b429d"
+    },
+    {
+      "path": "docs/research/full-vocab/results/train-4gpu-b64-8192-rank3.json",
+      "sha256": "edf1ba98509becdaba8f06de2c6ae2e2f8e74fce89613a32255c2ddb0b5169d7"
+    },
+    {
+      "path": "docs/research/full-vocab/results/train-4gpu-b64-8192-strict-rank0.json",
+      "sha256": "ed2e89b0f15de901e3f9898ff4b16ee52a0831e43b33c1d4a19ff3ac5e48e35b"
+    },
+    {
+      "path": "docs/research/full-vocab/results/train-4gpu-b64-8192-strict-rank1.json",
+      "sha256": "d864b9cbc273f1b4f50b90149de12f4e49437510bda204d8cdd2ee60b7f0654d"
+    },
+    {
+      "path": "docs/research/full-vocab/results/train-4gpu-b64-8192-strict-rank2.json",
+      "sha256": "e4510099bf138df06353e5894188738906cdbf83029afe2c0f082d0d23dfe685"
+    },
+    {
+      "path": "docs/research/full-vocab/results/train-4gpu-b64-8192-strict-rank3.json",
+      "sha256": "ff5674e5c7b8f85e916a8808980c30a2a5fedfba46db751326873da9b4530198"
+    },
+    {
+      "path": "docs/research/full-vocab/results/verify-final.json",
+      "sha256": "ff44d5351e5cc1d48dea50d6b36a9d3a031f6578669819b0edd711307623af25"
+    },
+    {
+      "path": "docs/research/full-vocab/results/verify.json",
+      "sha256": "fa3dd76eb09e2b2226d4b18b33d23f96cf15ff452ff0c5eabb0efe9619a8d47b"
+    }
+  ],
+  "delivery_sources": [
+    {
+      "path": "docs/research/full-vocab/experiments/benchmark_full_vocab.py",
+      "sha256": "0c32578e4b05703320505ba4343807522b6c24bc81e0365cd6ce0a189bd5dbbb"
+    },
+    {
+      "path": "docs/research/full-vocab/experiments/summarize.py",
+      "sha256": "cb8abdeecc6a4ed34653c39bde237443fd8bdae32dce410dc744f04fb75132b0"
+    }
+  ]
+}

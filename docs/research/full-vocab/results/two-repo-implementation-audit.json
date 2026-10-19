@@ -1,0 +1,140 @@
+{
+  "date": "2026-10-19",
+  "scope": "Working-tree implementation audit and design; no production algorithm changes",
+  "repositories": {
+    "OPD-State": {
+      "head": "96a9bd5d0b36f58ed51af9cf75c31b90218f5019",
+      "working_tree_dirty": true,
+      "files": [
+        {
+          "path": "src/opd_state/core/config.py",
+          "sha256": "df810d437ab76e7fb164ed3e258f22c22b31392d9c38ee2fdc860c7454487590"
+        },
+        {
+          "path": "src/opd_state/integrations/verl/configuration.py",
+          "sha256": "ebecf81ed06b4f91e7aac466bbfd7c9de3019bb01be20d63a161b4252dc19b1a"
+        },
+        {
+          "path": "configs/algorithm/sampled_opd.yaml",
+          "sha256": "2ab75491f92a679f6c632eaf333154d6d849c97c8d8e34a6caa8e850b894fc74"
+        },
+        {
+          "path": "verl/verl/workers/fsdp_teacher_worker.py",
+          "sha256": "3a118c8523573e47220d8af526d6b532c8160cfc928c127ec6b4b626ef06cd60"
+        },
+        {
+          "path": "verl/verl/trainer/ppo/opd_core_algos.py",
+          "sha256": "afbd08bcf44d9f825024bd1eafeb03895d05ce7b34479163c27741991b777fb1"
+        },
+        {
+          "path": "verl/verl/trainer/ppo/opd_topk_tail.py",
+          "sha256": "99bc0a70a7eeb2efbd2062cc065d266f0c0169b9dab9b2b51ae35949c446111f"
+        },
+        {
+          "path": "verl/verl/trainer/ppo/opd_trainer_mixin.py",
+          "sha256": "6c59d0e78040226bbe6dbfea71ceccaec379c7eb4a6e0c8a4aca835e9e27d718"
+        },
+        {
+          "path": "verl/verl/trainer/ppo/rollout_coordinator.py",
+          "sha256": "08e2d554f0dcc69c4b304add1c4660e755606f21ee684af704e835d75b28dc6d"
+        },
+        {
+          "path": "docs/research/full-vocab/experiments/benchmark_full_vocab.py",
+          "sha256": "0c32578e4b05703320505ba4343807522b6c24bc81e0365cd6ce0a189bd5dbbb"
+        }
+      ]
+    },
+    "MirrorOPD": {
+      "head": "84f5039636ee77a73facc6fdc9a0802e6fecee0f",
+      "working_tree_dirty": true,
+      "files": [
+        {
+          "path": "src/mirroropd/core/config.py",
+          "sha256": "6abfa0706869bff5764794865ce18bef04e9e1ae58a58ea003b5836ff342b2ce"
+        },
+        {
+          "path": "src/mirroropd/core/objectives.py",
+          "sha256": "c57b5c65a4f431bee843dbcc67344e840d7cd03d0da699ed97c295bf2d0cebd5"
+        },
+        {
+          "path": "src/mirroropd/core/cache.py",
+          "sha256": "2141dcd4162dcba30956861752930c531ca4974010ac5519d62cbe49edd6af9a"
+        },
+        {
+          "path": "src/mirroropd/core/layout.py",
+          "sha256": "a7f033ba69468a68865145e3b02e77ee957a5c07b3191ddfb4660256c18f5cf2"
+        },
+        {
+          "path": "src/mirroropd/core/signal.py",
+          "sha256": "e70d3d82a20e43a71db1e9751ba4ffd0affe0097f5e8a64a06637c0b74342563"
+        },
+        {
+          "path": "src/mirroropd/kernels/scoring.py",
+          "sha256": "1785170869a5a755d71d70ac5ffefed158caf4d11e306fe5eb6f67ce8b5c85a6"
+        },
+        {
+          "path": "src/mirroropd/kernels/logits.py",
+          "sha256": "b9017e50604c8c8a708f6ba4830ad13be925550e6af8697362543f03bde913e4"
+        },
+        {
+          "path": "src/mirroropd/kernels/projected.py",
+          "sha256": "2886307ac55efb556940207daefeec993d0804a63cd1c6badf4d2bb1592b5e69"
+        },
+        {
+          "path": "src/mirroropd/kernels/full_bpo.py",
+          "sha256": "dbe38c40f75cc67958c8edcaef28febd07d8cd53b7519ad0378b8e9f527840df"
+        },
+        {
+          "path": "src/mirroropd/kernels/sampled_bpo.py",
+          "sha256": "9de07625054327ba4ae0e88e05a8b30ba5c9dbccfe7d5fb0a350c494ee7eb0e6"
+        },
+        {
+          "path": "src/mirroropd/integrations/verl/projection.py",
+          "sha256": "d63f515dbc66cf2a7adb12d58ea1c767debd3dcdfd67820388e541197005975e"
+        },
+        {
+          "path": "src/mirroropd/integrations/verl/config.py",
+          "sha256": "9c4a38b1902869814eb7c9a9b707c121200902c9ee89a6c2817dab46e7a936c7"
+        },
+        {
+          "path": "src/mirroropd/integrations/verl/codec.py",
+          "sha256": "5ea7065e2ac3efa3ba6d698544002edc67ca227b18ced6438485050dd79f55dd"
+        },
+        {
+          "path": "src/mirroropd/integrations/verl/window.py",
+          "sha256": "9bb6958ebf91e1ecd5c97e59560aacfba879922f2bbe688c51d2899bf4868297"
+        },
+        {
+          "path": "patches/verl/backend.json",
+          "sha256": "c94fc8cac93ec9e82513235e7f88be780511a029f6c2067333c184b8a046caa7"
+        },
+        {
+          "path": "patches/verl/backend.patch",
+          "sha256": "30017745edb28759ccd70ffb3d5ad889a64bce91a186f71f852ef73d21ef37bc"
+        }
+      ]
+    }
+  },
+  "checks": [
+    {
+      "repository": "MirrorOPD",
+      "tests": [
+        "tests/core/test_objectives.py",
+        "tests/core/test_kernels.py"
+      ],
+      "passed": 138,
+      "seconds": 4.69,
+      "device": "CPU"
+    },
+    {
+      "repository": "OPD-State",
+      "tests": [
+        "verl/tests/opd/test_topk_tail_on_cpu.py"
+      ],
+      "passed": 8,
+      "subtests_passed": 9,
+      "seconds": 8.14,
+      "device": "CPU"
+    }
+  ]
+}

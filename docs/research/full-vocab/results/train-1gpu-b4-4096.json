@@ -1,0 +1,75 @@
+{
+  "args": {
+    "mode": "train",
+    "student": "../models/DeepSeek-R1-Distill-Qwen-1.5B",
+    "teacher": "../models/JustRL-DeepSeek-1.5B",
+    "records": "runs/validation-full-fast-20261019-v1/validation/kl/kl-tokens-step-2.jsonl",
+    "length": 4096,
+    "vocab": 151665,
+    "chunk": 512,
+    "steps": 3,
+    "accumulation": 4,
+    "output": "docs/research/full-vocab/results/train-1gpu-b4-4096.json"
+  },
+  "rank": 0,
+  "world": 1,
+  "torch": "2.7.1+cu126",
+  "gpu": "NVIDIA H800",
+  "input_sha256": "c039be93279078d978e0410fa3e70afa8255a58ad3e6d3ab4294b10e2b164ccc",
+  "response_tokens_global": 15924,
+  "parameters": 1777088000,
+  "updates": [
+    {
+      "step": 0,
+      "seconds": 2.018095090985298,
+      "teacher_seconds": 0.5716012865304947,
+      "learner_seconds": 1.3084860518574715,
+      "optimizer_seconds": 0.12921719998121262,
+      "losses": [
+        0.08455531299114227,
+        0.07634180784225464,
+        0.09644574671983719,
+        0.09301898628473282
+      ],
+      "grad_norm": 1.2407623529434204,
+      "peak_allocated_gib": 29.907238006591797,
+      "peak_reserved_gib": 30.73046875
+    },
+    {
+      "step": 1,
+      "seconds": 1.5611934065818787,
+      "teacher_seconds": 0.1576193869113922,
+      "learner_seconds": 1.347053475677967,
+      "optimizer_seconds": 0.050103239715099335,
+      "losses": [
+        0.08452495187520981,
+        0.07613416761159897,
+        0.09611187875270844,
+        0.09268330782651901
+      ],
+      "grad_norm": 1.2378653287887573,
+      "peak_allocated_gib": 36.15184497833252,
+      "peak_reserved_gib": 40.06640625
+    },
+    {
+      "step": 2,
+      "seconds": 1.4151646271348,
+      "teacher_seconds": 0.16025152802467346,
+      "learner_seconds": 1.1989788338541985,
+      "optimizer_seconds": 0.04955386370420456,
+      "losses": [
+        0.08396399021148682,
+        0.07572475075721741,
+        0.0955224335193634,
+        0.09232006222009659
+      ],
+      "grad_norm": 1.2316142320632935,
+      "peak_allocated_gib": 36.1504545211792,
+      "peak_reserved_gib": 40.06640625
+    }
+  ],
+  "optimizer_state_dtypes": [
+    "torch.float32"
+  ],
+  "teacher_has_gradient": false
+}

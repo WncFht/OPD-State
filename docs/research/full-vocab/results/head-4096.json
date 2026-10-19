@@ -1,0 +1,91 @@
+{
+  "args": {
+    "mode": "head",
+    "student": "../models/DeepSeek-R1-Distill-Qwen-1.5B",
+    "teacher": "../models/JustRL-DeepSeek-1.5B",
+    "records": "runs/validation-full-fast-20261019-v1/validation/kl/kl-tokens-step-2.jsonl",
+    "length": 4096,
+    "vocab": 151665,
+    "chunk": 512,
+    "steps": 3,
+    "accumulation": 1,
+    "output": "docs/research/full-vocab/results/head-4096.json"
+  },
+  "rank": 0,
+  "world": 1,
+  "torch": "2.7.1+cu126",
+  "gpu": "NVIDIA H800",
+  "input_sha256": "91330bdcbf51b2f05fafabb66d9bbd388034bd137a3c76f0392bfd19f8396210",
+  "response_tokens_global": 3981,
+  "parameters": 1777088000,
+  "measurements": [
+    {
+      "case": "dense",
+      "seconds": [
+        0.09543025493621826,
+        0.09404050558805466,
+        0.0938877984881401
+      ],
+      "median_seconds": 0.09404050558805466,
+      "loss": 0.08455529808998108,
+      "loss_error": 0.0,
+      "gradient_relative_l2": [
+        0.0,
+        0.0
+      ],
+      "peak_allocated_gib": 15.344379901885986,
+      "peak_reserved_gib": 16.490234375
+    },
+    {
+      "case": "chunk128",
+      "seconds": [
+        0.17509092390537262,
+        0.17488036304712296,
+        0.17447756230831146
+      ],
+      "median_seconds": 0.17488036304712296,
+      "loss": 0.08482398837804794,
+      "loss_error": 0.000268690288066864,
+      "gradient_relative_l2": [
+        0.07516863942146301,
+        0.027841180562973022
+      ],
+      "peak_allocated_gib": 17.489272117614746,
+      "peak_reserved_gib": 18.462890625
+    },
+    {
+      "case": "chunk512",
+      "seconds": [
+        0.11134076863527298,
+        0.110257089138031,
+        0.11032229661941528
+      ],
+      "median_seconds": 0.11032229661941528,
+      "loss": 0.08455531299114227,
+      "loss_error": 1.4901161193847656e-08,
+      "gradient_relative_l2": [
+        0.0030751845333725214,
+        0.0019143406534567475
+      ],
+      "peak_allocated_gib": 7.120904922485352,
+      "peak_reserved_gib": 9.431640625
+    },
+    {
+      "case": "chunk1024",
+      "seconds": [
+        0.1010625809431076,
+        0.10023534297943115,
+        0.09972858428955078
+      ],
+      "median_seconds": 0.10023534297943115,
+      "loss": 0.08455529808998108,
+      "loss_error": 0.0,
+      "gradient_relative_l2": [
+        0.002572226570919156,
+        0.0021024104207754135
+      ],
+      "peak_allocated_gib": 7.119434356689453,
+      "peak_reserved_gib": 8.4921875
+    }
+  ]
+}

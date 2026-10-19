@@ -11,3 +11,5 @@ docs/research/occupancy/results/**
 docs/research/occupancy/figures/**
 docs/provenance/one-shot-opd.json
 runs/
+# Raw experiment evidence is bound by SHA-256 in summary.json.
+docs/research/full-vocab/results/**
