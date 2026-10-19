@@ -258,6 +258,54 @@ class IntegrationTests(unittest.TestCase):
                 digest,
                 1,
             ),
+            (
+                "docs/experiment/results/native-rollout/validation-kl-full/kl-summary.json",
+                "tokens_sha256",
+                digest,
+                0,
+            ),
+            (
+                "docs/experiment/results/native-rollout/validation-kl-full/kl-independent-audit.json",
+                "tokens_sha256",
+                digest,
+                0,
+            ),
+            (
+                "docs/experiment/results/native-rollout/validation-kl-full/kl-summary.json",
+                "api_key",
+                digest,
+                1,
+            ),
+            (
+                "docs/experiment/results/native-rollout/validation-kl-full/kl-summary.json",
+                "tokens_sha256",
+                digest.upper(),
+                1,
+            ),
+            (
+                "docs/experiment/results/native-rollout/validation-kl-full/other.json",
+                "tokens_sha256",
+                digest,
+                1,
+            ),
+            (
+                "docs/experiment/results/native-rollout/validation-kl-full/kl-collection.json",
+                "/fixture/runs/native-validation-kl-full-20261019-v2/validation/kl/kl-tokens-step-2.jsonl",
+                digest,
+                0,
+            ),
+            (
+                "docs/experiment/results/native-rollout/validation-kl-full/kl-collection.json",
+                "/fixture/runs/native-validation-kl-full-20261019-v2/validation/kl/kl-tokens-step-3.jsonl",
+                digest,
+                1,
+            ),
+            (
+                "docs/experiment/results/native-rollout/validation-kl-full/kl-collection.json",
+                "/fixture/runs/unrelated/validation/kl/kl-tokens-step-2.jsonl",
+                digest,
+                1,
+            ),
         ]
         command = [
             str(Path(sys.executable).parent / "gitleaks"),

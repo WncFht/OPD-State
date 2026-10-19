@@ -1,0 +1,98 @@
+{
+  "scope": "Observed final full-gate call-wall accounting and workload; no kernel profiling or causal speed attribution",
+  "source_commit": "b528c6d29425e368ff7add630bfc845f060cb8b8",
+  "run_interval_epoch_s": [1792355363.6260352, 1792368384.840119],
+  "gate_interval_epoch_s": [1792355340.357933, 1792368430.4716244],
+  "gate_elapsed_s": 13090.113691329956,
+  "run_elapsed_s": 13021.214083909988,
+  "phases_s": {
+    "native_validation_generation": 9626.769076511264,
+    "kl_scoring_rpc": 2742.180607624352,
+    "other_validation_residual": 389.6350085064769,
+    "outside_validation_including_gate": 331.52899868786335
+  },
+  "validation_timer_s": 12758.584692642093,
+  "generation": {
+    "batches": 18,
+    "responses": 9120,
+    "response_positions": 56737088,
+    "observed_output_per_s": 5893.679130460819,
+    "recorded_max_num_seqs": 8
+  },
+  "rank_work": [
+    {
+      "rank": 0,
+      "responses": 2325,
+      "response_positions": 12254348,
+      "scored_positions": 12254348,
+      "position_blocks": 96853,
+      "student_forward_seconds": 1592.0323175936937,
+      "teacher_forward_seconds": 468.847893550992,
+      "head_kl_seconds": 670.7567845582962,
+      "seconds": 2736.2553772181273,
+      "head_snapshot_bytes": 466747392,
+      "actor_prepare_seconds": 0.5960414856672287,
+      "actor_release_seconds": 0.11345677822828293
+    },
+    {
+      "rank": 1,
+      "responses": 2325,
+      "response_positions": 12683885,
+      "scored_positions": 12683885,
+      "position_blocks": 100191,
+      "student_forward_seconds": 1563.8285583928227,
+      "teacher_forward_seconds": 468.8978683575988,
+      "head_kl_seconds": 697.8951640427113,
+      "seconds": 2735.4653949663043,
+      "head_snapshot_bytes": 466747392,
+      "actor_prepare_seconds": 0.7341698408126831,
+      "actor_release_seconds": 0.0874376967549324
+    },
+    {
+      "rank": 2,
+      "responses": 2325,
+      "response_positions": 12608296,
+      "scored_positions": 12608296,
+      "position_blocks": 99648,
+      "student_forward_seconds": 1564.5699900090694,
+      "teacher_forward_seconds": 468.88485487550497,
+      "head_kl_seconds": 696.981921620667,
+      "seconds": 2735.119346432388,
+      "head_snapshot_bytes": 466747392,
+      "actor_prepare_seconds": 0.6327427923679352,
+      "actor_release_seconds": 0.05724553018808365
+    },
+    {
+      "rank": 3,
+      "responses": 2325,
+      "response_positions": 19842571,
+      "scored_positions": 19191999,
+      "position_blocks": 151095,
+      "student_forward_seconds": 1212.9603769108653,
+      "teacher_forward_seconds": 469.0826710984111,
+      "head_kl_seconds": 1043.766810722649,
+      "seconds": 2732.3011364117265,
+      "head_snapshot_bytes": 466747392,
+      "actor_prepare_seconds": 0.7096113413572311,
+      "actor_release_seconds": 0.05761934816837311
+    }
+  ],
+  "static_operation_counts": {
+    "position_blocks": 447787,
+    "vocabulary_blocks_per_pass": 19,
+    "tensor_truth_checks_per_position_block": 2,
+    "semantics": "Counts follow frozen code loops and actual evaluated positions; not a CUDA profiler measurement"
+  },
+  "limitations": [
+    "rank wall categories include FSDP communication and waiting; maxima of categories must not be added",
+    "other-validation residual includes all unclassified validation work; tokenizer-length share is not directly measured",
+    "comparison against student50/maxseq64 changes weights, output workload and source; not a controlled concurrency experiment"
+  ],
+  "inputs_sha256": {
+    "runs/native-validation-kl-full-20261019-v2/validation/kl/kl-step-2.json": "8f67b89cfe5d81aebafa64c106cffbfcf3c9bdf20d4714274f3d0c421fa7f374",
+    "runs/native-validation-kl-full-20261019-v2/status.json": "22bf6bf6bb30d1242b6460c0329adcfdd6264f231e9681aa76b865f9ebfbc618",
+    "runs/native-validation-kl-full-20261019-v2-gate.json": "efbdad4710aa433a7e9b49faa06060e598b0a3a43c4e82f5e15816cb70cfd29f",
+    "runs/native-validation-kl-full-20261019-v2/checkpoints/native-trajectories/batches.jsonl": "a3942a6e541facd8037007173777084bc7251ad3db161f14d20730095225ee3d",
+    "docs/experiment/results/native-rollout/validation-kl-full/training-1-2.csv": "94e493d415e6a1c64b4d0742706695946f218bf661322a3918be2a44c00a0219"
+  }
+}

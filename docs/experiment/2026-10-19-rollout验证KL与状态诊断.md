@@ -10,9 +10,9 @@
 | `on_initial_states`    | 固定初始 student 的九十条响应         | 每条至多八个分层位置，带区间权重 | 不同训练变体在相同初始模型状态上的对照  |
 | `on_teacher_states`    | 固定 teacher 的九十条响应             | 同样的位置预算与权重规则         | 不同训练变体在相同 teacher 状态上的对照 |
 
-固定前缀库与六题×16 的真实长响应评分已通过。完整 570×16 工程验收正在运行：两次 B8、64-token 训练更新和十八批准确率生成已完成，当前在最终 student/teacher 评分 RPC，最终 KL 报告尚未写出。该任务验收完整覆盖与资源，不是五十步质量对照。
+固定前缀库、六题×16 长响应及完整 570×16 工程验收均已通过。完整规模的两次 B8、64-token 更新后，对 9,120 条响应的全部 56,737,088 个有效位置评分，并核对四 worker、原始 token、逐题归约与 W&B 最终行。该任务验收完整覆盖与资源，不是五十步质量对照。
 
-五组已结束的正式训练使用冻结 d59a7c3 协议，不含新增验证 KL，且未保存最终权重；只有响应文本无法追溯补算。开发入口的 `trainer.validation_kl.enabled` 当前默认关闭，完整规模验收通过后再为后续新协议启用。
+五组已结束的正式训练使用冻结 d59a7c3 协议，不含新增验证 KL，且未保存最终权重；只有响应文本无法追溯补算。开发入口的 `trainer.validation_kl.enabled` 当前默认关闭，完整规模正确性已通过，吞吐优化仍待受控对照；新实验需显式开启并计入额外评分成本。
 
 ## 复用准确率响应的评分流程
 
@@ -93,7 +93,7 @@ $$
 | 来源       | 最终 student 版本、UID/sample、原始 finish/stop reason              |
 | KL 深度    | 0–255、256–1023、1024–2047、2048 及以上位置分别归约                 |
 
-以上实现与 KL hook 一起接受当前全量验收；冻结 d59a7c3 的已结束五组不追溯增加未保存字段。
+以上实现与 KL hook 已完成全量链路验收；冻结 d59a7c3 的已结束五组不追溯增加未保存字段。
 
 ## 固定前缀对照
 
@@ -124,7 +124,19 @@ $$
 
 [评分资源](results/native-rollout/validation-kl-long/kl-resource-profile.json)记录 wall time **46.749 s**，四卡评分区间各二十次二秒整卡采样，峰值分别为 **10,761/10,363/8,817/8,817 MiB**；每 worker student head 快照 466,747,392 byte。worker 分项包含通信与等待，不是纯 kernel 时间。W&B 1sndtege 的两步训练、唯一末步验证及同一最终行 KL 已[核验](results/native-rollout/validation-kl-long/wandb-verification.json)。它不替代完整规模或五十步质量对照。
 
-完整规模 gate 固定 b528c6d，要求 500/40/30 题×16 的 **9,120 条主响应全部有效位置**，另加 bank 180 条响应；核对最终 student2、四个 worker、输入/token 哈希、题目 bootstrap、W&B 与评分阶段遥测。实现已完成短响应与长响应验收，全量数值、总时间和峰值仍待当前任务返回。B8 工程更新不能当作五十步学习效果。
+## 完整规模验收结果
+
+完整规模 gate 固定 b528c6d，[独立审计](results/native-rollout/validation-kl-full/kl-independent-audit.json)确认 500/40/30 题×16 的 **9,120 条主响应、56,737,088 个有效位置**，另加 bank 180 条响应的 1,440 个位置。主响应长度为 158–31,744、均值 6,221.17。四 worker、输入/token 哈希、题目 bootstrap 与 [W&B azusc532](results/native-rollout/validation-kl-full/wandb-verification.json)最终行一致。
+
+下表三行均评估同一个“两次 online 更新后的 student2”，只有评分前缀来源不同；不是三种来源训练到五十步后的 KL。各指标先在基准内归约，再对三基准等权平均。
+
+| 评分状态来源          | Student→teacher token KL | Teacher→student token KL | Student→teacher 累计量 |
+| --------------------- | -----------------------: | -----------------------: | ---------------------: |
+| 全量验证响应          |                 0.108592 |                 0.136892 |              1,163.635 |
+| 固定初始 student 前缀 |                 0.107984 |                 0.105910 |                397.703 |
+| 固定 teacher 前缀     |                 0.101650 |                 0.090255 |                369.004 |
+
+Token KL 单位为 nat/token，累计量为 nat/response；后两行使用分层权重。原始统计见[KL 摘要](results/native-rollout/validation-kl-full/kl-summary.json)。评分 wall time 为 **2,742.18 s（45.70 min）**，四卡阶段采样峰值为 **10,911/10,931/10,909/10,911 MiB**，每卡 1,242 次采样；完整阶段分解与负载问题归[速度与显存](2026-10-19-rollout速度与显存.md#完整验证-kl-的成本与瓶颈)。正确性通过不代表效率已优化，也不替代五十步研究对照。
 
 ## 已有 state 诊断与限制
 

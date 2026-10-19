@@ -1,0 +1,83 @@
+{
+  "scope": "Real 4-GPU trainer acceptance; short caps do not establish math accuracy",
+  "trainer_gpu_count": 4,
+  "resource_note": null,
+  "frozen_parameter_digests": {},
+  "training": [
+    {
+      "step": 1,
+      "responses": 8,
+      "response_tokens": 512,
+      "generation_identities": [
+        [
+          "current_student",
+          "/mnt/tidalfs-bdsz01/dataset/llm_dataset/zkn_data/fht_data/models/DeepSeek-R1-Distill-Qwen-1.5B",
+          0
+        ]
+      ],
+      "trace_sha256": "528bebfdca60c9424f28696bacd667c840555b344ca2bd8add905361b239c1da"
+    },
+    {
+      "step": 2,
+      "responses": 8,
+      "response_tokens": 512,
+      "generation_identities": [
+        [
+          "current_student",
+          "/mnt/tidalfs-bdsz01/dataset/llm_dataset/zkn_data/fht_data/models/DeepSeek-R1-Distill-Qwen-1.5B",
+          1
+        ]
+      ],
+      "trace_sha256": "11afdba4f3fd8ed4bfe59a8cbce124dcacc28d666886b734c784e4995356364d"
+    }
+  ],
+  "evaluation_responses": 9120,
+  "final_student_version": 2,
+  "evaluation_model_identities": [
+    [
+      "current_student",
+      "/mnt/tidalfs-bdsz01/dataset/llm_dataset/zkn_data/fht_data/models/DeepSeek-R1-Distill-Qwen-1.5B",
+      2
+    ]
+  ],
+  "whole_card_peak_mib": {
+    "0": 51009,
+    "1": 47975,
+    "2": 47975,
+    "3": 47975
+  },
+  "status": {
+    "state": "finished",
+    "started": 1792355363.6260352,
+    "finished": 1792368384.840119,
+    "exit_code": 0,
+    "elapsed_s": 13021.214083909988,
+    "gpu_after": [
+      [0, 3616, 0],
+      [1, 3596, 0],
+      [2, 3616, 0],
+      [3, 467, 0]
+    ],
+    "source_manifest": "/mnt/tidalfs-bdsz01/dataset/llm_dataset/zkn_data/fht_data/OPD-State/runs/native-validation-kl-full-20261019-v2/source-manifest.json"
+  },
+  "native_manifest_sha256": "ce6e65b4e17b2e599690344829f419c8f0cfbc70e24ee65b49ebeb966baed40e",
+  "math_summary": {
+    "run_name": "native-validation-kl-full-20261019-v2",
+    "run_directory": "/mnt/tidalfs-bdsz01/dataset/llm_dataset/zkn_data/fht_data/OPD-State/runs/native-validation-kl-full-20261019-v2",
+    "source_commit": "b528c6d29425e368ff7add630bfc845f060cb8b8",
+    "source_manifest_sha256": "0207b947fb89aba815466e6b2daea6a80b6e4026d3ec0425bdb3345c6b049a71",
+    "source_identity": "runtime_snapshot",
+    "training_steps": 2,
+    "samples_per_question": 16,
+    "full_benchmarks": true,
+    "checkpoints_saved": false,
+    "wandb_url": "https://wandb.ai/wncfht/OPD-State/runs/azusc532",
+    "training_log_sha256": "40a35b2d86de1f0792ced7890ac6d9afecd4423cdc28c6ab6bf2d305c7eae1bc",
+    "training_log_observed_bytes": 360615,
+    "collection_scope": "final_validation",
+    "final_validation_marker_verified": true,
+    "collector_source_sha256": "d55fdb5753b7557a445c8584830f41fdbb3ca450ae53fa888791f2cdf81899fb",
+    "validation_steps": [2]
+  },
+  "collector_source_sha256": "3280385139f4dcb918863be06cdc23f96ad6cc59e1882568d0817a995c73f5cf"
+}
