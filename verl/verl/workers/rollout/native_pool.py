@@ -11,9 +11,9 @@ import asyncio
 import copy
 from dataclasses import asdict
 
-from .native_executor import Completion
+from opd_state.rollout.executor import Completion
 from .placement import place_groups
-from .policy import Fusion, parse_policy
+from opd_state.core.policy import Fusion, parse_policy
 
 
 class NativeModelPool:

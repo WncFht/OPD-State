@@ -34,6 +34,8 @@ from typing import Any, Optional
 
 import torch
 
+from opd_state.kernels.advantages import compute_token_reward_direct_advantage
+
 from verl.trainer.config import AlgoConfig
 from verl.trainer.ppo.core_algos import (
     agg_loss,
@@ -50,32 +52,7 @@ __all__ = [
 ]
 
 
-@register_adv_est("token_reward_direct")
-def compute_token_reward_direct_advantage(
-    token_level_rewards: torch.Tensor,
-    response_mask: torch.Tensor,
-    config: Optional[AlgoConfig] = None,
-    **kwargs,
-) -> tuple[torch.Tensor, torch.Tensor]:
-    """Use the token-level teacher reward directly as the advantage.
-
-    Args:
-        token_level_rewards: ``(bs, response_length)`` for scalar-per-token OPD,
-            or ``(bs, response_length, K)`` when top-K distillation is enabled.
-        response_mask: ``(bs, response_length)``.
-        config: unused; accepted to match the estimator calling convention.
-
-    Returns:
-        ``(advantages, returns)``, both the same shape as ``token_level_rewards``.
-    """
-    with torch.no_grad():
-        mask = response_mask
-        if token_level_rewards.dim() == 3:
-            # top-K rewards are (bs, T, K); broadcast the (bs, T) mask over K.
-            mask = response_mask.unsqueeze(-1)
-        advantages = token_level_rewards * mask
-        returns = advantages.clone()
-    return advantages, returns
+compute_token_reward_direct_advantage = register_adv_est("token_reward_direct")(compute_token_reward_direct_advantage)
 
 
 @register_adv_est("token_reward_direct_plus_grpo")

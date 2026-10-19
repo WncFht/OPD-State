@@ -189,9 +189,9 @@ State 是下一 action 前的完整 prefix；响应长度、精确 prefix 重合
 
 | 组件                                                                           | 职责                                                                 |
 | ------------------------------------------------------------------------------ | -------------------------------------------------------------------- |
-| [validation_kl_runner.py](../../verl/verl/trainer/ppo/validation_kl_runner.py) | 保留 raw token、绑定 bank、休眠引擎、分布式调用、校验版本/顺序与报告 |
-| [workers/validation_kl.py](../../verl/verl/workers/validation_kl.py)           | 相同前缀 causal forward、head capture、全位置覆盖及分块评分          |
-| [validation_kl.py](../../verl/verl/trainer/ppo/validation_kl.py)               | 完整词表双向 KL/entropy 与分层位置抽样                               |
+| [validation_kl_runner.py](../../src/opd_state/integrations/verl/validation.py) | 保留 raw token、绑定 bank、休眠引擎、分布式调用、校验版本/顺序与报告 |
+| [workers/validation_kl.py](../../src/opd_state/kernels/causal_scoring.py)      | 相同前缀 causal forward、head capture、全位置覆盖及分块评分          |
+| [validation_kl.py](../../src/opd_state/kernels/divergence.py)                  | 完整词表双向 KL/entropy 与分层位置抽样                               |
 | [generate_prefix_bank.py](../../eval/generate_prefix_bank.py)                  | 原生 vLLM 生成固定两来源 bank                                        |
 | [audit_validation_kl.py](../../eval/audit_validation_kl.py)                    | 原始 token/准确率绑定、位置与深度覆盖、独立归约和逐题区间            |
 | [run_validation_kl_gate.py](../../eval/run_validation_kl_gate.py)              | 完整规模冻结运行与资源门槛；`--audit-only` 仅重试归档                |

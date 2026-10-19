@@ -51,10 +51,7 @@ def main():
     ).strip()
     if args.source_commit:
         source.mkdir()
-        components = ["verl"]
-        if subprocess.run(["git", "cat-file", "-e", commit + ":src/opd_state"], cwd=root,
-                          stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL).returncode == 0:
-            components.append("src/opd_state")
+        components = ["verl", "src/opd_state"]
         archive = subprocess.Popen(["git", "archive", commit, *components], cwd=root, stdout=subprocess.PIPE)
         subprocess.run(["tar", "-x", "-C", str(source)], stdin=archive.stdout, check=True)
         archive.stdout.close()

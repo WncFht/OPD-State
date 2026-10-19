@@ -4,13 +4,8 @@ import unittest
 
 import torch
 
-from verl.trainer.ppo.opd_topk_tail import (
-    coefficients_and_metrics,
-    packed_response_heads,
-    score_loss,
-    selected_and_tail,
-    summarize_kl,
-)
+from opd_state.kernels.head_tail import coefficients_and_metrics, score_loss, selected_and_tail, summarize_kl
+from opd_state.integrations.verl.layouts import packed_response_heads
 
 
 class TopKTailTests(unittest.TestCase):

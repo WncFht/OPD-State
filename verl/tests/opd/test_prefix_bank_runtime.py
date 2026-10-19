@@ -18,8 +18,8 @@ from omegaconf import OmegaConf
 
 from verl.trainer.ppo.fixed_rollout import digest_file
 from verl.trainer.ppo.prefix_bank import assemble
-from verl.trainer.ppo.validation_kl_runner import load_fixed_bank
-from verl.workers.rollout.native_executor import Request, Segment, Trajectory
+from opd_state.integrations.verl.validation import load_fixed_bank
+from opd_state.rollout.executor import Request, Segment, Trajectory
 from verl.workers.rollout.vllm_rollout.native_server import NativePolicyServerMixin
 
 ROOT = Path(__file__).resolve().parents[3]

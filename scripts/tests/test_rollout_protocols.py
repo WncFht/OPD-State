@@ -12,7 +12,11 @@ ROOT = Path(__file__).resolve().parents[2]
 
 
 def module(name):
-    path = ROOT / f"verl/verl/trainer/ppo/{name}.py"
+    path = ROOT / (
+        "src/opd_state/evaluation/math.py"
+        if name == "math_eval"
+        else f"verl/verl/trainer/ppo/{name}.py"
+    )
     spec = importlib.util.spec_from_file_location(name, path)
     result = importlib.util.module_from_spec(spec)
     spec.loader.exec_module(result)

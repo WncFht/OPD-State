@@ -132,9 +132,6 @@ def main():
     ).strip()
     if not args.plan_only:
         path = "src/opd_state/core/policy.py"
-        if subprocess.run(["git", "cat-file", "-e", source + ":" + path], cwd=ROOT,
-                          stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL).returncode:
-            path = "verl/verl/workers/rollout/policy.py"
         code = subprocess.check_output(["git", "show", source + ":" + path], cwd=ROOT, text=True)
         if "keep_request_boundary" not in code:
             raise ValueError("Selected source predates the same-model request-boundary control")

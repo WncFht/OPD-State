@@ -5,8 +5,8 @@ from __future__ import annotations
 from dataclasses import asdict
 
 from verl.trainer.ppo.fixed_rollout import digest_json
-from verl.trainer.ppo.validation_kl import sample_prefix_positions
-from verl.workers.rollout.policy import stable_seed
+from opd_state.evaluation.prefixes import sample_prefix_positions
+from opd_state.core.policy import stable_seed
 
 ROLES = {"initial_student": "on_initial_states", "teacher": "on_teacher_states"}
 

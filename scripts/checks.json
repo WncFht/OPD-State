@@ -26,6 +26,14 @@
       "allow_failure": false
     },
     {
+      "id": "evaluation-contract-tests",
+      "command": ["python3", "-m", "pytest", "tests/evaluation", "-q"],
+      "modes": ["test", "ci"],
+      "needs": [],
+      "timeout": 120,
+      "allow_failure": false
+    },
+    {
       "id": "configuration-tests",
       "command": ["python3", "-m", "pytest", "tests/configuration", "-q"],
       "modes": ["test", "ci"],

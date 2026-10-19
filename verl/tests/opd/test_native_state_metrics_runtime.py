@@ -8,7 +8,7 @@ import numpy as np
 import torch
 
 from verl import DataProto
-from verl.trainer.ppo.native_state_metrics import summarize_native_states, trajectory_segments
+from opd_state.kernels.state_metrics import summarize_native_states, trajectory_segments
 from verl.trainer.ppo.opd_trainer_mixin import OPDTrainerMixin
 
 

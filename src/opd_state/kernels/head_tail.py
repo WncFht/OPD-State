@@ -1,11 +1,6 @@
 # Copyright 2026 OPD-State contributors
 # SPDX-License-Identifier: Apache-2.0
-"""Full-normalization head enumeration plus an on-policy sampled tail.
-
-The training scalar is a frozen score surrogate, not a KL value. Its gradient
-is unbiased at the fresh student anchor. The separate grouped-tail diagnostic
-is a lower bound; the residual-corrected scalar estimates the full reverse KL.
-"""
+"""Full-normalization head and importance-corrected on-policy tail."""
 
 import torch
 
@@ -34,22 +29,6 @@ def selected_and_tail(logits, k, ids=None, *, include_tail=True, chunk_size=64):
             tail = torch.cat(pieces).reshape(normalizer.shape) - normalizer.detach()
             result["student_tail_log_mass"] = tail
     return result
-
-
-def packed_response_heads(data):
-    """Place cached response head IDs at the preceding predictor positions."""
-    ids = data["student_top_k_ids"]
-    prompt_width = data["prompts"].shape[1]
-    attention = data["attention_mask"]
-    lengths = attention.sum(-1).long()
-    prompts = attention[:, :prompt_width].sum(-1).long()
-    pieces = []
-    for row, (length, prompt) in enumerate(zip(lengths.tolist(), prompts.tolist(), strict=True)):
-        count = length - prompt
-        piece = torch.arange(ids.shape[-1], device=ids.device).expand(length, -1).clone()
-        piece[prompt - 1 : prompt + count - 1] = ids[row, :count]
-        pieces.append(piece)
-    return torch.cat(pieces)
 
 
 def coefficients_and_metrics(
@@ -109,7 +88,9 @@ def coefficients_and_metrics(
         )
         for name, value in zip(names, values, strict=True):
             if not torch.isfinite(value).all():
-                raise FloatingPointError(f"Nonfinite {name}; check teacher support/normalization")
+                raise FloatingPointError(
+                    f"Nonfinite {name}; check teacher support/normalization"
+                )
             stats[name][valid] = value
     return head_coeff.detach(), tail_coeff.detach(), stats
 
@@ -129,7 +110,10 @@ def summarize_kl(stats, mask):
     n = int(valid.sum())
     if not n:
         raise ValueError("KL diagnostics require at least one valid response token")
-    result = {f"opd_alignment/{key}_token_mean": float(value[valid].double().mean()) for key, value in stats.items()}
+    result = {
+        f"opd_alignment/{key}_token_mean": float(value[valid].double().mean())
+        for key, value in stats.items()
+    }
     seq = stats["kl_unbiased"].double().sum(-1)
     result["opd_alignment/kl_unbiased_sequence_mean"] = float(seq.mean())
     result["opd_alignment/kl_unbiased_sequence_se"] = (

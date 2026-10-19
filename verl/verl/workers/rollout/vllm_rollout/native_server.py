@@ -10,7 +10,7 @@ import asyncio
 import time
 from pathlib import Path
 
-from ..lifecycle import GenerationState
+from opd_state.rollout.lifecycle import GenerationState
 
 
 class NativePolicyServerMixin:

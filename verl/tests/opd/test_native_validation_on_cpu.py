@@ -20,8 +20,9 @@ def load(name):
     return module
 
 
-rollout = load("validation_rollout")
-kl = load("validation_kl")
+import opd_state.evaluation.rollout as rollout
+from opd_state.integrations.verl.validation_data import dump_columns
+import opd_state.evaluation.prefixes as kl
 
 
 class ValidationDispatchTests(unittest.TestCase):
@@ -105,7 +106,7 @@ class ValidationAggregationTests(unittest.TestCase):
         metrics = rollout.summarize_rollouts([row], samples_per_question=1)
         self.assertEqual(metrics["validation_rollout/MATH-500/eos_at_cap/count"], 1)
         self.assertEqual(metrics["validation_rollout/MATH-500/response_tokens"], 2)
-        self.assertEqual(rollout.dump_columns([row])["rollout_finish_reason"], ["length"])
+        self.assertEqual(dump_columns([row])["rollout_finish_reason"], ["length"])
 
     def test_benchmark_macro_and_micro_use_rows_and_keep_missing_subgroups_finite(self):
         rows = [self.row([2], uid=str(i)) for i in range(4)]

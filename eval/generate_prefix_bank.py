@@ -106,9 +106,9 @@ def main():
     from verl.trainer.ppo.fixed_rollout import model_signature, tokenizer_signature
     from verl.trainer.ppo.prefix_bank import assemble
     from verl.utils import hf_tokenizer
-    from verl.workers.rollout.native_executor import Request, generate
+    from opd_state.rollout.executor import Request, generate
     from verl.workers.rollout.native_pool import NativeRayBackend
-    from verl.workers.rollout.policy import ModelRef, compile_policy
+    from opd_state.core.policy import ModelRef, compile_policy
     from verl.workers.rollout.replica import RolloutMode
 
     models = prepared["models"]

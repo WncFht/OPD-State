@@ -7,7 +7,8 @@ from unittest.mock import patch
 import torch
 from transformers import Qwen2Config, Qwen2ForCausalLM
 
-from verl.workers.validation_kl import record_fingerprint, score_causal_records, validate_record
+from opd_state.evaluation.records import record_fingerprint, validate_record
+from opd_state.kernels.causal_scoring import score_causal_records
 
 
 class CausalScoringTests(unittest.TestCase):
@@ -109,7 +110,7 @@ class CausalScoringTests(unittest.TestCase):
             with self.assertRaises(ValueError):
                 self.score([self.record()], forward_batch_size=size)
         flags = [(m, m.training) for root in (self.student, self.teacher) for m in root.modules()]
-        with patch("verl.workers.validation_kl.full_vocab_divergences", side_effect=RuntimeError("injected")):
+        with patch("opd_state.kernels.causal_scoring.full_vocab_divergences", side_effect=RuntimeError("injected")):
             with self.assertRaisesRegex(RuntimeError, "injected"):
                 self.score([self.record(), self.record(uid="two")], forward_batch_size=2)
         self.assertEqual(flags, [(m, m.training) for m, _ in flags])
@@ -158,7 +159,7 @@ class CausalScoringTests(unittest.TestCase):
     def test_failure_removes_both_temporary_hooks_and_restores_training_flags(self):
         self.student.train()
         self.teacher.eval()
-        with patch("verl.workers.validation_kl.full_vocab_divergences", side_effect=RuntimeError("injected")):
+        with patch("opd_state.kernels.causal_scoring.full_vocab_divergences", side_effect=RuntimeError("injected")):
             with self.assertRaisesRegex(RuntimeError, "injected"):
                 self.score([self.record()])
         self.assertTrue(self.student.training)

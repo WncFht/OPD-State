@@ -1,0 +1,197 @@
+{
+  "baseline_commit": "e4d18e42aa2049bd05d4787e9fba036d44711804",
+  "definitions": [
+    {
+      "source": "verl/verl/trainer/ppo/math_eval.py",
+      "target": "src/opd_state/evaluation/math.py",
+      "name": "estimate_pass_at_k",
+      "body_sha256": "793a7eef2cc0bfa27f52c2849775cb945df84adf92f37ac86ddcde141ea46655"
+    },
+    {
+      "source": "verl/verl/trainer/ppo/math_eval.py",
+      "target": "src/opd_state/evaluation/math.py",
+      "name": "exact_math_metrics",
+      "body_sha256": "2486dac344cdfbe99619f9b93e37497c851a94c96cacc96d9e44278460ae91a2"
+    },
+    {
+      "source": "verl/verl/trainer/ppo/validation_kl.py",
+      "target": "src/opd_state/evaluation/prefixes.py",
+      "name": "PrefixSample",
+      "body_sha256": "92e280eea8e0cf73529de31260e04bc2f5b91b26c8001719af3e90d5ef8bf0ee"
+    },
+    {
+      "source": "verl/verl/trainer/ppo/validation_kl.py",
+      "target": "src/opd_state/evaluation/prefixes.py",
+      "name": "balanced_record_indices",
+      "body_sha256": "46e7019ad567f0f410bd138fc389f8ef4157d60bba6dc3fa1a095b836c297352"
+    },
+    {
+      "source": "verl/verl/trainer/ppo/validation_kl.py",
+      "target": "src/opd_state/evaluation/prefixes.py",
+      "name": "sample_prefix_positions",
+      "body_sha256": "75073e455b2c0c6b5a467cc6f25367abb52b1b83aeb2df1c6573c3eafd9aa3eb"
+    },
+    {
+      "source": "verl/verl/trainer/ppo/validation_kl.py",
+      "target": "src/opd_state/evaluation/prefixes.py",
+      "name": "estimate_trajectory_statistics",
+      "body_sha256": "71c88066651a28955acd05b7caa581217a03d59353faa6d21014f80e36fe6b2d"
+    },
+    {
+      "source": "verl/verl/trainer/ppo/validation_kl.py",
+      "target": "src/opd_state/kernels/divergence.py",
+      "name": "full_vocab_divergences",
+      "body_sha256": "ac36ed1caec42f5891802ea671ecac9ffc8a35b81149e269e77b21bc44c57162"
+    },
+    {
+      "source": "verl/verl/workers/validation_kl.py",
+      "target": "src/opd_state/core/records.py",
+      "name": "record_fingerprint",
+      "body_sha256": "d6705f8c97ca1bfd59f48f68408a39d5e6e95afce090734a0afd5324c6656ea3"
+    },
+    {
+      "source": "verl/verl/workers/validation_kl.py",
+      "target": "src/opd_state/core/records.py",
+      "name": "validate_record",
+      "body_sha256": "924bd2d83768e019467c3efa89b8faab79253e4bf93129f383592ead7daceee7"
+    },
+    {
+      "source": "verl/verl/workers/validation_kl.py",
+      "target": "src/opd_state/kernels/causal_scoring.py",
+      "name": "_output_head",
+      "body_sha256": "1baeef4c7cd6191e444cd72e829954b60f9d5e9d1bd591d8c3eb49f0e1127971"
+    },
+    {
+      "source": "verl/verl/workers/validation_kl.py",
+      "target": "src/opd_state/kernels/causal_scoring.py",
+      "name": "_head_capture",
+      "body_sha256": "eb906a19f14269b4b46a77ddd5d4ca0b12e6147c0e5e8142e12daf225f3ff364"
+    },
+    {
+      "source": "verl/verl/workers/validation_kl.py",
+      "target": "src/opd_state/kernels/causal_scoring.py",
+      "name": "score_causal_records",
+      "body_sha256": "5846d5a921f6f109eacdb3701ee14d17d74c115928599fd604653e6213a96df6"
+    },
+    {
+      "source": "verl/verl/workers/validation_kl.py",
+      "target": "src/opd_state/kernels/causal_scoring.py",
+      "name": "_score_causal_batches",
+      "body_sha256": "782cd0495afa7236d3cff6e4aaa78b1fc404b6047476ca6cbb9376ec5cad88c7"
+    },
+    {
+      "source": "verl/verl/trainer/ppo/validation_kl_runner.py",
+      "target": "src/opd_state/evaluation/kl_metrics.py",
+      "name": "summarize_kl",
+      "body_sha256": "eb6811f50f4cb6322bf3f1ed708af9e88329b39a48dbaf00d94d2d539c3b46fa"
+    },
+    {
+      "source": "verl/verl/trainer/ppo/validation_kl_runner.py",
+      "target": "src/opd_state/integrations/verl/validation.py",
+      "name": "validate_settings",
+      "body_sha256": "8ae0fb215df7d5803fc253940a3d823c7900db16d0273a4b0ffc3706188f3300"
+    },
+    {
+      "source": "verl/verl/trainer/ppo/validation_kl_runner.py",
+      "target": "src/opd_state/integrations/verl/validation.py",
+      "name": "collect_records",
+      "body_sha256": "3079a668a9f5c55976fec26abaac685bd7b3fac8bdf9a673fb4ffaa97fe88d10"
+    },
+    {
+      "source": "verl/verl/trainer/ppo/validation_kl_runner.py",
+      "target": "src/opd_state/integrations/verl/validation.py",
+      "name": "load_fixed_bank",
+      "body_sha256": "15b1516cff4e7b5dee20431ea295a6d58b368bc4a60afaa029811c7b807f537e"
+    },
+    {
+      "source": "verl/verl/trainer/ppo/validation_kl_runner.py",
+      "target": "src/opd_state/integrations/verl/validation.py",
+      "name": "run_validation_kl",
+      "body_sha256": "620dee4fb1ac5d20d95d1ed8c700319b567de5867f69cdcc6c161c50d063676d"
+    },
+    {
+      "source": "verl/verl/trainer/ppo/opd_topk_tail.py",
+      "target": "src/opd_state/kernels/head_tail.py",
+      "name": "selected_and_tail",
+      "body_sha256": "2cd9e31794ada41020a76578ecba2234950e137b6d8d4655b7d0018048ee2aa6"
+    },
+    {
+      "source": "verl/verl/trainer/ppo/opd_topk_tail.py",
+      "target": "src/opd_state/kernels/head_tail.py",
+      "name": "coefficients_and_metrics",
+      "body_sha256": "3269ff2d6f26c24772458a7618a6102555152acd9026b1ae9a2064763fa6b801"
+    },
+    {
+      "source": "verl/verl/trainer/ppo/opd_topk_tail.py",
+      "target": "src/opd_state/kernels/head_tail.py",
+      "name": "score_loss",
+      "body_sha256": "a8fb5abde61ce013c69eade80c75db6df50d493a497f87f3b095bba348502531"
+    },
+    {
+      "source": "verl/verl/trainer/ppo/opd_topk_tail.py",
+      "target": "src/opd_state/kernels/head_tail.py",
+      "name": "summarize_kl",
+      "body_sha256": "b7e2e115d4489d82e945a9cb8c5017184bcc069dae23d1bea0c5031ed3f0bd16"
+    },
+    {
+      "source": "verl/verl/trainer/ppo/opd_topk_tail.py",
+      "target": "src/opd_state/integrations/verl/layouts.py",
+      "name": "packed_response_heads",
+      "body_sha256": "ee28549762eeacbe97a2a4d3b2f132d19e4eb03d6e99099926dd183c2ef3bf23"
+    },
+    {
+      "source": "verl/verl/trainer/ppo/native_state_metrics.py",
+      "target": "src/opd_state/kernels/state_metrics.py",
+      "name": "trajectory_segments",
+      "body_sha256": "f1b966043b64a8706a93f23e75bb09ca88ded03ad5cd4fbea51e0560ca1e6ace"
+    },
+    {
+      "source": "verl/verl/trainer/ppo/native_state_metrics.py",
+      "target": "src/opd_state/kernels/state_metrics.py",
+      "name": "summarize_native_states",
+      "body_sha256": "7e00d15ab705a014280d443c5ff305f55c27ddac7bf0a454ed67d8f42158d248"
+    },
+    {
+      "source": "verl/verl/trainer/ppo/opd_core_algos.py",
+      "target": "src/opd_state/kernels/advantages.py",
+      "name": "compute_token_reward_direct_advantage",
+      "body_sha256": "53d57451ef65493337c58a77cf463dd9b45a8d572e74933ddb4efb946faf7a81"
+    },
+    {
+      "source": "verl/verl/trainer/ppo/validation_rollout.py",
+      "target": "src/opd_state/evaluation/rollout.py",
+      "name": "rollout_record",
+      "body_sha256": "ed2c94cff59d648d8de272b94e9b4bf24dd5a446b5c8033240fafeefc7decd64"
+    },
+    {
+      "source": "verl/verl/trainer/ppo/validation_rollout.py",
+      "target": "src/opd_state/evaluation/rollout.py",
+      "name": "_quantile",
+      "body_sha256": "6dce59c10dbc2179a07d16e66b2c1ad23cfe6abbd77a1d278950e22627518a1d"
+    },
+    {
+      "source": "verl/verl/trainer/ppo/validation_rollout.py",
+      "target": "src/opd_state/evaluation/rollout.py",
+      "name": "summarize_rollouts",
+      "body_sha256": "da0ad45feac4e4b6149d8429028bb1ec1b30a83b9d9d19138f7f9a5ce428b2d2"
+    },
+    {
+      "source": "verl/verl/trainer/ppo/validation_rollout.py",
+      "target": "src/opd_state/integrations/verl/validation_data.py",
+      "name": "decode_effective_tokens",
+      "body_sha256": "94a5efb1631a2664025428ae733381d153575020b41a4dfb51e7f991d825271c"
+    },
+    {
+      "source": "verl/verl/trainer/ppo/validation_rollout.py",
+      "target": "src/opd_state/integrations/verl/validation_data.py",
+      "name": "rows_from_batch",
+      "body_sha256": "65446a05880705d53f1841cde33b3da02eab77ef5d324a8257f827b89ec3f0e7"
+    },
+    {
+      "source": "verl/verl/trainer/ppo/validation_rollout.py",
+      "target": "src/opd_state/integrations/verl/validation_data.py",
+      "name": "dump_columns",
+      "body_sha256": "2e14054e488106248d0087511c7125dbe29109af052f4039da26022e6730e4ae"
+    }
+  ]
+}

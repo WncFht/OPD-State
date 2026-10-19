@@ -22,7 +22,7 @@ def main():
     import torch
     from transformers import AutoTokenizer
 
-    from verl.trainer.ppo.validation_rollout import decode_effective_tokens
+    from opd_state.integrations.verl.validation_data import decode_effective_tokens
 
     if torch.cuda.is_initialized():
         raise ValueError("Decode benchmark must remain CPU-only")

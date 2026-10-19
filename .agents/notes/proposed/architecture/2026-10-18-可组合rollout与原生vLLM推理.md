@@ -32,7 +32,7 @@ Status: proposed
 
 策略编译已迁入 [policy.py](../../../../src/opd_state/core/policy.py)，实现不可变模型身份、平面配置解析、全局响应配额、分段预算与端点归约，显式拒绝嵌套和 TCOD。[CPU 合约检查](../../../../tests/rollout/test_policy.py)已通过，包含五百组随机配额；Hydra 配置往返也已验证。新增配置默认关闭，现有路径继续使用原入口。这些 CPU 结果只覆盖契约层，不能单独证明 worker、权重生命周期或 trainer 集成；对应 GPU 证据单列。
 
-随后新增 [native_executor.py](../../../../verl/verl/workers/rollout/native_executor.py)、[lifecycle.py](../../../../verl/verl/workers/rollout/lifecycle.py)与原生服务端接口，生产 CPU 检查合计四十四项通过。执行层保持原 prompt 与完整响应，保留原始结束原因，核对来源/版本/λ；失败时要求原生 abort/drain。服务端将 actor 权重接收、完整 HF 名称集合、最终 bucket、实际写入序号、缓存失效与 CUDA barrier 纳入发布条件，同版本恢复也不能沿用上一次写入回执。固定来源在服务端和真实 inference worker 均拒绝 actor 流。
+随后新增 [native_executor.py](../../../../src/opd_state/rollout/executor.py)、[lifecycle.py](../../../../src/opd_state/rollout/lifecycle.py)与原生服务端接口，生产 CPU 检查合计四十四项通过。执行层保持原 prompt 与完整响应，保留原始结束原因，核对来源/版本/λ；失败时要求原生 abort/drain。服务端将 actor 权重接收、完整 HF 名称集合、最终 bucket、实际写入序号、缓存失效与 CUDA barrier 纳入发布条件，同版本恢复也不能沿用上一次写入回执。固定来源在服务端和真实 inference worker 均拒绝 actor 流。
 
 真实 GPU 检查已覆盖冻结 $p_0$ 与 $q$：生产 worker 扩展拒绝 actor 写入，写入尝试前后及 sleep/wake 后输出一致，EOS=PAD 且原生 finish reason 为 length 时仍保留有效 EOS。每引擎 sleep 释放 8,090 MiB，两个自有进程退出后整卡占用回到基线；见[GPU 身份与恢复证据](../../../../docs/experiment/results/native-rollout/identity-gpu.json)。该证据只覆盖 native worker 与生产 executor，不能代替异步 server 或 FSDP/trainer 验收；协调器与真实训练证据另列如下。
 

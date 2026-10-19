@@ -6,8 +6,8 @@ from pathlib import Path
 import pytest
 from omegaconf import OmegaConf
 
+import opd_state.evaluation.math as estimator
 from opd_state.artifacts import atomic_json, file_digest
-from opd_state.integrations.verl.modules import backend_module
 from recipes.application import run_prepared
 from tools.verify import verify_prepared, verify_run
 
@@ -121,7 +121,6 @@ def produce(root):
     )
     lines(directory / "batches.jsonl", batches)
     # Use the existing producer's estimator; verification uses its own binomial formula.
-    estimator = backend_module(cfg.run.backend, "trainer/ppo/math_eval.py")
     computed, _ = estimator.exact_math_metrics(
         [r["data_source"] for r in validation],
         [r["validation_uid"] for r in validation],

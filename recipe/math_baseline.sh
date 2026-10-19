@@ -79,10 +79,7 @@ if [[ ${OPD_FREEZE_SOURCE:-0} == 1 ]]; then
         }
     else
         mkdir -p "$SNAPSHOT"
-        SOURCE_COMPONENTS=(verl)
-        if git cat-file -e "$SOURCE_COMMIT:src/opd_state" 2>/dev/null; then
-            SOURCE_COMPONENTS+=(src/opd_state)
-        fi
+        SOURCE_COMPONENTS=(verl src/opd_state)
         git archive "$SOURCE_COMMIT" "${SOURCE_COMPONENTS[@]}" | tar -x -C "$SNAPSHOT"
         printf '%s\n' "$SOURCE_COMMIT" > "$SNAPSHOT/COMMIT"
     fi

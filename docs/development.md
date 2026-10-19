@@ -34,7 +34,7 @@ Python 使用 Ruff；Markdown、JSON、YAML、CJS 使用 Prettier；Markdownlint
 无偏 head-tail 路径的产品测试需要训练环境中的 Torch 与 TensorDict，根维护环境不包含这些依赖。从仓库根目录执行：
 
 ```bash
-CUDA_VISIBLE_DEVICES='' PYTHONPATH=verl ../envs/opd-state/bin/python \
+CUDA_VISIBLE_DEVICES='' PYTHONPATH=src:verl ../envs/opd-state/bin/python \
     -m unittest discover -s verl/tests/opd -p test_topk_tail_on_cpu.py -v
 ```
 
@@ -92,7 +92,7 @@ GPU 验收至少记录初始模型身份、权重保存策略、数据哈希、�
 桥接回归使用训练环境执行，覆盖实际 Hydra 默认值和无 tensor 的生成输入：
 
 ```bash
-CUDA_VISIBLE_DEVICES='' PYTHONPATH=verl ../envs/opd-state/bin/python \
+CUDA_VISIBLE_DEVICES='' PYTHONPATH=src:verl ../envs/opd-state/bin/python \
     -m unittest discover -s verl/tests/opd -p test_rollout_coordinator_runtime.py -v
 ```
 

@@ -24,9 +24,9 @@ def load(name):
 
 
 P = load("native_pool")
-E = sys.modules[NAME + ".native_executor"]
+import opd_state.rollout.executor as E
 S = load("sync_endpoint")
-Policy = sys.modules[NAME + ".policy"]
+import opd_state.core.policy as Policy
 
 
 class RPC:

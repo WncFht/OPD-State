@@ -455,7 +455,7 @@ class CoordinatorTests(unittest.TestCase):
             epochs_for_budget(5, 0)
 
     def test_same_model_two_requests_keep_source_counts_and_final_student_only_evaluation(self):
-        from verl.workers.rollout.native_executor import Completion
+        from opd_state.rollout.executor import Completion
 
         with open_dict(self.config):
             self.config.actor_rollout_ref.rollout.policy = {

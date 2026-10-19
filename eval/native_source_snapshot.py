@@ -16,10 +16,7 @@ def freeze(root, output, driver, commit=None):
     ).strip()
     if commit:
         source.mkdir()
-        components = ["verl"]
-        if subprocess.run(["git", "cat-file", "-e", resolved + ":src/opd_state"], cwd=root,
-                          stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL).returncode == 0:
-            components.append("src/opd_state")
+        components = ["verl", "src/opd_state"]
         archive = subprocess.Popen(["git", "archive", resolved, *components], cwd=root, stdout=subprocess.PIPE)
         unpacked = subprocess.run(["tar", "-xf", "-", "-C", str(source)], stdin=archive.stdout)
         archive.stdout.close()
@@ -27,8 +24,7 @@ def freeze(root, output, driver, commit=None):
             raise RuntimeError("Could not freeze the selected native source commit")
     else:
         shutil.copytree(root / "verl", source / "verl", ignore=shutil.ignore_patterns("__pycache__", "*.pyc"))
-        if (root / "src/opd_state").is_dir():
-            shutil.copytree(root / "src/opd_state", source / "src/opd_state", ignore=shutil.ignore_patterns("__pycache__", "*.pyc"))
+        shutil.copytree(root / "src/opd_state", source / "src/opd_state", ignore=shutil.ignore_patterns("__pycache__", "*.pyc"))
     manifest = {
         "base_commit": resolved,
         "source_kind": "git_archive" if commit else "worktree_copy",

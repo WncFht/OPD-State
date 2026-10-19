@@ -26,9 +26,9 @@ def load(name):
 
 
 S = load("native_staged")
-E = load("native_executor")
+import opd_state.rollout.executor as E
 N = load("native_pool")
-P = sys.modules[NAME + ".policy"]
+import opd_state.core.policy as P
 REFS = {role: P.ModelRef(role, "/" + role, fingerprint="sha-" + role) for role in ("initial_student", "teacher")}
 
 

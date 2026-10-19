@@ -58,8 +58,6 @@ def audit(
     cap = int(manifest.get("response_cap", env["MAX_RESP_LENGTH"]))
     seed = int(manifest.get("seed", 42))
     policy_path = run / "source/src/opd_state/core/policy.py"
-    if not policy_path.exists():
-        policy_path = run / "source/verl/verl/workers/rollout/policy.py"
     policy = load_policy(policy_path)
     reports = []
     consumed_row_ids = set()

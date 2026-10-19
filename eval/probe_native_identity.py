@@ -61,8 +61,8 @@ def child_body(role, gpu, output):
     from vllm import LLM, SamplingParams
 
     from verl.trainer.ppo.fixed_rollout import digest_json, model_signature
-    from verl.workers.rollout.native_executor import Completion, Request, generate
-    from verl.workers.rollout.policy import ModelRef, compile_policy
+    from opd_state.rollout.executor import Completion, Request, generate
+    from opd_state.core.policy import ModelRef, compile_policy
 
     paths = {
         "initial_student": ROOT.parent / "models/DeepSeek-R1-Distill-Qwen-1.5B",

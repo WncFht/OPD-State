@@ -16,7 +16,8 @@ import re
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[1]
-SPEC = importlib.util.spec_from_file_location("math_eval", ROOT / "verl/verl/trainer/ppo/math_eval.py")
+MATH_SOURCE = ROOT / "src/opd_state/evaluation/math.py"
+SPEC = importlib.util.spec_from_file_location("math_eval", MATH_SOURCE)
 MATH = importlib.util.module_from_spec(SPEC)
 SPEC.loader.exec_module(MATH)
 

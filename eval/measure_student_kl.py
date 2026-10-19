@@ -41,8 +41,8 @@ def main():
     import torch
     from transformers import AutoModelForCausalLM, AutoTokenizer, GenerationConfig, LogitsProcessor
 
-    sys.path.insert(0, str(ROOT / "verl"))
-    from verl.trainer.ppo.opd_topk_tail import coefficients_and_metrics, selected_and_tail
+    sys.path[:0] = [str(ROOT / "src"), str(ROOT / "verl")]
+    from opd_state.kernels.head_tail import coefficients_and_metrics, selected_and_tail
 
     torch.manual_seed(args.seed)
     device = "cpu" if args.cpu else "cuda:0"

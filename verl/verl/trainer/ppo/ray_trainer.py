@@ -382,7 +382,7 @@ class RayPPOTrainer(OPDTrainerMixin):
         from verl.trainer.ppo.rollout_coordinator import prepare_native_config
 
         self.native_policy_enabled = prepare_native_config(config, tokenizer, processor)
-        from verl.trainer.ppo.validation_kl_runner import load_fixed_bank, validate_settings
+        from opd_state.integrations.verl.validation import load_fixed_bank, validate_settings
 
         validate_settings(config, native_enabled=self.native_policy_enabled)
         self._validation_kl_bank = ([], None)
@@ -778,7 +778,7 @@ class RayPPOTrainer(OPDTrainerMixin):
             tick = time.perf_counter()
             output_ids = test_output_gen_batch.batch["responses"]
             if self.rollout_coordinator is not None:
-                from verl.trainer.ppo.validation_rollout import decode_effective_tokens
+                from opd_state.integrations.verl.validation_data import decode_effective_tokens
 
                 output_texts = decode_effective_tokens(
                     self.tokenizer, output_ids, test_output_gen_batch.batch["response_mask"]
@@ -813,11 +813,11 @@ class RayPPOTrainer(OPDTrainerMixin):
 
             tick = time.perf_counter()
             if self.rollout_coordinator is not None:
-                from verl.trainer.ppo.validation_rollout import rows_from_batch
+                from opd_state.integrations.verl.validation_data import rows_from_batch
 
                 rollout_rows.extend(rows_from_batch(test_batch, reward_extra_info, self.tokenizer.eos_token_id))
                 if kl_enabled:
-                    from verl.trainer.ppo.validation_kl_runner import collect_records
+                    from opd_state.integrations.verl.validation import collect_records
 
                     kl_records.extend(collect_records(test_batch, student_version=self.global_steps))
             validation_timings["record_collection_seconds"] += time.perf_counter() - tick
@@ -839,7 +839,7 @@ class RayPPOTrainer(OPDTrainerMixin):
 
         kl_rows, kl_metrics = [], {}
         if kl_enabled:
-            from verl.trainer.ppo.validation_kl_runner import run_validation_kl
+            from opd_state.integrations.verl.validation import run_validation_kl
 
             tick = time.perf_counter()
             kl_rows, kl_metrics = run_validation_kl(self, kl_records)
@@ -855,7 +855,7 @@ class RayPPOTrainer(OPDTrainerMixin):
         # dump generations
         val_data_dir = self.config.trainer.get("validation_data_dir", None)
         if val_data_dir:
-            from verl.trainer.ppo.validation_rollout import dump_columns
+            from opd_state.integrations.verl.validation_data import dump_columns
 
             tick = time.perf_counter()
             self._dump_generations(
@@ -893,7 +893,7 @@ class RayPPOTrainer(OPDTrainerMixin):
         metrics = self._val_metrics_update(data_sources, sample_uids, reward_extra_infos_dict, sample_turns)
         metrics.update(kl_metrics)
         if rollout_rows:
-            from verl.trainer.ppo.validation_rollout import summarize_rollouts
+            from opd_state.evaluation.rollout import summarize_rollouts
 
             metrics.update(
                 summarize_rollouts(
@@ -911,7 +911,7 @@ class RayPPOTrainer(OPDTrainerMixin):
         if mode not in {"all", "math_exact"} or (mode == "math_exact" and expected_samples is None):
             raise ValueError("validation_metrics_mode must be all, or math_exact with math_eval_samples")
         if expected_samples is not None:
-            from verl.trainer.ppo.math_eval import MATH_BENCHMARK_COUNTS, exact_math_metrics
+            from opd_state.evaluation.math import MATH_BENCHMARK_COUNTS, exact_math_metrics
 
             if "acc" not in reward_extra_infos_dict:
                 raise ValueError("Math evaluation requires per-sample acc from the verifier")
@@ -978,12 +978,12 @@ class RayPPOTrainer(OPDTrainerMixin):
         metrics = self._val_metrics_update(data_sources, sample_uids, reward_extra_infos_dict, sample_turns)
         rollout_rows = result_a.get("rollout_rows", []) + result_b.get("rollout_rows", [])
         if rollout_rows:
-            from verl.trainer.ppo.validation_rollout import summarize_rollouts
+            from opd_state.evaluation.rollout import summarize_rollouts
 
             metrics.update(summarize_rollouts(rollout_rows))
         kl_rows = result_a.get("kl_rows", []) + result_b.get("kl_rows", [])
         if kl_rows:
-            from verl.trainer.ppo.validation_kl_runner import summarize_kl
+            from opd_state.evaluation.kl_metrics import summarize_kl
 
             metrics.update(summarize_kl(kl_rows))
             performance = {key for result in (result_a, result_b) for key in result.get("kl_metrics", {})

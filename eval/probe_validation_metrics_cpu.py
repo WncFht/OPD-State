@@ -16,15 +16,19 @@ from pathlib import Path
 ROOT = Path(__file__).resolve().parents[1]
 SOURCES = [
     "eval/probe_validation_metrics_cpu.py",
-    "verl/verl/trainer/ppo/validation_kl.py",
-    "verl/verl/trainer/ppo/validation_rollout.py",
+    "src/opd_state/kernels/divergence.py",
+    "src/opd_state/core/records.py",
+    "src/opd_state/evaluation/prefixes.py",
+    "src/opd_state/evaluation/kl_metrics.py",
+    "src/opd_state/evaluation/rollout.py",
+    "src/opd_state/integrations/verl/validation_data.py",
     "verl/verl/trainer/ppo/ray_trainer.py",
     "verl/verl/trainer/ppo/rollout_coordinator.py",
     "verl/tests/opd/test_native_validation_on_cpu.py",
     "verl/tests/opd/test_validation_metrics_runtime.py",
     "verl/tests/opd/test_rollout_coordinator_runtime.py",
-    "verl/verl/trainer/ppo/validation_kl_runner.py",
-    "verl/verl/workers/validation_kl.py",
+    "src/opd_state/integrations/verl/validation.py",
+    "src/opd_state/kernels/causal_scoring.py",
     "verl/verl/workers/fsdp_teacher_worker.py",
     "verl/verl/single_controller/ray/base.py",
     "verl/verl/trainer/config/ppo_trainer.yaml",
@@ -43,14 +47,14 @@ def main():
     args = parser.parse_args()
     os.environ["CUDA_VISIBLE_DEVICES"] = ""
     os.environ["OMP_NUM_THREADS"] = "2"
-    sys.path.insert(0, str(ROOT / "verl"))
+    sys.path[:0] = [str(ROOT / "src"), str(ROOT / "verl")]
     import torch
 
-    from verl.trainer.ppo.validation_kl import full_vocab_divergences
+    from opd_state.kernels.divergence import full_vocab_divergences
 
     torch.set_num_threads(2)
     args.logs.mkdir(parents=True, exist_ok=True)
-    env = {**os.environ, "PYTHONPATH": str(ROOT / "verl")}
+    env = {**os.environ, "PYTHONPATH": os.pathsep.join([str(ROOT / "src"), str(ROOT / "verl")])}
     commands = [
         [
             str(ROOT / ".venv/bin/python"),

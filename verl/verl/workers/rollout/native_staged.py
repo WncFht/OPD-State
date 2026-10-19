@@ -12,7 +12,7 @@ import asyncio
 import time
 from dataclasses import replace
 
-from .policy import ModelRef, Stage
+from opd_state.core.policy import ModelRef, Stage
 
 
 class StagedNativeBackend:

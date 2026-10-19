@@ -237,7 +237,7 @@ class OPDTrainerMixin:
             float((batch.batch["teacher_log_probs"] * response_mask).sum().item()) / n_tokens
         )
         if "native_segments" in batch.non_tensor_batch:
-            from verl.trainer.ppo.native_state_metrics import summarize_native_states
+            from opd_state.kernels.state_metrics import summarize_native_states
 
             metrics.update(
                 summarize_native_states(
@@ -249,7 +249,7 @@ class OPDTrainerMixin:
             )
 
         if self.opd_topk_tail_enabled():
-            from verl.trainer.ppo.opd_topk_tail import coefficients_and_metrics, summarize_kl
+            from opd_state.kernels.head_tail import coefficients_and_metrics, summarize_kl
             head, tail, stats = coefficients_and_metrics(
                 batch.batch["student_top_k_log_probs"],
                 teacher_output.batch["teacher_top_k_log_probs"].to(response_mask.device),

@@ -1,8 +1,14 @@
-"""Sampled-action diagnostics on native prefixes, without extra model forwards."""
+"""Sampled-action diagnostics on source-labeled native prefixes."""
 
 import torch
 
-SOURCES = {"current_student", "initial_student", "teacher", "fusion_current_student", "fusion_initial_student"}
+SOURCES = {
+    "current_student",
+    "initial_student",
+    "teacher",
+    "fusion_current_student",
+    "fusion_initial_student",
+}
 
 
 def trajectory_segments(trajectories):
@@ -14,10 +20,15 @@ def trajectory_segments(trajectories):
             roles = tuple(identity[0] for identity in segment.identities)
             if len(roles) == 1:
                 source = roles[0]
-            elif roles in [("current_student", "teacher"), ("initial_student", "teacher")]:
+            elif roles in [
+                ("current_student", "teacher"),
+                ("initial_student", "teacher"),
+            ]:
                 source = "fusion_" + roles[0]
             else:
-                raise ValueError("Unsupported action-policy identity in native diagnostic metadata")
+                raise ValueError(
+                    "Unsupported action-policy identity in native diagnostic metadata"
+                )
             if source not in SOURCES:
                 raise ValueError("Unknown native action-policy source")
             segments.append((source, index, segment.start, segment.end))
@@ -38,16 +49,31 @@ def summarize_native_states(response_mask, student_logp, teacher_logp, segments)
         or student_logp.shape != response_mask.shape
         or teacher_logp.shape != response_mask.shape
     ):
-        raise ValueError("Native diagnostic scores and response mask need identical batch/token shapes")
+        raise ValueError(
+            "Native diagnostic scores and response mask need identical batch/token shapes"
+        )
     valid = response_mask.bool()
     lengths = valid.sum(-1)
     depth = torch.arange(valid.shape[1], device=valid.device).expand_as(valid)
-    if len(segments) != valid.shape[0] or not torch.equal(valid, depth < lengths.unsqueeze(-1)):
-        raise ValueError("Native diagnostic metadata must match contiguous valid responses")
-    if (lengths < 1).any() or not torch.equal(response_mask, valid.to(response_mask.dtype)):
-        raise ValueError("Native diagnostics require nonempty responses and a binary mask")
-    if not torch.isfinite(student_logp[valid]).all() or not torch.isfinite(teacher_logp[valid]).all():
-        raise ValueError("Valid native diagnostic action log probabilities must be finite")
+    if len(segments) != valid.shape[0] or not torch.equal(
+        valid, depth < lengths.unsqueeze(-1)
+    ):
+        raise ValueError(
+            "Native diagnostic metadata must match contiguous valid responses"
+        )
+    if (lengths < 1).any() or not torch.equal(
+        response_mask, valid.to(response_mask.dtype)
+    ):
+        raise ValueError(
+            "Native diagnostics require nonempty responses and a binary mask"
+        )
+    if (
+        not torch.isfinite(student_logp[valid]).all()
+        or not torch.isfinite(teacher_logp[valid]).all()
+    ):
+        raise ValueError(
+            "Valid native diagnostic action log probabilities must be finite"
+        )
     names = sorted(SOURCES)
     source_codes = torch.zeros_like(response_mask, dtype=torch.int8)
     stages = torch.full_like(source_codes, -1)
@@ -61,12 +87,16 @@ def summarize_native_states(response_mask, student_logp, teacher_logp, segments)
                 or start != end
                 or not start < stop <= lengths[i]
             ):
-                raise ValueError("Native diagnostic stages have invalid provenance or response coverage")
+                raise ValueError(
+                    "Native diagnostic stages have invalid provenance or response coverage"
+                )
             source_codes[i, start:stop] = names.index(source) + 1
             stages[i, start:stop] = stage
             end = stop
         if end != int(lengths[i]):
-            raise ValueError("Native diagnostic stages do not cover the complete valid response")
+            raise ValueError(
+                "Native diagnostic stages do not cover the complete valid response"
+            )
 
     metrics = {}
 
@@ -80,10 +110,14 @@ def summarize_native_states(response_mask, student_logp, teacher_logp, segments)
         delta = p - q
         metrics.update(
             {
-                prefix + "response_prefix_depth_mean": float(depth[selected].float().mean()),
+                prefix + "response_prefix_depth_mean": float(
+                    depth[selected].float().mean()
+                ),
                 prefix + "student_logp_mean": float(p.mean()),
                 prefix + "teacher_logp_mean": float(q.mean()),
-                prefix + "teacher_selected_action_probability_mean": float(q.exp().mean()),
+                prefix + "teacher_selected_action_probability_mean": float(
+                    q.exp().mean()
+                ),
                 prefix + "sampled_log_ratio_mean": float(delta.mean()),
                 prefix + "log_ratio_rms": float(delta.square().mean().sqrt()),
             }
@@ -98,8 +132,12 @@ def summarize_native_states(response_mask, student_logp, teacher_logp, segments)
             record(f"action_{name}", selected)
             for stage in [0, 1]:
                 if (selected & (stages == stage)).any():
-                    record(f"segment_{stage}/action_{name}", selected & (stages == stage))
+                    record(
+                        f"segment_{stage}/action_{name}", selected & (stages == stage)
+                    )
     for lower, upper in [(0, 256), (256, 1024), (1024, 2048), (2048, valid.shape[1])]:
         if lower < upper:
-            record(f"depth_{lower}_{upper - 1}", valid & (depth >= lower) & (depth < upper))
+            record(
+                f"depth_{lower}_{upper - 1}", valid & (depth >= lower) & (depth < upper)
+            )
     return metrics

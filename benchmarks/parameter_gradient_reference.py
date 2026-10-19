@@ -10,6 +10,7 @@ from __future__ import annotations
 import argparse
 import copy
 import gc
+import importlib.util
 import json
 import os
 import resource
@@ -39,6 +40,7 @@ def main():
     parser.add_argument("--records", type=int, default=2)
     parser.add_argument("--response-tokens", type=int, default=8)
     parser.add_argument("--threads", type=int, default=8)
+    parser.add_argument("--candidate-advantage", type=Path)
     args = parser.parse_args()
     if min(args.records, args.response_tokens, args.threads) < 1:
         parser.error("Positive record, token and thread budgets are required")
@@ -65,6 +67,20 @@ def main():
     torch.manual_seed(42)
     started = time.perf_counter()
     config, manifest, inputs = verify_prepared(root)
+    candidate, candidate_sha = None, None
+    if args.candidate_advantage is not None:
+        frozen_candidate = output / "candidate_advantages.py"
+        shutil.copyfile(args.candidate_advantage, frozen_candidate)
+        candidate_sha = file_digest(frozen_candidate)
+        if candidate_sha != file_digest(args.candidate_advantage):
+            raise ValueError("Candidate changed while preparing its frozen comparison")
+        spec = importlib.util.spec_from_file_location(
+            "_opd_candidate_advantages", frozen_candidate
+        )
+        module = importlib.util.module_from_spec(spec)
+        sys.modules[spec.name] = module
+        spec.loader.exec_module(module)
+        candidate = module.compute_token_reward_direct_advantage
     actor_settings = config.actor_rollout_ref.actor
     if (
         config.distillation.opd.objective.kind != "sampled_opd"
@@ -168,7 +184,10 @@ def main():
     }
     reference_grads, reference_parameters, reference_state = {}, {}, {}
     comparisons, measurements = {}, []
-    for mode in ("native_ppo", "score_reference"):
+    for mode in (
+        "native_ppo",
+        "migrated_advantage" if candidate else "score_reference",
+    ):
         student.zero_grad(set_to_none=True)
         with torch.no_grad():
             for name, value in parameters.items():
@@ -179,11 +198,14 @@ def main():
             raise ValueError(
                 "Paired forward changed the common anchor log probabilities"
             )
-        if mode == "native_ppo":
+        if mode == "native_ppo" or candidate is not None:
+            selected_advantage = advantage
+            if mode == "migrated_advantage":
+                selected_advantage, _ = candidate(reward, mask)
             loss, _ = compute_policy_loss_vanilla(
                 old_logp,
                 current,
-                advantage,
+                selected_advantage,
                 mask,
                 loss_agg_mode="token-mean",
                 config=actor,
@@ -246,6 +268,7 @@ def main():
         output / "result.json",
         {
             "scope": "Real initial-model CPU parameter-gradient and AdamW comparison at the common anchor; not FSDP/GPU equivalence",
+            "candidate_advantage_sha256": candidate_sha,
             "passed": True,
             "source_id": manifest["source_id"],
             "config_id": manifest["config_id"],

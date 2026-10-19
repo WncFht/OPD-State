@@ -35,7 +35,7 @@ def configure_source(
 ):
     from safetensors import safe_open
 
-    from ..policy import ModelRef
+    from opd_state.core.policy import ModelRef
 
     path = str(Path(path).resolve())
     actual = str(Path(worker.model_runner.vllm_config.model_config.model).resolve())

@@ -22,7 +22,7 @@ def worker(rank, output_dir, rendezvous):
     from transformers import Qwen2Config, Qwen2ForCausalLM
     from transformers.models.qwen2.modeling_qwen2 import Qwen2DecoderLayer
 
-    from verl.workers.validation_kl import score_causal_records
+    from opd_state.kernels.causal_scoring import score_causal_records
 
     torch.set_num_threads(2)
     dist.init_process_group(
@@ -110,7 +110,7 @@ def main():
     args = parser.parse_args()
     os.environ["CUDA_VISIBLE_DEVICES"] = ""
     os.environ["OMP_NUM_THREADS"] = "2"
-    sys.path.insert(0, str(ROOT / "verl"))
+    sys.path[:0] = [str(ROOT / "src"), str(ROOT / "verl")]
     import torch.multiprocessing as mp
 
     args.output = args.output.resolve()
@@ -119,8 +119,11 @@ def main():
     ranks = [json.loads((args.output / f"rank-{rank}.json").read_text()) for rank in range(2)]
     sources = [
         "eval/probe_validation_fsdp_cpu.py",
-        "verl/verl/workers/validation_kl.py",
-        "verl/verl/trainer/ppo/validation_kl.py",
+        "src/opd_state/kernels/causal_scoring.py",
+        "src/opd_state/kernels/divergence.py",
+    "src/opd_state/core/records.py",
+    "src/opd_state/evaluation/prefixes.py",
+    "src/opd_state/evaluation/kl_metrics.py",
     ]
     report = {
         "schema": "validation-fsdp-cpu-v1",

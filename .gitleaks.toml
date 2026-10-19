@@ -107,3 +107,11 @@ condition = "AND"
 regexTarget = "line"
 paths = ['''^docs/experiment/results/native-rollout/validation-kl-full/kl-collection\.json$''']
 regexes = ['''^\s*"[^"]*/runs/native-validation-kl-full-20261019-v2/validation/kl/kl-tokens-step-2\.jsonl"\s*:\s*"[a-f0-9]{64}"\s*,?\s*$''']
+
+# The extraction comparison records a SHA-256 of its frozen input token bytes.
+[[allowlists]]
+description = "Input-token checksum in the scoring extraction comparison"
+condition = "AND"
+regexTarget = "line"
+paths = ['''^docs/provenance/scoring-extraction-20261019\.json$''']
+regexes = ['''^\s*"input_tokens_sha256"\s*:\s*"[a-f0-9]{64}"\s*,?\s*$''']

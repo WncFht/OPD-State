@@ -19,7 +19,8 @@ from transformers import Qwen2Config, Qwen2ForCausalLM
 from verl import DataProto
 from verl.single_controller.base import Worker
 from verl.single_controller.ray.base import RayClassWithInitArgs, create_colocated_worker_cls
-from verl.trainer.ppo.validation_kl_runner import load_fixed_bank, run_validation_kl, summarize_kl, validate_settings
+from opd_state.integrations.verl.validation import load_fixed_bank, run_validation_kl, validate_settings
+from opd_state.evaluation.kl_metrics import summarize_kl
 from verl.workers.fsdp_teacher_worker import TeacherWorker
 
 

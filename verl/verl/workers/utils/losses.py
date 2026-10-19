@@ -62,7 +62,7 @@ def ppo_loss(config: ActorConfig, model_output, data: TensorDict, dp_group=None)
         entropy = no_padding_2_padding(entropy, data)
 
     if tu.get_non_tensor_data(data=data, key="opd_topk_tail", default=False):
-        from verl.trainer.ppo.opd_topk_tail import score_loss
+        from opd_state.kernels.head_tail import score_loss
         head = no_padding_2_padding(model_output["student_top_k_log_probs"], data)
         mask = data["response_mask"].bool()
         per_prefix = score_loss(head, log_prob, data["opd_head_coefficient"], data["opd_tail_coefficient"], mask)

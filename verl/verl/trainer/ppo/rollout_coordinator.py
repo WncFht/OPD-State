@@ -14,9 +14,9 @@ from dataclasses import asdict
 from pathlib import Path
 
 from verl.trainer.ppo.fixed_rollout import canonical, digest_file, digest_json, model_signature, pack_token_records
-from verl.workers.rollout.native_executor import Request, generate
+from opd_state.rollout.executor import Request, generate
 from verl.workers.rollout.native_pool import NativeModelPool, NativeRayBackend
-from verl.workers.rollout.policy import Fusion, ModelRef, compile_policy, parse_policy
+from opd_state.core.policy import Fusion, ModelRef, compile_policy, parse_policy
 
 
 def prepare_native_config(config, tokenizer, processor):
@@ -434,7 +434,7 @@ class RolloutCoordinator:
         if not validate and self.rollout.get("generation_state_metrics", True):
             import numpy as np
 
-            from verl.trainer.ppo.native_state_metrics import trajectory_segments
+            from opd_state.kernels.state_metrics import trajectory_segments
 
             provenance = np.empty(len(trajectories), dtype=object)
             for index, row in enumerate(trajectory_segments(trajectories)):

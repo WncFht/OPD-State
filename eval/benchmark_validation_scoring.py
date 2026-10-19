@@ -8,6 +8,7 @@ of a discarded trained checkpoint or a training-quality experiment.
 from __future__ import annotations
 
 import argparse
+import ast
 import csv
 import hashlib
 import importlib.util
@@ -96,11 +97,20 @@ def prepare(args):
     return manifest
 
 
-def load_module(name, path):
+def load_module(name, path, *, bindings=None):
     spec = importlib.util.spec_from_file_location(name, path)
     module = importlib.util.module_from_spec(spec)
     sys.modules[name] = module
-    spec.loader.exec_module(module)
+    if bindings:
+        tree = ast.parse(Path(path).read_text())
+        for node in tree.body:
+            if isinstance(node, ast.ImportFrom):
+                node.names = [alias for alias in node.names if (alias.asname or alias.name) not in bindings]
+        tree.body = [node for node in tree.body if not isinstance(node, ast.ImportFrom) or node.names]
+        module.__dict__.update(bindings)
+        exec(compile(tree, str(path), "exec"), module.__dict__)
+    else:
+        spec.loader.exec_module(module)
     return module
 
 
@@ -165,8 +175,9 @@ def run(args):
     from transformers import AutoModelForCausalLM
     from transformers.models.qwen2.modeling_qwen2 import Qwen2DecoderLayer
 
-    from verl.trainer.ppo.validation_kl import balanced_record_indices, full_vocab_divergences
-    from verl.workers.validation_kl import score_causal_records
+    from opd_state.evaluation.prefixes import balanced_record_indices
+    from opd_state.kernels.divergence import full_vocab_divergences
+    from opd_state.kernels.causal_scoring import score_causal_records
 
     rank = int(os.environ["LOCAL_RANK"])
     torch.cuda.set_device(rank)
@@ -188,7 +199,7 @@ def run(args):
     while len(records) % 4:
         records.append(original[(len(records) - len(original)) % len(original)])
     baseline_core = load_module("validation_baseline_core", directory / "baseline/core.py")
-    baseline_worker = load_module("validation_baseline_worker", directory / "baseline/worker.py")
+    baseline_worker = load_module("validation_baseline_worker", directory / "baseline/worker.py", bindings={"full_vocab_divergences": baseline_core.full_vocab_divergences})
     baseline_worker.full_vocab_divergences = baseline_core.full_vocab_divergences
     stopped, monitor = threading.Event(), None
     if rank == 0:

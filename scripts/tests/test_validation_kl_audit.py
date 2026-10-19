@@ -16,7 +16,7 @@ spec = importlib.util.spec_from_file_location(
 )
 AUDIT = importlib.util.module_from_spec(spec)
 spec.loader.exec_module(AUDIT)
-tree = ast.parse((ROOT / "verl/verl/trainer/ppo/validation_kl_runner.py").read_text())
+tree = ast.parse((ROOT / "src/opd_state/evaluation/kl_metrics.py").read_text())
 node = next(
     node
     for node in tree.body

@@ -1340,7 +1340,8 @@ class FSDPEngineWithLMHead(FSDPEngine):
         opd_frozen = tu.get_non_tensor_data(data=micro_batch, key="opd_frozen_head", default=False)
         frozen_ids = None
         if opd_tail:
-            from verl.trainer.ppo.opd_topk_tail import packed_response_heads, selected_and_tail
+            from opd_state.integrations.verl.layouts import packed_response_heads
+            from opd_state.kernels.head_tail import selected_and_tail
             vocab_size = tu.get_non_tensor_data(data=micro_batch, key="opd_effective_vocab_size", default=0)
             if use_fused_kernels or self.engine_config.ulysses_sequence_parallel_size != 1 or self.pad_to_length:
                 raise ValueError("Unbiased top-k tail requires unfused SP=1 without static padding")

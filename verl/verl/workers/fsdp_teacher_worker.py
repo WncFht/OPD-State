@@ -285,7 +285,7 @@ class TeacherWorker(Worker):
     @register(dispatch_mode=Dispatch.DP_COMPUTE_PROTO)
     def compute_validation_kl(self, data: DataProto) -> DataProto:
         """Score all requested prefixes against the live colocated student."""
-        from verl.workers.validation_kl import score_causal_records
+        from opd_state.kernels.causal_scoring import score_causal_records
 
         peers = [self.get_fused_worker_by_name(name) for name in ("actor_rollout", "actor_rollout_ref")]
         peers = [peer for peer in peers if peer is not None]
@@ -389,7 +389,7 @@ class TeacherWorker(Worker):
                 result["teacher_in_student"] = flat["teacher_in_student"].view(bsz, seqlen, -1)
                 result["teacher_own_top_k_log_probs"] = flat["teacher_log_probs"].view(bsz, seqlen, -1)
                 if self.teacher_config.unbiased_topk_tail:
-                    from verl.trainer.ppo.opd_topk_tail import selected_and_tail
+                    from opd_state.kernels.head_tail import selected_and_tail
                     tail = selected_and_tail(logits, top_k, student_top_k_ids)["student_tail_log_mass"]
                     result["teacher_tail_log_mass"] = tail
         return result

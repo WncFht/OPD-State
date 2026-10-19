@@ -168,7 +168,7 @@ def main():
         ["git", "rev-parse", "--verify", args.source_commit + "^{commit}"], cwd=ROOT, text=True
     ).strip()
     subprocess.run(
-        ["git", "cat-file", "-e", f"{commit}:verl/verl/trainer/ppo/validation_kl_runner.py"], cwd=ROOT, check=True
+        ["git", "cat-file", "-e", f"{commit}:src/opd_state/integrations/verl/validation.py"], cwd=ROOT, check=True
     )
     if not args.plan_only and not args.runtime_python.is_file():
         raise ValueError("Full KL gate requires the existing training-environment Python for W&B verification")

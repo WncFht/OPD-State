@@ -13,8 +13,9 @@ from omegaconf import OmegaConf
 from verl import DataProto
 from verl.trainer.ppo.fixed_rollout import pack_token_records
 from verl.trainer.ppo.ray_trainer import RayPPOTrainer
-from verl.trainer.ppo.validation_kl import full_vocab_divergences
-from verl.trainer.ppo.validation_rollout import rows_from_batch, summarize_rollouts
+from opd_state.kernels.divergence import full_vocab_divergences
+from opd_state.integrations.verl.validation_data import rows_from_batch
+from opd_state.evaluation.rollout import summarize_rollouts
 
 
 class FullVocabularyTests(unittest.TestCase):
@@ -143,7 +144,7 @@ class ValidationTrainerTests(unittest.TestCase):
         from tokenizers.models import WordLevel
         from transformers import PreTrainedTokenizerFast
 
-        from verl.trainer.ppo.validation_rollout import decode_effective_tokens
+        from opd_state.integrations.verl.validation_data import decode_effective_tokens
 
         tokenizer = PreTrainedTokenizerFast(
             tokenizer_object=Tokenizer(

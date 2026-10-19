@@ -1,9 +1,4 @@
-"""Exact finite-sample math evaluation alongside veRL's native metrics.
-
-mean@N is average correctness over N independent samples for each question.
-pass@k uses the unbiased without-replacement estimator. It is deliberately not
-an alias for the upstream bootstrap best@k statistic.
-"""
+"""Exact math accuracy and finite-sample pass-at-k aggregation."""
 
 from __future__ import annotations
 
@@ -33,7 +28,9 @@ def exact_math_metrics(
     required_sources=None,
     ks=(1, 2, 4, 8, 16),
 ):
-    if not len(data_sources) == len(sample_uids) == len(correctness) or not len(data_sources):
+    if not len(data_sources) == len(sample_uids) == len(correctness) or not len(
+        data_sources
+    ):
         raise ValueError("Validation columns must have equal, nonzero lengths")
     grouped = defaultdict(list)
     for source, uid, value in zip(data_sources, sample_uids, correctness, strict=True):
@@ -47,9 +44,17 @@ def exact_math_metrics(
     records, by_source = [], defaultdict(list)
     for (source, uid), values in grouped.items():
         if len(values) != samples_per_question:
-            raise ValueError(f"Expected {samples_per_question} samples for {source}/{uid}, got {len(values)}")
+            raise ValueError(
+                f"Expected {samples_per_question} samples for {source}/{uid}, got {len(values)}"
+            )
         n, c = len(values), int(sum(values))
-        row = {"data_source": source, "uid": uid, "n": n, "correct": c, f"mean@{n}": c / n}
+        row = {
+            "data_source": source,
+            "uid": uid,
+            "n": n,
+            "correct": c,
+            f"mean@{n}": c / n,
+        }
         row.update({f"pass@{k}": estimate_pass_at_k(n, c, k) for k in ks if k <= n})
         records.append(row)
         by_source[source].append(row)
@@ -57,14 +62,23 @@ def exact_math_metrics(
         counts = {key: len(value) for key, value in by_source.items()}
         if counts != dict(required_counts):
             raise ValueError(f"Validation question counts mismatch: {counts}")
-    fields = [f"mean@{samples_per_question}", *[f"pass@{k}" for k in ks if k <= samples_per_question]]
+    fields = [
+        f"mean@{samples_per_question}",
+        *[f"pass@{k}" for k in ks if k <= samples_per_question],
+    ]
     metrics = {}
     for source, questions in by_source.items():
         metrics[f"eval/{source}/questions"] = len(questions)
         metrics[f"eval/{source}/samples_per_question"] = samples_per_question
         for field in fields:
-            metrics[f"eval/{source}/{field}"] = sum(row[field] for row in questions) / len(questions)
+            metrics[f"eval/{source}/{field}"] = sum(
+                row[field] for row in questions
+            ) / len(questions)
     for field in fields:
-        metrics[f"eval/macro/{field}"] = sum(metrics[f"eval/{source}/{field}"] for source in by_source) / len(by_source)
-        metrics[f"eval/micro/{field}"] = sum(row[field] for row in records) / len(records)
+        metrics[f"eval/macro/{field}"] = sum(
+            metrics[f"eval/{source}/{field}"] for source in by_source
+        ) / len(by_source)
+        metrics[f"eval/micro/{field}"] = sum(row[field] for row in records) / len(
+            records
+        )
     return metrics, records

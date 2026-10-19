@@ -56,11 +56,7 @@ def prepared(tmp_path):
         target = repository / name
         target.parent.mkdir(parents=True, exist_ok=True)
         target.write_text(content)
-    for name in (
-        "workers/rollout/policy.py",
-        "trainer/ppo/fixed_rollout.py",
-        "trainer/ppo/math_eval.py",
-    ):
+    for name in ("trainer/ppo/fixed_rollout.py",):
         target = backend / "verl/verl" / name
         target.parent.mkdir(parents=True, exist_ok=True)
         shutil.copyfile(ROOT / "verl/verl" / name, target)
