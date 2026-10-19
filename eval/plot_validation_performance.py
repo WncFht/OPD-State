@@ -150,8 +150,9 @@ def main():
         ax.set_xlim(left=0)
         ax.set_xlabel("Four-replica output tokens / API second")
         ax.set_ylabel("Configuration")
-        ax.legend(frameon=False, loc="lower right")
-        fv.mark_neutral(memory_ax.barh(natural_y, memory_peaks, color=fv.NEUTRALS["baseline"]))
+        fig.legend(*ax.get_legend_handles_labels(), frameon=False, loc="upper center", ncol=2)
+        for bar in memory_ax.barh(natural_y, memory_peaks, color=fv.NEUTRALS["baseline"]):
+            fv.mark_neutral(bar)
         fv.mark_neutral(memory_ax.axvline(81559 / 1024, ls="--", color=fv.NEUTRALS["vink"], lw=1))
         memory_ax.set_xlim(0, 81559 / 1024 * 1.05)
         memory_ax.set_xlabel("Natural-phase whole-card peak (GiB)")
@@ -160,7 +161,7 @@ def main():
         for panel in panels:
             fv.apply_frame(panel, "open")
             fv.apply_grid(panel, "y-only", axis="x")
-        fig.subplots_adjust(left=0.25, right=0.97, bottom=0.23, top=0.97, wspace=0.16)
+        fig.subplots_adjust(left=0.25, right=0.97, bottom=0.23, top=0.89, wspace=0.16)
         fig.text(
             0.5,
             0.025,

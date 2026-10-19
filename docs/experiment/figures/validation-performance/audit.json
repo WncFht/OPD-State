@@ -1,17 +1,22 @@
 {
   "inputs_sha256": {
-    "docs/experiment/results/native-rollout/validation-performance/scoring-gpu.json": "4dc98b53c228d090d0dc6eed1fc77f581153d8d18f44d0e0f13aeb8338720f7e"
+    "docs/experiment/results/native-rollout/validation-performance/scoring-gpu.json": "4dc98b53c228d090d0dc6eed1fc77f581153d8d18f44d0e0f13aeb8338720f7e",
+    "docs/experiment/results/native-rollout/validation-performance/generation-gpu.json": "67f4db25b1646f0f5b28f7189df15ea6443d7657cbd30521465bb1eda8329441",
+    "docs/experiment/results/native-rollout/validation-performance/generation-gpu.csv": "9a67d362906a4f06c05d60f57a614d03104004839cc621780a56ae937d02ae8e"
   },
-  "driver_sha256": "99eafd524a733251710f04c9cc8f1b74986772830d331324fb6edb102fc0e75f",
+  "driver_sha256": "ad66637d5568b91c95e30cd311dabfe8ce5a13c4e8718e07bcf0d502c5017418",
   "style_sha256": "a9670b726e4890688bad9bec5cf5f39dcc6a1604ceebff8043c26cee95726581",
   "outputs_sha256": {
     "scoring.png": "e0421639beda960aec58ae489a49b99a531a79a34456ef47e63a2a668761dd28",
-    "scoring.pdf": "06595beaf34c72983454079912cb6134f796aaeb4589a24640ca18c51f3febfd",
+    "scoring.pdf": "ec3013dc4d5e92a3105f6c898c76d3b1d707d2855603edc5602b17f34fd17db8",
+    "generation.png": "623171763c91ed05a4bcc05af8e950fe749495fdb3c4bcee46129ea06d56d19d",
+    "generation.pdf": "2599160ba5c1f9165b308f1862315ae9a2f7b6a174e377e4749e010f44bb9681",
     "scoring.csv": "311607b79624fd4a0f1591dee4049ca2ae18d01bfc6dde09acbfab5d420412cc"
   },
   "matplotlib_version": "3.10.7",
   "audits": {
-    "scoring": []
+    "scoring": [],
+    "generation": []
   },
   "scope": "Paired scoring and separate inference API benchmarks, not full trainer speedup"
 }
