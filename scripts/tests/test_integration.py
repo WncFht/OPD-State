@@ -159,6 +159,7 @@ class IntegrationTests(unittest.TestCase):
         for name in [
             "staged_checks.py",
             "check_docs.py",
+            "doc_checks.py",
             "notes_guard.py",
             "check_archive.py",
         ]:

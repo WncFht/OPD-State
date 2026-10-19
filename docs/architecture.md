@@ -13,7 +13,7 @@
 | `verl/scripts/` | 原框架的模型与运行辅助脚本                                             |
 | `scripts/`      | 我们接入的维护检查、工具安装与 hooks                                   |
 
-配置与前台已迁入根 `configs/`、`recipes/`，独立审计位于 `tools/verify.py`。纯策略编译在 `src/opd_state/core/policy.py`，轨迹执行与权重发布状态机在 `src/opd_state/rollout/`，这些模块不导入 Torch、Ray、verl 或 vLLM。后端旧路径暂时只导出相同对象；修改算法时编辑包内实现。完整迁移与验收范围由 [MirrorOPD 对齐 Agent Note](../.agents/notes/proposed/architecture/2026-10-19-MirrorOPD配置与架构对齐.md)维护。
+配置与前台已迁入根 `configs/`、`recipes/`，独立审计位于 `tools/verify.py`。纯策略编译在 `src/opd_state/core/policy.py`，轨迹执行与权重发布状态机在 `src/opd_state/rollout/`，这些模块不导入 Torch、Ray、verl 或 vLLM。记录合同位于 `core/records.py`，数值计算位于 `kernels/`，评测聚合位于 `evaluation/`，分布式评分适配位于 `integrations/verl/`。旧转发模块已删除，调用方直接导入包内实现。suite 调度原型尚未接入 trainer，旧启动链仍待清理；重构当前暂停。完整迁移与验收范围由 [MirrorOPD 对齐 Agent Note](../.agents/notes/proposed/architecture/2026-10-19-MirrorOPD配置与架构对齐.md)维护。
 
 `verl/` 内部的 `setup.py`、`pyproject.toml` 和 `verl/` 包目录是上游原有结构。保留这一层可继续使用原安装入口和 recipe 的 PYTHONPATH 解析；日常改训练代码直接进入 `verl/verl/`。
 
@@ -33,14 +33,8 @@ PPO 主循环在 `verl/verl/trainer/ppo/ray_trainer.py`，OPD 的教师注册和
 
 固定 teacher 与初始 student 轨迹由 `data/prep/build_rollout_cache.py` 生成，`fixed_rollout.py` 验证并读取缓存；当前 student 和冻结 teacher 仍在训练时重新评分。`recipe/math_cached.sh` 选择缓存来源，所有设置均只更新 student。长时固定缓存训练由 `plateau.py` 合并每 50 步的验证与训练残差，记录经验平台判断。
 
-共享 prefix 的 logit fusion 已在 `verl/verl/workers/rollout/fusion/` 实现，通过 vLLM worker 扩展接收当前 actor 参数并生成融合轨迹，`recipe/math_fusion.sh` 提供训练入口。验证始终使用独立 student；完整两步调试与 λ=0.5 的正式 50 步实验均已完成。缓存身份、权重版本、后端限制、测试和结果见[统一实验协议](experiment/2026-10-19-rollout来源与logit融合实验.md)。原生路径通过 `recipe/math_native.sh` 接入单模型、轨迹内分段、batch 混合和双模型 fusion，均有四卡短训练证据；完整五十步质量与性能验收仍按[实验入口](experiment/2026-10-19-rollout来源与logit融合实验.md)列明范围。相关假设与判分归[研究正文](research/occupancy/2026-10-17-OPD访问测度与收敛机制研究.md)。
+共享 prefix 的 logit fusion 已在 `verl/verl/workers/rollout/fusion/` 实现，通过 vLLM worker 扩展接收当前 actor 参数并生成融合轨迹，`recipe/math_fusion.sh` 提供训练入口。验证始终使用独立 student；完整两步调试与 λ=0.5 的正式 50 步实验均已完成。缓存身份、权重版本、后端限制、测试和结果见[统一实验协议](experiment/2026-10-19-rollout来源与logit融合实验.md)。原生路径通过 `recipe/math_native.sh` 接入单模型、轨迹内分段、batch 混合和双模型 fusion，均有四卡短训练证据；正式质量、性能与未完成范围按[实验入口](experiment/2026-10-19-rollout来源与logit融合实验.md)列明范围。相关假设与判分归[研究正文](research/occupancy/2026-10-17-OPD访问测度与收敛机制研究.md)。
 
-### HF fusion 的计算与训练
+## 策略与实现细节
 
-当前 `name=vllm` 表示服务容器、RPC 和验证设施，fusion 的训练生成实际由 `LogitFusionDecoder` 中两套 Transformers 模型执行。每个 actor rank 对应一个单卡 fusion 副本；生成用 student 是训练 actor 的独立推理副本，另一套是冻结 teacher。actor 更新后的 named tensors 经 BucketedWeightSender/Receiver 原地写入推理 student，完整接收后才发布版本；第 $k$ 步生成要求版本为 $k-1$。同一参数流目前还更新原生 vLLM student，原生引擎用于 student-only 验证。
-
-每个 prompt 只使用一个 token 序列。两个模型分别 prefill 相同 prompt，保存各自 KV；每个解码位置分别得到 logits，在有效词表内转为 FP32 做加权，softmax 后只采样一个 token，再把同一个 token 送给两个模型。正式配方的 λ=0.5、温度为 1、无 top-p/top-k 截断。生成结束后，训练 actor 重新计算 student log-prob，FSDP teacher 重新评分；现有 OPD 信号与优化器只更新训练 student，fusion 不是一个新增的可训练混合模型。
-
-默认 `cuda_graph_flash` 的 prefill 使用 eager 前向，decode 捕获两套模型的前向并使用 Flash KV attention；FP32 logits 融合、softmax 和随机采样仍在图外执行。StaticCache 按 batch 与总长度容量建立，已结束行不会被新请求补入，只以 mask 排除；长短响应混批仍有空槽计算。λ=0/1 虽有正确的融合端点，当前生成循环仍执行两个模型，尚未剪去无用前向。行为 log-prob 在 decoder 中返回，但 worker 当前只汇总为指标，未作为逐 token 字段交给 learner。
-
-重构提案、替代方案、相关推理实现与验证条件统一维护于 [Agent Note：可组合 rollout 与原生 vLLM 推理](../.agents/notes/proposed/architecture/2026-10-18-可组合rollout与原生vLLM推理.md)。
+当前使用入口与策略语义归[Rollout 参考](reference/rollout.md)，原生工程证据归[支撑验证](experiment/support/2026-10-19-原生rollout工程验证.md)。历史 HF fusion 的执行关系见[历史实现说明](experiment/support/2026-10-19-HF融合历史实现.md)，不作为当前原生默认路径的说明。

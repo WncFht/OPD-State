@@ -1,6 +1,6 @@
 {
   "repository": "git@github.com:WncFht/agent-maintenance.git",
-  "commit": "f2b7cdfe4c6ab96ed779f42c878e84b7042edf43",
+  "commit": "78f4c630c71f22f4464ec718b7a7803f3d00418a",
   "license": "docs/provenance.md",
   "scope": [
     ".agents/skills",
@@ -11,5 +11,10 @@
     "scripts",
     "development configuration"
   ],
-  "adapted": true
+  "adapted": true,
+  "initial_commit": "f2b7cdfe4c6ab96ed779f42c878e84b7042edf43",
+  "documentation_adoption": {
+    "date": "2026-10-19",
+    "scope": "Question reports, supporting evidence, document lifecycle, local anchors and configurable budgets; no duplicate detection."
+  }
 }

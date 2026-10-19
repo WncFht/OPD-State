@@ -97,3 +97,9 @@ CUDA_VISIBLE_DEVICES='' PYTHONPATH=src:verl ../envs/opd-state/bin/python \
 ```
 
 `eval/run_native_acceptance.py` 保存完整源码快照、参数、退出状态与四卡遥测，`eval/collect_native_acceptance.py` 独立核对轨迹和最终指标。它们的短响应结果仅作训练链验收，运行实例和证据见[实验入口](experiment/2026-10-19-rollout来源与logit融合实验.md)。
+
+## 文档交付
+
+[问题主报告](experiment/2026-10-19-rollout来源与logit融合实验.md)维护研究结论，方法与调研分别归 research/occupancy 和 research/rollout，工程证据归 experiment/support；当前策略与使用归 [Rollout 参考](reference/rollout.md)。提案保留设计理由与未完成验收，执行流水进入 runs。
+
+文档检查核验本地文件与章节锚点，并读取 scripts/doc-policy.json：列出的常驻入口超限阻断，研究长文仅提示。跨仓库来源使用固定版本链接，不依赖相邻工作树。归属按 [docs 规则](AGENTS.md)维护，不做重复检测。

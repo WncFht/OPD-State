@@ -1,5 +1,7 @@
 # Rollout 来源与 logit fusion 工作记录
 
+本页为历史执行记录，包含当时的排队、修复与中间结果；当前协议和结论以[研究主报告](../experiment/2026-10-19-rollout来源与logit融合实验.md)为准。后续执行流水进入忽略的 runs，不继续追加本页。
+
 ## 目标与验收
 
 继续完成 teacher-cache、Semi-OPD 和 lambda=0.5 当前 student/teacher logit fusion 的实际训练。模型、采样、cap、优化器、统一 AMC23、AIME25、MATH-500 每题 16 次采样的评测，原 greedy baseline 仅作工程历史，GPU 限物理 0–3，W&B project 仍为 OPD-State，不保存模型 checkpoint。

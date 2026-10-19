@@ -1,6 +1,7 @@
 {
     "config": {
         "MD013": false,
+        "MD033": { "allowed_elements": ["a"] },
         "MD024": { "siblings_only": true },
         "MD029": false,
         "MD060": false,

@@ -64,19 +64,19 @@ OPD-State 的生成策略已经统一，但实验配置仍分散在 `math_native
 
 ### 1. 对齐配置系统的实际机制
 
-MirrorOPD 使用 [configs/train.yaml](../../../../../MirrorOPD/configs/train.yaml)继承固定后端的 `ppo_trainer`，通过 defaults 组合功能组。它没有先构造一份自定义 Job，再把 Job 编译成 verl 配置。
+MirrorOPD 使用 [configs/train.yaml](https://github.com/WncFht/MirrorOPD/blob/84f5039636ee77a73facc6fdc9a0802e6fecee0f/configs/train.yaml)继承固定后端的 `ppo_trainer`，通过 defaults 组合功能组。它没有先构造一份自定义 Job，再把 Job 编译成 verl 配置。
 
-| 机制         | MirrorOPD 当前实现                                                                                                      | OPD-State 采用方式                                          |
-| ------------ | ----------------------------------------------------------------------------------------------------------------------- | ----------------------------------------------------------- |
-| 单一组合入口 | [recipes/configuration.py](../../../../../MirrorOPD/recipes/configuration.py)的 `configure` / `compose_config`          | 同样供训练、预检、study 和测试调用                          |
-| 后端配置来源 | Hydra searchpath 指向 `--backend` 的原生配置目录                                                                        | 来自我们锁定的 One-Shot-OPD 后端，不替换成 TA-OPD           |
-| 配置组       | backend、student、teacher、dataset、algorithm、evaluation、checkpoint、logging、experiment、training                    | 保留同名分工；增加独立 rollout 策略组                       |
-| 原生字段     | `actor_rollout_ref.*`、`data.*`、`trainer.*` 等继续使用原名                                                             | 优化器、FSDP、vLLM 不再包一套同义字段                       |
-| 扩展类型     | Objective/Memory注册到ConfigStore；评测对象经严格decoder校验                                                            | 定义自有 Objective、RolloutPolicy、KL 诊断等小型类型        |
-| 插值         | 显式 paths、run.dir 及路径/context resolver                                                                             | 使用独立训练 context 与验证 context，保留 5,120/32,768 分离 |
-| 前台入口     | [recipes/train.py](../../../../../MirrorOPD/recipes/train.py)选择 `--backend` 或 `--prepared`，其余参数交给 Hydra       | 相同 CLI 形态；prepared 模式拒绝追加覆盖                    |
-| Shell 包装   | [scripts/_training.sh](../../../../../MirrorOPD/scripts/_training.sh)归一化路径、选择 Python 及运行目录，按数组转发参数 | 只保留环境便利入口，科学默认值只在配置中                    |
-| Study        | [tools/study.py](../../../../../MirrorOPD/tools/study.py)调用同一 compose/prepare/run/verify                            | 十五条件与 seed 矩阵不再拥有独立训练启动逻辑                |
+| 机制         | MirrorOPD 当前实现                                                                                                                                                               | OPD-State 采用方式                                          |
+| ------------ | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ----------------------------------------------------------- |
+| 单一组合入口 | [recipes/configuration.py](https://github.com/WncFht/MirrorOPD/blob/7d13aaef480df12d52723d2106c2608f8505307b/recipes/configuration.py)的 `configure` / `compose_config`          | 同样供训练、预检、study 和测试调用                          |
+| 后端配置来源 | Hydra searchpath 指向 `--backend` 的原生配置目录                                                                                                                                 | 来自我们锁定的 One-Shot-OPD 后端，不替换成 TA-OPD           |
+| 配置组       | backend、student、teacher、dataset、algorithm、evaluation、checkpoint、logging、experiment、training                                                                             | 保留同名分工；增加独立 rollout 策略组                       |
+| 原生字段     | `actor_rollout_ref.*`、`data.*`、`trainer.*` 等继续使用原名                                                                                                                      | 优化器、FSDP、vLLM 不再包一套同义字段                       |
+| 扩展类型     | Objective/Memory注册到ConfigStore；评测对象经严格decoder校验                                                                                                                     | 定义自有 Objective、RolloutPolicy、KL 诊断等小型类型        |
+| 插值         | 显式 paths、run.dir 及路径/context resolver                                                                                                                                      | 使用独立训练 context 与验证 context，保留 5,120/32,768 分离 |
+| 前台入口     | [recipes/train.py](https://github.com/WncFht/MirrorOPD/blob/61bfe5a5d6ed6365c6b9fd5943e5b5247f2d5973/recipes/train.py)选择 `--backend` 或 `--prepared`，其余参数交给 Hydra       | 相同 CLI 形态；prepared 模式拒绝追加覆盖                    |
+| Shell 包装   | [scripts/_training.sh](https://github.com/WncFht/MirrorOPD/blob/84f5039636ee77a73facc6fdc9a0802e6fecee0f/scripts/_training.sh)归一化路径、选择 Python 及运行目录，按数组转发参数 | 只保留环境便利入口，科学默认值只在配置中                    |
+| Study        | [tools/study.py](https://github.com/WncFht/MirrorOPD/blob/61bfe5a5d6ed6365c6b9fd5943e5b5247f2d5973/tools/study.py)调用同一 compose/prepare/run/verify                            | 十五条件与 seed 矩阵不再拥有独立训练启动逻辑                |
 
 配置组的文件使用 `# @package _global_` 覆盖相关原生字段；已有后端 group 使用带 package 的 defaults 项。需要测试组名与后端已有 `algorithm`、`rollout` group 的共存，不能靠重命名原生字段绕过冲突。
 
@@ -246,7 +246,7 @@ Batch 混合沿用 `components`、`assignment: exact_count`、`routing_unit: tra
 
 ### 5. 校验、派生值和配置身份
 
-MirrorOPD 的 [validate_native_config](../../../../../MirrorOPD/src/mirroropd/integrations/verl/config.py)负责数学与支持范围，输入读取由 [prepare_inputs](../../../../../MirrorOPD/recipes/inputs.py)承担。采用同样的分层，而不是在每个脚本里重复校验。
+MirrorOPD 的 [validate_native_config](https://github.com/WncFht/MirrorOPD/blob/91567a023b019b2596822d93a0d1603283539ed6/src/mirroropd/integrations/verl/config.py)负责数学与支持范围，输入读取由 [prepare_inputs](https://github.com/WncFht/MirrorOPD/blob/e576604b2ea5016f0a806c9b4e5e71b3e3290dfb/recipes/inputs.py)承担。采用同样的分层，而不是在每个脚本里重复校验。
 
 1. **组合**：Hydra 读取配置组、处理插值和 CLI 覆盖；只注册必要的扩展 schema。普通原生字段的类型继续由后端负责。
 2. **静态约束**：不读取模型、不初始化 CUDA，检查有限参数、未知扩展字段、版本、策略互斥、全局 batch 整除、上下文和端点、sampled-token 协议与 KL 设置。
@@ -262,7 +262,7 @@ MirrorOPD 的 [validate_native_config](../../../../../MirrorOPD/src/mirroropd/in
 
 ### 6. Prepare、冻结与运行生命周期
 
-采用 [MirrorOPD 前台应用](../../../../../MirrorOPD/recipes/application.py)的前台所有权模型：
+采用 [MirrorOPD 前台应用](https://github.com/WncFht/MirrorOPD/blob/e576604b2ea5016f0a806c9b4e5e71b3e3290dfb/recipes/application.py)的前台所有权模型：
 
 ```mermaid
 flowchart LR
