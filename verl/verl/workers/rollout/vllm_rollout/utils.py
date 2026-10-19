@@ -284,6 +284,20 @@ class vLLMColocateWorkerExtension:
         torch.cuda.synchronize()
         return {"native_device_idle": True}
 
+    def native_cuda_memory(self, reset=False):
+        """Read allocator telemetry through a named, serializable worker RPC."""
+        if type(reset) is not bool:
+            raise ValueError("Allocator peak reset must be boolean")
+        torch.cuda.synchronize()
+        if reset:
+            torch.cuda.reset_peak_memory_stats()
+        return {
+            "allocated": torch.cuda.memory_allocated(),
+            "reserved": torch.cuda.memory_reserved(),
+            "peak_allocated": torch.cuda.max_memory_allocated(),
+            "peak_reserved": torch.cuda.max_memory_reserved(),
+        }
+
     def native_model_layout(self):
         """Report actual native KV regions for paired-model acceptance."""
         from vllm.compilation.counter import compilation_counter

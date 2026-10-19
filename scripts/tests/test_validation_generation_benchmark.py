@@ -5,6 +5,7 @@ import math
 import sys
 import unittest
 from pathlib import Path
+from types import SimpleNamespace
 
 ROOT = Path(__file__).resolve().parents[2]
 sys.path.insert(0, str(ROOT / "eval"))
@@ -16,6 +17,12 @@ SPEC.loader.exec_module(BENCH)
 
 
 class GenerationBenchmarkTests(unittest.TestCase):
+    def test_dead_worker_is_rejected_before_waiting_at_the_generation_barrier(self):
+        connection = SimpleNamespace(poll=lambda timeout: False)
+        process = SimpleNamespace(is_alive=lambda: False, pid=123, exitcode=1)
+        with self.assertRaisesRegex(RuntimeError, "exited 1"):
+            BENCH.receive(connection, process)
+
     def prepared(self):
         return {
             "questions": [

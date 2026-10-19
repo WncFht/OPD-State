@@ -296,6 +296,29 @@ class CoordinatorTests(unittest.TestCase):
                 self.assertEqual(r.max_num_seqs, 8)
                 self.assertEqual(r.gpu_memory_utilization, 0.2)
 
+    def test_named_memory_rpc_reads_worker_peaks_and_resets_only_when_requested(self):
+        from verl.workers.rollout.vllm_rollout.utils import vLLMColocateWorkerExtension
+
+        cuda = NS(
+            synchronize=lambda: None,
+            reset_peak_memory_stats=lambda: None,
+            memory_allocated=lambda: 10,
+            memory_reserved=lambda: 20,
+            max_memory_allocated=lambda: 30,
+            max_memory_reserved=lambda: 40,
+        )
+        with (
+            patch("verl.workers.rollout.vllm_rollout.utils.torch.cuda", cuda),
+            patch.object(cuda, "reset_peak_memory_stats") as reset,
+        ):
+            actual = vLLMColocateWorkerExtension.native_cuda_memory(NS())
+            self.assertEqual(actual, {"allocated": 10, "reserved": 20, "peak_allocated": 30, "peak_reserved": 40})
+            reset.assert_not_called()
+            vLLMColocateWorkerExtension.native_cuda_memory(NS(), reset=True)
+            reset.assert_called_once()
+            with self.assertRaisesRegex(ValueError, "boolean"):
+                vLLMColocateWorkerExtension.native_cuda_memory(NS(), reset=1)
+
     def test_worker_receipt_reads_the_actual_engine_scheduler_configuration(self):
         from verl.workers.rollout.vllm_rollout.utils import vLLMColocateWorkerExtension
 

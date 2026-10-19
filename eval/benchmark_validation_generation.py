@@ -66,20 +66,6 @@ def clean_metrics(value):
     return value
 
 
-def worker_cuda_memory(worker, reset=False):
-    import torch
-
-    torch.cuda.synchronize()
-    if reset:
-        torch.cuda.reset_peak_memory_stats()
-    return {
-        "allocated": torch.cuda.memory_allocated(),
-        "reserved": torch.cuda.memory_reserved(),
-        "peak_allocated": torch.cuda.max_memory_allocated(),
-        "peak_reserved": torch.cuda.max_memory_reserved(),
-    }
-
-
 def worker(rank, ordinal, profile, prepared, connection, barrier, directory):
     os.environ.update(
         CUDA_VISIBLE_DEVICES=str(ordinal),
@@ -161,8 +147,9 @@ def worker(rank, ordinal, profile, prepared, connection, barrier, directory):
                 for row in rows
             ]
             llm.reset_prefix_cache()
-            llm.collective_rpc(worker_cuda_memory, kwargs={"reset": True})
+            llm.collective_rpc("native_cuda_memory", kwargs={"reset": True})
             before = clean_metrics([dataclasses.asdict(metric) for metric in llm.get_metrics()])
+            connection.send({"state": "phase_ready", "rank": rank})
             barrier.wait()
             tick = time.perf_counter()
             outputs = llm.generate(
@@ -204,7 +191,7 @@ def worker(rank, ordinal, profile, prepared, connection, barrier, directory):
                     "eos": sum(row["finish_reason"] == "stop" for row in records),
                     "length": sum(row["finish_reason"] == "length" for row in records),
                     "input_positions": sum(len(row["prompt_ids"]) for row in rows),
-                    "memory": llm.collective_rpc(worker_cuda_memory)[0],
+                    "memory": llm.collective_rpc("native_cuda_memory")[0],
                     "metrics_before": before,
                     "metrics_after": clean_metrics([dataclasses.asdict(metric) for metric in llm.get_metrics()]),
                     "responses_file": filename,
@@ -330,6 +317,8 @@ def main():
                 ):
                     raise ValueError("Actual engine device or limits differ from profile")
                 result["engines"].append({"profile": profile["name"], **receipt})
+                result["state"] = "initializing"
+                (directory / "result.json").write_text(json.dumps(result, indent=2) + "\n")
             phases = [
                 ("warmup-fixed", True, True, args.fixed_cap),
                 ("fixed-0", True, False, args.fixed_cap),
@@ -347,6 +336,11 @@ def main():
                             "fixed_length": fixed,
                         }
                     )
+                # Detect failed workers before entering a collective barrier.
+                # A child can fail while resetting metrics or preparing inputs.
+                for connection, process in zip(connections, processes, strict=True):
+                    if receive(connection, process).get("state") != "phase_ready":
+                        raise ValueError("Generation worker did not prepare this phase")
                 barrier.wait()
                 started = time.time()
                 tick = time.perf_counter()
