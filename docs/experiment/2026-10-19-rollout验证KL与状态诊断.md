@@ -4,36 +4,57 @@
 
 ## 方案与当前进度
 
-| 状态集合               | 输入                                  | 评分范围                         | 用途                                    |
-| ---------------------- | ------------------------------------- | -------------------------------- | --------------------------------------- |
-| `on_validation_states` | 完整 570×16 的最终 student 准确率响应 | 每个有效 response 位置，不抽样   | 实际验证状态上的条件 KL 与累计量        |
-| `on_initial_states`    | 固定初始 student 的九十条响应         | 每条至多八个分层位置，带区间权重 | 不同训练变体在相同初始模型状态上的对照  |
-| `on_teacher_states`    | 固定 teacher 的九十条响应             | 同样的位置预算与权重规则         | 不同训练变体在相同 teacher 状态上的对照 |
+| 状态集合               | 输入                                | 评分范围                         | 用途                                    |
+| ---------------------- | ----------------------------------- | -------------------------------- | --------------------------------------- |
+| `on_validation_states` | 完整 570×16 的本次 student 验证响应 | 每个有效 response 位置，不抽样   | 实际验证状态上的条件 KL 与累计量        |
+| `on_initial_states`    | 固定初始 student 的九十条响应       | 每条至多八个分层位置，带区间权重 | 不同训练变体在相同初始模型状态上的对照  |
+| `on_teacher_states`    | 固定 teacher 的九十条响应           | 同样的位置预算与权重规则         | 不同训练变体在相同 teacher 状态上的对照 |
 
 固定前缀库、六题×16 长响应及完整 570×16 工程验收均已通过。完整规模的两次 B8、64-token 更新后，对 9,120 条响应的全部 56,737,088 个有效位置评分，并核对四 worker、原始 token、逐题归约与 W&B 最终行。该任务验收完整覆盖与资源，不是五十步质量对照。
 
 五组已结束的正式训练使用冻结 d59a7c3 协议，不含新增验证 KL，且未保存最终权重；只有响应文本无法追溯补算。开发入口的 `trainer.validation_kl.enabled` 当前默认关闭，完整规模正确性已通过，吞吐优化仍待受控对照；新实验需显式开启并计入额外评分成本。
 
+## 每个验证点的版本与训练恢复
+
+KL hook 挂在通用的 `_validate()` 内，`trainer.validation_kl.enabled=True` 时每次调用都执行，不要求当前 step 等于训练总步数。记当前验证发生在训练更新 $v$ 后、总更新数为 $T$，生成与评分均使用实时 $p_{\theta_v}$；末步只是 $v=T$。无需先保存 checkpoint 再读取权重。
+
+验证频率由 `trainer.test_freq` 决定。例如在原生配方上合并下面配置，验证发生在 step20/40/60/80/100，每次都计算 KL；打开 `val_before_train` 还会评估 step0。
+
+```yaml
+trainer:
+    total_training_steps: 100
+    test_freq: 20
+    val_before_train: false
+    validation_kl:
+        enabled: true
+```
+
+每轮验证先同步版本 $v$ 到纯 student 引擎，收集该版本的准确率响应；整轮生成完成后再评分当前 actor 与冻结 teacher。中间验证结束时 `end_eval(v, resume_training=True)` 休眠验证引擎，恢复需要当前 actor 的训练来源；固定 p0/q 来源保持冻结。训练随后继续更新至 $v+1$。末步使用 `resume_training=False`，省去训练恢复。
+
+原始 token 与报告分别写入 `validation/kl/kl-tokens-step-<v>.jsonl` 和 `kl-step-<v>.json`，均记录 `student_version=v`，acc、KL、长度等指标返回同一训练 step。固定前缀 bank 跨验证点不变，student 概率每次按实时权重重算，不沿用上次 head 快照或 KL。
+
+[连续验证 CPU 回归](results/native-rollout/periodic-validation-cpu.json)使用真实小型 Qwen2 与 SGD，在 step0/2/4 调用实际 trainer/teacher 评分方法：检查不同版本输出独立、更新后 KL 改变、bank 与 teacher 不变，以及恢复标志依次为 true/true/false。它模拟 DP RPC，不运行 GPU 引擎；同一四卡训练中的多验证点 KL 及恢复仍须独立验收，已有真实 GPU KL 证据仅覆盖各运行的末步。
+
 ## 复用准确率响应的评分流程
 
 ```mermaid
 flowchart TD
-    V["最终 student 原生 vLLM 验证<br/>570题 × 16；T=0.7，top-p=0.9"] --> R["保留 prompt/response 原始 token<br/>UID、sample、版本与有效长度"]
+    V["当前验证版本 student 原生 vLLM 验证<br/>570题 × 16；T=0.7，top-p=0.9"] --> R["保留 prompt/response 原始 token<br/>UID、sample、版本与有效长度"]
     R --> D["生成结束；休眠全部推理副本"]
     B["不可变 p0/q 前缀库<br/>相同题目、固定 token/位置/权重"] --> S
-    D --> S["最终 student 与冻结 teacher<br/>相同前缀，无梯度 causal forward"]
+    D --> S["当前验证版本 student 与冻结 teacher<br/>相同前缀，无梯度 causal forward"]
     S --> H["保留所需 hidden；分位置投影两套 head<br/>完整有效词表归一化，FP32 KL/entropy 归约"]
     H --> A["逐响应累计、长度归一化、深度分层<br/>逐题/逐基准归约与题目 bootstrap"]
-    A --> O["准确率与 KL 同一最终 W&B 行<br/>原始 token、报告及独立覆盖审计"]
+    A --> O["准确率与 KL 同一验证 step 的 W&B 行<br/>原始 token、报告及独立覆盖审计"]
 ```
 
 响应已知，因果前向可以一次计算多个位置，无需重新逐 token 生成。生成继续使用 vLLM；评分读取同卡现有 FSDP student/teacher，不使用 HF 生成回退。模型 eval、无梯度；恢复原 training flags，保留参数与 RNG 状态。
 
-主验证必须保留准确的 token IDs、response mask 与最终 student 版本；不从解码文本重新 tokenize，也不以 old_log_probs 代替当前分布。第一个 action 的预测位置是 prompt 最后一个 token，EOS 是有效 action，padding 和响应结束后的额外位置不计。各 FSDP rank 使用匹配次数的参数收集，DP 补齐行在返回后去除。
+主验证必须保留准确的 token IDs、response mask 与当前验证 step 的 student 版本；不从解码文本重新 tokenize，也不以 old_log_probs 代替当前分布。第一个 action 的预测位置是 prompt 最后一个 token，EOS 是有效 action，padding 和响应结束后的额外位置不计。各 FSDP rank 使用匹配次数的参数收集，DP 补齐行在返回后去除。
 
 ## Full-vocab 条件 KL 与归约
 
-令 $p=p_\theta$ 为最终 student、$q$ 为冻结 teacher；在同一 prefix $s$ 上，以 T=1 原始 logits 和共同有效词表 $\mathcal V$ 归一化：
+令 $p=p_\theta$ 为本次验证的 student、$q$ 为冻结 teacher；在同一 prefix $s$ 上，以 T=1 原始 logits 和共同有效词表 $\mathcal V$ 归一化：
 
 $$
 k_{p\Vert q}(s)=\sum_{a\in\mathcal V}p(a\mid s)\log\frac{p(a\mid s)}{q(a\mid s)},\qquad
@@ -90,7 +111,7 @@ $$
 | 结束状态   | EOS 比例、非 EOS 的 cap 截断比例、空响应、abort/error 数量          |
 | 答案       | 解析成功率、每题答案多样性；失败和缺失显式计数                      |
 | 退化与分层 | 重复 4-gram 比例；正确/错误/截断响应的长度分布                      |
-| 来源       | 最终 student 版本、UID/sample、原始 finish/stop reason              |
+| 来源       | 当前验证版本、UID/sample、原始 finish/stop reason                   |
 | KL 深度    | 0–255、256–1023、1024–2047、2048 及以上位置分别归约                 |
 
 以上实现与 KL hook 已完成全量链路验收；冻结 d59a7c3 的已结束五组不追溯增加未保存字段。

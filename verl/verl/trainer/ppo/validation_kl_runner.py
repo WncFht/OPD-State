@@ -158,7 +158,7 @@ def summarize_kl(rows):
 
 
 def run_validation_kl(trainer, records):
-    """Score before final weights disappear; all generation replicas must sleep first."""
+    """Score the live student at this validation step after sleeping all replicas."""
     settings = trainer.config.trainer.validation_kl
     bank, bank_sha = getattr(trainer, "_validation_kl_bank", ([], None))
     all_records = records + bank

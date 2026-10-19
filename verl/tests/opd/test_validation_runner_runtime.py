@@ -140,6 +140,74 @@ class ScoringRunnerTests(unittest.TestCase):
         with self.assertRaisesRegex(ValueError, "exactly one"):
             run_validation_kl(trainer, rows)
 
+    def test_periodic_validation_uses_each_live_version_and_resumes_until_final_step(self):
+        trainer, events, dumped = self.trainer()
+        trainer.total_training_steps = 4
+        resumptions = []
+        original_end = trainer.rollout_coordinator.end_eval
+
+        def end_eval(version, *, resume_training):
+            resumptions.append((version, resume_training))
+            return original_end(version, resume_training=resume_training)
+
+        trainer.rollout_coordinator.end_eval = end_eval
+        bank = [
+            {
+                "state_source": source,
+                "source": "MATH-500",
+                "uid": "fixed",
+                "sample": 0,
+                "prompt_ids": [1, 3],
+                "response_ids": [6, 6, 2],
+                "positions": [0, 2],
+                "weights": [1, 2],
+            }
+            for source in ("on_initial_states", "on_teacher_states")
+        ]
+        trainer._validation_kl_bank = (bank, "same-bank-across-validation-steps")
+        frozen_bank = copy.deepcopy(bank)
+        frozen_teacher = copy.deepcopy(self.teacher.state_dict())
+        optimizer = torch.optim.SGD(self.student.parameters(), lr=0.1)
+        ids = torch.tensor([[1, 3, 6, 2]])
+        reward = fixtures.ValidationTrainerTests().reward
+        observed = []
+        for step in (0, 2, 4):
+            if step:
+                # Real learner updates between validations catch cached heads or
+                # a worker accidentally reading the initial student's weights.
+                for _ in range(2):
+                    optimizer.zero_grad(set_to_none=True)
+                    self.student(input_ids=ids, labels=ids, use_cache=False).loss.backward()
+                    optimizer.step()
+            trainer.global_steps = step
+            before = copy.deepcopy(self.student.state_dict())
+            rng = torch.random.get_rng_state().clone()
+            with patch("verl.trainer.ppo.ray_trainer.extract_reward", side_effect=reward):
+                metrics = trainer._validate()
+            self.assertTrue(torch.equal(rng, torch.random.get_rng_state()))
+            self.assertTrue(all(torch.equal(v, before[k]) for k, v in self.student.state_dict().items()))
+            self.assertTrue(all(torch.equal(v, frozen_teacher[k]) for k, v in self.teacher.state_dict().items()))
+            report = json.loads((self.directory / f"kl/kl-step-{step}.json").read_text())
+            self.assertEqual(report["student_version"], step)
+            self.assertEqual(report["fixed_bank_sha256"], "same-bank-across-validation-steps")
+            tokens = self.directory / f"kl/kl-tokens-step-{step}.jsonl"
+            self.assertEqual(report["tokens_sha256"], hashlib.sha256(tokens.read_bytes()).hexdigest())
+            columns = dumped[-1]["reward_extra_infos_dict"]
+            self.assertEqual(columns["rollout_student_version"], [step] * 6)
+            self.assertEqual(metrics["validation_kl/on_validation_states/micro/evaluated_positions"], 20)
+            for source in ("on_initial_states", "on_teacher_states"):
+                self.assertEqual(metrics[f"validation_kl/{source}/micro/evaluated_positions"], 2)
+            observed.append(metrics["validation_kl/on_validation_states/micro/student_teacher_kl/token_weighted"])
+        self.assertEqual(resumptions, [(0, True), (2, True), (4, False)])
+        self.assertEqual(
+            events,
+            [event for step in (0, 2, 4) for event in [("begin", step), ("sleep",), ("score", 8), ("end", step)]],
+        )
+        self.assertEqual(len(list((self.directory / "kl").glob("kl-step-*.json"))), 3)
+        self.assertEqual(bank, frozen_bank)
+        self.assertNotAlmostEqual(observed[0], observed[1], places=6)
+        self.assertNotAlmostEqual(observed[1], observed[2], places=6)
+
     def test_shared_fixed_bank_runs_alongside_full_validation_without_changing_main_coverage(self):
         trainer, _, _ = self.trainer()
         bank = [

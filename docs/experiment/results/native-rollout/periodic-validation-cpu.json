@@ -1,0 +1,62 @@
+{
+  "schema": "periodic-validation-cpu-v1",
+  "passed": true,
+  "scope": "Actual _validate/teacher scoring methods with tiny CPU Qwen2 models and simulated DP RPC; no GPU engine or full fit scheduler execution",
+  "python": "3.12.15",
+  "packages": {
+    "torch": "2.7.1+cu126",
+    "transformers": "4.57.6",
+    "omegaconf": "2.3.1"
+  },
+  "commands": [
+    "CUDA_VISIBLE_DEVICES='' OMP_NUM_THREADS=2 PYTHONPATH=verl ../envs/opd-state/bin/python -m unittest discover -s verl/tests/opd -p 'test_validation*_runtime.py' -v",
+    "CUDA_VISIBLE_DEVICES='' OMP_NUM_THREADS=2 PYTHONPATH=verl ../envs/opd-state/bin/python -m unittest discover -s verl/tests/opd -p test_rollout_coordinator_runtime.py -v"
+  ],
+  "test_runs": [
+    {
+      "log_name": "periodic-validation-all-runtime.log",
+      "tests": 28,
+      "elapsed_s": 0.864,
+      "sha256": "c71e8e085693eb96d6cd639a3ec31a8aed7a10209ce2ced2e8f708f4b275df20"
+    },
+    {
+      "log_name": "periodic-validation-coordinator-runtime.log",
+      "tests": 16,
+      "elapsed_s": 9.221,
+      "sha256": "08a8dc9704cca536000a8e57c803841e473ec5c8741158d742d6db3824f1c2ab"
+    }
+  ],
+  "periodic_case": {
+    "validation_steps": [0, 2, 4],
+    "total_training_steps": 4,
+    "sgd_updates_between_validations": [2, 2],
+    "resume_training": [true, true, false],
+    "main_responses_per_validation": 6,
+    "main_effective_positions_per_validation": 20,
+    "bank_responses_per_validation": 2,
+    "bank_selected_positions_per_validation": 4,
+    "checked": [
+      "current step on response metadata and report",
+      "separate raw-token/report files and matching checksums",
+      "KL changes after real student optimizer updates",
+      "readonly scoring preserves current student, frozen teacher and RNG",
+      "fixed bank reused unchanged",
+      "resume-training flags for initial/intermediate/final validation"
+    ]
+  },
+  "limitations": [
+    "No CUDA/native-engine sleep-wake or distributed GPU collective execution",
+    "A real four-GPU training run with intermediate KL and subsequent updates remains unverified",
+    "Existing full-scale GPU gates evaluated the last step of their engineering runs"
+  ],
+  "source_files_sha256": {
+    "verl/tests/opd/test_validation_runner_runtime.py": "05d100d7363e8a001936b4bd15db361248d2724f1e43bcf78be90cd1bb820e0d",
+    "verl/tests/opd/test_validation_metrics_runtime.py": "a0efcfd754532e1c053fd356134ea3051b5644d2782a07315c0722e8ce3daa0a",
+    "verl/tests/opd/test_rollout_coordinator_runtime.py": "0a1fea52891c135b454c587ad94b2711ce6419fe2bdd8173eb62fe85fd976f6f",
+    "verl/verl/trainer/ppo/ray_trainer.py": "f6f20c43994c00f54489bfad0f595d168e4a339d01349428e81cb695e50bb295",
+    "verl/verl/trainer/ppo/rollout_coordinator.py": "a47173d0e0eadaea38ffd12a9c5627dcc20bbff33d27b98f3e6a2113b0521f04",
+    "verl/verl/trainer/ppo/validation_kl_runner.py": "d3490d79b41c5eaf45f2d672078784847200f49a067e8d05af0f1b542787ca04",
+    "verl/verl/workers/fsdp_teacher_worker.py": "b429d3c03c09a610977a5ba054eb65ff6448cde9dbd6ab38c4e7a785f0899964",
+    "verl/verl/workers/validation_kl.py": "cd04972a549662c042a27cd03c351916c5a0aaf55ff23c5d4e83ced1e3d1ed3b"
+  }
+}

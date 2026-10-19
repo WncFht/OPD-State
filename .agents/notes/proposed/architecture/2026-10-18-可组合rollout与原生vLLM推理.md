@@ -685,6 +685,8 @@ prompt 池由 `data.train_files`、清洗、去重与 sampler 决定，训练步
 
 开发源码已用 `trainer.validation_kl.enabled=True` 接入完整条件 KL 的可选验证 hook，默认关闭以保留原实验协议。输入校验对整个调用复用一次有效词表大小；本环境 tokenizer 的长度查询存在实测开销，不能放在逐响应循环内重复执行。缓存值同时用于记录支持集、worker metadata 和报告，保持词表解释一致。[CPU 对照](../../../../docs/experiment/results/native-rollout/tokenizer-vocab-cache-cpu.json)在相同 180 条真实 bank 记录上验证位置/权重输出逐值一致，只描述校验成本，不作为神经网络评分加速证据。它复用整轮准确率响应，在原生引擎休眠后使用同卡的最终 student 和冻结 teacher 评分，保存逐响应累计量、均值、分层统计及原始 token。开发版长度/EOS/解析/多样性指标和 KL 链路已通过真实 Torch/DataProto、实际 trainer 方法与小型 Qwen2 的 CPU 检查；两进程 CPU FSDP 还验证优化器更新后读取新 student、teacher 参数不变。真实四卡短响应、固定 bank 与长响应评分已通过下文验收；完整 570×16 评分已覆盖 56,737,088 个有效位置，wall time 45.70 min；资源与负载分解见[速度专题](../../../../docs/experiment/2026-10-19-rollout速度与显存.md#完整验证-kl-的成本与瓶颈)，尚未据此宣称吞吐已优化。冻结的 d59a7c3 矩阵不含新增指标，已结束且未保存最终权重的运行不能仅凭响应文本补算最终 KL。
 
+KL hook 服务每次 `_validate()` 调用，读取当前 `global_steps` 的实时 student；末步是验证版本等于训练总步数的特例。中间验证结束通过 `end_eval(..., resume_training=True)` 恢复训练，末步不恢复；按 step 分别写出原始 token 与报告，共同 bank 跨验证保持不变。真实小 Qwen2 的 step0/2/4 连续验证、两段 SGD 更新、版本/输出隔离和恢复标志已通过 [CPU 回归](../../../../docs/experiment/results/native-rollout/periodic-validation-cpu.json)；该证据模拟 DP RPC，同一四卡训练中的中间 KL 与训练恢复仍待实际验收。配置和语义归 [KL 专题](../../../../docs/experiment/2026-10-19-rollout验证KL与状态诊断.md#每个验证点的版本与训练恢复)。
+
 #### 散度方向、状态来源与归约
 
 记 $p=p_\theta$ 为被评测的最终 student，$q$ 为冻结 teacher，二者均使用 temperature=1 的原始分布，并在共同有效词表 $\mathcal V$ 上归一化，排除输出 head 的填充词表项。在同一个实际前缀 $s_t=(x,y_{<t})$ 上定义

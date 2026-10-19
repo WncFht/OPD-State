@@ -163,7 +163,7 @@ class ValidationTrainerTests(unittest.TestCase):
                     "response_cap": 6,
                     "prompt_id": uid,
                     "sample": index % 2,
-                    "student_version": 50,
+                    "student_version": trainer.global_steps,
                 }
             result = pack_token_records(records, prompt_cap=3, response_cap=6, pad_token_id=2, source="fixture")
             result.non_tensor_batch["native_response_info"] = infos
