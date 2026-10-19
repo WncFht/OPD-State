@@ -49,6 +49,8 @@ def prepared(tmp_path):
         "src/opd_state/__init__.py": "__version__ = 'fixture'\n",
         "recipes/__init__.py": "",
         "recipes/train.py": "from pathlib import Path\nimport os\nPath(os.environ['OPD_MANIFEST_PATH']).parent.joinpath('dispatch-proof.txt').write_text(__file__)\n",
+        "tools/__init__.py": "",
+        "tools/verify.py": "from pathlib import Path\nimport sys\nPath(sys.argv[1]).joinpath('verification-dispatch-proof.txt').write_text(__file__)\n",
         "configs/train.yaml": "{}\n",
     }.items():
         target = repository / name

@@ -9,16 +9,13 @@ from pathlib import Path
 
 
 def dispatch_prepared(directory):
-    from tools.verify import verify_prepared
+    from recipes.snapshots import frozen_environment, verify_frozen_files
 
     root = Path(directory).expanduser().resolve(strict=True)
-    config, _manifest, _inputs = verify_prepared(root, verify_assets=False)
     entry = root / "source/recipes/train.py"
     if Path(__file__).resolve() != entry:
-        environment = {
-            **os.environ,
-            **dict(config.ray_kwargs.ray_init.runtime_env.env_vars),
-        }
+        verify_frozen_files(root)
+        environment = frozen_environment(root)
         os.chdir(root / "source")
         os.execve(
             sys.executable,

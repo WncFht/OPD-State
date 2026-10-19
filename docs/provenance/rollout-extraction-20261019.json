@@ -1,0 +1,105 @@
+{
+  "schema_version": 1,
+  "scope": "Pure rollout module extraction; CPU semantic parity passed, GPU replay incomplete",
+  "implementation_commit": "5a63363",
+  "baseline_commit": "2eec618f5f62545cd265c6231f18a05132b828d7",
+  "oracle": {
+    "path": "tests/oracles/rollout-extraction.json",
+    "sha256": "42db9f28267783c62abfb9d0c907645390469dc7717e25c63879c5b624d85557",
+    "routing_cases": 87,
+    "unchanged_algorithm_bodies": 3
+  },
+  "tests": {
+    "configuration_and_rollout_cpu": 137,
+    "application_cpu": 36,
+    "training_environment_bridge": 26,
+    "bridge_subtests": 31,
+    "maintenance": 160,
+    "isolated_ci": "passed"
+  },
+  "wheel": {
+    "wheel": "runs/config-refactor-20261019/rollout-wheel/opd_state-0.1.0-py3-none-any.whl",
+    "sha256": "02959faf2aff629b7b474cefb87395c3593021c3064ddcf3004fa29b910abdd1",
+    "members": [
+      "opd_state/__init__.py",
+      "opd_state/artifacts.py",
+      "opd_state/events.py",
+      "opd_state/processes.py",
+      "opd_state/core/__init__.py",
+      "opd_state/core/config.py",
+      "opd_state/core/evaluation.py",
+      "opd_state/core/policy.py",
+      "opd_state/integrations/__init__.py",
+      "opd_state/integrations/verl/__init__.py",
+      "opd_state/integrations/verl/configuration.py",
+      "opd_state/integrations/verl/modules.py",
+      "opd_state/rollout/__init__.py",
+      "opd_state/rollout/executor.py",
+      "opd_state/rollout/lifecycle.py",
+      "opd_state-0.1.0.dist-info/licenses/LICENSE",
+      "opd_state-0.1.0.dist-info/licenses/NOTICE",
+      "opd_state-0.1.0.dist-info/METADATA",
+      "opd_state-0.1.0.dist-info/WHEEL",
+      "opd_state-0.1.0.dist-info/top_level.txt",
+      "opd_state-0.1.0.dist-info/RECORD"
+    ],
+    "isolated_import": "opd_state.core.policy",
+    "backend_imports": false
+  },
+  "gpu_replay": {
+    "directory": "runs/config-refactor-20261019/canary-extracted-switch-v1",
+    "run_id": "e5fa3ab650e54d83802e031fe7e797a6",
+    "source_id": "d7abc30b4d388dbf4a5ad37ee06a45437f91159ace54f9fab622734154bef927",
+    "config_id": "42e55a01df4e590d9d8c64c3f164c0422167d87e795955b81ed05fc27e3c2d87",
+    "policy": "teacher-current",
+    "teacher_prefix_tokens": 32,
+    "response_cap": 128,
+    "requested_updates": 2,
+    "completed_updates": 0,
+    "validation": "3 questions x 2 responses at each update, full-vocab KL",
+    "state": {
+      "schema_version": 1,
+      "run_id": "e5fa3ab650e54d83802e031fe7e797a6",
+      "state": "failed",
+      "updated_epoch_s": 1792403994.2634716,
+      "error_type": "RuntimeError",
+      "error": "Backend exited with 1; inspect logs/train.log",
+      "cleanup_complete": true
+    },
+    "exit": {
+      "command": [
+        "/mnt/tidalfs-bdsz01/dataset/llm_dataset/zkn_data/fht_data/envs/opd-state/bin/python",
+        "-m",
+        "recipes.train",
+        "--prepared",
+        "/mnt/tidalfs-bdsz01/dataset/llm_dataset/zkn_data/fht_data/OPD-State/runs/config-refactor-20261019/canary-extracted-switch-v1"
+      ],
+      "pid": 3340621,
+      "started_epoch_s": 1792403644.9714901,
+      "finished_epoch_s": 1792403995.3631637,
+      "return_code": 1
+    },
+    "cleanup": {
+      "remaining_processes_in_run": [],
+      "reported_cleanup": true
+    },
+    "error": "vLLM memory profiling assertion: initial free 14.9967041015625 GiB, current free 21.402099609375 GiB",
+    "post_cleanup_gpu_observation": "GPU 0: 49201 MiB; GPUs 1-3: 50399 MiB each; NVML PIDs not visible in this container",
+    "interpretation": "Post-cleanup occupancy and inaccessible NVML PIDs indicate another container workload; owner not established",
+    "log_sha256": "08079f908e6b67adc1efd420fa5324064cefb00e6802f0cb1d38cf15a935944b",
+    "telemetry_sha256": "ebba51e1bd908ace801a65ab40636817f81d9c5b6f026f661701e1d6ac9f8a2c",
+    "next_action": "Replay in a new run directory when the allocated GPUs are free; do not disable memory profiling safeguards"
+  },
+  "versioned_frontend_followup": {
+    "application_tests": 38,
+    "historical_canary_reverification": "identical to its originally published verification",
+    "historical_report_sha256": "2aac2c7f06dbd5dbc8bfdf8714cad9304977adcc3c8b42f69544813b6f19a13d"
+  },
+  "remaining": [
+    "real-model parameter-gradient baseline and kernels",
+    "backend adapters and pinned patch",
+    "unified suites and head-tail consumers",
+    "all source policies on four GPUs",
+    "full 570x16 and matched-workload resource validation"
+  ]
+}

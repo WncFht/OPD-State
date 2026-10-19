@@ -109,6 +109,41 @@ def verify_snapshot(destination):
     return manifest
 
 
+def verify_frozen_files(directory):
+    """Check sealed bytes before handing off to that run's versioned decoder."""
+    root = Path(directory).expanduser().resolve(strict=True)
+    manifest = json.loads((root / "manifest.json").read_text())
+    if manifest.get("schema_version") != 1:
+        raise ValueError("Unsupported prepared-run schema")
+    if manifest.get("manifest_id") != content_id(
+        {key: value for key, value in manifest.items() if key != "manifest_id"}
+    ):
+        raise ValueError("Prepared manifest identity changed")
+    if (
+        file_digest(root / "resolved.yaml") != manifest["configuration_sha256"]
+        or file_digest(root / "inputs.json") != manifest["inputs_sha256"]
+    ):
+        raise ValueError("Prepared configuration or input manifest changed")
+    source = verify_snapshot(root / "source")
+    if source["source_id"] != manifest["source_id"]:
+        raise ValueError("Prepared run points to a different source snapshot")
+    return manifest
+
+
+def frozen_environment(directory):
+    """Bootstrap frozen imports and manifest; its own app applies runtime controls."""
+    import os
+
+    source = Path(directory).resolve() / "source"
+    return {
+        **os.environ,
+        "OPD_MANIFEST_PATH": str(source.parent / "manifest.json"),
+        "PYTHONPATH": os.pathsep.join([str(source), str(source / "backend/verl")]),
+        "PYTHONNOUSERSITE": "1",
+        "PYTHONDONTWRITEBYTECODE": "1",
+    }
+
+
 def remap_source(path, repository, backend, destination, *, package=None):
     if package is None:
         import opd_state

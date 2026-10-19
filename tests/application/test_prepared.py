@@ -11,9 +11,50 @@ from omegaconf import OmegaConf
 
 from opd_state.artifacts import atomic_json, content_id, execution_lock, file_digest
 from recipes.application import prepare, run_prepared, validate_application
-from tools.verify import verify_prepared
+from tools.verify import configuration_id, verify_prepared
 
 ROOT = Path(__file__).resolve().parents[2]
+
+
+def test_configuration_identity_is_independent_of_source_identity(prepared):
+    root = prepared["root"]
+    config, manifest, inputs = verify_prepared(root)
+    config.ray_kwargs.ray_init.runtime_env.env_vars.OPD_SOURCE_ID = "different-source"
+    assert (
+        configuration_id(config, root, inputs, manifest["scratch"])
+        == manifest["config_id"]
+    )
+    config.actor_rollout_ref.actor.optim.lr *= 2
+    assert (
+        configuration_id(config, root, inputs, manifest["scratch"])
+        != manifest["config_id"]
+    )
+
+
+def test_verify_cli_uses_frozen_decoder_before_current_schema(prepared):
+    root = prepared["root"]
+    # A historical decoder can support fields rejected by the current schema.
+    # This stub proves handoff only; real completed runs have separate GPU evidence.
+    config = OmegaConf.load(root / "resolved.yaml")
+    config.distillation.opd.objective.kind = "historical-objective"
+    OmegaConf.save(config, root / "resolved.yaml")
+    manifest = json.loads((root / "manifest.json").read_text())
+    manifest["configuration_sha256"] = file_digest(root / "resolved.yaml")
+    manifest["manifest_id"] = content_id(
+        {k: v for k, v in manifest.items() if k != "manifest_id"}
+    )
+    atomic_json(root / "manifest.json", manifest)
+    result = subprocess.run(
+        [sys.executable, "-m", "tools.verify", str(root), "--prepared"],
+        cwd=ROOT,
+        env={**os.environ, "PYTHONPATH": str(ROOT / "src"), "CUDA_VISIBLE_DEVICES": ""},
+        capture_output=True,
+        text=True,
+    )
+    assert result.returncode == 0, result.stderr
+    assert (root / "verification-dispatch-proof.txt").read_text() == str(
+        root / "source/tools/verify.py"
+    )
 
 
 def test_preparation_owns_new_directory_and_preserves_native_inputs(prepared):

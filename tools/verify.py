@@ -7,6 +7,8 @@ import copy
 import importlib.util
 import json
 import math
+import os
+import sys
 from collections import Counter, defaultdict
 from pathlib import Path
 
@@ -17,7 +19,7 @@ from opd_state.core.evaluation import due_suites, parse_evaluation
 from opd_state.core.policy import compile_policy
 from opd_state.integrations.verl.configuration import validate_config
 from recipes.inputs import verify_inputs
-from recipes.snapshots import verify_snapshot
+from recipes.snapshots import frozen_environment, verify_frozen_files
 
 
 def configuration_id(config, root, inputs, scratch):
@@ -33,7 +35,13 @@ def configuration_id(config, root, inputs, scratch):
         .get("runtime_env", {})
         .get("env_vars", {})
     )
-    for key in ("OPD_RUN_ID", "OPD_CONFIG_ID", "WANDB_RUN_ID", "WANDB_NAME"):
+    for key in (
+        "OPD_RUN_ID",
+        "OPD_SOURCE_ID",
+        "OPD_CONFIG_ID",
+        "WANDB_RUN_ID",
+        "WANDB_NAME",
+    ):
         env.pop(key, None)
     replacements = [
         (row["path"], "@asset/" + row["identity"]) for row in inputs["models"].values()
@@ -55,21 +63,7 @@ def configuration_id(config, root, inputs, scratch):
 
 def verify_prepared(directory, *, verify_assets=True):
     root = Path(directory).expanduser().resolve(strict=True)
-    manifest = json.loads((root / "manifest.json").read_text())
-    if manifest.get("schema_version") != 1:
-        raise ValueError("Unsupported prepared-run schema")
-    if manifest.get("manifest_id") != content_id(
-        {k: v for k, v in manifest.items() if k != "manifest_id"}
-    ):
-        raise ValueError("Prepared manifest identity changed")
-    if (
-        file_digest(root / "resolved.yaml") != manifest["configuration_sha256"]
-        or file_digest(root / "inputs.json") != manifest["inputs_sha256"]
-    ):
-        raise ValueError("Prepared configuration or input manifest changed")
-    source = verify_snapshot(root / "source")
-    if source["source_id"] != manifest["source_id"]:
-        raise ValueError("Prepared run points to a different source snapshot")
+    manifest = verify_frozen_files(root)
     inputs = json.loads((root / "inputs.json").read_text())
     if inputs["inputs_id"] != manifest["inputs_id"]:
         raise ValueError("Prepared input identity differs from its manifest")
@@ -509,6 +503,15 @@ def main():
     parser.add_argument("directory", type=Path)
     parser.add_argument("--prepared", action="store_true")
     args = parser.parse_args()
+    root = args.directory.expanduser().resolve(strict=True)
+    if Path(__file__).resolve() != root / "source/tools/verify.py":
+        verify_frozen_files(root)
+        environment = frozen_environment(root)
+        os.chdir(root / "source")
+        command = [sys.executable, "-m", "tools.verify", str(root)]
+        if args.prepared:
+            command.append("--prepared")
+        os.execve(sys.executable, command, environment)
     result = (
         verify_prepared(args.directory)[1]
         if args.prepared
