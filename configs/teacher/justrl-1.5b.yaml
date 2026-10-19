@@ -1,0 +1,4 @@
+# @package _global_
+distillation:
+  fsdp_teacher:
+    model_path: ${opd_path:${paths.model_root},JustRL-DeepSeek-1.5B}

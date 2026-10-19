@@ -1,0 +1,12 @@
+defaults:
+  - /schema@_here_: benchmark
+  - _self_
+data:
+  paths:
+    - ${opd_path:${paths.data_root},math/MATH-500/test.parquet}
+    - ${opd_path:${paths.data_root},math/AMC23/test.parquet}
+    - ${opd_path:${paths.data_root},math/AIME25/test.parquet}
+  expected_counts:
+    MATH-500: 500
+    AMC23: 40
+    AIME25: 30

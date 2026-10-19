@@ -1,0 +1,1 @@
+"""Explicit framework integration boundaries."""

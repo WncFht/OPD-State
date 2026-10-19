@@ -8,6 +8,9 @@ __pycache__/
 .ruff_cache/
 .pytest_cache/
 *.egg-info/
+/build/
+/dist/
+/upstream/
 .DS_Store
 
 # Training data is rebuilt by data/prep; keep preparation code and smoke inputs.

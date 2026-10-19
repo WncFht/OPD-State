@@ -1,0 +1,12 @@
+# @package _global_
+defaults:
+  - opd50
+  - _self_
+actor_rollout_ref:
+  rollout:
+    enforce_eager: false
+    cudagraph_capture_sizes: [1, 2, 4, 8, 16, 32, 64]
+    engine_kwargs:
+      vllm:
+        compilation_config:
+          custom_ops: [all]

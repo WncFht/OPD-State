@@ -1,0 +1,86 @@
+# @package _global_
+data:
+  filter_overlong_prompts: true
+  truncation: error
+  return_raw_chat: true
+  dataloader_num_workers: 0
+  shuffle: true
+  val_batch_size: 32
+  val_files: ${opd_eval:${evaluation},files}
+actor_rollout_ref:
+  model:
+    use_remove_padding: true
+    enable_gradient_checkpointing: true
+    override_config:
+      attn_implementation: flash_attention_2
+  actor:
+    use_dynamic_bsz: true
+    ppo_micro_batch_size_per_gpu: 1
+    ppo_max_token_len_per_gpu: 8192
+    ulysses_sequence_parallel_size: 1
+    use_kl_loss: false
+    fsdp_config:
+      param_offload: true
+      optimizer_offload: true
+  rollout:
+    name: vllm
+    generation_backend: vllm_native
+    collection:
+      mode: fresh
+    logit_fusion:
+      enabled: false
+    multi_turn:
+      enable: false
+    enforce_eager: true
+    temperature: 1.0
+    tensor_model_parallel_size: 1
+    gpu_memory_utilization: 0.55
+    max_model_len: ${opd_context:${data.max_prompt_length},${data.max_response_length},${evaluation}}
+    max_num_batched_tokens: 32768
+    max_num_seqs: 64
+    n: 1
+    prompt_length: ${data.max_prompt_length}
+    response_length: ${data.max_response_length}
+    calculate_log_probs: true
+    val_kwargs:
+      do_sample: ${opd_eval:${evaluation},do_sample}
+      n: ${opd_eval:${evaluation},n}
+      temperature: ${opd_eval:${evaluation},temperature}
+      top_p: ${opd_eval:${evaluation},top_p}
+      top_k: ${opd_eval:${evaluation},top_k}
+      max_tokens: ${opd_eval:${evaluation},max_tokens}
+distillation:
+  fsdp_teacher:
+    enabled: true
+    micro_batch_size_per_gpu: 1
+    dtype: bfloat16
+    teacher_temperature: 1.0
+    attn_implementation: flash_attention_2
+    fsdp_config:
+      param_offload: true
+reward:
+  custom_reward_function:
+    path: ${run.backend}/verl/verl/utils/reward_score/opd_mixed_verify.py
+    name: reward_func
+trainer:
+  use_v1: false
+  n_gpus_per_node: 4
+  nnodes: 1
+  total_epochs: 1
+  resume_mode: disable
+  log_val_generations: 0
+  val_only: false
+  source_commit: ${opd_source_commit:${run.repository}}
+  experiment_name: ${run.name}
+  default_local_dir: ${run.dir}/checkpoints
+  validation_data_dir: ${run.dir}/validation
+  native_data_manifest: ${recipe.prepared_manifest}
+  test_freq: ${opd_eval:${evaluation},frequency,${trainer.total_training_steps}}
+  val_before_train: ${opd_eval:${evaluation},initial}
+  math_eval_samples: ${opd_eval:${evaluation},n}
+  math_eval_require_full: ${opd_eval:${evaluation},require_full}
+  validation_kl: ${opd_eval:${evaluation},kl}
+ray_kwargs:
+  ray_init:
+    num_cpus: 16
+    object_store_memory: 4294967296

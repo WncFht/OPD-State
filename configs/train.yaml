@@ -1,0 +1,37 @@
+defaults:
+  - ppo_trainer
+  - _self_
+  - schema@distillation.opd.objective: objective
+  - schema@evaluation: evaluation
+  - backend: fsdp
+  - student: deepseek-r1-1.5b
+  - teacher: justrl-1.5b
+  - dataset: dapo-math-unique
+  - rollout: student-fresh
+  - evaluation: math-final-kl
+  - checkpoint: none
+  - logging: wandb-online
+  - experiment: math
+  - algorithm: sampled_opd
+  - training: opd50
+hydra:
+  searchpath:
+    - file://${opd_backend_config:}
+  run:
+    dir: .
+  output_subdir: null
+  job:
+    chdir: false
+paths:
+  model_root: null
+  data_root: null
+run:
+  name: opd-state
+  backend: ${opd_backend:}
+  repository: ${opd_repository:}
+  dir: null
+  source_dir: ${run.dir}/source
+  prepare_only: false
+  wandb_mode: online
+recipe:
+  prepared_manifest: null

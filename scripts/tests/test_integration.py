@@ -413,6 +413,47 @@ class IntegrationTests(unittest.TestCase):
         shell.write_text("#!/bin/bash\nif then\n")
         self.assertTrue(check_source.check(self.root))
 
+    def test_extracted_package_and_application_sources_are_checked(self):
+        for name in (
+            "src/opd_state/integrations/verl",
+            "recipes",
+            "tools",
+            "platforms",
+            "benchmarks",
+            "tests",
+        ):
+            with self.subTest(directory=name):
+                directory = self.root / name
+                directory.mkdir(parents=True, exist_ok=True)
+                source = directory / "example.py"
+                source.write_text("broken = (\n")
+                self.assertTrue(check_source.check(self.root))
+                source.write_text("value = 1\n")
+                self.assertEqual(check_source.check(self.root), [])
+                source.unlink()
+
+    def test_lint_selection_distinguishes_adapter_from_vendored_verl(self):
+        shutil.copyfile(ROOT / "ruff.toml", self.root / "ruff.toml")
+        owned = self.root / "src/opd_state/integrations/verl/config.py"
+        owned.parent.mkdir(parents=True)
+        owned.write_text("value = 1\n")
+        backend = self.root / "verl/verl/config.py"
+        backend.parent.mkdir(parents=True)
+        backend.write_text("value = 1\n")
+        (self.root / "verl/pyproject.toml").write_text(
+            "[tool.ruff]\nline-length = 119\n"
+        )
+        result = subprocess.run(
+            [str(ROOT / ".venv/bin/ruff"), "check", "--show-files", "."],
+            cwd=self.root,
+            capture_output=True,
+            text=True,
+            check=True,
+        )
+        paths = result.stdout.splitlines()
+        self.assertIn(str(owned), paths)
+        self.assertNotIn(str(backend), paths)
+
     def test_launchers_forward_arguments_and_select_vendored_verl(self):
         binary = self.root / "training-env/bin"
         binary.mkdir(parents=True)

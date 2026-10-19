@@ -1,0 +1,6 @@
+# @package _global_
+recipe:
+  prepared_manifest: ${opd_path:${paths.data_root},math/DAPO-unique/manifest.json}
+data:
+  train_files:
+    - ${opd_manifest_data:${recipe.prepared_manifest}}

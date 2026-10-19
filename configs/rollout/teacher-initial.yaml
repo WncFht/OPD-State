@@ -1,0 +1,10 @@
+# @package _global_
+actor_rollout_ref:
+  rollout:
+    policy:
+      kind: sequence_switch
+      first: teacher
+      second: initial_student
+      boundary:
+        kind: response_tokens
+        value: 2048

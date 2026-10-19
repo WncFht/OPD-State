@@ -1,0 +1,13 @@
+# @package _global_
+defaults:
+  - /evaluation/benchmarks@evaluation.benchmarks.math: math
+  - _self_
+evaluation:
+  suites:
+    validation:
+      execution: live
+      trigger:
+        initial: false
+        every_outer_steps: null
+        training_end: true
+      benchmarks: [math]

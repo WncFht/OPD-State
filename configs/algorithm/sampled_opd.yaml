@@ -1,0 +1,18 @@
+# @package _global_
+algorithm:
+  adv_estimator: token_reward_direct
+  rollout_correction: null
+distillation:
+  opd:
+    objective:
+      kind: sampled_opd
+  fsdp_teacher:
+    log_prob_top_k: 0
+    metric_top_k: 0
+    top_k_strategy: only_stu
+    reward_weight_mode: student_p
+actor_rollout_ref:
+  actor:
+    loss_agg_mode: token-mean
+    policy_loss:
+      loss_mode: vanilla

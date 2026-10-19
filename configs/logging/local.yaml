@@ -1,0 +1,6 @@
+# @package _global_
+trainer:
+  project_name: OPD-State
+  logger: [console]
+run:
+  wandb_mode: disabled

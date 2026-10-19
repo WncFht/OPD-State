@@ -1,0 +1,6 @@
+# @package _global_
+actor_rollout_ref:
+  rollout:
+    policy:
+      kind: single
+      model: teacher

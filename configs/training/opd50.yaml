@@ -1,0 +1,17 @@
+# @package _global_
+data:
+  train_batch_size: 64
+  max_prompt_length: 1024
+  max_response_length: 4096
+  seed: 42
+actor_rollout_ref:
+  actor:
+    ppo_mini_batch_size: ${data.train_batch_size}
+    ppo_epochs: 1
+    grad_clip: ${actor_rollout_ref.actor.optim.clip_grad}
+    optim:
+      lr: 1.0e-6
+      weight_decay: 0.01
+      clip_grad: 1.0
+trainer:
+  total_training_steps: 50

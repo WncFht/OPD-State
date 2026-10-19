@@ -6,7 +6,18 @@ import argparse
 import subprocess
 from pathlib import Path
 
-SOURCE_DIRS = ("data", "eval", "recipe", "verl")
+SOURCE_DIRS = (
+    "data",
+    "eval",
+    "recipe",
+    "verl",
+    "src",
+    "recipes",
+    "tools",
+    "platforms",
+    "benchmarks",
+    "tests",
+)
 
 
 def check(root: Path) -> list[str]:

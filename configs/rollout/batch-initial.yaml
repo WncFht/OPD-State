@@ -1,0 +1,16 @@
+# @package _global_
+actor_rollout_ref:
+  rollout:
+    policy:
+      kind: batch_mix
+      assignment: exact_count
+      routing_unit: trajectory
+      components:
+        - policy:
+            kind: single
+            model: teacher
+          weight: 0.5
+        - policy:
+            kind: single
+            model: initial_student
+          weight: 0.5

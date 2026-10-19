@@ -1,0 +1,32 @@
+# @package _global_
+defaults:
+  - math-final
+  - _self_
+evaluation:
+  suites:
+    validation:
+      diagnostics:
+        kl:
+          enabled: true
+          balance_records: true
+          forward_batch_size: 1
+          position_chunk_size: 1024
+          vocab_chunk_size: 151665
+          fixed_prefix_bank: null
+data:
+  val_batch_size: 64
+actor_rollout_ref:
+  rollout:
+    generation_eval_max_num_seqs: 128
+    generation_eval_max_num_batched_tokens: 32768
+    generation_eval_memory_utilization: 0.55
+    generation_eval_enforce_eager: false
+    generation_eval_engine_kwargs:
+      compilation_config:
+        custom_ops: [all]
+        cudagraph_capture_sizes: [1, 2, 4, 8, 16, 32, 64, 128]
+trainer:
+  validation_metrics_mode: math_exact
+ray_kwargs:
+  ray_init:
+    object_store_memory: 8589934592
